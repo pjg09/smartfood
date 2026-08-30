@@ -6,7 +6,8 @@ de alta pública, es un error, no una funcionalidad.
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.contrib.auth import views as vistas_de_auth
+from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 
 from config.salud import salud
@@ -20,6 +21,25 @@ admin.site.index_title = "Gestión de la cafetería"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
-    # Provisional: la sustituye la pantalla de acceso de `TT-11` (`PR-08`).
+    # Definición de contraseña a partir de la invitación (`TT-11`). La misma
+    # pantalla sirve a los cuatro roles: el mecanismo de acceso es único
+    # (`DEC-3`), y la reutilizan `HU-39`, `HU-41` y `HU-03`.
+    #
+    # Se apoya en las vistas de Django en lugar de escribir autenticación
+    # propia, que `CLAUDE.md` descarta explícitamente. El token que usan ya se
+    # invalida al cambiar la contraseña y caduca solo; `TT-18` lo revisa.
+    path(
+        "invitacion/<uidb64>/<token>/",
+        vistas_de_auth.PasswordResetConfirmView.as_view(
+            template_name="cuentas/definir-contrasena.html",
+            success_url=reverse_lazy("contrasena-definida"),
+        ),
+        name="definir-contrasena",
+    ),
+    path(
+        "invitacion/lista/",
+        TemplateView.as_view(template_name="cuentas/contrasena-definida.html"),
+        name="contrasena-definida",
+    ),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

@@ -133,12 +133,25 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# AVISO PARA TT-09 (PR-08), que declara el modelo de usuario con rol:
-#
-#   AUTH_USER_MODEL hay que fijarlo ANTES de la primera migración. Por eso este
-#   PR no ejecuta `migrate`: si se crean las tablas de `django.contrib.auth` con
-#   el usuario por defecto, cambiarlo después obliga a borrar la base a los
-#   cuatro integrantes. Ver el README.
+# Modelo de usuario propio, fijado ANTES de la primera migración (TT-09). El
+# correo es la identidad: es por donde llega la invitación, y no hay ningún
+# camino de alta que no pase por ella (DEC-3, INVD-1).
+AUTH_USER_MODEL = "cuentas.Usuario"
+
+# Cuánto vive el enlace de una invitación. Django lo usa para el mismo
+# mecanismo con el que se define la contraseña (DEC-3). Tres días es su valor
+# por defecto; una invitación que llega un viernes debe seguir sirviendo el
+# lunes. La caducidad definitiva la fija TT-18.
+PASSWORD_RESET_TIMEOUT = env.int("DJANGO_CADUCIDAD_INVITACION", default=60 * 60 * 24 * 7)
+
+LOGIN_URL = "/admin/login/"
+
+# Base absoluta para los enlaces que viajan por correo. Un enlace de invitación
+# no puede ser relativo: se abre desde el cliente de correo, no desde el sitio.
+URL_BASE = env(
+    "DJANGO_URL_BASE",
+    default=f"https://{DOMINIO_PUBLICO}" if DOMINIO_PUBLICO else "http://localhost:8000",
+)
 
 # --- Correo (TT-06) -------------------------------------------------------
 

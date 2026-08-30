@@ -23,6 +23,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/sprint-1-backlog.md` | **Las 55 tareas del sprint en curso**, con responsable |
 | `docs/plan-de-pull-requests.md` | Las 55 tareas agrupadas en 24 PR, y **el estado de cada una** |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
+| `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.** Ocho

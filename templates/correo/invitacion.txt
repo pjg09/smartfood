@@ -1,0 +1,17 @@
+Hola {{ nombre }}:
+
+La institución educativa te dio acceso a SmartFood como {{ rol }}.
+
+Nadie ha creado una contraseña por ti: la defines tú, con este enlace.
+
+{{ enlace }}
+
+El enlace vale {{ dias_de_validez }} días y deja de servir en cuanto lo uses.
+Si caduca, pide que te reenvíen la invitación.
+
+Si no esperabas este correo, ignóralo: sin definir la contraseña, la cuenta no
+puede usarse.
+
+--
+SmartFood · prototipo académico
+Proyecto Aplicado en TIC 1 · UPB

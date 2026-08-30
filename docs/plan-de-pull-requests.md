@@ -82,13 +82,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **9** de 55 | **7** de 24 |
-| Pendientes | 46 | 17 |
+| **Finalizadas** | **13** de 55 | **8** de 24 |
+| Pendientes | 42 | 16 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 6 | 25 |
-| Carlos | 1 | 16 |
+| Pedro | 8 | 25 |
+| Carlos | 3 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 2 | 5 |
 
@@ -103,7 +103,7 @@ este documento.
 | `PR-05` | `TT-06` | Correo | ☑ `#5` |
 | `PR-06` | `TT-07` | Definición de Terminado | ☑ `#6` |
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☑ `#7` |
-| `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☐ |
+| `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☑ `#8` |
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☐ |
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☐ |
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☐ |
@@ -302,15 +302,15 @@ Corresponden a `[S4]` del sprint backlog, en su orden.
 | Rama | `feat/TT-09-institucion-por-seed` |
 | Responsables | Pedro y Carlos |
 | Historia | `HU-39` |
-| Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Invariantes | empieza a sostener `INV-6`, `INVD-1` |
+| Estado | ☑ **Integrado en `main`** (#8) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-09` | Modelo de usuario con rol, y modelo de institución educativa | Pedro | ☐ |
-| `TT-10` | Rutina de seed que crea la institución de referencia y dispara su invitación | Pedro | ☐ |
-| `TT-11` | Pantalla de definición de contraseña a partir del token de invitación | Carlos | ☐ |
-| `TT-12` | Plantilla del correo de invitación | Carlos | ☐ |
+| `TT-09` | Modelo de usuario con rol, y modelo de institución educativa | Pedro | ☑ |
+| `TT-10` | Rutina de seed que crea la institución de referencia y dispara su invitación | Pedro | ☑ |
+| `TT-11` | Pantalla de definición de contraseña a partir del token de invitación | Carlos | ☑ |
+| `TT-12` | Plantilla del correo de invitación | Carlos | ☑ |
 
 Las cuatro cierran la primera historia del sprint y hay que integrarlas juntas: una
 invitación que no se puede aceptar no se demuestra. `TT-11` y `TT-12` los reutilizan

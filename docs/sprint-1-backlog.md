@@ -110,10 +110,10 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-09` | Modelo de usuario con rol, y modelo de institución educativa | Pedro | ☐ |
-| `TT-10` | Rutina de seed que crea la institución de referencia y dispara su invitación | Pedro | ☐ |
-| `TT-11` | Pantalla de definición de contraseña a partir del token de invitación | Carlos | ☐ |
-| `TT-12` | Plantilla del correo de invitación | Carlos | ☐ |
+| `TT-09` | Modelo de usuario con rol, y modelo de institución educativa | Pedro | ☑ |
+| `TT-10` | Rutina de seed que crea la institución de referencia y dispara su invitación | Pedro | ☑ |
+| `TT-11` | Pantalla de definición de contraseña a partir del token de invitación | Carlos | ☑ |
+| `TT-12` | Plantilla del correo de invitación | Carlos | ☑ |
 
 `TT-11` y `TT-12` los reutilizan `HU-03` y `HU-41`: el mecanismo de acceso es el mismo para los cuatro roles (`DEC-3`).
 

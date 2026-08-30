@@ -1,0 +1,38 @@
+{# Versión HTML de la invitación (TT-12). La de texto plano es la obligatoria:
+   una invitación que un cliente de correo no muestra es una cuenta que no se
+   activa. Sin CSS externo ni imágenes: los clientes de correo no los cargan. #}
+<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#0f172a;line-height:1.6;max-width:34rem">
+  <p>Hola {{ nombre }}:</p>
+
+  <p>La institución educativa te dio acceso a <strong>SmartFood</strong> como {{ rol }}.</p>
+
+  <p><strong>Nadie ha creado una contraseña por ti</strong>: la defines tú.</p>
+
+  <p style="margin:1.75rem 0">
+    <a href="{{ enlace }}"
+       style="background:#166534;color:#ffffff;padding:.75rem 1.5rem;border-radius:.375rem;
+              text-decoration:none;display:inline-block;font-weight:600">
+      Definir mi contraseña
+    </a>
+  </p>
+
+  <p style="color:#475569;font-size:.875rem">
+    Si el botón no funciona, copia esta dirección en tu navegador:<br>
+    <span style="word-break:break-all">{{ enlace }}</span>
+  </p>
+
+  <p style="color:#475569;font-size:.875rem">
+    El enlace vale {{ dias_de_validez }} días y deja de servir en cuanto lo uses.
+    Si caduca, pide que te reenvíen la invitación.
+  </p>
+
+  <p style="color:#475569;font-size:.875rem">
+    Si no esperabas este correo, ignóralo: sin definir la contraseña, la cuenta no
+    puede usarse.
+  </p>
+
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:1.5rem 0">
+  <p style="color:#64748b;font-size:.75rem">
+    SmartFood · prototipo académico · Proyecto Aplicado en TIC 1 · UPB
+  </p>
+</div>
