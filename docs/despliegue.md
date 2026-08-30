@@ -8,7 +8,7 @@
 | titulo | Estado real del entorno de pruebas y cómo está montado |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable de la asignatura |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-20`, `DT-21`); `./convenciones-de-git.md`; `./definicion-de-terminado.md` (`DoD-4`) |
-| actualizado | 2026-08-30, tras `PR-08` |
+| actualizado | 2026-08-30, tras `DEC-10` |
 | idioma | es-CO |
 | version | 1.0 |
 
@@ -51,10 +51,21 @@ En `railway.json`, versionado:
 |---|---|
 | Construcción | `manage.py tailwind build && manage.py collectstatic --noinput` |
 | Antes de desplegar | `manage.py migrate --noinput` |
+| Antes de desplegar | `manage.py sembrar --contrasena-de-desarrollo "$SEED_CONTRASENA_INSTITUCION"` |
 | Arranque | `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2` |
 
-`migrate` va en `preDeployCommand` y no en el arranque: así se ejecuta **una vez** antes
-de que la versión nueva reciba tráfico, en lugar de una vez por réplica.
+Ambos van en `preDeployCommand` y no en el arranque: se ejecutan **una vez** antes de que
+la versión nueva reciba tráfico, en lugar de una vez por réplica.
+
+**El entorno se siembra solo.** El seed es idempotente y con contraseña **no envía
+correo** (`DEC-10`), así que puede correr en cada despliegue: si hubiera que recrear el
+entorno desde cero, la institución aparece sin que nadie ejecute nada a mano. La
+contraseña se restablece en cada despliegue al valor de `SEED_CONTRASENA_INSTITUCION`,
+que es la fuente de verdad — cambiarla desde el admin no dura.
+
+Si esa variable no estuviera definida, el comando **genera una clave y la imprime en el
+registro del despliegue** en lugar de caer al camino por defecto, que enviaría una
+invitación a una dirección que no es de nadie. Falla del lado seguro.
 
 > **`railway.json` está deprecado** en favor de `.railway/railway.ts`, y deja de
 > funcionar el **2026-12-01**. Se decidió **no migrar**: el Sprint 5 termina alrededor
@@ -118,6 +129,7 @@ Los **nombres**; los valores viven solo en Railway y **ninguno está en el repos
 | `DJANGO_DEFAULT_FROM_EMAIL` · `DJANGO_EMAIL_TIMEOUT` | Remitente y tiempo límite | Fijadas a mano |
 | `S3_ENDPOINT_URL` · `S3_BUCKET` · `S3_ACCESS_KEY_ID` · `S3_SECRET_ACCESS_KEY` · `S3_REGION` · `S3_ADDRESSING_STYLE` | Bucket | `railway bucket credentials` |
 | `S3_CADUCIDAD_FIRMA` | Segundos que vive la URL firmada de una fotografía | Fijada a mano |
+| `SEED_CONTRASENA_INSTITUCION` | Contraseña de la cuenta institucional (`DEC-10`) | Generada al sembrar |
 | `RAILWAY_PUBLIC_DOMAIN` | El dominio del servicio | La inyecta Railway |
 
 `config/settings.py` lee `RAILWAY_PUBLIC_DOMAIN` para completar `ALLOWED_HOSTS`,
@@ -152,10 +164,13 @@ Si hubiera que rehacer el entorno:
 4. Mover ambos servicios a la región elegida, **poniendo a cero las demás** (`[S4]`).
 5. Crear el bucket en la misma región y volcar sus credenciales a las variables `S3_*`.
 6. Fijar el resto de variables de `[S3]`. `DJANGO_SECRET_KEY` se genera nueva.
-7. Sembrar la institución de referencia: `manage.py sembrar --email-institucion <buzón real>`.
+7. Fijar `SEED_CONTRASENA_INSTITUCION` con una clave generada. **La institución la siembra
+   el propio despliegue**: no hay paso manual.
 
-El paso 7 no es automático a propósito: dispara un correo, y eso no debe ocurrir en cada
-despliegue.
+Para demostrar `HU-39` tal como está escrita —invitación por correo y titular que define
+su contraseña— se ejecuta aparte, contra un buzón real:
+`manage.py sembrar --email-institucion <buzón real>`. Eso sí dispara un correo, y por eso
+no forma parte del despliegue.
 
 ---
 

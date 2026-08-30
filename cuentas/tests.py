@@ -125,6 +125,30 @@ class ContrasenaDeDesarrolloTest(TestCase):
         self.assertTrue(institucion.usuario.check_password("segunda"))
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_una_clave_vacia_no_cae_al_camino_del_correo(self):
+        """El modo de fallo que cierra el seed en el despliegue.
+
+        Si `SEED_CONTRASENA_INSTITUCION` no estuviera definida, el comando
+        recibiría una cadena vacía. Sin esta protección caería al camino por
+        defecto y mandaría una invitación a una dirección que no es de nadie:
+        un rebote, y `DEC-9` explica lo que eso cuesta.
+        """
+        from django.core.management import call_command
+        from io import StringIO
+
+        salida = StringIO()
+        with self.captureOnCommitCallbacks(execute=True):
+            call_command("sembrar", "--contrasena-de-desarrollo", "", stdout=salida)
+
+        self.assertEqual(len(mail.outbox), 0, "una clave vacía no debe disparar correo")
+        self.assertIn("contraseña", salida.getvalue())
+
+        # Y la clave generada sirve para entrar.
+        from django.contrib.auth import authenticate
+        clave = [l.split(":", 1)[1].strip()
+                 for l in salida.getvalue().splitlines() if l.strip().startswith("contraseña")][0]
+        self.assertIsNotNone(authenticate(username="institucion@example.com", password=clave))
+
     def test_el_generador_no_repite_contrasenas(self):
         from personas.management.commands.sembrar import generar_contrasena
 
