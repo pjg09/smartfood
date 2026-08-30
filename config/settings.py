@@ -49,13 +49,19 @@ APPS_DE_DJANGO = [
     "django.contrib.staticfiles",
 ]
 
+APPS_DE_TERCEROS = [
+    # Gestiona el binario autónomo de Tailwind: `manage.py tailwind build` y
+    # `tailwind watch`. Sin Node y sin package.json (TT-05, DT-16).
+    "django_tailwind_cli",
+]
+
 APPS_DEL_PROYECTO = [
     "cuentas",
     "personas",
     "catalogo",
 ]
 
-INSTALLED_APPS = APPS_DE_DJANGO + APPS_DEL_PROYECTO
+INSTALLED_APPS = APPS_DE_DJANGO + APPS_DE_TERCEROS + APPS_DEL_PROYECTO
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -76,8 +82,10 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        # La plantilla base y el layout llegan con TT-05, en PR-04.
-        "DIRS": [BASE_DIR / "plantillas"],
+        # `templates`, no `plantillas`: el cargador de apps de Django busca el
+        # subdirectorio "templates" y no es configurable. Nombrar distinto al
+        # del proyecto dejaría dos convenciones en el mismo repositorio.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -143,6 +151,19 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "assets"]
+
+# --- Tailwind (TT-05, DT-16) ----------------------------------------------
+
+# Versión fijada, no "latest": una construcción reproducible no puede depender
+# de lo que hubiera publicado GitHub esa mañana.
+TAILWIND_CLI_VERSION = "4.3.3"
+# La fuente vive fuera de STATICFILES_DIRS a propósito: dentro, collectstatic
+# la recogería y el backend con manifiesto fallaría al resolver su
+# `@import "tailwindcss"`. El paquete lo avisa con su check W001.
+TAILWIND_CLI_SRC_CSS = BASE_DIR / "estilos" / "fuente.css"
+TAILWIND_CLI_DIST_CSS = "css/tailwind.css"
+TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
 
 STORAGES = {
     "default": {

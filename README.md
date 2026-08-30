@@ -46,9 +46,37 @@ En `http://localhost:8000`. La consola de MinIO está en `http://localhost:9001`
 | Ver los registros | `docker compose logs -f postgres` |
 | Consola de PostgreSQL | `uv run python manage.py dbshell` |
 | Servidor de desarrollo | `uv run python manage.py runserver` |
+| **Recompilar los estilos al vuelo** | `uv run python manage.py tailwind watch` |
+| Compilar los estilos una vez | `uv run python manage.py tailwind build` |
 | Añadir una dependencia | `uv add nombre-del-paquete` |
 
+Trabajando en plantillas, deja `tailwind watch` corriendo en una segunda terminal: sin
+él, una clase nueva no aparece en la hoja compilada y el cambio no se ve.
+
 `uv run` activa el entorno virtual por ti: no hace falta `source .venv/bin/activate`.
+
+---
+
+## Dónde va cada cosa del frontend
+
+Servidor renderiza, HTMX actualiza fragmentos, Tailwind compila con su binario autónomo.
+**No hay Node ni `package.json`** (`DT-16`).
+
+| Ruta | Qué es |
+|---|---|
+| `templates/base.html` | Tronco común del que cuelga toda página |
+| `templates/partials/` | Fragmentos que devuelven las vistas HTMX — **nunca páginas** |
+| `<app>/templates/<app>/` | Plantillas propias de cada dominio |
+| `estilos/fuente.css` | **Fuente** de Tailwind: paleta, tipografía, `@source` |
+| `assets/js/htmx.min.js` | HTMX 2.0.9, vendorizado, sin CDN |
+| `assets/css/tailwind.css` | **Salida compilada.** No se versiona: la genera el build |
+
+`estilos/` está fuera de `assets/` a propósito. Dentro, `collectstatic` recogería la
+fuente y el almacenamiento con manifiesto fallaría al resolver su `@import
+"tailwindcss"` — la construcción del despliegue se cae. El propio paquete lo avisa con
+su comprobación `W001`.
+
+`INT-3` no lleva plantillas: lo cubre el admin de Django (`DT-2`), aquí solo traducido.
 
 ---
 
