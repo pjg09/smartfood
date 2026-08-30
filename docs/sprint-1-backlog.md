@@ -93,8 +93,8 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 | `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | `INT-1`, `INT-3` | ☑ |
 | `TT-06` | Configuración del envío de correo | Pedro | `HU-39`, `HU-03`, `HU-41` | ☑ |
 | `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | Todo | ☑ |
-| `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | `HU-57`, `HU-59` | ☐ |
-| `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | `HU-57`, `HU-59` | ☐ |
+| `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | `HU-57`, `HU-59` | ☑ |
+| `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | `HU-57`, `HU-59` | ☑ |
 
 **Las nueve se pueden hacer de entrada**, en el orden en que están: ninguna depende de nada que venga después. `TT-08`, el generador de datos ficticios, era la décima y se movió al final de `[S4]`, porque necesita que existan los modelos.
 

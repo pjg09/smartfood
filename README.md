@@ -57,6 +57,43 @@ Trabajando en plantillas, deja `tailwind watch` corriendo en una segunda termina
 
 ---
 
+## Almacenamiento de imágenes
+
+La base guarda **la clave del objeto, nunca el binario** (`DT-18`).
+
+| Almacenamiento | Contiene | Cómo llega al navegador |
+|---|---|---|
+| `privado/` | Fotografías de estudiantes (`HU-57`) | URL firmada, caduca en 5 min |
+| `publico/` | Imágenes de producto (`HU-59`) | Servidas por la aplicación, caché larga |
+
+**Un solo bucket con dos prefijos, y ninguno accesible sin credenciales** (`DT-21`). Los
+buckets de Railway son privados sin excepción: no existe modo público en ningún plan. En
+local, MinIO replica la misma topología —aunque sí soportaría un bucket público— porque
+la razón de usar MinIO es que el control de acceso se comporte igual aquí que desplegado.
+
+> `publico` significa **«no sensible»**, no «accesible sin credenciales». Ningún objeto
+> del prototipo lo es.
+
+El bucket local lo crea `docker compose` al levantar; no hay que tocar la consola de MinIO.
+
+### Ninguna imagen se guarda tal cual
+
+Todo lo que sube un usuario pasa por `config/imagenes.py`, que **la decodifica y la
+vuelve a codificar desde cero** (`DT-20`). Eso hace tres cosas a la vez:
+
+- **Valida por contenido.** La extensión y el `Content-Type` los elige quien sube el
+  fichero: no son evidencia de nada.
+- **Neutraliza los ficheros políglotos.** Al reconstruir la imagen desde sus píxeles, lo
+  que no era píxel desaparece.
+- **Retira el EXIF.** La foto de un menor tomada con un teléfono lleva dentro, por
+  defecto, la ubicación GPS donde se tomó (`ALC-OUT-08`, Ley 1581 de 2012).
+
+La orientación del EXIF se aplica **antes** de retirarlo, o las fotos de móvil saldrían
+giradas. La salida es siempre WEBP, con el lado mayor limitado y nombre generado por el
+servidor.
+
+---
+
 ## Correo
 
 Una sola variable describe el envío entero, igual que `DATABASE_URL` describe la base:

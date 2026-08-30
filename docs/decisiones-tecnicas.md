@@ -15,7 +15,7 @@
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
 | fecha_decisiones | 2026-08-29 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 20 (`DT-1` … `DT-20`) |
+| decisiones | 21 (`DT-1` … `DT-21`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -248,6 +248,34 @@ En producción, el bucket del propio PaaS, para no añadir un segundo proveedor.
 
 ---
 
+#### `[DT-21]` Un bucket con dos prefijos, y ninguno público
+
+**Corrige:** `DT-18`, que preveía **dos** buckets con políticas opuestas —uno privado y otro de lectura pública—.
+
+**El hecho que lo obliga:** el proveedor del entorno de pruebas (`DT-13`) **no ofrece buckets públicos en ningún plan**. Su documentación es explícita: *«Buckets are private; there are no public bucket URLs»* y *«there is no public-bucket mode to accidentally enable»*. No es un límite del plan gratuito que se resuelva pagando: no existe la funcionalidad. El plan gratuito añade, además, un tope de **un bucket por proyecto**.
+
+**Decidido:**
+
+- **Un bucket**, con dos prefijos: `privado/` para las fotografías de estudiantes y `publico/` para las imágenes de producto.
+- En el código siguen existiendo **dos almacenamientos lógicos** de Django, `privado` y `publico`. Que apunten a un bucket con prefijos o a dos buckets es **configuración**, no diseño: pasar a dos es cambiar dos rutas.
+- **La misma topología en local**, sobre MinIO, aunque MinIO sí soporte políticas públicas.
+- Las **fotografías de estudiantes** se sirven con URL firmada de caducidad corta, como preveía `DT-18`. Esto no cambia.
+- Las **imágenes de producto** las sirve la aplicación, leyéndolas del bucket y devolviéndolas con una cabecera de caché larga.
+
+**Por qué la misma topología en local.** `DT-18` justificó MinIO —en vez del sistema de archivos— por la **paridad de control de acceso**: que el comportamiento real de acceso se pruebe en el portátil y no por primera vez en el entorno desplegado, sobre fotografías de menores. Un bucket público en local y ninguno desplegado rompería exactamente esa paridad: se escribe la etiqueta de imagen, funciona en local, y falla desplegada. La divergencia se descubriría donde `DT-18` quería evitar descubrirla.
+
+**Por qué la aplicación sirve las imágenes de producto y no se firman.** `DT-18` descartó firmar las imágenes de producto porque *«firmar cincuenta URL para pintar la lista del punto de venta es coste sin contrapartida»*. Ese argumento **está mal medido**: firmar es un HMAC local, del orden de microsegundos, y cincuenta firmas no se notan.
+
+El problema real de la URL firmada es otro: **caduca, así que cambia en cada pintado**, y una URL que cambia no la puede cachear el navegador. `INT-2` debe atender toda la demanda en veinte a treinta minutos; descargar el catálogo de imágenes entero en cada refresco es justo lo que no puede permitirse. Servirlas desde la aplicación da una **URL estable y cacheable**: el navegador las pide una vez. Es también el patrón que el proveedor documenta para este caso.
+
+El coste es que los bytes pasan por el proceso de la aplicación la primera vez. Con un catálogo de decenas de productos y caché de navegador, es asumible; si dejara de serlo, la salida es una caché delante, no volver a firmar.
+
+**Lo que no cambia de `DT-18`:** la base guarda **la clave del objeto, nunca el binario**; la fotografía de un menor no queda accesible por una URL adivinable; y `INVD-6` sigue vigente.
+
+> **Sobre el nombre `publico`.** En este proyecto significa **«no sensible»**, no «accesible sin credenciales». Ningún objeto del prototipo es accesible sin credenciales. Conviene recordarlo al leer el código: el alias engaña si se lee con la definición de `DT-18`.
+
+---
+
 #### `[DT-14]` Datos ficticios generados programáticamente
 
 **Razón:** `ALC-OUT-07` exige datos ficticios y `ALC-OUT-08` explica por qué: el tratamiento de datos personales de menores exige autorización de sus titulares conforme a la Ley 1581 de 2012. **Ningún dato real de ningún estudiante entra en el repositorio ni en el entorno de pruebas.**
@@ -407,7 +435,7 @@ Además, `TT-06` (envío de correo) y `TT-15` (permisos según `[S11]`) se apoya
 - **Cálculo del saldo con el historial creciendo.** `DT-4` calcula el saldo por agregación. Para el volumen del prototipo sobra, pero conviene medirlo antes del Avance 2 y dejar registrada la cifra en `ENT-06` como limitación conocida.
 - **Estrategia de pruebas automatizadas.** La Definición de Terminado exige un caso de prueba por invariante, pero no se decidió si son pruebas automatizadas o guiones manuales. Alejandro es dueño del plan de pruebas (`[S12]`).
 - **Caducidad de las URL firmadas.** `DT-18` fija que la fotografía se sirve firmada, no cuántos minutos dura la firma.
-- **PaaS concreto.** `DT-13` fija el tipo de despliegue, no el proveedor. Tampoco qué proveedor de bucket se usa en producción.
+- **PaaS concreto.** `DT-13` fija el tipo de despliegue, no el proveedor. **Resuelto en la práctica:** el entorno de pruebas está en Railway, y el bucket es el suyo (`DT-21`). La decisión sigue sin ser normativa: `DT-13` no obliga a ese proveedor.
 
 ---
 
