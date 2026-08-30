@@ -22,6 +22,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-1-backlog.md` | **Las 55 tareas del sprint en curso**, con responsable |
 | `docs/plan-de-pull-requests.md` | Las 55 tareas agrupadas en 24 PR, y **el estado de cada una** |
+| `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.** Ocho
@@ -83,9 +84,12 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ## Definición de Terminado
 
-En `[S2]` de `docs/sprint-1-backlog.md`. Resumen: criterios de aceptación verificados, integrado en
-la rama principal, migraciones escritas y aplicadas, **demostrable en el entorno desplegado** —no
-solo en local—, un caso de prueba por cada invariante que la historia sostenga, y datos ficticios.
+En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
+**Pull Request**, no a la historia, porque 12 de las 55 tareas del sprint no cuelgan de ninguna.
+
+Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`), `DoD-4` (**demostrable en el
+entorno desplegado**, no solo en local) y `DoD-6` (datos ficticios) aplican **siempre**. Los otros
+tres son condicionales — y un criterio que no aplica **se declara, no se salta**.
 
 ## Convenciones
 

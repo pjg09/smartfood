@@ -46,7 +46,7 @@ Consecuencia práctica: **integrar los PR en orden numérico no puede romperse.*
 
 Los cortes se eligieron con tres criterios, en este orden:
 
-1. **Un PR cierra algo demostrable.** La Definición de Terminado (`[S2]`) exige demostrar
+1. **Un PR cierra algo demostrable.** `DoD-4` de `./definicion-de-terminado.md` exige demostrar
    la funcionalidad en el entorno desplegado. Un PR que deja una historia a medias no se
    puede demostrar.
 2. **Un PR se revisa de una sentada.** Entre 1 y 4 tareas. Ninguno pasa de 4.
@@ -82,15 +82,15 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **6** de 55 | **5** de 24 |
-| Pendientes | 49 | 19 |
+| **Finalizadas** | **7** de 55 | **6** de 24 |
+| Pendientes | 48 | 18 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 4 | 25 |
 | Carlos | 1 | 16 |
 | Alejandro | 0 | 9 |
-| Naomi | 1 | 5 |
+| Naomi | 2 | 5 |
 
 ### [S3.1] Estado de los 24 Pull Requests
 
@@ -101,7 +101,7 @@ este documento.
 | `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☑ `#3` |
 | `PR-04` | `TT-05` | Plantilla base | ☑ `#4` |
 | `PR-05` | `TT-06` | Correo | ☑ `#5` |
-| `PR-06` | `TT-07` | Definición de Terminado | ☐ |
+| `PR-06` | `TT-07` | Definición de Terminado | ☑ `#6` |
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☐ |
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☐ |
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☐ |
@@ -248,14 +248,18 @@ invitaciones pero no las entrega.
 | Responsable | Naomi |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#6) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | ☐ |
+| `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | ☑ |
 
-PR de una sola tarea documental. Se deja aparte en vez de colgarlo de `PR-05` porque no
-comparte nada con el correo. Es un `docs`: no publica versión.
+PR de una sola tarea documental. Es un `docs`: no publica versión.
+
+Extrae la Definición de Terminado a `./definicion-de-terminado.md` con identificadores
+citables (`DoD-1` … `DoD-6`) y la reescribe con **criterios condicionales**, porque la
+redacción original hablaba de historias y **12 de las 55 tareas del sprint no cuelgan de
+ninguna** — incluidos los cinco PR ya integrados.
 
 ---
 
