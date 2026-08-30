@@ -1,0 +1,234 @@
+# =============================================================================
+# SmartFood — .gitignore
+# Stack: Django + PostgreSQL + HTMX + Tailwind + Docker Compose + MinIO (DT-2, DT-3, DT-18)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Secretos y configuración de entorno
+# Nunca versionar credenciales. `.env.example` SÍ se versiona (TT-02).
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials.json
+service-account*.json
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# Gestores de dependencias (el lockfile del gestor elegido SÍ se versiona)
+.pdm-python
+.pdm-build/
+__pypackages__/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# -----------------------------------------------------------------------------
+# Django
+# -----------------------------------------------------------------------------
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Estáticos recolectados por `collectstatic`: son artefacto de build (DT-13).
+/staticfiles/
+/static_root/
+
+# Subidas locales. En el proyecto real las imágenes van a los buckets (DT-18),
+# pero el Plan B por variable de entorno usa el sistema de archivos.
+/media/
+/mediafiles/
+
+# NO ignorar migraciones: son parte del contrato y la Definición de Terminado
+# exige que estén escritas y aplicadas ([S2] del sprint backlog).
+!**/migrations/
+!**/migrations/*.py
+
+# -----------------------------------------------------------------------------
+# Pruebas y cobertura
+# -----------------------------------------------------------------------------
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.cover
+.hypothesis/
+nosetests.xml
+.cache
+
+# -----------------------------------------------------------------------------
+# Linters y comprobadores de tipos
+# -----------------------------------------------------------------------------
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# -----------------------------------------------------------------------------
+# Node — solo para Tailwind CLI y semantic-release en CI (DT-16)
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn/
+.pnp.*
+
+# Salida compilada de Tailwind: artefacto de build, se genera en el despliegue.
+/static/css/tailwind.css
+/**/static/**/tailwind.css
+/**/static/**/output.css
+
+# -----------------------------------------------------------------------------
+# Docker, PostgreSQL y MinIO (TT-02)
+# Los volúmenes montados al host no entran al repositorio.
+# -----------------------------------------------------------------------------
+docker-compose.override.yml
+.docker/
+/data/
+/pgdata/
+/minio-data/
+*.sql.gz
+*.dump
+
+# -----------------------------------------------------------------------------
+# Despliegue (DT-13)
+# -----------------------------------------------------------------------------
+.railway/
+.vercel/
+.serverless/
+
+# -----------------------------------------------------------------------------
+# Editores e IDE
+# -----------------------------------------------------------------------------
+# VS Code — se versionan extensions.json y settings.json compartidos si el
+# equipo los acuerda; el resto es preferencia personal.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+*.code-workspace
+.history/
+
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Neovim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+Session.vim
+Sessionx.vim
+tags
+
+# Emacs
+\#*\#
+.\#*
+*.elc
+.projectile
+
+# Zed
+.zed/
+
+# -----------------------------------------------------------------------------
+# Sistemas operativos
+# -----------------------------------------------------------------------------
+# Linux
+.directory
+.Trash-*
+.nfs*
+.fuse_hidden*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.stackdump
+
+# macOS — el equipo es de cuatro; alguien acabará en un Mac.
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.DocumentRevisions-V100
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# -----------------------------------------------------------------------------
+# Herramientas de agentes
+# -----------------------------------------------------------------------------
+.claude/settings.local.json
+
+# -----------------------------------------------------------------------------
+# Temporales y archivos comprimidos sueltos
+# -----------------------------------------------------------------------------
+*.bak
+*.tmp
+*.orig
+*.rej
+*.pid
+*.seed
+tmp/
+temp/
+scratch/

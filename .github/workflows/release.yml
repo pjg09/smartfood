@@ -1,0 +1,43 @@
+name: Release
+
+# Publica una versión en cada integración a main (DT-13, TT-01).
+# No genera CHANGELOG.md: las notas viven en la Release de GitHub.
+on:
+  push:
+    branches: [main]
+
+# Evita dos releases simultáneos si entran dos PR seguidos.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write        # crear la etiqueta y la Release
+  issues: write          # etiquetar issues cerrados por la Release
+  pull-requests: write   # etiquetar los PR incluidos
+
+jobs:
+  release:
+    name: semantic-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # semantic-release necesita el historial completo
+          persist-credentials: false
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Node solo existe aquí: nadie del equipo lo necesita en local.
+      - name: Publicar versión
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          npx --yes
+          -p semantic-release@24
+          -p conventional-changelog-conventionalcommits@8
+          semantic-release
