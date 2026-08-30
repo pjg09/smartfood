@@ -4,6 +4,10 @@ y es lo que analiza semantic-release. Formato:
 
     tipo(ámbito): resumen en imperativo
 
+Si el cambio es incompatible, el `!` va AQUÍ, en el título: `feat(ámbito)!: ...`.
+Un `BREAKING CHANGE:` en el cuerpo de un commit de la rama no llega a main y no
+dispara la versión mayor.
+
 Ver docs/convenciones-de-git.md
 -->
 

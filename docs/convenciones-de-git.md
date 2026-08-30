@@ -10,7 +10,7 @@
 | tipo_documento | Convención de trabajo. No es un artefacto de Scrum |
 | cubre | `TT-01` — Repositorio, estrategia de ramas y convención de commits |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 Este documento es el contrato de cómo entra código a `main`. Lo que aquí se decide lo
 hace cumplir la automatización de `.github/workflows/`, no la buena voluntad.
@@ -134,8 +134,22 @@ El ámbito es **opcional** cuando el cambio es transversal: `feat: ...`.
 
 ### [S2.3] Cambios incompatibles
 
-Un `!` antes de los dos puntos, o una nota `BREAKING CHANGE:` al final del cuerpo.
-Publican una versión **major**.
+**Un `!` antes de los dos puntos, en el título del Pull Request. Y solo eso.**
+
+Conventional Commits admite además declararlo con una nota `BREAKING CHANGE:` al final
+del cuerpo. **Aquí esa vía no sirve**, y conviene entender por qué antes de usarla por
+costumbre: el repositorio integra con squash y el mensaje que queda en `main` es
+únicamente el título del PR (`[S2.5]`). Un `BREAKING CHANGE:` escrito en el cuerpo de un
+commit de la rama **nunca llega a `main`**, así que `semantic-release` no lo ve y publica
+una `minor` donde tocaba una `major`. El fallo es silencioso: no hay error, solo un
+número de versión que miente.
+
+```
+feat(billetera)!: reconstruir el saldo desde el historial
+```
+
+En el cuerpo del commit de tu rama puedes explicarlo como quieras —y debes—, pero **lo
+que decide la versión es el `!` del título**:
 
 ```
 feat(billetera)!: reconstruir el saldo desde el historial
@@ -147,6 +161,10 @@ el selector correspondiente.
 BREAKING CHANGE: `Billetera.saldo` deja de existir.
 Refs: TT-23, INV-2, DT-4
 ```
+
+El `BREAKING CHANGE:` de ese cuerpo es documentación para quien revise la rama, no el
+disparador de la versión. `.releaserc.json` conserva los `noteKeywords` por si algún día
+se integra de otra forma, pero **no te apoyes en ellos**.
 
 ### [S2.4] Ejemplos completos
 
@@ -189,6 +207,19 @@ El título del PR debe cumplir `[S2]`. `.github/workflows/convencion-de-commits.
 verifica en cada apertura y edición del PR y falla si no cumple. Los commits dentro de
 la rama son tuyos: escríbelos bien igualmente, pero el que cuenta es el título.
 
+La configuración del repositorio lo sostiene: en *Settings → General → Pull Requests*
+solo está activo **Allow squash merging**, con *Default commit message* fijado en
+**Pull request title**. Merge commits y rebase están desactivados, de modo que no existe
+la vía por la que los commits de una rama llegarían sueltos a `main`.
+
+**Dos consecuencias que hay que tener presentes:**
+
+1. El cuerpo del commit que queda en `main` está **vacío**. Los `Refs: TT-nn` de tus
+   commits no viajan al historial: viven en el Pull Request, al que el commit de squash
+   enlaza con el `(#N)` que GitHub le añade al título. Por eso la plantilla de PR incluye
+   una tabla de trazabilidad —es el sitio donde esa información queda para siempre—.
+2. Un cambio incompatible **solo cuenta si lleva `!` en el título** (`[S2.3]`).
+
 ---
 
 ## [S3] Publicación de versiones
@@ -215,7 +246,7 @@ Se leen los commits desde la última etiqueta y gana el de mayor impacto:
 
 | Hay al menos un… | Versión |
 |---|---|
-| Cambio incompatible (`!` o `BREAKING CHANGE`) | `major` — `1.4.2` → `2.0.0` |
+| Cambio incompatible: `!` en el título (`[S2.3]`) | `major` — `1.4.2` → `2.0.0` |
 | `feat` | `minor` — `1.4.2` → `1.5.0` |
 | `fix`, `perf`, `refactor`, `revert` | `patch` — `1.4.2` → `1.4.3` |
 | Solo `docs`, `test`, `build`, `ci`, `style`, `chore` | **No se publica nada** |
