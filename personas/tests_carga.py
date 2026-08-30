@@ -3,7 +3,6 @@
 from django.core import mail
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from cuentas.models import Rol, Usuario
@@ -11,6 +10,7 @@ from cuentas.services import sincronizar_grupos_y_permisos
 from personas.carga import ArchivoIlegible, leer
 from personas.models import Acudiente, Estudiante
 from personas.services import cargar_estudiantes_y_acudientes, dar_de_alta_la_institucion
+from personas.validacion import ArchivoInvalido
 
 ENCABEZADO = (
     "documento_estudiante,nombre_estudiante,"
@@ -160,11 +160,17 @@ class CargaMasivaTest(TestCase):
     # --- Todo o nada -------------------------------------------------------
 
     def test_si_una_fila_falla_no_se_escribe_ninguna(self):
-        """La atomicidad que `HU-02` convierte en criterio (`TT-25`, `PR-13`)."""
+        """La atomicidad que `HU-02` convierte en criterio explícito (`TT-25`).
+
+        Desde `PR-13` el duplicado lo caza el validador **antes** de escribir, y
+        el error que sale es un reporte con fila y columna en vez de un
+        `IntegrityError` del motor. Lo que no cambia es lo que importa: no queda
+        ni una fila.
+        """
         duplicado = ARCHIVO + (
             "1001234501,Ana Sofía Otra Vez,99999999,Otro Acudiente,otro@example.com\n"
         )
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ArchivoInvalido):
             with self.captureOnCommitCallbacks(execute=True):
                 cargar_estudiantes_y_acudientes(actor=self.actor, archivo=archivo(duplicado))
 

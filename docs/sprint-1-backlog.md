@@ -166,9 +166,9 @@ El resto lo cubren `TT-11` y `TT-12`.
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-25` | Validador que acumula errores por fila y **no escribe nada si hay alguno** | Pedro | ☐ |
-| `TT-26` | Pantalla de reporte de errores de validación | Carlos | ☐ |
-| `TT-27` | Archivos de prueba: uno válido, uno con errores y uno mixto | Alejandro | ☐ |
+| `TT-25` | Validador que acumula errores por fila y **no escribe nada si hay alguno** | Pedro | ☑ |
+| `TT-26` | Pantalla de reporte de errores de validación | Carlos | ☑ |
+| `TT-27` | Archivos de prueba: uno válido, uno con errores y uno mixto | Alejandro | ☑ |
 
 El «todo o nada» de `TT-25` es el criterio de aceptación de la historia, no un detalle: define si la carga es atómica.
 
