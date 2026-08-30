@@ -96,6 +96,19 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
                 condition=models.Q(rol__in=[r.value for r in Rol]),
                 name="usuario_rol_valido",
             ),
+            # `TT-13`. Un `Usuario` creado sin pasar por el manager —el formulario
+            # de alta del admin, un script, una carga futura— queda con
+            # `password=""`, y Django considera **usable** una contraseña vacía:
+            # `is_password_usable("")` devuelve `True`. Esa cuenta reportaría
+            # tener contraseña definida y `reenviar_invitacion` se negaría a
+            # invitarla: una cuenta que nadie puede activar nunca.
+            #
+            # La impone la base y no un `if` (`DT-15`): un `if` cubre el camino
+            # que hoy conocemos, la restricción cubre los que aún no existen.
+            models.CheckConstraint(
+                condition=~models.Q(password=""),
+                name="usuario_contrasena_no_vacia",
+            ),
         ]
 
     def __str__(self):
