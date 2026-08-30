@@ -138,10 +138,16 @@ AUTH_PASSWORD_VALIDATORS = [
 # camino de alta que no pase por ella (DEC-3, INVD-1).
 AUTH_USER_MODEL = "cuentas.Usuario"
 
-# Cuánto vive el enlace de una invitación. Django lo usa para el mismo
-# mecanismo con el que se define la contraseña (DEC-3). Tres días es su valor
-# por defecto; una invitación que llega un viernes debe seguir sirviendo el
-# lunes. La caducidad definitiva la fija TT-18.
+# TT-18. Cuánto vive el enlace de una invitación, en segundos.
+#
+# Siete días: una invitación que llega un viernes tiene que seguir sirviendo el
+# lunes, y el titular puede estar de vacaciones. Más allá de una semana el
+# enlace deja de ser una invitación y pasa a ser una credencial olvidada en una
+# bandeja de entrada; si caduca, se reenvía desde la vista de cuentas (TT-17).
+#
+# El token es además **de un solo uso**: Django lo construye a partir del hash
+# de la contraseña actual, así que definirla lo invalida. Cambiar el correo o
+# iniciar sesión también. Las tres propiedades tienen caso de prueba.
 PASSWORD_RESET_TIMEOUT = env.int("DJANGO_CADUCIDAD_INVITACION", default=60 * 60 * 24 * 7)
 
 LOGIN_URL = "/admin/login/"

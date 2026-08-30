@@ -17,6 +17,7 @@ import string
 
 from django.core.management.base import BaseCommand
 
+from cuentas.services import sincronizar_grupos_y_permisos
 from personas.services import dar_de_alta_la_institucion
 
 # Centinela: distingue «no se pidió contraseña» de «se pidió sin dar valor».
@@ -85,6 +86,10 @@ class Command(BaseCommand):
         # seguro: sin correo, y con la clave impresa en el registro.
         if contrasena is GENERAR or contrasena == "":
             contrasena = generar_contrasena()
+
+        # La matriz [S11] primero: la cuenta institucional se crea ya dentro de
+        # su grupo, y no como un usuario suelto al que hay que arreglar después.
+        sincronizar_grupos_y_permisos()
 
         institucion, creada = dar_de_alta_la_institucion(
             nombre=opciones["nombre_institucion"],

@@ -11,7 +11,9 @@ Funciones, no clases.
 """
 
 from django.conf import settings
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.urls import reverse
 from django.utils.encoding import force_bytes
@@ -19,6 +21,10 @@ from django.utils.http import urlsafe_base64_encode
 
 from config.correo import enviar_correo
 from cuentas.models import Rol, Usuario
+from cuentas.permisos import PERMISOS_POR_ROL, nombre_del_grupo
+
+# Los dos roles que la institución da de alta (`HU-40`, `DEC-2`).
+ROLES_DE_PERSONAL = frozenset({Rol.CAJERO, Rol.ADMINISTRADOR})
 
 
 def construir_enlace_de_invitacion(usuario):
@@ -89,6 +95,8 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
         is_staff=accede_a_administracion,
     )
 
+    asignar_grupo_del_rol(usuario)
+
     if contrasena_de_desarrollo:
         usuario.set_password(contrasena_de_desarrollo)
         usuario.save(update_fields=["password"])
@@ -96,6 +104,87 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
 
     invitar(usuario)
     return usuario
+
+
+def asignar_grupo_del_rol(usuario):
+    """Pone al usuario en el grupo de su rol, y solo en ese.
+
+    Los permisos van al **grupo**, no al usuario: así cambiar lo que puede hacer
+    un rol es una operación, no recorrer las cuentas una a una.
+    """
+    grupo, _ = Group.objects.get_or_create(name=nombre_del_grupo(usuario.rol))
+    usuario.groups.set([grupo])
+    return grupo
+
+
+@transaction.atomic
+def sincronizar_grupos_y_permisos():
+    """Materializa la matriz `[S11]` en grupos de Django (`TT-15`).
+
+    **Idempotente y con poda.** No solo concede lo que la matriz dice: **retira
+    lo que la matriz no dice**. Sin la poda, un permiso concedido a mano —o
+    heredado de una versión anterior de la matriz— se quedaría para siempre, y
+    `INV-4` dejaría de estar donde se puede leer.
+
+    Devuelve `{nombre_del_grupo: [codenames]}` para poder informar.
+    """
+    resultado = {}
+
+    for rol, modelos in PERMISOS_POR_ROL.items():
+        grupo, _ = Group.objects.get_or_create(name=nombre_del_grupo(rol))
+
+        codenames = []
+        for etiqueta, acciones in modelos.items():
+            app, modelo = etiqueta.split(".")
+            for accion in acciones:
+                codenames.append((app, f"{accion}_{modelo}"))
+
+        permisos = list(
+            Permission.objects.filter(
+                content_type__app_label__in=[a for a, _ in codenames],
+                codename__in=[c for _, c in codenames],
+            )
+        ) if codenames else []
+
+        # `set` reemplaza: concede lo que falta y retira lo que sobra.
+        grupo.permissions.set(permisos)
+        resultado[grupo.name] = sorted(p.codename for p in permisos)
+
+    return resultado
+
+
+@transaction.atomic
+def crear_cuenta_de_personal(*, actor, email, rol, nombre=""):
+    """Da de alta a un cajero o administrador de la cafetería (`TT-16`, `HU-40`).
+
+    **Solo la institución educativa puede hacerlo** —primer criterio de
+    `HU-40`—, y solo sobre los dos roles de personal. El actor se recibe como
+    argumento: este servicio no sabe de HTTP y no lee `request.user` (`DT-15`).
+
+    Dispara la invitación de `HU-41`, así que quien crea la cuenta **no llega a
+    conocer nunca la clave del titular**.
+    """
+    if actor is None or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "Solo la institución educativa da de alta cuentas del personal (HU-40)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    if rol not in ROLES_DE_PERSONAL:
+        permitidos = ", ".join(sorted(ROLES_DE_PERSONAL))
+        raise ValueError(
+            f"«{rol}» no es un rol de personal de la cafetería. Se admiten: {permitidos}. "
+            "Las cuentas de acudiente nacen de la carga institucional (HU-01, HU-03)."
+        )
+
+    return crear_cuenta(
+        email=email,
+        rol=rol,
+        nombre=nombre,
+        # `INT-3` es el admin de Django (`DT-2`): el personal opera desde allí.
+        accede_a_administracion=True,
+    )
 
 
 @transaction.atomic
@@ -106,4 +195,13 @@ def reenviar_invitacion(usuario):
     invitar(usuario)
 
 
-__all__ = ["Rol", "crear_cuenta", "invitar", "reenviar_invitacion", "construir_enlace_de_invitacion"]
+__all__ = [
+    "Rol",
+    "asignar_grupo_del_rol",
+    "construir_enlace_de_invitacion",
+    "crear_cuenta",
+    "crear_cuenta_de_personal",
+    "invitar",
+    "reenviar_invitacion",
+    "sincronizar_grupos_y_permisos",
+]

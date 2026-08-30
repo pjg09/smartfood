@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **15** de 55 | **9** de 24 |
-| Pendientes | 40 | 15 |
+| **Finalizadas** | **19** de 55 | **10** de 24 |
+| Pendientes | 36 | 14 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 9 | 25 |
-| Carlos | 3 | 16 |
+| Pedro | 12 | 25 |
+| Carlos | 4 | 16 |
 | Alejandro | 1 | 9 |
 | Naomi | 2 | 5 |
 
@@ -109,7 +109,7 @@ este documento.
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☑ `#7` |
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☑ `#8` |
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☑ `#13` |
-| `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☐ |
+| `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☑ `#14` |
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☐ |
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☐ |
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☐ |
@@ -361,19 +361,25 @@ definida y no se habría podido invitar nunca. Lo impide ahora una restricción 
 | Responsables | Pedro y Carlos |
 | Historias | `HU-40`, `HU-41` |
 | Invariantes | base de **`INV-4`** |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#14) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-15` | Roles y permisos por modelo según la matriz `[S11]` | Pedro | ☐ |
-| `TT-16` | Servicio de alta de cuenta de personal que dispara la invitación | Pedro | ☐ |
-| `TT-17` ◆ | Vista de gestión de cuentas de personal para la institución | Carlos | ☐ |
-| `TT-18` | Token de invitación de un solo uso y con caducidad | Pedro | ☐ |
+| `TT-15` | Roles y permisos por modelo según la matriz `[S11]` | Pedro | ☑ |
+| `TT-16` | Servicio de alta de cuenta de personal que dispara la invitación | Pedro | ☑ |
+| `TT-17` ◆ | Vista de gestión de cuentas de personal para la institución | Carlos | ☑ |
+| `TT-18` | Token de invitación de un solo uso y con caducidad | Pedro | ☑ |
 
 `HU-41` aporta una sola tarea y el resto lo cubren `TT-11` y `TT-12`, ya integrados: no
 merece PR propio. `TT-15` es donde se decide `INV-4` —el cajero no tiene permiso de
 escritura sobre restricciones—, y se decide **en la capa de datos**, no ocultando un botón
 en el Sprint 3 (`DT-11`).
+
+La matriz `[S11]` quedó como **dato** en `cuentas/permisos.py`, no repartida en
+decoradores. La prueba que la sostiene no dice «el cajero no tiene tal permiso» sino
+**«ningún rol tiene un permiso que la matriz no declare»**: así vigila también los modelos
+que aún no existen. `TT-18` resultó ser casi verificación —el generador de tokens de
+Django ya es de un solo uso y caduca solo—, y así está declarado.
 
 ---
 
