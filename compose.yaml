@@ -54,7 +54,32 @@ services:
       retries: 10
       start_period: 10s
 
-# Los dos buckets y sus políticas NO se crean aquí: son TT-50, en PR-07.
+  # Crea el bucket y sale (TT-50). Sin esto, cada integrante tendría que entrar
+  # a la consola de MinIO a mano y el entorno dejaría de ser reproducible.
+  #
+  # UN bucket con dos prefijos, `privado/` y `publico/`, no dos buckets: los
+  # buckets de Railway son privados sin excepción y no existe modo público en
+  # ningún plan, así que la separación por política que preveía DT-18 no es
+  # realizable allí. Se replica aquí la misma topología, porque la razón de usar
+  # MinIO en local es la paridad de control de acceso (DT-18, DT-21).
+  minio-inicializar:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: smartfood-minio-inicializar
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartfood}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-smartfood-local}
+      BUCKET: ${S3_BUCKET:-smartfood}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD";
+      mc mb --ignore-existing local/$$BUCKET;
+      mc anonymous set none local/$$BUCKET;
+      echo 'Bucket' $$BUCKET 'listo, privado.';
+      "
+    restart: "no"
 
 volumes:
   postgres-datos:

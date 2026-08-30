@@ -196,6 +196,34 @@ TAILWIND_CLI_SRC_CSS = BASE_DIR / "estilos" / "fuente.css"
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"
 TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
 
+# --- Almacenamiento de objetos (TT-50, DT-18, DT-21) ----------------------
+
+# La base guarda la CLAVE del objeto, nunca el binario (DT-18).
+#
+# Dos almacenamientos lógicos, `privado` y `publico`, sobre UN bucket con dos
+# prefijos. No son dos buckets porque los de Railway son privados sin excepción
+# —no existe modo público en ningún plan— y el plan gratuito además permite uno
+# por proyecto (DT-21). Como en el código son dos alias distintos, pasar a dos
+# buckets el día que haga falta es cambiar estas rutas, no rediseñar nada.
+#
+# `publico` no significa accesible sin credenciales: significa «no sensible».
+# Las imágenes de producto se sirven a través de la aplicación con caché larga;
+# las fotografías de estudiantes, con URL firmada de caducidad corta.
+
+S3_ENDPOINT_URL = env("S3_ENDPOINT_URL", default="")
+S3_BUCKET = env("S3_BUCKET", default="smartfood")
+
+_s3_comun = {
+    "bucket_name": S3_BUCKET,
+    "endpoint_url": S3_ENDPOINT_URL,
+    "access_key": env("S3_ACCESS_KEY_ID", default=""),
+    "secret_key": env("S3_SECRET_ACCESS_KEY", default=""),
+    "region_name": env("S3_REGION", default="auto"),
+    "file_overwrite": False,
+    "querystring_auth": True,
+    "addressing_style": env("S3_ADDRESSING_STYLE", default="path"),
+}
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -205,11 +233,39 @@ STORAGES = {
         # que se puedan cachear indefinidamente sin servir uno viejo.
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+    # Fotografías de estudiantes (HU-57). URL firmada y de caducidad corta: la
+    # fotografía de un menor no puede quedar en una URL adivinable ni en una que
+    # siga sirviendo meses después (DEC-8, ALC-OUT-08).
+    "privado": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_s3_comun,
+            "location": "privado",
+            "querystring_expire": env.int("S3_CADUCIDAD_FIRMA", default=300),
+        },
+    },
+    # Imágenes de producto (HU-59). No son sensibles, pero el bucket sigue
+    # siendo privado: las sirve la aplicación (DT-21).
+    "publico": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            **_s3_comun,
+            "location": "publico",
+        },
+    },
 }
 
-# El almacenamiento de objetos para fotografías e imágenes (DT-18) se configura
-# en TT-50 y TT-55, en PR-07: `default` pasará a apuntar a los buckets. Hasta
-# entonces queda el sistema de archivos, que nadie usa todavía.
+# Cuánto puede cachear el navegador una imagen de producto. Son inmutables: la
+# clave del objeto cambia al reemplazar la imagen, así que no hay que invalidar
+# nada y el punto de venta (INT-2) no vuelve a descargar el catálogo entero en
+# cada pintado.
+CACHE_IMAGEN_PRODUCTO = env.int("DJANGO_CACHE_IMAGEN_PRODUCTO", default=60 * 60 * 24 * 30)
+
+# --- Canalización de subida (TT-55, DT-20) --------------------------------
+
+IMAGEN_TAMANO_MAXIMO_BYTES = env.int("IMAGEN_TAMANO_MAXIMO_BYTES", default=5 * 1024 * 1024)
+IMAGEN_LADO_MAXIMO = env.int("IMAGEN_LADO_MAXIMO", default=1600)
+IMAGEN_CALIDAD = env.int("IMAGEN_CALIDAD", default=82)
 
 # --- Seguridad en el entorno desplegado (TT-04) ---------------------------
 

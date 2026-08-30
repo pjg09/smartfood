@@ -82,12 +82,12 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **7** de 55 | **6** de 24 |
-| Pendientes | 48 | 18 |
+| **Finalizadas** | **9** de 55 | **7** de 24 |
+| Pendientes | 46 | 17 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 4 | 25 |
+| Pedro | 6 | 25 |
 | Carlos | 1 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 2 | 5 |
@@ -102,7 +102,7 @@ este documento.
 | `PR-04` | `TT-05` | Plantilla base | ☑ `#4` |
 | `PR-05` | `TT-06` | Correo | ☑ `#5` |
 | `PR-06` | `TT-07` | Definición de Terminado | ☑ `#6` |
-| `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☐ |
+| `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☑ `#7` |
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☐ |
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☐ |
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☐ |
@@ -271,16 +271,18 @@ ninguna** — incluidos los cinco PR ya integrados.
 | Rama | `feat/TT-50-almacenamiento-de-objetos` |
 | Responsable | Pedro |
 | Historia | — (habilitación) |
-| Invariantes | ninguna directamente; sostiene `DT-18` y `DT-20` |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna directamente; sostiene `DT-18`, `DT-20` y `DT-21` |
+| Estado | ☑ **Integrado en `main`** (#7) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | ☐ |
-| `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | ☐ |
+| `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | ☑ |
+| `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | ☑ |
 
 Los buckets sin canalización de subida no se prueban, y la canalización sin buckets no
-tiene dónde escribir. **La base guarda la clave del objeto, nunca el binario.** El PR debe
+tiene dónde escribir. Este PR registra además **`DT-21`**, que corrige `DT-18`: el
+proveedor no ofrece buckets públicos en ningún plan, así que es **un bucket con dos
+prefijos y ninguno público**. **La base guarda la clave del objeto, nunca el binario.** El PR debe
 demostrar que la URL del bucket privado va firmada y caduca: es una fotografía de un menor
 (`DEC-8`, `ALC-OUT-08`).
 

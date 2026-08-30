@@ -14,6 +14,8 @@ dependencies = [
     "gunicorn>=23.0",
     "whitenoise[brotli]>=6.9",
     "django-tailwind-cli>=4.8",
+    "django-storages[s3]>=1.14",
+    "pillow>=11",
 ]
 
 # La versión la publica semantic-release como etiqueta de Git; no se escribe en
