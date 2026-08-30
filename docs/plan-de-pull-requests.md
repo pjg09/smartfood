@@ -82,12 +82,12 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **1** de 55 | **1** de 24 |
-| Pendientes | 54 | 23 |
+| **Finalizadas** | **3** de 55 | **2** de 24 |
+| Pendientes | 52 | 22 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 25 |
+| Pedro | 2 | 25 |
 | Carlos | 0 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 1 | 5 |
@@ -97,7 +97,7 @@ este documento.
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
 | `PR-01` | `TT-01` | Gobernanza del repositorio | ☑ `#1` |
-| `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☐ |
+| `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
 | `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☐ |
 | `PR-04` | `TT-05` | Plantilla base | ☐ |
 | `PR-05` | `TT-06` | Correo | ☐ |
@@ -165,12 +165,12 @@ título del PR, la plantilla de PR y `./convenciones-de-git.md`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#2) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | ☐ |
-| `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | ☐ |
+| `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | ☑ |
+| `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | ☑ |
 
 Van juntas porque por separado no se demuestra nada: un `compose` sin aplicación no se
 prueba, y una aplicación sin base de datos no arranca. Incluye `.env.example`.

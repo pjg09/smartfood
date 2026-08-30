@@ -1,0 +1,61 @@
+# Entorno local reproducible (TT-02).
+#
+# Solo los servicios de infraestructura: PostgreSQL (DT-1) y MinIO (DT-18). La
+# aplicación Django corre en el host con uv, no en un contenedor: el equipo la
+# ejecuta y la depura a diario, y meterla aquí añade un ciclo de reconstrucción
+# a cada cambio sin comprar reproducibilidad —esa la da uv.lock—.
+#
+# Levantar:  docker compose up -d
+# Apagar:    docker compose down
+# Borrar todo, datos incluidos:  docker compose down -v
+
+name: smartfood
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    container_name: smartfood-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smartfood}
+      POSTGRES_USER: ${POSTGRES_USER:-smartfood}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartfood-local}
+      # Comparaciones y ordenación en español, que es el idioma de los datos.
+      POSTGRES_INITDB_ARGS: "--locale=es_CO.UTF-8 --encoding=UTF8"
+      LANG: es_CO.utf8
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartfood} -d ${POSTGRES_DB:-smartfood}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: smartfood-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartfood}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-smartfood-local}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"       # API S3
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"   # consola web
+    volumes:
+      - minio-datos:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+# Los dos buckets y sus políticas NO se crean aquí: son TT-50, en PR-07.
+
+volumes:
+  postgres-datos:
+  minio-datos:

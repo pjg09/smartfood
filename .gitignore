@@ -48,7 +48,9 @@ MANIFEST
 venv/
 ENV/
 env/
-.python-version
+
+# `.python-version` SÍ se versiona: con uv fija el intérprete de todo el equipo
+# y es parte de la reproducibilidad que pide TT-02.
 
 # Gestores de dependencias (el lockfile del gestor elegido SÍ se versiona)
 .pdm-python
