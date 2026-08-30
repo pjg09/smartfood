@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **13** de 55 | **8** de 24 |
-| Pendientes | 42 | 16 |
+| **Finalizadas** | **15** de 55 | **9** de 24 |
+| Pendientes | 40 | 15 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 8 | 25 |
+| Pedro | 9 | 25 |
 | Carlos | 3 | 16 |
-| Alejandro | 0 | 9 |
+| Alejandro | 1 | 9 |
 | Naomi | 2 | 5 |
 
 ### [S3.1] Estado de los 24 Pull Requests
@@ -108,7 +108,7 @@ este documento.
 | `PR-06` | `TT-07` | Definición de Terminado | ☑ `#6` |
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☑ `#7` |
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☑ `#8` |
-| `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☐ |
+| `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☑ `#13` |
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☐ |
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☐ |
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☐ |
@@ -335,15 +335,20 @@ después `HU-03` y `HU-41` (`DEC-3`).
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-05` |
 | Invariantes | **`INV-6`, `INVD-1`** |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#13) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-13` | Eliminar toda ruta de registro; el usuario se crea sin contraseña utilizable | Pedro | ☐ |
-| `TT-14` | Caso de prueba: intento de autorregistro desde cada una de las tres interfaces | Alejandro | ☐ |
+| `TT-13` | Eliminar toda ruta de registro; el usuario se crea sin contraseña utilizable | Pedro | ☑ |
+| `TT-14` | Caso de prueba: intento de autorregistro desde cada una de las tres interfaces | Alejandro | ☑ |
 
 La invariante y su prueba van en el mismo PR: la Definición de Terminado lo exige. Las
 rutas de registro **no existen**, no se ocultan (`DT-10`).
+
+`TT-13` cerró además un agujero que no era evidente: un `Usuario` creado **sin pasar por
+el manager** —el formulario de alta del admin— quedaba con la contraseña vacía, y Django
+considera **usable** una contraseña vacía. Esa cuenta habría reportado tener contraseña
+definida y no se habría podido invitar nunca. Lo impide ahora una restricción de la base.
 
 ---
 

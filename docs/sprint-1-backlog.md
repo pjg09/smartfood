@@ -121,8 +121,8 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-13` | Eliminar toda ruta de registro; el usuario se crea sin contraseña utilizable | Pedro | ☐ |
-| `TT-14` | Caso de prueba: intento de autorregistro desde cada una de las tres interfaces | Alejandro | ☐ |
+| `TT-13` | Eliminar toda ruta de registro; el usuario se crea sin contraseña utilizable | Pedro | ☑ |
+| `TT-14` | Caso de prueba: intento de autorregistro desde cada una de las tres interfaces | Alejandro | ☑ |
 
 Sostiene `INV-6` e `INVD-1`. Va temprano porque es una restricción del módulo de cuentas, no una verificación posterior.
 
