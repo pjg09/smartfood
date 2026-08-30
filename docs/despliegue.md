@@ -1,0 +1,168 @@
+# SmartFood — Topología de despliegue
+
+## [S0] Bloque de control del documento
+
+| Campo | Valor |
+|---|---|
+| doc_id | SMARTFOOD-TIC1-DESPLIEGUE |
+| titulo | Estado real del entorno de pruebas y cómo está montado |
+| tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable de la asignatura |
+| documentos_fuente | `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-20`, `DT-21`); `./convenciones-de-git.md`; `./definicion-de-terminado.md` (`DoD-4`) |
+| actualizado | 2026-08-30, tras `PR-08` |
+| idioma | es-CO |
+| version | 1.0 |
+
+### [S0.1] Qué es y qué no es
+
+Registra **lo que hay montado y por qué**, para que el contexto no viva solo en la
+cabeza de quien lo montó. Si mañana se pierde la cuenta, o alguien —persona o agente—
+llega al repositorio sin haber estado en las decisiones, esto es lo que necesita.
+
+**No es el entregable de documentación técnica** (`ENT-03`, `ENT-06`). Ese se redactará
+cuando se sepa qué forma tendrá y con qué criterio se evalúa. Esto es otra cosa: la
+libreta del entorno.
+
+**No decide nada.** Las decisiones están en `./decisiones-tecnicas.md` con su
+identificador. Aquí solo se registra el estado y se cita de dónde sale.
+
+---
+
+## [S1] Qué hay montado
+
+| Recurso | Valor |
+|---|---|
+| Proveedor | Railway — `DT-13` no lo fija, pero es el que se está usando |
+| Proyecto | `smartfood` · `cd700c34-a0ca-42b6-86fb-f77a476aa9a3` |
+| Entorno | `production` · `3b27f052-603b-4ceb-8afa-f1e304629753` |
+| Servicio web | `web` · `dba5b8ef-04bb-4007-85e1-1d1f2462adb9` |
+| Base de datos | `Postgres` · `3a0cd1dd-72fd-47d1-ae67-743e92f6c453` · PostgreSQL 18 gestionado |
+| Bucket | `smartfood-privado` · `923dff5f-36e5-4b12-a35d-8881c15dee9e` · región `ams` |
+| Región de los servicios | `europe-west4` — ver `[S2]` |
+| URL | https://web-production-3db23.up.railway.app |
+| Salud | `/salud/` — consulta la base, no solo el proceso |
+| Origen del código | `pjg09/smartfood`, rama `main`, despliegue automático en cada integración |
+| Plan | Gratuito — ver `[S2]` |
+
+### [S1.1] Cómo se construye y arranca
+
+En `railway.json`, versionado:
+
+| Fase | Comando |
+|---|---|
+| Construcción | `manage.py tailwind build && manage.py collectstatic --noinput` |
+| Antes de desplegar | `manage.py migrate --noinput` |
+| Arranque | `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2` |
+
+`migrate` va en `preDeployCommand` y no en el arranque: así se ejecuta **una vez** antes
+de que la versión nueva reciba tráfico, en lugar de una vez por réplica.
+
+> **`railway.json` está deprecado** en favor de `.railway/railway.ts`, y deja de
+> funcionar el **2026-12-01**. Se decidió **no migrar**: el Sprint 5 termina alrededor
+> del 2026-11-01, hay un mes de holgura, y `.railway/railway.ts` exige Node y el paquete
+> npm `railway` —comprobado: `railway config pull` falla con `ERR_MODULE_NOT_FOUND`—,
+> que es justo lo que este repositorio evita. La propia guía de Railway recomienda
+> `railway.json` para repositorios sin TypeScript. **Revisar si el proyecto se alarga
+> hasta diciembre**; `railway config migrate` traduce el fichero cuando haga falta.
+
+---
+
+## [S2] Las restricciones del plan gratuito, y qué obligan
+
+Tres, y ninguna es un detalle.
+
+### [S2.1] Los despliegues se bloquean 12 horas al día
+
+El plan gratuito **no despliega entre las 8:00 y las 20:00 hora local de cada región**.
+
+| Región | Ventana libre, en hora de Bogotá | Latencia aprox. |
+|---|---|---|
+| `us-east4` Virginia | 19:00 → 07:00 | ~70 ms |
+| `us-west2` Oregón | 22:00 → 10:00 | ~110 ms |
+| **`europe-west4` Ámsterdam** | **13:00 → 01:00** | ~130 ms |
+| `southeast-asia` Singapur | 07:00 → 19:00 | ~280 ms |
+
+**Por eso los servicios están en Ámsterdam y no en Virginia**, que estaría a la mitad de
+latencia: es la única región cuya ventana libre cubre la tarde de trabajo del equipo.
+
+> **Un merge a `main` antes de la 1 de la tarde hora de Bogotá falla el despliegue.**
+> Con el plan Hobby desaparece el bloqueo y los servicios vuelven a `us-east4`.
+
+### [S2.2] Un solo bucket por proyecto
+
+`DT-18` preveía dos. Además, **los buckets de Railway son privados sin excepción y no
+existe modo público en ningún plan**, así que la separación por política que preveía
+`DT-18` no es realizable ni pagando. `DT-21` lo resuelve: un bucket con los prefijos
+`privado/` y `publico/`, y dos almacenamientos lógicos en Django.
+
+### [S2.3] Los servicios se duermen
+
+`sleepApplication` está activo. **La primera petición tras un rato de inactividad
+devuelve `503`** mientras PostgreSQL despierta; la siguiente ya responde. Es tolerable y
+ahorra crédito.
+
+> **Antes de una demostración o una Sprint Review, abre `/salud/` un par de veces para
+> despertar la base.** Un `503` en mitad de una sustentación parece un sistema roto.
+
+---
+
+## [S3] Variables de entorno del servicio `web`
+
+Los **nombres**; los valores viven solo en Railway y **ninguno está en el repositorio**.
+
+| Variable | Para qué | Origen |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Firma de sesiones y tokens | Generada al montar el entorno |
+| `DJANGO_DEBUG` | `False` en el entorno desplegado | Fijada a mano |
+| `DATABASE_URL` | Conexión a PostgreSQL | Referencia `${{Postgres.DATABASE_URL}}` |
+| `EMAIL_URL` | SMTP de Resend | Clave de API de Resend |
+| `DJANGO_DEFAULT_FROM_EMAIL` · `DJANGO_EMAIL_TIMEOUT` | Remitente y tiempo límite | Fijadas a mano |
+| `S3_ENDPOINT_URL` · `S3_BUCKET` · `S3_ACCESS_KEY_ID` · `S3_SECRET_ACCESS_KEY` · `S3_REGION` · `S3_ADDRESSING_STYLE` | Bucket | `railway bucket credentials` |
+| `S3_CADUCIDAD_FIRMA` | Segundos que vive la URL firmada de una fotografía | Fijada a mano |
+| `RAILWAY_PUBLIC_DOMAIN` | El dominio del servicio | La inyecta Railway |
+
+`config/settings.py` lee `RAILWAY_PUBLIC_DOMAIN` para completar `ALLOWED_HOSTS`,
+`CSRF_TRUSTED_ORIGINS` y `URL_BASE`. En local no existe y se usan los valores por
+defecto.
+
+---
+
+## [S4] Trampas que ya costaron un rato
+
+Registradas para que no vuelvan a costarlo.
+
+| Trampa | Qué pasa | Cómo se resuelve |
+|---|---|---|
+| **`railway service scale` acumula** | Añade regiones en vez de sustituirlas; el servicio acaba con réplicas en tres y el despliegue falla por la región bloqueada | Poner a cero las que sobran: `us-east=0 us-west=0 eu-west=1` |
+| **La sonda de salud va por HTTP interno** | Sin la cabecera `X-Forwarded-Proto`, `SECURE_SSL_REDIRECT` le devuelve `301` y el despliegue se marca como fallido con la aplicación viva | `SECURE_REDIRECT_EXEMPT = [r"^salud/$"]` |
+| **La sonda manda `Host: healthcheck.railway.app`** | Sin estar en `ALLOWED_HOSTS`, responde `400` | Se añade junto al dominio público |
+| **La fuente de Tailwind dentro de `STATICFILES_DIRS`** | `collectstatic` la recoge y el almacenamiento con manifiesto falla al resolver su `@import` | La fuente vive en `estilos/`, fuera de `assets/` |
+| **La clave de API de Resend es de solo envío** | No permite consultar el estado de entrega | La confirmación de que un correo llegó es la bandeja, no la API |
+
+---
+
+## [S5] Cómo se reconstruiría desde cero
+
+Si hubiera que rehacer el entorno:
+
+1. Crear el proyecto y el PostgreSQL gestionado.
+2. Crear el servicio web y **conectarlo al repositorio, rama `main`** — esto ya dispara
+   el primer despliegue.
+3. Generar el dominio **antes** de desplegar, para que `RAILWAY_PUBLIC_DOMAIN` exista ya
+   durante la construcción.
+4. Mover ambos servicios a la región elegida, **poniendo a cero las demás** (`[S4]`).
+5. Crear el bucket en la misma región y volcar sus credenciales a las variables `S3_*`.
+6. Fijar el resto de variables de `[S3]`. `DJANGO_SECRET_KEY` se genera nueva.
+7. Sembrar la institución de referencia: `manage.py sembrar --email-institucion <buzón real>`.
+
+El paso 7 no es automático a propósito: dispara un correo, y eso no debe ocurrir en cada
+despliegue.
+
+---
+
+## [S6] Qué está pendiente de decidir
+
+- **Plan Hobby.** Resolvería el bloqueo horario y devolvería los servicios a `us-east4`.
+  Pedro lo consulta con el equipo.
+- **Rotación de la clave de Resend.** La clave pasó por una conversación con un agente.
+  Funciona; conviene rotarla si el historial se comparte.
+- **`railway.json` después del 2026-12-01.** Ver `[S1.1]`.

@@ -170,19 +170,32 @@ Las variables (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`) viven en Rai
 
 ---
 
-## Todavía no se ejecuta `migrate`
+## Cuentas: nadie se registra
 
-**Es deliberado, no un olvido.** `TT-09` declara el modelo de usuario propio, y Django
-exige fijar `AUTH_USER_MODEL` **antes de la primera migración**. Si alguien ejecuta
-`migrate` ahora, se crean las tablas de `django.contrib.auth` con el usuario por
-defecto y cambiarlo después obliga a **borrar la base de datos a los cuatro
-integrantes**.
+**No hay ninguna ruta de registro y no la habrá** (`INV-6`, `INVD-1`, `DT-10`). Toda
+cuenta nace de un alta hecha por otro actor, **sin contraseña utilizable**, más una
+invitación por correo con la que el titular define su propia clave (`DEC-3`). Quien crea
+la cuenta no llega a conocer nunca esa clave.
 
-Hasta que `PR-08` esté integrado, para comprobar que la base responde usa:
+La primera cuenta —la de la institución educativa— la crea el seed:
 
 ```bash
-uv run python manage.py check --database default
+uv run python manage.py migrate
+uv run python manage.py sembrar
 ```
+
+`sembrar` es **idempotente**: en la segunda pasada no duplica nada ni reenvía el correo.
+Con `EMAIL_URL=consolemail://` la invitación se imprime por la terminal; copia el enlace
+`/invitacion/…` y ábrelo en el navegador.
+
+Para dirigir la invitación a un buzón real al demostrar `HU-39`:
+
+```bash
+uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
+```
+
+Los datos que siembra son ficticios (`ALC-OUT-07`). El dominio `example.edu.co` está
+reservado por la RFC 2606 justamente para esto: nunca corresponde a un buzón real.
 
 ---
 
