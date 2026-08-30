@@ -57,6 +57,36 @@ Trabajando en plantillas, deja `tailwind watch` corriendo en una segunda termina
 
 ---
 
+## Correo
+
+Una sola variable describe el envío entero, igual que `DATABASE_URL` describe la base:
+
+| Entorno | `EMAIL_URL` | Efecto |
+|---|---|---|
+| Local | `consolemail://` | El correo se imprime por la consola |
+| Desplegado | `smtp+tls://resend:<clave>@smtp.resend.com:587` | Envío real por Resend |
+
+**En local nadie necesita credenciales**, y ningún correo sale de una máquina de
+desarrollo por accidente. Para probar la configuración:
+
+```bash
+uv run python manage.py sendtestemail tu-correo@ejemplo.com
+```
+
+Todo envío pasa por `config/correo.py`, **nunca por `send_mail` directamente**. Ese
+módulo difiere el correo con `transaction.on_commit`: los servicios escriben dentro de
+`transaction.atomic()` (`DT-15`), y un correo enviado dentro de la transacción sale
+aunque esta se deshaga. En `HU-03` eso sería invitar a un acudiente cuya carga se
+revirtió. Un correo no se puede deshacer; una fila sí.
+
+> **Límite conocido del prototipo.** Resend en plan gratuito, sin dominio verificado,
+> **solo entrega a la dirección del titular de la cuenta**. `HU-03` envía una invitación
+> por acudiente cargado: en el entorno de pruebas llegarán todas a un único buzón. Es
+> una limitación aceptada, no un defecto — los datos son ficticios (`ALC-OUT-07`) y
+> ningún acudiente real existe.
+
+---
+
 ## Dónde va cada cosa del frontend
 
 Servidor renderiza, HTMX actualiza fragmentos, Tailwind compila con su binario autónomo.
