@@ -130,9 +130,9 @@ Sostiene `INV-6` e `INVD-1`. Va temprano porque es una restricción del módulo 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-15` | Roles y permisos por modelo según la matriz `[S11]` | Pedro | ☐ |
-| `TT-16` | Servicio de alta de cuenta de personal que dispara la invitación | Pedro | ☐ |
-| `TT-17` ◆ | Vista de gestión de cuentas de personal para la institución | Carlos | ☐ |
+| `TT-15` | Roles y permisos por modelo según la matriz `[S11]` | Pedro | ☑ |
+| `TT-16` | Servicio de alta de cuenta de personal que dispara la invitación | Pedro | ☑ |
+| `TT-17` ◆ | Vista de gestión de cuentas de personal para la institución | Carlos | ☑ |
 
 `TT-15` es la base de `INV-4`: el cajero no debe tener permiso de escritura sobre restricciones, y eso se decide aquí, no ocultando un botón en el Sprint 3.
 
@@ -140,7 +140,7 @@ Sostiene `INV-6` e `INVD-1`. Va temprano porque es una restricción del módulo 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-18` | Token de invitación de un solo uso y con caducidad | Pedro | ☐ |
+| `TT-18` | Token de invitación de un solo uso y con caducidad | Pedro | ☑ |
 
 El resto lo cubren `TT-11` y `TT-12`.
 

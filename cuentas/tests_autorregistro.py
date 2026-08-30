@@ -71,25 +71,29 @@ class NoHayCaminoDeAutorregistroTest(TestCase):
             with self.subTest(ruta=ruta):
                 self.assertEqual(self.client.get(ruta).status_code, 404)
 
-    def test_int_3_el_admin_no_ofrece_alta_de_cuentas(self):
+    def test_int_3_nadie_se_da_de_alta_a_si_mismo(self):
         """`INT-3` es el admin de Django (`DT-2`).
 
-        Su formulario de alta no pasa por `cuentas.services`, así que crearía la
-        cuenta sin disparar la invitación. Hasta que `TT-16` construya el
-        servicio de alta de personal, el alta está cerrada.
+        Desde `TT-17` el alta de cuentas **sí existe** aquí, pero eso no es
+        autorregistro: la hace la institución educativa sobre otra persona, y
+        pasa por `cuentas.services` para que dispare la invitación (`HU-40`).
+        Autorregistrarse sería crear la cuenta propia, y para eso hay que estar
+        dentro; para estar dentro hace falta una cuenta.
+
+        Lo que esta prueba fija es que **nadie del personal** —aun teniendo
+        acceso a la administración— puede dar de alta cuentas.
         """
-        institucion = Usuario.objects.crear_usuario(
-            email="institucion@example.com", rol=Rol.INSTITUCION,
-            is_staff=True, is_superuser=True,
+        cajero = Usuario.objects.crear_usuario(
+            email="cajero@example.com", rol=Rol.CAJERO, is_staff=True,
         )
-        institucion.set_password("clave-de-prueba-2026")
-        institucion.save(update_fields=["password"])
-        self.client.force_login(institucion)
+        cajero.set_password("clave-de-prueba-2026")
+        cajero.save(update_fields=["password"])
+        self.client.force_login(cajero)
 
         respuesta = self.client.get("/admin/cuentas/usuario/add/")
         self.assertEqual(
             respuesta.status_code, 403,
-            "el admin no debe ofrecer alta de cuentas hasta TT-16",
+            "solo la institución educativa da de alta cuentas (HU-40, [S11])",
         )
 
     def test_un_anonimo_no_alcanza_el_admin(self):
