@@ -72,7 +72,7 @@ def invitar(usuario):
 
 @transaction.atomic
 def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
-                 contrasena_de_desarrollo=None):
+                 contrasena_de_desarrollo=None, enviar_invitacion=True):
     """Crea una cuenta **sin contraseña utilizable** y la invita.
 
     `INV-6` e `INVD-1`: ninguna cuenta nace de un autorregistro, y quien la crea
@@ -102,7 +102,13 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
         usuario.save(update_fields=["password"])
         return usuario
 
-    invitar(usuario)
+    # `DEC-9`: la carga masiva **genera** la invitación pero no la entrega. El
+    # token no se almacena, se deriva del usuario, así que «generarla» es que el
+    # enlace se pueda construir cuando haga falta —y se puede—. Lo que no se
+    # hace es enviar correo a direcciones que no son de nadie.
+    if enviar_invitacion:
+        invitar(usuario)
+
     return usuario
 
 

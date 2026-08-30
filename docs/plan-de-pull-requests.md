@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **21** de 55 | **11** de 24 |
-| Pendientes | 34 | 13 |
+| **Finalizadas** | **25** de 55 | **12** de 24 |
+| Pendientes | 30 | 12 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 13 | 25 |
-| Carlos | 5 | 16 |
-| Alejandro | 1 | 9 |
+| Pedro | 15 | 25 |
+| Carlos | 6 | 16 |
+| Alejandro | 2 | 9 |
 | Naomi | 2 | 5 |
 
 ### [S3.1] Estado de los 24 Pull Requests
@@ -111,7 +111,7 @@ este documento.
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☑ `#13` |
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☑ `#14` |
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☑ `#15` |
-| `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☐ |
+| `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☑ `#16` |
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☐ |
 | `PR-14` | `TT-28`–`TT-29` | `HU-03` + `HU-04` | ☐ |
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☐ |
@@ -418,15 +418,15 @@ borrar la cuenta, el historial que la historia exige conservar desaparecería co
 | Rama | `feat/TT-21-carga-masiva` |
 | Responsables | Pedro, Alejandro y Carlos |
 | Historia | `HU-01` |
-| Invariantes | ninguna directamente |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna directamente; `INV-6` e `INVD-1` en las cuentas que crea |
+| Estado | ☑ **Integrado en `main`** (#16) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-21` | Modelos de estudiante y acudiente, con vínculo de uno a varios (`ALC-IN-04`) | Pedro | ☐ |
-| `TT-22` | Definición del formato del archivo: columnas, tipos y obligatoriedad | Alejandro | ☐ |
-| `TT-23` | Lector del archivo y servicio de carga dentro de una transacción | Pedro | ☐ |
-| `TT-24` | Pantalla de carga con selección de archivo y resultado | Carlos | ☐ |
+| `TT-21` | Modelos de estudiante y acudiente, con vínculo de uno a varios (`ALC-IN-04`) | Pedro | ☑ |
+| `TT-22` | Definición del formato del archivo: columnas, tipos y obligatoriedad | Alejandro | ☑ |
+| `TT-23` | Lector del archivo y servicio de carga dentro de una transacción | Pedro | ☑ |
+| `TT-24` | Pantalla de carga con selección de archivo y resultado | Carlos | ☑ |
 
 El PR más cargado del sprint junto con `PR-21`. `TT-22` es análisis y no depende de nada:
 Alejandro puede tenerlo escrito antes de que Pedro llegue a `TT-23`, aunque se integren en

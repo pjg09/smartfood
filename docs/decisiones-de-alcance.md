@@ -14,10 +14,10 @@
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 10 (`DEC-1` … `DEC-10`) |
+| decisiones | 11 (`DEC-1` … `DEC-11`) |
 | invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -216,6 +216,31 @@ Lo que esta decisión añade es un segundo camino, para el uso diario, que **no*
 
 ---
 
+### `[DEC-11]` Las contraseñas del prototipo se asignan; el flujo de invitación se demuestra aparte
+
+*No cierra ningún `VAC`. Decisión posterior, tomada al construir la carga masiva (`TT-23`). **Amplía `DEC-10`**, que se limitaba a la cuenta institucional.*
+
+**Decidido:**
+
+- **Todas** las cuentas del prototipo —institución, personal y acudientes— se pueden sembrar con una **contraseña asignada por el equipo**, sin activación por correo.
+- Es una **opción explícita y con nombre** de cada servicio de alta, no su comportamiento por defecto. Sin ella, todo sigue igual: la cuenta nace sin contraseña utilizable y la invitación se genera.
+- **El flujo de invitación se conserva entero y se demuestra aparte**, dirigido a un buzón real. Es la demostración que se le enseña a la docente.
+- Ninguna contraseña de este tipo se escribe en el repositorio. Las locales viven en `./desarrollo.md` porque solo sirven contra `localhost`; el resto, fuera.
+
+**Justificación del equipo:** el prototipo se opera y se demuestra a diario, y su alcance excluye el despliegue en una institución real (`ALC-OUT-06`). Los acudientes de las pruebas no existen: sus direcciones son ficticias por obligación legal (`ALC-OUT-07`, `ALC-OUT-08`) y `DEC-9` ya estableció que la carga masiva no entrega correo, porque cada rebote degrada la reputación del remitente hasta que el proveedor suspende la cuenta.
+
+Con las invitaciones sin entregar y sin contraseña asignada, **nadie podría entrar como acudiente**: `HU-04`, `HU-11` y todo lo que el acudiente hace en los sprints siguientes quedarían sin forma de probarse. La alternativa —extraer a mano el enlace de invitación de cada cuenta— es fricción sin beneficio sobre datos que nadie va a leer.
+
+**Lo que esto cuesta, dicho claro.** `DEC-10` advertía exactamente contra esto:
+
+> *«Si esta excepción se extiende alguna vez a las cuentas de personal o de acudiente, deja de ser una excepción acotada y `HU-41` y `HU-03` dejan de cumplirse: su valor es precisamente que quien crea la cuenta no llega a conocer la clave.»*
+
+La advertencia era correcta y se cumple. En el camino con contraseña asignada, **quien crea la cuenta sí conoce la clave**, y eso contradice el tercer criterio de `HU-41`. Lo que salva a las historias es que ese camino **no es el único ni el que está por defecto**: `HU-03` y `HU-41` siguen siendo ciertas y demostrables por el camino de invitación, que no se retira.
+
+> **Lo que NO se decide aquí.** En una implementación real esta opción no existe: la contraseña la define siempre el titular. Debe declararse como limitación identificada del prototipo en el informe final (`ENT-06`), junto a `DEC-9` y `DEC-10`.
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -247,6 +272,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-7` | Baja lógica de estudiante retirado con saldo congelado |
 | `DEC-9` | **No añade alcance: lo recorta.** Retira la entrega por correo de las invitaciones de la carga masiva |
 | `DEC-10` | **No añade alcance.** Añade un camino alterno de seed para la cuenta institucional, fuera del que describe `HU-39` |
+| `DEC-11` | **No añade alcance.** Extiende ese camino alterno a todas las cuentas del prototipo |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -268,6 +294,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (decisión posterior) Fotografías e imágenes | **Decidido** | `DEC-8` | `HU-57`, `HU-58`, `HU-59` |
 | — (decisión posterior) Entrega de las invitaciones de la carga | **Decidido** | `DEC-9` | `HU-03` (criterio modificado) |
 | — (decisión posterior) Seed de la cuenta institucional | **Decidido** | `DEC-10` | `HU-39` (sin cambios en el texto) |
+| — (decisión posterior) Contraseñas asignadas en el prototipo | **Decidido** | `DEC-11` | `HU-03`, `HU-41` (sin cambios en el texto) |
 
 ---
 
