@@ -1,0 +1,39 @@
+name: Convención de commits
+
+# Con main protegido y squash merge, el mensaje que analiza semantic-release es
+# el TÍTULO DEL PR, no los commits de la rama. Si el título no cumple la
+# convención, el versionado no se dispara. Esto lo impide (TT-01).
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  titulo:
+    name: Validar el título del PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comprobar formato Conventional Commits
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+          PATRON='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?!?: .+'
+          if [[ ! "$TITULO" =~ $PATRON ]]; then
+            echo "::error::Título inválido: «$TITULO»"
+            echo ""
+            echo "Formato esperado:  tipo(ámbito): resumen en imperativo"
+            echo "Tipos válidos:     feat fix docs style refactor perf test build ci chore revert"
+            echo "Ejemplo:           feat(billetera): registrar la recarga como movimiento"
+            echo ""
+            echo "Ver docs/convenciones-de-git.md"
+            exit 1
+          fi
+          RESUMEN="${TITULO#*: }"
+          if [[ ${#RESUMEN} -gt 72 ]]; then
+            echo "::error::El resumen supera 72 caracteres (${#RESUMEN}). Acórtalo."
+            exit 1
+          fi
+          echo "Título válido: $TITULO"
