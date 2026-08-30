@@ -24,14 +24,24 @@ Ver docs/convenciones-de-git.md
 | Historias | `HU-nn` |
 | Invariantes que sostiene | `INV-n` / `INVD-n` — o «ninguna» |
 
-## Definición de Terminado `[S2]`
+## Definición de Terminado
 
-- [ ] Los criterios de aceptación de cada `HU-nn` se cumplen y se verificaron manualmente.
-- [ ] No rompe nada de lo ya construido.
-- [ ] Migraciones escritas y aplicadas en el entorno de pruebas.
-- [ ] Demostrable en el entorno desplegado (`ENT-01`), no solo en local.
-- [ ] Cada invariante que sostiene tiene un caso de prueba que la ejercita.
-- [ ] Todos los datos son ficticios (`ALC-OUT-07`, Ley 1581 de 2012).
+<!--
+Marca la casilla solo si lo comprobaste. Si un criterio NO aplica, di POR QUÉ en su
+línea; «no aplica» a secas es lo que deja pasar el caso en el que sí aplicaba.
+Detalle en docs/definicion-de-terminado.md
+-->
+
+- [ ] **`DoD-1`** Cierra `HU-nn`: sus criterios de aceptación se cumplen, verificados uno a uno.
+      <!-- Si no cierra historias: qué habilita, y cómo se comprueba que lo habilita. -->
+- [ ] **`DoD-2`** Integrado por PR y no rompe nada de lo ya construido. *(Siempre aplica.)*
+- [ ] **`DoD-3`** Migraciones escritas, aplicadas, y `makemigrations --check` sin pendientes.
+      <!-- No aplica si el PR no toca modelos. Dilo. -->
+- [ ] **`DoD-4`** Demostrable en `ENT-01`, no solo en local. *(Siempre aplica.)*
+      <!-- Si no tiene pantalla, demuéstralo por su efecto observable allí. -->
+- [ ] **`DoD-5`** Cada invariante que sostiene tiene un caso de prueba que **falla si se rompe**.
+      <!-- No aplica si no sostiene ninguna. Compruébalo antes de decirlo. -->
+- [ ] **`DoD-6`** Todos los datos son ficticios. *(Siempre aplica — `ALC-OUT-07`, Ley 1581 de 2012.)*
 
 ## Alcance
 

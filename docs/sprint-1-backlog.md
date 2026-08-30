@@ -18,7 +18,7 @@
 | tareas | 55 (`TT-01` … `TT-55`) |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -40,7 +40,7 @@
 | ID | Sección | Contenido |
 |---|---|---|
 | S1 | Objetivo del Sprint | `COM-2` |
-| S2 | Definición de Terminado | `COM-3` |
+| S2 | Definición de Terminado | Puntero a `./definicion-de-terminado.md` (`COM-3`) |
 | S3 | Tareas de habilitación | `TT-01` … `TT-08`, sin historia asociada |
 | S4 | Tareas por historia | `TT-09` … `TT-46` |
 | S5 | Tareas de gestión del Sprint | `TT-47` … `TT-49` |
@@ -61,14 +61,22 @@ Al cerrar el Sprint 1 existe **con quién** operar (cuentas), **sobre quién** o
 
 ## [S2] Definición de Terminado `[COM-3]`
 
-Una historia está terminada cuando cumple **todo** lo siguiente. Esta definición aplica a los cinco sprints y no se relaja durante el semestre.
+**Vive en `./definicion-de-terminado.md`** (`TT-07`). Aquí solo queda el puntero: es el
+compromiso del Incremento y gobierna los cinco sprints, así que no puede vivir dentro
+del artefacto de uno solo —el backlog del Sprint 2 tendría que duplicarlo, y entonces
+divergen—.
 
-- Todos sus criterios de aceptación se cumplen y se han verificado manualmente.
-- El código está integrado en la rama principal, sin romper lo ya construido.
-- Las migraciones de base de datos están escritas y aplicadas en el entorno de pruebas.
-- La funcionalidad se puede demostrar en el entorno desplegado (`ENT-01`), no solo en local.
-- Si la historia sostiene una invariante (`INV-n` o `INVD-n`), existe un caso de prueba que la ejercita.
-- Los datos usados son ficticios (`ALC-OUT-07`).
+| | Criterio | Cuándo aplica |
+|---|---|---|
+| `DoD-1` | Los criterios de aceptación se cumplen | Si cierra historias; si no, declara qué habilita |
+| `DoD-2` | Está integrado en la rama principal | **Siempre** |
+| `DoD-3` | Las migraciones están escritas y aplicadas | Si cambia el esquema |
+| `DoD-4` | Se demuestra en el entorno desplegado (`ENT-01`) | **Siempre** |
+| `DoD-5` | Cada invariante que sostiene tiene su prueba | Si sostiene alguna |
+| `DoD-6` | Todos los datos son ficticios (`ALC-OUT-07`) | **Siempre** |
+
+Un criterio que no aplica **se declara**, no se salta. El detalle de cada uno, y qué
+cambió respecto de la redacción original, están en el documento.
 
 ---
 
@@ -84,7 +92,7 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 | `TT-04` | Despliegue en entorno de pruebas con base de datos gestionada | Pedro | `ENT-01`, Definición de Terminado | ☑ |
 | `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | `INT-1`, `INT-3` | ☑ |
 | `TT-06` | Configuración del envío de correo | Pedro | `HU-39`, `HU-03`, `HU-41` | ☑ |
-| `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | Todo | ☐ |
+| `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | Todo | ☑ |
 | `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | `HU-57`, `HU-59` | ☐ |
 | `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | `HU-57`, `HU-59` | ☐ |
 
