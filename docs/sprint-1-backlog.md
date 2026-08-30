@@ -148,8 +148,8 @@ El resto lo cubren `TT-11` y `TT-12`.
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-19` | Estado de la cuenta y bloqueo del inicio de sesión si está inactiva | Pedro | ☐ |
-| `TT-20` ◆ | Acciones de desactivar y reactivar en la vista de cuentas | Carlos | ☐ |
+| `TT-19` | Estado de la cuenta y bloqueo del inicio de sesión si está inactiva | Pedro | ☑ |
+| `TT-20` ◆ | Acciones de desactivar y reactivar en la vista de cuentas | Carlos | ☑ |
 
 ### `[HU-01]` Carga masiva de estudiantes y acudientes
 

@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **19** de 55 | **10** de 24 |
-| Pendientes | 36 | 14 |
+| **Finalizadas** | **21** de 55 | **11** de 24 |
+| Pendientes | 34 | 13 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 12 | 25 |
-| Carlos | 4 | 16 |
+| Pedro | 13 | 25 |
+| Carlos | 5 | 16 |
 | Alejandro | 1 | 9 |
 | Naomi | 2 | 5 |
 
@@ -110,7 +110,7 @@ este documento.
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☑ `#8` |
 | `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☑ `#13` |
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☑ `#14` |
-| `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☐ |
+| `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☑ `#15` |
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☐ |
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☐ |
 | `PR-14` | `TT-28`–`TT-29` | `HU-03` + `HU-04` | ☐ |
@@ -392,15 +392,21 @@ Django ya es de un solo uso y caduca solo—, y así está declarado.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-42` |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#15) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-19` | Estado de la cuenta y bloqueo del inicio de sesión si está inactiva | Pedro | ☐ |
-| `TT-20` ◆ | Acciones de desactivar y reactivar en la vista de cuentas | Carlos | ☐ |
+| `TT-19` | Estado de la cuenta y bloqueo del inicio de sesión si está inactiva | Pedro | ☑ |
+| `TT-20` ◆ | Acciones de desactivar y reactivar en la vista de cuentas | Carlos | ☑ |
 
 Candidato número uno a moverse al Sprint 2 si el sprint desborda: `ANEXO A` del sprint
 backlog. Ninguna historia posterior depende de él.
+
+Los tres criterios de `HU-42` son afirmaciones distintas y se prueban por separado. La
+segunda —«ni **operar**»— es la que se suele dar por supuesta: que alguien no pueda
+**iniciar** sesión no dice nada de la sesión que ya tenía abierta cuando lo desactivaron.
+Y para que la tercera se cumpla, el admin **deja de ofrecer borrado**: si se pudiera
+borrar la cuenta, el historial que la historia exige conservar desaparecería con ella.
 
 ---
 
