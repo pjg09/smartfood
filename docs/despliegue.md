@@ -50,12 +50,18 @@ En `railway.json`, versionado:
 | Fase | Comando |
 |---|---|
 | Construcción | `manage.py tailwind build && manage.py collectstatic --noinput` |
-| Antes de desplegar | `manage.py migrate --noinput` |
-| Antes de desplegar | `manage.py sembrar --contrasena-de-desarrollo "$SEED_CONTRASENA_INSTITUCION"` |
-| Arranque | `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2` |
+| Arranque | `migrate` → `sembrar` → `gunicorn` |
 
-Ambos van en `preDeployCommand` y no en el arranque: se ejecutan **una vez** antes de que
-la versión nueva reciba tráfico, en lugar de una vez por réplica.
+> **`preDeployCommand` de `railway.json` se ignora en silencio.** Se probó: el plan que
+> imprime Railpack en el registro de construcción muestra los pasos `install`, `build` y
+> `Deploy`, **y ninguno de pre-despliegue**. `buildCommand` y `startCommand` del mismo
+> fichero sí se aplican. El síntoma fue que las migraciones no se ejecutaron nunca y
+> cualquier consulta al ORM devolvía 500, con el despliegue marcado como correcto.
+>
+> Como ajuste del servicio —fuera del repositorio— sí funciona, pero eso deja la
+> configuración fuera de control de versiones. Por eso `migrate` y `sembrar` van
+> encadenados en el `startCommand`, que sí se lee del fichero. Con una sola réplica no
+> hay diferencia práctica; si algún día hubiera varias, habría que volver a mirarlo.
 
 **El entorno se siembra solo.** El seed es idempotente y con contraseña **no envía
 correo** (`DEC-10`), así que puede correr en cada despliegue: si hubiera que recrear el
@@ -130,6 +136,7 @@ Los **nombres**; los valores viven solo en Railway y **ninguno está en el repos
 | `S3_ENDPOINT_URL` · `S3_BUCKET` · `S3_ACCESS_KEY_ID` · `S3_SECRET_ACCESS_KEY` · `S3_REGION` · `S3_ADDRESSING_STYLE` | Bucket | `railway bucket credentials` |
 | `S3_CADUCIDAD_FIRMA` | Segundos que vive la URL firmada de una fotografía | Fijada a mano |
 | `SEED_CONTRASENA_INSTITUCION` | Contraseña de la cuenta institucional (`DEC-10`) | Generada al sembrar |
+| `DJANGO_NIVEL_DE_REGISTRO` | Nivel del registro raíz; `INFO` por defecto | Opcional |
 | `RAILWAY_PUBLIC_DOMAIN` | El dominio del servicio | La inyecta Railway |
 
 `config/settings.py` lee `RAILWAY_PUBLIC_DOMAIN` para completar `ALLOWED_HOSTS`,
@@ -144,6 +151,8 @@ Registradas para que no vuelvan a costarlo.
 
 | Trampa | Qué pasa | Cómo se resuelve |
 |---|---|---|
+| **`preDeployCommand` de `railway.json` se ignora** | Las migraciones no corren, el despliegue se marca correcto y toda consulta al ORM da 500 | Encadenarlo en el `startCommand` |
+| **Un 500 no deja rastro** | Sin `LOGGING`, Django manda los errores a `mail_admins`; con `ADMINS` vacío se descartan en silencio | `LOGGING` con salida estándar, en `config/settings.py` |
 | **`railway service scale` acumula** | Añade regiones en vez de sustituirlas; el servicio acaba con réplicas en tres y el despliegue falla por la región bloqueada | Poner a cero las que sobran: `us-east=0 us-west=0 eu-west=1` |
 | **La sonda de salud va por HTTP interno** | Sin la cabecera `X-Forwarded-Proto`, `SECURE_SSL_REDIRECT` le devuelve `301` y el despliegue se marca como fallido con la aplicación viva | `SECURE_REDIRECT_EXEMPT = [r"^salud/$"]` |
 | **La sonda manda `Host: healthcheck.railway.app`** | Sin estar en `ALLOWED_HOSTS`, responde `400` | Se añade junto al dominio público |
