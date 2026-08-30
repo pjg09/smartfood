@@ -15,6 +15,8 @@ from cuentas.models import Rol, Usuario
 from cuentas.services import (
     ROLES_DE_PERSONAL,
     crear_cuenta_de_personal,
+    desactivar_cuenta,
+    reactivar_cuenta,
     reenviar_invitacion,
 )
 
@@ -47,7 +49,7 @@ class UsuarioAdmin(admin.ModelAdmin):
     # invitación y nadie más llega a conocerla (`DEC-3`, `INVD-1`).
     exclude = ["password"]
     readonly_fields = ["id", "creado_en", "last_login"]
-    actions = ["accion_reenviar_invitacion"]
+    actions = ["accion_desactivar", "accion_reactivar", "accion_reenviar_invitacion"]
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is None:
@@ -95,6 +97,50 @@ class UsuarioAdmin(admin.ModelAdmin):
             "define su contraseña desde ahí, nadie más la conocerá.",
             messages.SUCCESS,
         )
+
+    def has_delete_permission(self, request, obj=None):
+        """No se borran cuentas. `TT-19`, tercer criterio de `HU-42`.
+
+        La historia exige que **el historial de operaciones de esa cuenta se
+        conserve**: quién cobró qué venta sigue siendo cierto después de que esa
+        persona deje de trabajar allí. Borrar la fila destruiría esa
+        trazabilidad. El camino sancionado es desactivar, que es baja lógica.
+        """
+        return False
+
+    def _aplicar(self, request, queryset, operacion, hecho, ya_estaba):
+        """Recorre la selección aplicando un servicio y resume el resultado.
+
+        El admin es una vista: delega, no escribe (`DT-15`).
+        """
+        aplicadas, sin_cambio, rechazadas = 0, 0, []
+        for usuario in queryset:
+            estaba = usuario.is_active
+            try:
+                operacion(actor=request.user, usuario=usuario)
+            except (PermissionDenied, ValueError) as error:
+                rechazadas.append(f"{usuario.email}: {error}")
+                continue
+            usuario.refresh_from_db()
+            if usuario.is_active != estaba:
+                aplicadas += 1
+            else:
+                sin_cambio += 1
+
+        if aplicadas:
+            self.message_user(request, f"{hecho}: {aplicadas}.", messages.SUCCESS)
+        if sin_cambio:
+            self.message_user(request, f"Sin cambios, {ya_estaba}: {sin_cambio}.", messages.INFO)
+        for motivo in rechazadas:
+            self.message_user(request, motivo, messages.ERROR)
+
+    @admin.action(description="Desactivar la cuenta (revoca el acceso, conserva el historial)")
+    def accion_desactivar(self, request, queryset):
+        self._aplicar(request, queryset, desactivar_cuenta, "Cuentas desactivadas", "ya estaban desactivadas")
+
+    @admin.action(description="Reactivar la cuenta")
+    def accion_reactivar(self, request, queryset):
+        self._aplicar(request, queryset, reactivar_cuenta, "Cuentas reactivadas", "ya estaban activas")
 
     @admin.action(description="Reenviar la invitación")
     def accion_reenviar_invitacion(self, request, queryset):

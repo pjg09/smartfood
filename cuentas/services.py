@@ -187,6 +187,70 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre=""):
     )
 
 
+def _comprobar_actor_institucional(actor, verbo):
+    """La institución educativa, y activa. `[S11]`, `DEC-2`, `HU-42`."""
+    if actor is None or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            f"Solo la institución educativa puede {verbo} cuentas del personal (HU-42)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+
+def _comprobar_es_personal(usuario):
+    if usuario.rol not in ROLES_DE_PERSONAL:
+        raise ValueError(
+            f"«{usuario.rol}» no es personal de la cafetería. `HU-42` cubre a cajeros y "
+            "administradores; la baja del estudiante es HU-51 y tiene sus propias reglas."
+        )
+
+
+@transaction.atomic
+def desactivar_cuenta(*, actor, usuario):
+    """Revoca el acceso sin borrar nada (`TT-19`, `HU-42`).
+
+    **Baja lógica, no borrado.** El tercer criterio de `HU-42` exige que el
+    historial de operaciones de la cuenta se conserve: quién cobró qué venta
+    sigue siendo cierto después de que esa persona deje de trabajar allí.
+    Borrar la fila destruiría esa trazabilidad, que es lo que `OBJ-E2` pide del
+    sistema.
+
+    No hace falta cerrar sesiones a mano: el backend de autenticación de Django
+    rechaza a los usuarios inactivos también al resolver la sesión, así que la
+    sesión abierta deja de identificar a nadie en la siguiente petición. Hay
+    caso de prueba, porque «no puede iniciar sesión» y «no puede operar» son dos
+    afirmaciones distintas y `HU-42` pide las dos.
+    """
+    _comprobar_actor_institucional(actor, "desactivar")
+    _comprobar_es_personal(usuario)
+
+    if usuario.pk == actor.pk:
+        raise PermissionDenied(
+            "La institución no puede desactivarse a sí misma: nadie podría reactivarla."
+        )
+
+    if not usuario.is_active:
+        return usuario
+
+    usuario.is_active = False
+    usuario.save(update_fields=["is_active"])
+    return usuario
+
+
+@transaction.atomic
+def reactivar_cuenta(*, actor, usuario):
+    """Devuelve el acceso. Segundo criterio de `HU-42`."""
+    _comprobar_actor_institucional(actor, "reactivar")
+    _comprobar_es_personal(usuario)
+
+    if usuario.is_active:
+        return usuario
+
+    usuario.is_active = True
+    usuario.save(update_fields=["is_active"])
+    return usuario
+
+
 @transaction.atomic
 def reenviar_invitacion(usuario):
     """Vuelve a mandar la invitación a quien todavía no definió su contraseña."""
@@ -201,7 +265,9 @@ __all__ = [
     "construir_enlace_de_invitacion",
     "crear_cuenta",
     "crear_cuenta_de_personal",
+    "desactivar_cuenta",
     "invitar",
+    "reactivar_cuenta",
     "reenviar_invitacion",
     "sincronizar_grupos_y_permisos",
 ]
