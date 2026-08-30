@@ -26,17 +26,17 @@ class AltaDeCuentaTest(TestCase):
     def test_la_cuenta_nace_sin_contrasena_utilizable(self):
         """`INV-6`, `INVD-1`, `DEC-3`: quien crea la cuenta no conoce la clave."""
         with self.captureOnCommitCallbacks(execute=True):
-            usuario = crear_cuenta(email="cajero@example.edu.co", rol=Rol.CAJERO)
+            usuario = crear_cuenta(email="cajero@example.com", rol=Rol.CAJERO)
 
         self.assertFalse(usuario.has_usable_password())
         self.assertFalse(usuario.tiene_contrasena_definida)
 
     def test_el_alta_dispara_la_invitacion(self):
         with self.captureOnCommitCallbacks(execute=True):
-            crear_cuenta(email="cajero@example.edu.co", rol=Rol.CAJERO)
+            crear_cuenta(email="cajero@example.com", rol=Rol.CAJERO)
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["cajero@example.edu.co"])
+        self.assertEqual(mail.outbox[0].to, ["cajero@example.com"])
         self.assertIn("/invitacion/", mail.outbox[0].body)
 
     def test_no_invita_si_el_alta_se_deshace(self):
@@ -46,15 +46,15 @@ class AltaDeCuentaTest(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             with self.assertRaises(FalloDelAlta):
                 with transaction.atomic():
-                    crear_cuenta(email="cajero@example.edu.co", rol=Rol.CAJERO)
+                    crear_cuenta(email="cajero@example.com", rol=Rol.CAJERO)
                     raise FalloDelAlta
 
         self.assertEqual(len(mail.outbox), 0)
-        self.assertFalse(Usuario.objects.filter(email="cajero@example.edu.co").exists())
+        self.assertFalse(Usuario.objects.filter(email="cajero@example.com").exists())
 
 
 class SeedDeLaInstitucionTest(TestCase):
-    DATOS = {"nombre": "Colegio de Prueba", "email": "secretaria@example.edu.co"}
+    DATOS = {"nombre": "Colegio de Prueba", "email": "institucion@example.com"}
 
     def test_el_seed_crea_la_institucion_y_dispara_su_invitacion(self):
         """Los dos primeros criterios de `HU-39`."""
@@ -84,16 +84,60 @@ class SeedDeLaInstitucionTest(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             dar_de_alta_la_institucion(**self.DATOS)
 
-        otro = Usuario.objects.crear_usuario(email="otra@example.edu.co", rol=Rol.INSTITUCION)
+        otro = Usuario.objects.crear_usuario(email="otra@example.com", rol=Rol.INSTITUCION)
         with self.assertRaises(IntegrityError):
             Institucion.objects.create(nombre="Segundo Colegio", usuario=otro)
+
+
+class ContrasenaDeDesarrolloTest(TestCase):
+    """`DEC-10`. La excepción acotada, y sus límites."""
+
+    DATOS = {"nombre": "Colegio de Prueba", "email": "institucion@example.com"}
+
+    def test_fija_la_contrasena_y_no_envia_correo(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            institucion, _ = dar_de_alta_la_institucion(
+                **self.DATOS, contrasena_de_desarrollo="clave-de-desarrollo-2026"
+            )
+
+        self.assertTrue(institucion.usuario.check_password("clave-de-desarrollo-2026"))
+        self.assertEqual(len(mail.outbox), 0, "DEC-10: no se envía invitación por este camino")
+
+    def test_sin_el_argumento_el_comportamiento_no_cambia(self):
+        """`HU-39` sigue siendo demostrable tal como está escrita."""
+        with self.captureOnCommitCallbacks(execute=True):
+            institucion, _ = dar_de_alta_la_institucion(**self.DATOS)
+
+        self.assertFalse(institucion.usuario.has_usable_password())
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_restablece_la_clave_de_una_institucion_ya_sembrada(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            dar_de_alta_la_institucion(**self.DATOS, contrasena_de_desarrollo="primera")
+        mail.outbox.clear()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            institucion, creada = dar_de_alta_la_institucion(
+                **self.DATOS, contrasena_de_desarrollo="segunda"
+            )
+
+        self.assertFalse(creada)
+        self.assertTrue(institucion.usuario.check_password("segunda"))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_el_generador_no_repite_contrasenas(self):
+        from personas.management.commands.sembrar import generar_contrasena
+
+        claves = {generar_contrasena() for _ in range(200)}
+        self.assertEqual(len(claves), 200)
+        self.assertTrue(all(len(c) >= 24 for c in claves))
 
 
 class DefinirContrasenaTest(TestCase):
     def setUp(self):
         with self.captureOnCommitCallbacks(execute=True):
             self.institucion, _ = dar_de_alta_la_institucion(
-                nombre="Colegio de Prueba", email="secretaria@example.edu.co"
+                nombre="Colegio de Prueba", email="institucion@example.com"
             )
         self.usuario = self.institucion.usuario
 

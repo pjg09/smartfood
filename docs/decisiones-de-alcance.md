@@ -14,10 +14,10 @@
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 9 (`DEC-1` … `DEC-9`) |
+| decisiones | 10 (`DEC-1` … `DEC-10`) |
 | invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -189,6 +189,33 @@ El proveedor de correo del prototipo, en plan gratuito y sin dominio verificado,
 
 ---
 
+### `[DEC-10]` La cuenta institucional del prototipo se siembra con contraseña, sin invitación
+
+*No cierra ningún `VAC`. Decisión posterior, tomada al sembrar el entorno desplegado.*
+
+**Decidido:**
+
+- La cuenta de la institución educativa se puede sembrar con una **contraseña conocida**, y en ese caso **no se envía invitación por correo**.
+- Es una **opción explícita y con nombre** del comando de seed, no su comportamiento por defecto. Sin ella, el seed hace lo que `HU-39` describe: crea la cuenta sin contraseña utilizable y dispara la invitación.
+- **Se limita a la cuenta institucional.** Las cuentas de acudiente (`HU-03`) y de personal (`HU-41`) se activan por invitación, sin excepción: ahí `INVD-1` sigue entero y quien crea la cuenta no conoce la clave.
+- La contraseña **no está escrita en el código**: el comando genera una aleatoria y la muestra una sola vez, o acepta la que se le pase.
+
+**Justificación del equipo:** la dirección de la cuenta institucional del prototipo no es de nadie. No hay ninguna persona que vaya a abrir esa invitación, así que el mecanismo de `HU-39` —recibir el correo y definir la contraseña— no tiene quien lo ejecute en el uso diario.
+
+Y mandarla tiene coste. `DEC-9` ya razonó que un envío a una dirección inexistente produce un rebote, y que una tasa de rebote alta degrada la reputación del remitente hasta que el proveedor suspende la cuenta. Esa cuenta de correo hace falta intacta para lo único que sí se va a demostrar por correo: la activación de un acudiente. Sembrar la institución por invitación gastaría reputación en un correo que nadie va a leer, poniendo en riesgo el que sí importa.
+
+**Efecto sobre `HU-39`:** ninguno en el texto. Sus cuatro criterios siguen siendo ciertos y demostrables, porque el comportamiento por defecto del seed no cambia. La demostración se hace dirigiendo la invitación a un buzón real:
+
+```
+manage.py sembrar --email-institucion <buzón real>
+```
+
+Lo que esta decisión añade es un segundo camino, para el uso diario, que **no** es el que `HU-39` describe. Por eso se registra: sin identificador, alguien que abriera el entorno desplegado vería una cuenta institucional con contraseña y concluiría que `INVD-1` no se cumple.
+
+> **Advertencia.** `INVD-1` sigue vigente para todas las demás cuentas y no se relaja. Si esta excepción se extiende alguna vez a las cuentas de personal o de acudiente, deja de ser una excepción acotada y `HU-41` y `HU-03` dejan de cumplirse: su valor es precisamente que quien crea la cuenta no llega a conocer la clave.
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -219,6 +246,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-8` | Fotografía del estudiante mostrada al cobrar; imagen del producto en el catálogo |
 | `DEC-7` | Baja lógica de estudiante retirado con saldo congelado |
 | `DEC-9` | **No añade alcance: lo recorta.** Retira la entrega por correo de las invitaciones de la carga masiva |
+| `DEC-10` | **No añade alcance.** Añade un camino alterno de seed para la cuenta institucional, fuera del que describe `HU-39` |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -239,6 +267,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (pregunta abierta) Baja del estudiante retirado | **Resuelto** | `DEC-7` | `HU-51`, `HU-52` |
 | — (decisión posterior) Fotografías e imágenes | **Decidido** | `DEC-8` | `HU-57`, `HU-58`, `HU-59` |
 | — (decisión posterior) Entrega de las invitaciones de la carga | **Decidido** | `DEC-9` | `HU-03` (criterio modificado) |
+| — (decisión posterior) Seed de la cuenta institucional | **Decidido** | `DEC-10` | `HU-39` (sin cambios en el texto) |
 
 ---
 

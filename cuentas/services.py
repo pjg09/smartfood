@@ -65,11 +65,22 @@ def invitar(usuario):
 
 
 @transaction.atomic
-def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False):
+def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
+                 contrasena_de_desarrollo=None):
     """Crea una cuenta **sin contraseña utilizable** y la invita.
 
     `INV-6` e `INVD-1`: ninguna cuenta nace de un autorregistro, y quien la crea
     no llega a conocer nunca la clave del titular (`DEC-3`).
+
+    `contrasena_de_desarrollo` es la **única excepción**, y está acotada por
+    `DEC-10`: fija una clave conocida y **no envía invitación**. Existe solo para
+    la cuenta institucional del prototipo, que nadie va a activar por correo
+    porque su dirección no es de nadie. Su nombre es largo a propósito: quien lo
+    escriba tiene que saber lo que está haciendo.
+
+    **No lo uses para cuentas de acudiente ni de personal.** Ahí la invitación
+    es el mecanismo, y `HU-41` exige que quien crea la cuenta no conozca la
+    clave.
     """
     usuario = Usuario.objects.crear_usuario(
         email=email,
@@ -77,6 +88,12 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False):
         nombre=nombre,
         is_staff=accede_a_administracion,
     )
+
+    if contrasena_de_desarrollo:
+        usuario.set_password(contrasena_de_desarrollo)
+        usuario.save(update_fields=["password"])
+        return usuario
+
     invitar(usuario)
     return usuario
 

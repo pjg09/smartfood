@@ -194,8 +194,21 @@ Para dirigir la invitación a un buzón real al demostrar `HU-39`:
 uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
 ```
 
-Los datos que siembra son ficticios (`ALC-OUT-07`). El dominio `example.edu.co` está
-reservado por la RFC 2606 justamente para esto: nunca corresponde a un buzón real.
+Para entrar sin pasar por el correo —el uso diario— hay un camino aparte, acotado por
+`DEC-10` y **solo para la cuenta institucional**:
+
+```bash
+uv run python manage.py sembrar --contrasena-de-desarrollo
+```
+
+Fija una contraseña generada, la muestra una vez y **no envía invitación**. Las cuentas
+de acudiente y de personal no tienen este atajo: se activan por invitación, sin
+excepción (`INVD-1`).
+
+Credenciales y reconstrucción completa en [`docs/desarrollo.md`](./docs/desarrollo.md).
+
+Los datos que siembra son ficticios (`ALC-OUT-07`). El dominio `example.com` está
+reservado por la RFC 2606: nadie puede registrarlo.
 
 ---
 
@@ -206,6 +219,8 @@ commits en Conventional Commits, que son los que disparan el versionado.
 
 | Documento | Para qué |
 |---|---|
+| [`docs/desarrollo.md`](./docs/desarrollo.md) | **Reconstrucción local, credenciales y comandos** |
+| [`docs/despliegue.md`](./docs/despliegue.md) | Estado del entorno desplegado y sus trampas |
 | [`docs/convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
 | [`docs/plan-de-pull-requests.md`](./docs/plan-de-pull-requests.md) | Las 55 tareas del Sprint 1 en 24 PR, y el estado de cada una |
 | [`docs/sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El sprint en curso |
