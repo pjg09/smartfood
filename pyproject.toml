@@ -1,0 +1,19 @@
+[project]
+name = "smartfood"
+version = "0.0.0"
+description = "Plataforma de gestión para cafeterías escolares con control parental y trazabilidad digital"
+requires-python = ">=3.14"
+
+# Solo lo que TT-02 y TT-03 necesitan. Cada dependencia posterior entra con la
+# tarea que la justifica: django-storages y boto3 con TT-50, Tailwind con TT-05.
+dependencies = [
+    "django>=6.1,<6.2",
+    "psycopg[binary]>=3.3",
+    "django-environ>=0.12",
+]
+
+# La versión la publica semantic-release como etiqueta de Git; no se escribe en
+# este fichero (ver [S3] de docs/convenciones-de-git.md). El 0.0.0 es un relleno.
+
+[tool.uv]
+package = false

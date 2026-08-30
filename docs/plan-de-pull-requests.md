@@ -59,8 +59,16 @@ Los cortes se eligieron con tres criterios, en este orden:
 Una tarea pasa a **☑ Finalizada** cuando su PR está **integrado en `main`**, no cuando el
 código funciona en local. Antes de eso es **☐ Pendiente**.
 
-Al integrar un PR se editan sus filas en `[S4]` y se actualiza el contador de `[S3]`, en
-el mismo PR o en uno de tipo `docs` inmediatamente después.
+**El marcado va dentro del propio PR**, en su último commit antes de pedir revisión: se
+editan sus filas de `[S4]`, su fila `Estado`, el contador de `[S3]` y la columna `Estado`
+de `./sprint-1-backlog.md`. Si el PR no se integra, el marcado nunca llega a `main` y no
+hay nada que deshacer. Un PR ya integrado que se olvidó de marcarse se pone al día en el
+PR siguiente.
+
+**El estado vive en dos documentos y deben coincidir**: aquí y en la columna `Estado` de
+`./sprint-1-backlog.md`. Es duplicación deliberada —el sprint backlog es lo que se enseña
+en la Sprint Review— y por eso hay que actualizar los dos a la vez. Si divergen, manda
+este documento.
 
 | Símbolo | Significado |
 |---|---|
@@ -74,15 +82,44 @@ el mismo PR o en uno de tipo `docs` inmediatamente después.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **1** de 55 | **1** de 24 |
-| Pendientes | 54 | 23 |
+| **Finalizadas** | **3** de 55 | **2** de 24 |
+| Pendientes | 52 | 22 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 25 |
+| Pedro | 2 | 25 |
 | Carlos | 0 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 1 | 5 |
+
+### [S3.1] Estado de los 24 Pull Requests
+
+| PR | Tareas | Qué cierra | Estado |
+|---|---|---|---|
+| `PR-01` | `TT-01` | Gobernanza del repositorio | ☑ `#1` |
+| `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
+| `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☐ |
+| `PR-04` | `TT-05` | Plantilla base | ☐ |
+| `PR-05` | `TT-06` | Correo | ☐ |
+| `PR-06` | `TT-07` | Definición de Terminado | ☐ |
+| `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☐ |
+| `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☐ |
+| `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☐ |
+| `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☐ |
+| `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☐ |
+| `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☐ |
+| `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☐ |
+| `PR-14` | `TT-28`–`TT-29` | `HU-03` + `HU-04` | ☐ |
+| `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☐ |
+| `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☐ |
+| `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` | ☐ |
+| `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☐ |
+| `PR-19` | `TT-41`–`TT-42` | `HU-51` | ☐ |
+| `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☐ |
+| `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☐ |
+| `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☐ |
+| `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☐ |
+| `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
 
 ---
 
@@ -99,11 +136,12 @@ Ninguna historia se puede construir antes de que estas siete estén integradas.
 
 | | |
 |---|---|
-| Título del PR | `chore(infra): establecer gobernanza del repositorio` |
+| Título del PR | `chore(infra): establecer la gobernanza del repositorio` |
 | Rama | `chore/TT-01-gobernanza-del-repositorio` |
 | Responsable | Naomi |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☑ **Integrado en `main`** (#1) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -127,11 +165,12 @@ título del PR, la plantilla de PR y `./convenciones-de-git.md`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☑ **Integrado en `main`** (#2) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | ☐ |
-| `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | ☐ |
+| `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | ☑ |
+| `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | ☑ |
 
 Van juntas porque por separado no se demuestra nada: un `compose` sin aplicación no se
 prueba, y una aplicación sin base de datos no arranca. Incluye `.env.example`.
@@ -147,6 +186,7 @@ prueba, y una aplicación sin base de datos no arranca. Incluye `.env.example`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -167,6 +207,7 @@ no esté integrado, ninguna historia puede darse por terminada.
 | Responsable | Carlos |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -186,6 +227,7 @@ ver `[S5]`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -204,6 +246,7 @@ Habilita `HU-39`, `HU-03` y `HU-41`: las tres invitaciones salen por aquí.
 | Responsable | Naomi |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -223,6 +266,7 @@ comparte nada con el correo. Es un `docs`: no publica versión.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna directamente; sostiene `DT-18` y `DT-20` |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -251,6 +295,7 @@ Corresponden a `[S4]` del sprint backlog, en su orden.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-39` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -278,6 +323,7 @@ después `HU-03` y `HU-41` (`DEC-3`).
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-05` |
 | Invariantes | **`INV-6`, `INVD-1`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -298,6 +344,7 @@ rutas de registro **no existen**, no se ocultan (`DT-10`).
 | Responsables | Pedro y Carlos |
 | Historias | `HU-40`, `HU-41` |
 | Invariantes | base de **`INV-4`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -322,6 +369,7 @@ en el Sprint 3 (`DT-11`).
 | Responsables | Pedro y Carlos |
 | Historia | `HU-42` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -342,6 +390,7 @@ backlog. Ninguna historia posterior depende de él.
 | Responsables | Pedro, Alejandro y Carlos |
 | Historia | `HU-01` |
 | Invariantes | ninguna directamente |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -365,6 +414,7 @@ el mismo PR.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-02` |
 | Invariantes | ninguna; el «todo o nada» es criterio de aceptación |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -387,6 +437,7 @@ las filas buenas, el PR no pasa.
 | Responsables | Pedro y Carlos |
 | Historias | `HU-03`, `HU-04` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -407,6 +458,7 @@ a los suyos. El modelo ya lo resolvió `TT-21`.
 | Responsables | Pedro y Alejandro |
 | Historias | `HU-14`, `HU-43` |
 | Invariantes | **`INV-7`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -430,6 +482,7 @@ del identificador del estudiante, nunca UUIDv7** —lleva timestamp y va ordenad
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-44` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -451,6 +504,7 @@ desbloquea tres PR posteriores.
 | Responsable | Carlos |
 | Historia | `HU-45` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -471,6 +525,7 @@ Sprint 2: no es un adorno, es el insumo físico de la siguiente demostración.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-46` |
 | Invariantes | **`INVD-4`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -492,6 +547,7 @@ Si el código anterior sigue siendo válido, `HU-47` y `HU-48` del Sprint 2 no p
 | Responsables | Pedro y Carlos |
 | Historia | `HU-51` |
 | Invariantes | protege **`INV-2`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -512,6 +568,7 @@ Baja **lógica**. Un `DELETE` destruiría el historial del que se reconstruye el
 | Responsables | Pedro y Carlos |
 | Historia | `HU-57` |
 | Invariantes | ninguna; se apoya en `DT-18` y `DT-20` |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -532,6 +589,7 @@ ausencia no puede impedir ninguna operación, y el PR tiene que demostrarlo.
 | Responsables | Pedro, Alejandro y Carlos |
 | Historia | `HU-26` |
 | Invariantes | **`INV-5`** |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -559,6 +617,7 @@ Revisión obligatoria de los dos desarrolladores, no de uno.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-59` |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -583,6 +642,7 @@ pintar la lista del punto de venta es coste sin contrapartida (`DT-18`).
 | Responsable | Alejandro |
 | Historia | — (transversal) |
 | Invariantes | **`INVD-6`**; `ALC-OUT-07` |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
@@ -612,6 +672,7 @@ Los avatares se generan; no se descargan de ningún sitio.
 | Responsable | Naomi |
 | Historia | — (gestión, `[S5]`) |
 | Invariantes | ninguna |
+| Estado | ☐ Pendiente |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
