@@ -26,6 +26,16 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
+# El PaaS publica el dominio del servicio en una variable propia (TT-04). Se
+# añade solo si existe, para no obligar a declararla en local.
+DOMINIO_PUBLICO = env("RAILWAY_PUBLIC_DOMAIN", default="")
+if DOMINIO_PUBLICO:
+    # `healthcheck.railway.app` es la cabecera Host que envía la sonda de salud
+    # del PaaS. Sin ella, la sonda recibe un 400 y el despliegue se marca como
+    # fallido aunque la aplicación esté perfectamente viva.
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, DOMINIO_PUBLICO, "healthcheck.railway.app"]
+    CSRF_TRUSTED_ORIGINS = [f"https://{DOMINIO_PUBLICO}"]
+
 # --- Aplicaciones ---------------------------------------------------------
 
 # Una app por dominio. Aquí están solo las tres que toca el Sprint 1; billetera,
@@ -49,6 +59,10 @@ INSTALLED_APPS = APPS_DE_DJANGO + APPS_DEL_PROYECTO
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Sirve los estáticos en el entorno desplegado, donde no hay servidor web
+    # delante (TT-04). Va justo detrás de SecurityMiddleware, como pide su
+    # documentación, y antes que todo lo demás.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,6 +98,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db("DATABASE_URL"),
 }
+
+# Reutilizar la conexión evita abrir una por petición contra la base gestionada,
+# que está al otro lado de la red y no en localhost.
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DJANGO_CONN_MAX_AGE", default=60)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # DT-6 exige bloqueo pesimista en la venta (`select_for_update`), que necesita
 # una transacción abierta. Los servicios abren la suya con `transaction.atomic()`
@@ -125,5 +144,36 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        # Comprime y versiona cada fichero con un hash del contenido, de modo
+        # que se puedan cachear indefinidamente sin servir uno viejo.
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # El almacenamiento de objetos para fotografías e imágenes (DT-18) se configura
-# en TT-50 y TT-55, en PR-07. Hasta entonces no hay STORAGES personalizado.
+# en TT-50 y TT-55, en PR-07: `default` pasará a apuntar a los buckets. Hasta
+# entonces queda el sistema de archivos, que nadie usa todavía.
+
+# --- Seguridad en el entorno desplegado (TT-04) ---------------------------
+
+# Solo fuera de DEBUG. En local no hay HTTPS y activarlas rompería el
+# desarrollo con redirecciones a https://localhost.
+if not DEBUG:
+    # El PaaS termina el TLS y reenvía por HTTP; sin esto Django cree que la
+    # petición no es segura y entra en un bucle de redirección.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    # La sonda de salud llega por HTTP interno, sin pasar por el proxy que
+    # añade X-Forwarded-Proto. Sin esta excepción recibiría un 301 y el PaaS
+    # daría el despliegue por fallido con la aplicación funcionando.
+    SECURE_REDIRECT_EXEMPT = [r"^salud/$"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    X_FRAME_OPTIONS = "DENY"
