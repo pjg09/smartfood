@@ -140,6 +140,37 @@ AUTH_PASSWORD_VALIDATORS = [
 #   el usuario por defecto, cambiarlo después obliga a borrar la base a los
 #   cuatro integrantes. Ver el README.
 
+# --- Correo (TT-06) -------------------------------------------------------
+
+# Una sola variable describe el envío entero, igual que DATABASE_URL describe la
+# base: mismo formato en local y en el entorno desplegado (DT-13).
+#
+#   local        consolemail://                 (imprime el correo por consola)
+#   desplegado   smtp+tls://usuario:clave@host:587
+#
+# Por defecto, consola: nadie necesita credenciales para desarrollar, y ningún
+# correo sale de una máquina de desarrollo por accidente.
+EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
+
+EMAIL_BACKEND = EMAIL_CONFIG["EMAIL_BACKEND"]
+EMAIL_HOST = EMAIL_CONFIG.get("EMAIL_HOST", "")
+EMAIL_PORT = EMAIL_CONFIG.get("EMAIL_PORT", 25)
+EMAIL_HOST_USER = EMAIL_CONFIG.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = EMAIL_CONFIG.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = EMAIL_CONFIG.get("EMAIL_USE_TLS", False)
+EMAIL_USE_SSL = EMAIL_CONFIG.get("EMAIL_USE_SSL", False)
+
+# Sin tiempo límite, un servidor de correo que no responde deja colgado un
+# trabajador de gunicorn hasta que el sistema operativo corte la conexión. Con
+# dos trabajadores, dos correos así dejan la aplicación sin atender a nadie.
+EMAIL_TIMEOUT = env.int("DJANGO_EMAIL_TIMEOUT", default=10)
+
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="SmartFood <onboarding@resend.dev>",
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
 # --- Internacionalización -------------------------------------------------
 
 LANGUAGE_CODE = "es-co"

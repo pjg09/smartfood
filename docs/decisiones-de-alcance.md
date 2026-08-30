@@ -14,10 +14,10 @@
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 8 (`DEC-1` … `DEC-8`) |
+| decisiones | 9 (`DEC-1` … `DEC-9`) |
 | invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -163,6 +163,32 @@ La imagen del producto es de otra naturaleza —no hay argumento de seguridad—
 
 ---
 
+### `[DEC-9]` La carga masiva genera las invitaciones pero no las entrega
+
+*No cierra ningún `VAC`. Decisión posterior, tomada al configurar el envío de correo del prototipo (`TT-06`).*
+
+**Decidido:**
+
+- La carga masiva (`HU-01`) **genera la invitación de cada acudiente cargado** —su token de un solo uso y con caducidad (`TT-18`)— exactamente igual que si fuera a enviarse. El mecanismo no se simula ni se salta.
+- **El correo no se entrega** para los acudientes que entran por carga masiva.
+- La entrega real de correo se demuestra con las altas **de una en una**: el seed de la institución (`HU-39`) y el alta de personal de la cafetería (`HU-41`).
+- La invitación generada por la carga **sigue siendo utilizable**: `HU-03` se demuestra de extremo a extremo tomando el enlace de un acudiente cargado y definiendo la contraseña con él.
+- La decisión afecta **solo al prototipo**. En una implementación real la entrega es obligatoria y sin ella `HU-03` no tendría sentido.
+
+**Justificación del equipo:** los datos del prototipo son ficticios por obligación legal (`ALC-OUT-07`, `ALC-OUT-08`), y eso incluye las direcciones de correo de los acudientes. Esas direcciones **no corresponden a ningún buzón**. Enviarles correo no es difícil: es que no hay a quién entregarlo.
+
+Y no es inocuo. Cada envío a una dirección inexistente produce un rebote, y una tasa de rebote alta degrada la reputación del remitente hasta que el proveedor suspende la cuenta. Una carga de prueba de doscientos acudientes ficticios podría dejar al equipo sin poder enviar **ningún** correo, incluidos los de `HU-39` y `HU-41`, que sí hacen falta para la demostración. La restricción protege la propia capacidad de demostrar el sistema.
+
+El proveedor de correo del prototipo, en plan gratuito y sin dominio verificado, solo entrega a la dirección del titular de la cuenta, así que el envío masivo tampoco sería observable aunque se intentara.
+
+`ALC-OUT-06` excluye el despliegue en una institución real, que es el único escenario en el que esas direcciones serían válidas. No existe, dentro del alcance, el caso que la entrega masiva serviría.
+
+**Efecto sobre `HU-03`:** cambia su segundo criterio de aceptación, de «se envía una invitación a cada acudiente cargado» a «se **genera** una invitación por cada acudiente cargado». Los otros dos criterios no cambian: la generación sigue siendo automática tras la carga y el acudiente sigue definiendo su propia contraseña con esa invitación. La historia conserva su valor: lo que se retira es la entrega, no el mecanismo.
+
+> **Advertencia.** Esta es la única decisión de este documento que **recorta** un criterio de aceptación ya escrito en lugar de añadir alcance. Se registra aquí precisamente por eso: sin identificador, la divergencia entre lo que `HU-03` pide y lo que el prototipo hace quedaría solo en una conversación, y en la Sprint Review la historia no se podría dar por cumplida. Debe declararse como limitación identificada en el informe final (`ENT-06`).
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -192,6 +218,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-6` | Cierre de caja diario con efectivo contado, diferencia y motivo |
 | `DEC-8` | Fotografía del estudiante mostrada al cobrar; imagen del producto en el catálogo |
 | `DEC-7` | Baja lógica de estudiante retirado con saldo congelado |
+| `DEC-9` | **No añade alcance: lo recorta.** Retira la entrega por correo de las invitaciones de la carga masiva |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -211,6 +238,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | `VAC-6` Cierre de caja | **Resuelto** | `DEC-6` | `HU-55`, `HU-56` |
 | — (pregunta abierta) Baja del estudiante retirado | **Resuelto** | `DEC-7` | `HU-51`, `HU-52` |
 | — (decisión posterior) Fotografías e imágenes | **Decidido** | `DEC-8` | `HU-57`, `HU-58`, `HU-59` |
+| — (decisión posterior) Entrega de las invitaciones de la carga | **Decidido** | `DEC-9` | `HU-03` (criterio modificado) |
 
 ---
 
