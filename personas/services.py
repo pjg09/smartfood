@@ -17,7 +17,7 @@ from personas.models import Institucion
 
 
 @transaction.atomic
-def dar_de_alta_la_institucion(*, nombre, email):
+def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
     """Crea la institución de referencia con su cuenta, y la invita (`HU-39`).
 
     **Idempotente.** Si la institución ya existe, no crea otra ni reenvía la
@@ -32,6 +32,12 @@ def dar_de_alta_la_institucion(*, nombre, email):
     """
     existente = Institucion.objects.select_related("usuario").first()
     if existente is not None:
+        # Restablecer la clave de desarrollo de una institución ya sembrada es
+        # el caso de «se me olvidó» y de «acabo de recrear el entorno pero no la
+        # base». Sigue sin enviar correo (`DEC-10`).
+        if contrasena_de_desarrollo:
+            existente.usuario.set_password(contrasena_de_desarrollo)
+            existente.usuario.save(update_fields=["password"])
         return existente, False
 
     usuario = crear_cuenta(
@@ -39,6 +45,7 @@ def dar_de_alta_la_institucion(*, nombre, email):
         rol=Rol.INSTITUCION,
         nombre=nombre,
         accede_a_administracion=True,
+        contrasena_de_desarrollo=contrasena_de_desarrollo,
     )
     # La institución administra el sistema entero: es el actor con más permisos
     # del prototipo. La matriz fina la construye `TT-15`.
