@@ -20,6 +20,47 @@
       </div>
     {% endif %}
 
+    {% if errores %}
+      {# TT-26. El reporte identifica los errores encontrados (HU-02). #}
+      <div class="mt-6 rounded-md border border-alerta-600 bg-alerta-100 px-4 py-4 text-sm"
+           role="alert">
+        <p class="font-medium text-alerta-700">
+          No se cargó nada: el archivo tiene {{ errores|length }}
+          {% if errores|length == 1 %}error{% else %}errores{% endif %}.
+        </p>
+        <p class="mt-1 text-alerta-700">
+          La carga es todo o nada. Corrige el archivo y vuelve a subirlo.
+        </p>
+
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-left text-slate-700">
+            <thead class="border-b border-alerta-600/30 text-xs uppercase text-alerta-700">
+              <tr>
+                <th class="py-1 pr-4">Fila</th>
+                <th class="py-1 pr-4">Columna</th>
+                <th class="py-1 pr-4">Valor</th>
+                <th class="py-1">Qué pasa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in errores %}
+                <tr class="border-b border-alerta-600/10 align-top">
+                  <td class="py-1 pr-4 font-mono text-xs">{{ e.fila|default:"—" }}</td>
+                  <td class="py-1 pr-4 font-mono text-xs">{{ e.columna }}</td>
+                  <td class="py-1 pr-4 font-mono text-xs break-all">{{ e.valor|default:"(vacío)" }}</td>
+                  <td class="py-1">{{ e.mensaje }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-3 text-xs text-alerta-700">
+          El número de fila es el que ves en tu editor: la fila 1 es el encabezado.
+        </p>
+      </div>
+    {% endif %}
+
     {% if resultado %}
       <div class="mt-6 rounded-md bg-marca-100 px-4 py-4 text-sm text-marca-900" role="status">
         <p class="font-medium">Carga completada</p>

@@ -15,6 +15,7 @@ from django.views.decorators.http import require_http_methods
 from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
 from personas.services import cargar_estudiantes_y_acudientes
+from personas.validacion import ArchivoInvalido
 
 
 class ArchivoDeCargaForm(forms.Form):
@@ -38,7 +39,12 @@ def carga_de_estudiantes(request):
             "Cargar estudiantes es función exclusiva de la institución educativa."
         )
 
-    contexto = {"form": ArchivoDeCargaForm(), "resultado": None, "error": None}
+    contexto = {
+        "form": ArchivoDeCargaForm(),
+        "resultado": None,
+        "error": None,
+        "errores": None,
+    }
 
     if request.method == "POST":
         form = ArchivoDeCargaForm(request.POST, request.FILES)
@@ -51,8 +57,11 @@ def carga_de_estudiantes(request):
                     archivo=form.cleaned_data["archivo"],
                 )
             except ArchivoIlegible as error:
-                # `HU-02` construye el reporte de errores por fila (`TT-26`).
-                # Esto solo cubre el archivo que ni siquiera se puede leer.
+                # El archivo que ni siquiera se puede leer como CSV.
                 contexto["error"] = str(error)
+            except ArchivoInvalido as error:
+                # `HU-02`, tercer criterio: el reporte identifica los errores
+                # encontrados. Van todos, no el primero.
+                contexto["errores"] = error.errores
 
     return render(request, "personas/carga-de-estudiantes.html", contexto)

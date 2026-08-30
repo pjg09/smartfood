@@ -102,7 +102,22 @@ de una en una.
 
 ---
 
-## [S6] Lo que este documento no decide
+## [S6] Archivos de ejemplo
+
+`TT-27` deja tres en `personas/ejemplos/`, que usan tanto las pruebas automáticas como
+quien quiera demostrar la carga a mano:
+
+| Archivo | Qué debe pasar |
+|---|---|
+| `carga-valida.csv` | Carga completa: 5 estudiantes, 3 acudientes, dos de ellos con dos hijos |
+| `carga-con-errores.csv` | No se escribe nada |
+| `carga-mixta.csv` | **No se escribe nada**, aunque haya filas correctas |
+
+El tercero es el que importa: es el que distingue «validar» de «validar de verdad».
+
+---
+
+## [S7] Lo que este documento no decide
 
 `HU-02` define **qué se valida y cómo se reporta**. Aquí solo se declara qué columnas hay,
 de qué tipo y cuáles son obligatorias. La lista de comprobaciones —duplicados, correos

@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **25** de 55 | **12** de 24 |
-| Pendientes | 30 | 12 |
+| **Finalizadas** | **28** de 55 | **13** de 24 |
+| Pendientes | 27 | 11 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 15 | 25 |
-| Carlos | 6 | 16 |
-| Alejandro | 2 | 9 |
+| Pedro | 16 | 25 |
+| Carlos | 7 | 16 |
+| Alejandro | 3 | 9 |
 | Naomi | 2 | 5 |
 
 ### [S3.1] Estado de los 24 Pull Requests
@@ -112,7 +112,7 @@ este documento.
 | `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☑ `#14` |
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☑ `#15` |
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☑ `#16` |
-| `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☐ |
+| `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☑ `#17` |
 | `PR-14` | `TT-28`–`TT-29` | `HU-03` + `HU-04` | ☐ |
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☐ |
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☐ |
@@ -443,17 +443,22 @@ el mismo PR.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-02` |
 | Invariantes | ninguna; el «todo o nada» es criterio de aceptación |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#17) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-25` | Validador que acumula errores por fila y **no escribe nada si hay alguno** | Pedro | ☐ |
-| `TT-26` | Pantalla de reporte de errores de validación | Carlos | ☐ |
-| `TT-27` | Archivos de prueba: uno válido, uno con errores y uno mixto | Alejandro | ☐ |
+| `TT-25` | Validador que acumula errores por fila y **no escribe nada si hay alguno** | Pedro | ☑ |
+| `TT-26` | Pantalla de reporte de errores de validación | Carlos | ☑ |
+| `TT-27` | Archivos de prueba: uno válido, uno con errores y uno mixto | Alejandro | ☑ |
 
 Se separa de `PR-12` para que cada uno se revise de una sentada, no porque sean
 independientes. El archivo **mixto** de `TT-27` es el que prueba la atomicidad: si escribe
 las filas buenas, el PR no pasa.
+
+El primer criterio de `HU-02` no es «si algo falla se deshace»: es que **la validación
+ocurra antes de escribir**. Deshacer con una transacción y no llegar a escribir son cosas
+distintas, y la historia pide la segunda. El validador **acumula**: un archivo con diez
+erratas se reporta entero, no obliga a subirlo diez veces.
 
 ---
 

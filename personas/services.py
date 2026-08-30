@@ -18,6 +18,7 @@ from cuentas.models import Rol
 from cuentas.services import crear_cuenta
 from personas.carga import leer
 from personas.models import Acudiente, Estudiante, Institucion
+from personas.validacion import ArchivoInvalido, validar
 
 
 @transaction.atomic
@@ -105,6 +106,15 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
 
     filas = leer(archivo)
+
+    # `HU-02`, primer criterio: **la validación ocurre antes de escribir
+    # cualquier dato**. No es lo mismo que deshacer con una transacción: la
+    # historia pide que no se llegue a escribir. La transacción de arriba sigue
+    # ahí como segunda red, para lo que la validación no pueda anticipar.
+    errores = validar(filas)
+    if errores:
+        raise ArchivoInvalido(errores)
+
     resultado = ResultadoDeCarga(filas_leidas=len(filas))
 
     # El correo agrupa: `[S3]` de docs/formato-de-carga.md.
