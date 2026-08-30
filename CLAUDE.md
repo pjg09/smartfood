@@ -89,9 +89,13 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
 **Pull Request**, no a la historia, porque 12 de las 55 tareas del sprint no cuelgan de ninguna.
 
-Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`), `DoD-4` (**demostrable en el
-entorno desplegado**, no solo en local) y `DoD-6` (datos ficticios) aplican **siempre**. Los otros
-tres son condicionales — y un criterio que no aplica **se declara, no se salta**.
+Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (datos ficticios)
+aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se
+salta**.
+
+**`DoD-4` está suspendido** desde el 2026-08-30: el entorno desplegado se congeló porque el plan
+gratuito del proveedor no lo sostiene (`[S2]` de `docs/despliegue.md`). Mientras dure, cada PR
+declara **cómo se verificó en local, con la salida real del comando**.
 
 ## Convenciones
 

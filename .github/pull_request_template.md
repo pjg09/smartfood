@@ -37,8 +37,9 @@ Detalle en docs/definicion-de-terminado.md
 - [ ] **`DoD-2`** Integrado por PR y no rompe nada de lo ya construido. *(Siempre aplica.)*
 - [ ] **`DoD-3`** Migraciones escritas, aplicadas, y `makemigrations --check` sin pendientes.
       <!-- No aplica si el PR no toca modelos. Dilo. -->
-- [ ] **`DoD-4`** Demostrable en `ENT-01`, no solo en local. *(Siempre aplica.)*
-      <!-- Si no tiene pantalla, demuéstralo por su efecto observable allí. -->
+- [ ] **`DoD-4`** ⏸ **SUSPENDIDO** — el entorno desplegado está congelado.
+      **En su lugar:** declara cómo lo verificaste en local, con la salida real del
+      comando. No basta «funciona en mi máquina». Ver `docs/definicion-de-terminado.md`.
 - [ ] **`DoD-5`** Cada invariante que sostiene tiene un caso de prueba que **falla si se rompe**.
       <!-- No aplica si no sostiene ninguna. Compruébalo antes de decirlo. -->
 - [ ] **`DoD-6`** Todos los datos son ficticios. *(Siempre aplica — `ALC-OUT-07`, Ley 1581 de 2012.)*

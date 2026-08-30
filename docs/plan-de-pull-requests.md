@@ -56,6 +56,10 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 ## [S2] Cómo se marca una tarea como finalizada
 
+> ⏸ **`DoD-4` está suspendido desde el 2026-08-30** y con él la verificación en el
+> entorno desplegado. Una tarea se marca finalizada con los otros cinco criterios más la
+> verificación local declarada. Ver `[S5]` de `./definicion-de-terminado.md`.
+
 Una tarea pasa a **☑ Finalizada** cuando su PR está **integrado en `main`**, no cuando el
 código funciona en local. Antes de eso es **☐ Pendiente**.
 

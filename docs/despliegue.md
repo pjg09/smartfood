@@ -8,11 +8,42 @@
 | titulo | Estado real del entorno de pruebas y cómo está montado |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable de la asignatura |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-20`, `DT-21`); `./convenciones-de-git.md`; `./definicion-de-terminado.md` (`DoD-4`) |
-| actualizado | 2026-08-30, tras `DEC-10` |
+| actualizado | 2026-08-30 · **entorno congelado** |
 | idioma | es-CO |
 | version | 1.0 |
 
-### [S0.1] Qué es y qué no es
+### [S0.1] ⏸ Entorno congelado desde el 2026-08-30
+
+**El despliegue automático está desconectado y no debe tocarse Railway** hasta que Pedro
+consulte con la docente si la asignatura exige un entorno desplegado.
+
+El plan gratuito no lo sostiene, por dos fallos que **no son del código**:
+
+1. **La base de datos duerme y no se puede evitar.** Al despertar rechaza conexiones con
+   `FATAL: the database system is starting up`, y toda vista que toque el ORM devuelve
+   500. Railway **prohíbe** desactivarlo: *«Free plan services must have
+   "sleepApplication" set to "true" unless they have a cron schedule»*.
+2. **`/app/staticfiles/` no existe en tiempo de ejecución**, aunque la construcción
+   informa de «132 static files copied to '/app/staticfiles'». Toda página con
+   `{% static %}` da 500. Candidato de arreglo **sin verificar**: mover `collectstatic`
+   al `startCommand`. No rescata el entorno por sí solo: el fallo 1 sigue.
+
+`DoD-4` quedó **suspendido** mientras tanto (`[S5]` de `./definicion-de-terminado.md`).
+**Todo funciona en local**, así que el desarrollo no está bloqueado.
+
+| Si la docente… | Qué hacer |
+|---|---|
+| **Exige despliegue** | Plan Hobby (~5 USD/mes). Resuelve el sueño **y** el bloqueo horario. Arreglar el fallo 2 y verificar |
+| **No lo exige** | Limpiar: borrar el proyecto, quitar `railway.json`, y **retirar `ENT-01` y `TT-04`** del alcance con una decisión registrada |
+
+> **Resto pendiente en la cuenta**, si se retoma: quedó un `preDeployCommand` con
+> `migrate` como ajuste del servicio, de cuando se diagnosticaba. Con el `startCommand`
+> actual correría dos veces —inofensivo, pero son dos fuentes de verdad—. Conviene
+> quitarlo.
+
+---
+
+### [S0.2] Qué es y qué no es
 
 Registra **lo que hay montado y por qué**, para que el contexto no viva solo en la
 cabeza de quien lo montó. Si mañana se pierde la cuenta, o alguien —persona o agente—
@@ -40,7 +71,7 @@ identificador. Aquí solo se registra el estado y se cita de dónde sale.
 | Región de los servicios | `europe-west4` — ver `[S2]` |
 | URL | https://web-production-3db23.up.railway.app |
 | Salud | `/salud/` — consulta la base, no solo el proceso |
-| Origen del código | `pjg09/smartfood`, rama `main`, despliegue automático en cada integración |
+| Origen del código | **Desconectado** el 2026-08-30. Era `pjg09/smartfood`, rama `main` |
 | Plan | Gratuito — ver `[S2]` |
 
 ### [S1.1] Cómo se construye y arranca
