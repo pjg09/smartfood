@@ -1,0 +1,16 @@
+{# Fragmento de mensajes del framework (`django.contrib.messages`).
+
+   Es el primer habitante de `partials/` y fija la convención de `DT-16`: aquí
+   viven los fragmentos que las vistas HTMX devuelven por separado, no páginas
+   completas. #}
+{% if messages %}
+  <div class="mx-auto w-full max-w-5xl px-4 pt-4" role="status" aria-live="polite">
+    {% for mensaje in messages %}
+      <div class="mb-2 rounded-md px-4 py-3 text-sm
+                  {% if mensaje.tags == 'error' %}bg-alerta-100 text-alerta-700
+                  {% else %}bg-marca-100 text-marca-900{% endif %}">
+        {{ mensaje }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

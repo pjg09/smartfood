@@ -82,7 +82,7 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 | `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | Todo | ☑ |
 | `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | Todo | ☑ |
 | `TT-04` | Despliegue en entorno de pruebas con base de datos gestionada | Pedro | `ENT-01`, Definición de Terminado | ☑ |
-| `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | `INT-1`, `INT-3` | ☐ |
+| `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | `INT-1`, `INT-3` | ☑ |
 | `TT-06` | Configuración del envío de correo | Pedro | `HU-39`, `HU-03`, `HU-41` | ☐ |
 | `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | Todo | ☐ |
 | `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | `HU-57`, `HU-59` | ☐ |

@@ -82,13 +82,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **4** de 55 | **3** de 24 |
-| Pendientes | 51 | 21 |
+| **Finalizadas** | **5** de 55 | **4** de 24 |
+| Pendientes | 50 | 20 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 3 | 25 |
-| Carlos | 0 | 16 |
+| Carlos | 1 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 1 | 5 |
 
@@ -99,7 +99,7 @@ este documento.
 | `PR-01` | `TT-01` | Gobernanza del repositorio | ☑ `#1` |
 | `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
 | `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☑ `#3` |
-| `PR-04` | `TT-05` | Plantilla base | ☐ |
+| `PR-04` | `TT-05` | Plantilla base | ☑ `#4` |
 | `PR-05` | `TT-06` | Correo | ☐ |
 | `PR-06` | `TT-07` | Definición de Terminado | ☐ |
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☐ |
@@ -207,11 +207,11 @@ no esté integrado, ninguna historia puede darse por terminada.
 | Responsable | Carlos |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#4) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | ☐ |
+| `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | ☑ |
 
 Habilita `INT-1` e `INT-3`. Tailwind por CLI, sin CDN (`DT-16`). **No depende de `PR-03`**:
 ver `[S5]`.

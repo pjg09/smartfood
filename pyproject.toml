@@ -13,6 +13,7 @@ dependencies = [
     # TT-04: servidor de aplicación y servicio de estáticos en el entorno desplegado.
     "gunicorn>=23.0",
     "whitenoise[brotli]>=6.9",
+    "django-tailwind-cli>=4.8",
 ]
 
 # La versión la publica semantic-release como etiqueta de Git; no se escribe en

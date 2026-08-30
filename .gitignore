@@ -118,8 +118,10 @@ yarn-error.log*
 .yarn/
 .pnp.*
 
-# Salida compilada de Tailwind: artefacto de build, se genera en el despliegue.
-/static/css/tailwind.css
+# Salida compilada de Tailwind y binario descargado: artefactos de build, se
+# generan en cada despliegue con `manage.py tailwind build` (TT-05).
+/assets/css/tailwind.css
+/.tailwind/
 /**/static/**/tailwind.css
 /**/static/**/output.css
 
