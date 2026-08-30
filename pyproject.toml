@@ -10,6 +10,9 @@ dependencies = [
     "django>=6.1,<6.2",
     "psycopg[binary]>=3.3",
     "django-environ>=0.12",
+    # TT-04: servidor de aplicación y servicio de estáticos en el entorno desplegado.
+    "gunicorn>=23.0",
+    "whitenoise[brotli]>=6.9",
 ]
 
 # La versión la publica semantic-release como etiqueta de Git; no se escribe en

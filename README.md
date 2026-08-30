@@ -52,6 +52,29 @@ En `http://localhost:8000`. La consola de MinIO está en `http://localhost:9001`
 
 ---
 
+## Entorno de pruebas
+
+**https://web-production-3db23.up.railway.app** — `ENT-01`, desplegado en Railway
+(`DT-13`). Se actualiza solo en cada integración a `main`.
+
+| | |
+|---|---|
+| Salud del servicio | [`/salud/`](https://web-production-3db23.up.railway.app/salud/) — consulta la base, no solo el proceso |
+| Proyecto en Railway | `smartfood` · `cd700c34-a0ca-42b6-86fb-f77a476aa9a3` |
+| Región | `europe-west4` — ver la nota de abajo |
+| Base de datos | PostgreSQL 18 gestionado, en la misma región |
+
+Las variables (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`) viven en Railway.
+**Ninguna está en el repositorio.**
+
+> **Por qué Ámsterdam y no Virginia.** El plan gratuito de Railway bloquea los
+> despliegues entre las 8:00 y las 20:00 de la hora local de cada región. Ámsterdam es
+> la única cuya ventana libre —13:00 a 01:00 hora de Bogotá— cubre la tarde de trabajo
+> del equipo. Es un apaño, no una decisión de arquitectura: con el plan Hobby el
+> servicio vuelve a `us-east4`, que está a 70 ms de Bogotá en vez de 130 ms.
+
+---
+
 ## Todavía no se ejecuta `migrate`
 
 **Es deliberado, no un olvido.** `TT-09` declara el modelo de usuario propio, y Django

@@ -82,12 +82,12 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **3** de 55 | **2** de 24 |
-| Pendientes | 52 | 22 |
+| **Finalizadas** | **4** de 55 | **3** de 24 |
+| Pendientes | 51 | 21 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 2 | 25 |
+| Pedro | 3 | 25 |
 | Carlos | 0 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 1 | 5 |
@@ -98,7 +98,7 @@ este documento.
 |---|---|---|---|
 | `PR-01` | `TT-01` | Gobernanza del repositorio | ☑ `#1` |
 | `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
-| `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☐ |
+| `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☑ `#3` |
 | `PR-04` | `TT-05` | Plantilla base | ☐ |
 | `PR-05` | `TT-06` | Correo | ☐ |
 | `PR-06` | `TT-07` | Definición de Terminado | ☐ |
@@ -186,14 +186,14 @@ prueba, y una aplicación sin base de datos no arranca. Incluye `.env.example`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#3) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-04` | Despliegue en entorno de pruebas con base de datos gestionada | Pedro | ☐ |
+| `TT-04` | Despliegue en entorno de pruebas con base de datos gestionada | Pedro | ☑ |
 
 Solo, porque toca credenciales del PaaS y no se valida leyendo el diff: se valida abriendo
-la URL. **Habilita `ENT-01` y con él la Definición de Terminado entera**: hasta que este PR
+la URL — **https://web-production-3db23.up.railway.app**. **Habilita `ENT-01` y con él la Definición de Terminado entera**: hasta que este PR
 no esté integrado, ninguna historia puede darse por terminada.
 
 ---
