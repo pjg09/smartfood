@@ -10,10 +10,10 @@
 | documentos_fuente | `./sprint-1-backlog.md` (`[S2]`); `corpus:guia-de-scrum-2020.md` (`COM-3`, `ART-3`); `./smartfood.md` (`ENT-01`, `ALC-OUT-07`) |
 | tipo_documento | Compromiso del Incremento (`COM-3` de la Guía de Scrum) |
 | cubre | `TT-07` — Redacción y acuerdo de la Definición de Terminado |
-| criterios | 6 (`DoD-1` … `DoD-6`) |
-| aplica a | Los cinco sprints. No se relaja durante el semestre |
+| criterios | 6 (`DoD-1` … `DoD-6`) · **`DoD-4` suspendido**, ver `DoD-4` |
+| aplica a | Los cinco sprints. No se relaja durante el semestre. **Una excepción registrada**: ver `DoD-4` y `[S5]` |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Por qué es un documento aparte
 
@@ -30,7 +30,11 @@ Sprint Backlog. Vive donde le corresponde.
 
 ## [S1] La regla
 
-> **Nada está terminado hasta que cumple los seis criterios que aplican a su caso.**
+> **Nada está terminado hasta que cumple los criterios que aplican a su caso.**
+
+> ⏸ **Uno de los seis está suspendido.** `DoD-4` —demostrar en el entorno desplegado— no
+> se puede cumplir mientras ese entorno esté congelado. Ver la caja en su apartado: no es
+> una relajación por conveniencia, es que la condición previa no existe.
 
 Se aplica a la **unidad de trabajo**, que en este proyecto es **un Pull Request**
 (`[S1]` de `./convenciones-de-git.md`). Un PR es lo que se integra, lo que se despliega
@@ -77,7 +81,32 @@ proyecto, y para entonces el commit lleva días integrado.
 
 **Si el PR no toca modelos**, no aplica. Decláralo.
 
-### `[DoD-4]` Se demuestra en el entorno desplegado
+### `[DoD-4]` Se demuestra en el entorno desplegado — **SUSPENDIDO**
+
+> ## ⏸ Suspendido desde el 2026-08-30
+>
+> **No se puede cumplir, y no por el trabajo.** El entorno desplegado está congelado
+> porque el plan gratuito del proveedor no lo sostiene: la base de datos se duerme, al
+> despertar rechaza conexiones con `FATAL: the database system is starting up`, y toda
+> vista que toque el ORM devuelve 500. El proveedor **prohíbe** desactivar ese
+> comportamiento en el plan gratuito —*«Free plan services must have "sleepApplication"
+> set to "true"»*—, así que no hay arreglo desde el código. El detalle está en
+> `[S2]` de `./despliegue.md`.
+>
+> **Mientras esté suspendido, en su lugar aplica esto:** el PR declara **cómo se verificó
+> en local**, con la salida real de lo que ejecutó. No basta «funciona en mi máquina»:
+> hay que enseñar el comando y su resultado.
+>
+> **Qué lo restaura.** Pedro consulta con la docente si la asignatura exige el despliegue.
+> Si lo exige, el plan de pago resuelve las dos causas y `DoD-4` vuelve tal cual. Si no lo
+> exige, hay que **retirarlo formalmente** —y con él revisar `ENT-01` y `TT-04`—, no
+> dejarlo suspendido indefinidamente.
+>
+> **Esta suspensión caduca sola:** mientras esta caja siga aquí sin fecha de resolución,
+> es deuda declarada, no una decisión cerrada.
+
+El texto original, que vuelve a estar vigente en cuanto exista un entorno desplegado
+fiable:
 
 Lo que el PR entrega se puede **enseñar en `ENT-01`**, no solo en local. Aplica
 **siempre**, pero la forma de demostrarlo depende de lo que se entrega:
@@ -153,6 +182,27 @@ ella. No es un documento que una persona escribe y los demás acatan: es un comp
 > **El acuerdo no lo da este fichero.** Mientras la fila de arriba diga «pendiente», lo
 > que hay es un borrador redactado, no un compromiso adquirido. Naomi lo registra cuando
 > los cuatro lo hayan discutido, con la fecha.
+
+---
+
+## [S5] Cambios al compromiso
+
+Un compromiso que cambia sin dejar rastro deja de serlo. Aquí queda cada cambio, con su
+fecha y su motivo.
+
+| Fecha | Cambio | Motivo | Qué lo revierte |
+|---|---|---|---|
+| 2026-08-30 | **`DoD-4` suspendido** | El entorno desplegado se congeló: el plan gratuito del proveedor no lo sostiene y el fallo no es del código (`[S2]` de `./despliegue.md`) | Que exista un entorno desplegado fiable, o que se retire `ENT-01` del alcance |
+
+**No es una relajación por conveniencia.** `DoD-4` no se suspende porque cueste
+cumplirlo, sino porque **nadie puede cumplirlo**: la condición previa —un entorno
+desplegado que funcione— no existe. Un criterio que ningún trabajo puede satisfacer, por
+razones ajenas al trabajo, no es un listón de calidad: es un bloqueo. Dejarlo en pie
+obligaría a mentir en la casilla o a no terminar nunca nada.
+
+Lo que **no** se hace: bajar el resto. Los otros cinco criterios siguen enteros, y el
+sustituto de `DoD-4` mientras dure —declarar la verificación local con su salida real—
+es más exigente que marcar una casilla.
 
 ---
 
