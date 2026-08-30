@@ -153,6 +153,50 @@ URL_BASE = env(
     default=f"https://{DOMINIO_PUBLICO}" if DOMINIO_PUBLICO else "http://localhost:8000",
 )
 
+# --- Registro (logging) ---------------------------------------------------
+
+# Sin esto, un error 500 en el entorno desplegado NO DEJA RASTRO. La
+# configuración por defecto de Django manda `django.request` al manejador
+# `mail_admins`, y con `ADMINS` vacío ese manejador descarta el mensaje en
+# silencio: el usuario ve un 500 y en los registros no hay ni una línea.
+#
+# Costó un diagnóstico a ciegas descubrirlo. Todo va a la salida estándar, que
+# es donde el PaaS recoge los registros.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "detallado": {
+            "format": "{levelname} {asctime} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "consola": {
+            "class": "logging.StreamHandler",
+            "formatter": "detallado",
+        },
+    },
+    "root": {
+        "handlers": ["consola"],
+        "level": env("DJANGO_NIVEL_DE_REGISTRO", default="INFO"),
+    },
+    "loggers": {
+        # La traza completa de cada 500, en la salida estándar.
+        "django.request": {
+            "handlers": ["consola"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # Ruidoso y sin valor: una petición por cada fichero estático.
+        "django.server": {
+            "handlers": ["consola"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
+
 # --- Correo (TT-06) -------------------------------------------------------
 
 # Una sola variable describe el envío entero, igual que DATABASE_URL describe la
