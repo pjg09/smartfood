@@ -87,6 +87,10 @@ que ningún correo dirigido ahí llega a una persona real.
 railway variables --service web --environment production --json | grep SEED_CONTRASENA
 ```
 
+Esa variable es la **fuente de verdad**: el despliegue siembra la institución en cada
+integración y restablece la contraseña a ese valor. Cambiarla desde el admin no dura
+hasta el siguiente despliegue; para cambiarla de verdad, se cambia la variable.
+
 **Está en Railway y no en el repositorio, deliberadamente.** El entorno desplegado es una
 URL pública en internet y esa cuenta es superusuario del admin: escribir su clave aquí se
 la daría a cualquiera con acceso al repositorio —hoy cuatro personas, mañana quien

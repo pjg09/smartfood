@@ -76,7 +76,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **opciones):
         contrasena = opciones["contrasena_de_desarrollo"]
-        if contrasena is GENERAR:
+
+        # Una cadena vacía significa que se pidió contraseña pero la variable de
+        # entorno que la traía no estaba definida. Se genera una en vez de caer
+        # al camino por defecto: ese enviaría una invitación a una dirección que
+        # no es de nadie, y cada rebote degrada la reputación del remitente
+        # hasta que el proveedor suspende la cuenta (DEC-9). Falla del lado
+        # seguro: sin correo, y con la clave impresa en el registro.
+        if contrasena is GENERAR or contrasena == "":
             contrasena = generar_contrasena()
 
         institucion, creada = dar_de_alta_la_institucion(
