@@ -155,10 +155,10 @@ El resto lo cubren `TT-11` y `TT-12`.
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-21` | Modelos de estudiante y acudiente, con vínculo de uno a varios (`ALC-IN-04`) | Pedro | ☐ |
-| `TT-22` | Definición del formato del archivo: columnas, tipos y obligatoriedad | Alejandro | ☐ |
-| `TT-23` | Lector del archivo y servicio de carga dentro de una transacción | Pedro | ☐ |
-| `TT-24` | Pantalla de carga con selección de archivo y resultado | Carlos | ☐ |
+| `TT-21` | Modelos de estudiante y acudiente, con vínculo de uno a varios (`ALC-IN-04`) | Pedro | ☑ |
+| `TT-22` | Definición del formato del archivo: columnas, tipos y obligatoriedad | Alejandro | ☑ |
+| `TT-23` | Lector del archivo y servicio de carga dentro de una transacción | Pedro | ☑ |
+| `TT-24` | Pantalla de carga con selección de archivo y resultado | Carlos | ☑ |
 
 `TT-22` es de Alejandro porque define el contrato de datos con el colegio, que es análisis, no implementación.
 

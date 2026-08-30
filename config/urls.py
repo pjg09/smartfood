@@ -11,6 +11,7 @@ from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 
 from config.salud import salud
+from personas.views import carga_de_estudiantes
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
 # único que necesita es hablar en español y no llamarse «Django» (TT-05).
@@ -41,5 +42,7 @@ urlpatterns = [
         TemplateView.as_view(template_name="cuentas/contrasena-definida.html"),
         name="contrasena-definida",
     ),
+    # Carga masiva de estudiantes y acudientes (`TT-24`, `HU-01`).
+    path("carga/", carga_de_estudiantes, name="carga-de-estudiantes"),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

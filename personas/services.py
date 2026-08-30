@@ -9,11 +9,15 @@
 Funciones, no clases.
 """
 
+from dataclasses import dataclass, field
+
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 from cuentas.models import Rol
 from cuentas.services import crear_cuenta
-from personas.models import Institucion
+from personas.carga import leer
+from personas.models import Acudiente, Estudiante, Institucion
 
 
 @transaction.atomic
@@ -54,3 +58,88 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
 
     institucion = Institucion.objects.create(nombre=nombre, usuario=usuario)
     return institucion, True
+
+
+@dataclass
+class ResultadoDeCarga:
+    """Lo que la carga hizo, para poder enseñárselo a quien la ejecutó."""
+
+    filas_leidas: int = 0
+    acudientes_creados: int = 0
+    acudientes_reutilizados: int = 0
+    estudiantes_creados: int = 0
+    avisos: list = field(default_factory=list)
+
+    @property
+    def acudientes_totales(self):
+        return self.acudientes_creados + self.acudientes_reutilizados
+
+
+@transaction.atomic
+def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=None):
+    """Carga el archivo entero, o no carga nada (`TT-23`, `HU-01`).
+
+    **Una sola transacción.** `HU-02` exige que la carga sea todo o nada: si
+    algo falla a mitad, el sistema no puede quedar con la mitad de un colegio
+    dentro. La validación que acumula errores y los reporta antes de escribir es
+    `TT-25`; aquí la atomicidad ya está, y es la que sostiene aquello.
+
+    **Solo la institución educativa.** Segundo criterio de `HU-01`, y `[S11]`:
+    ningún otro rol carga datos de menores. El actor llega como argumento —este
+    servicio no sabe de HTTP (`DT-15`)—.
+
+    **Un mismo acudiente puede quedar a cargo de varios estudiantes** (cuarto
+    criterio, `ALC-IN-04`). El correo es la identidad: filas con el mismo correo
+    son la misma persona y comparten cuenta.
+
+    `contrasena_de_desarrollo` asigna una clave conocida a las cuentas creadas y
+    no envía correo (`DEC-11`). Sin él, las cuentas nacen sin contraseña
+    utilizable y la invitación **se genera pero no se entrega** (`DEC-9`).
+    """
+    if actor is None or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "Cargar estudiantes es función exclusiva de la institución educativa "
+            "(HU-01, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    filas = leer(archivo)
+    resultado = ResultadoDeCarga(filas_leidas=len(filas))
+
+    # El correo agrupa: `[S3]` de docs/formato-de-carga.md.
+    acudientes_por_correo = {}
+
+    for fila in filas:
+        correo = fila.correo_acudiente.lower()
+
+        acudiente = acudientes_por_correo.get(correo)
+        if acudiente is None:
+            acudiente = Acudiente.objects.filter(usuario__email__iexact=correo).first()
+            if acudiente is not None:
+                resultado.acudientes_reutilizados += 1
+            else:
+                usuario = crear_cuenta(
+                    email=correo,
+                    rol=Rol.ACUDIENTE,
+                    nombre=fila.nombre_acudiente,
+                    contrasena_de_desarrollo=contrasena_de_desarrollo,
+                    # DEC-9: la carga no entrega correo.
+                    enviar_invitacion=False,
+                )
+                acudiente = Acudiente.objects.create(
+                    usuario=usuario,
+                    nombre=fila.nombre_acudiente,
+                    documento=fila.documento_acudiente,
+                )
+                resultado.acudientes_creados += 1
+            acudientes_por_correo[correo] = acudiente
+
+        Estudiante.objects.create(
+            nombre=fila.nombre_estudiante,
+            documento=fila.documento_estudiante,
+            acudiente=acudiente,
+        )
+        resultado.estudiantes_creados += 1
+
+    return resultado
