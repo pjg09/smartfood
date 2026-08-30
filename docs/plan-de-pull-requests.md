@@ -82,12 +82,12 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **5** de 55 | **4** de 24 |
-| Pendientes | 50 | 20 |
+| **Finalizadas** | **6** de 55 | **5** de 24 |
+| Pendientes | 49 | 19 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 3 | 25 |
+| Pedro | 4 | 25 |
 | Carlos | 1 | 16 |
 | Alejandro | 0 | 9 |
 | Naomi | 1 | 5 |
@@ -100,7 +100,7 @@ este documento.
 | `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
 | `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☑ `#3` |
 | `PR-04` | `TT-05` | Plantilla base | ☑ `#4` |
-| `PR-05` | `TT-06` | Correo | ☐ |
+| `PR-05` | `TT-06` | Correo | ☑ `#5` |
 | `PR-06` | `TT-07` | Definición de Terminado | ☐ |
 | `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☐ |
 | `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☐ |
@@ -227,13 +227,15 @@ ver `[S5]`.
 | Responsable | Pedro |
 | Historia | — (habilitación) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#5) |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-06` | Configuración del envío de correo | Pedro | ☐ |
+| `TT-06` | Configuración del envío de correo | Pedro | ☑ |
 
-Habilita `HU-39`, `HU-03` y `HU-41`: las tres invitaciones salen por aquí.
+Habilita `HU-39`, `HU-03` y `HU-41`: las tres invitaciones salen por aquí. Este PR
+registra además `DEC-9`, que surgió al configurarlo: la carga masiva genera las
+invitaciones pero no las entrega.
 
 ---
 
@@ -446,6 +448,13 @@ las filas buenas, el PR no pasa.
 
 Dos historias de una tarea cada una, contiguas y del mismo asunto: el acudiente entra y ve
 a los suyos. El modelo ya lo resolvió `TT-21`.
+
+> **`DEC-9` cambia lo que `TT-28` tiene que construir.** La carga **genera** la invitación
+> de cada acudiente —token de un solo uso y con caducidad— pero **no la entrega por
+> correo**: las direcciones cargadas son ficticias (`ALC-OUT-07`) y no corresponden a
+> ningún buzón. No hay que implementar envío masivo ni preocuparse por su latencia.
+> `HU-03` se demuestra tomando el enlace de un acudiente cargado y definiendo la
+> contraseña con él.
 
 ---
 

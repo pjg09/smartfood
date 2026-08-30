@@ -9,7 +9,7 @@
 | doc_id | SMARTFOOD-TIC1-BACKLOG |
 | titulo | Backlog de historias de usuario del prototipo SmartFood |
 | archivo_origen | — · documento derivado; no reexpresa ningún original |
-| documentos_fuente | `./smartfood.md` (`S4`, `S5`, `S9`, `S10`, `S11`); `./decisiones-de-alcance.md` (`DEC-1` … `DEC-7`, `INVD-1` … `INVD-5`); `corpus:semana-5-gestion-de-proyectos-con-metodologias-agiles.md` (`D07`, `D14`); `corpus:guia-de-scrum-2020.md` (`ART-1`, `COM-1`) |
+| documentos_fuente | `./smartfood.md` (`S4`, `S5`, `S9`, `S10`, `S11`); `./decisiones-de-alcance.md` (`DEC-1` … `DEC-9`, `INVD-1` … `INVD-6`); `corpus:semana-5-gestion-de-proyectos-con-metodologias-agiles.md` (`D07`, `D14`); `corpus:guia-de-scrum-2020.md` (`ART-1`, `COM-1`) |
 | tipo_documento | Artefacto de gestión producido por el equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-04` de `./smartfood.md` — «backlog priorizado» |
@@ -20,7 +20,7 @@
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
-| version | 2.1 |
+| version | 2.2 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -133,9 +133,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
   - El sistema genera la invitación **automáticamente** tras la carga.
-  - Se envía una invitación a cada acudiente cargado.
-  - El acudiente define su propia contraseña mediante esa invitación.
-- **Origen:** `ALC-IN-03`, `FUN-1`, `OBJ-E2`
+  - Se **genera** una invitación por cada acudiente cargado. **Su entrega por correo queda fuera del prototipo** (`DEC-9`): las direcciones de los acudientes son ficticias (`ALC-OUT-07`) y no corresponden a ningún buzón. La entrega real se demuestra en `HU-39` y `HU-41`, que son altas de una en una.
+  - El acudiente define su propia contraseña mediante esa invitación. La invitación generada por la carga es utilizable: la historia se demuestra de extremo a extremo tomando el enlace de un acudiente cargado.
+- **Origen:** `ALC-IN-03`, `FUN-1`, `OBJ-E2`, `DEC-9`
 
 #### `[HU-04]` Acudiente con varios estudiantes a cargo
 
