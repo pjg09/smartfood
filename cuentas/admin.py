@@ -48,13 +48,44 @@ class UsuarioAdmin(admin.ModelAdmin):
     # La contraseña nunca se edita desde aquí: la define el titular con su
     # invitación y nadie más llega a conocerla (`DEC-3`, `INVD-1`).
     exclude = ["password"]
-    readonly_fields = ["id", "creado_en", "last_login"]
     actions = ["accion_desactivar", "accion_reactivar", "accion_reenviar_invitacion"]
+
+    # Lo que este formulario **no** deja tocar, y por qué cada uno.
+    #
+    # Salió del recorrido de `TT-35`. Quitarle el superusuario a la institución
+    # (`TT-10`) no habría servido de nada mientras este formulario siguiera
+    # ofreciendo `is_superuser`, `groups` y `user_permissions`: la institución
+    # podía devolvérselo con dos clics, o concederle al cajero la escritura
+    # sobre las restricciones directamente sobre su cuenta. `INV-4` se sostiene
+    # con permisos por rol en la capa de datos (`DT-11`), y eso exige que los
+    # permisos **no** se concedan una a una desde una pantalla.
+    #
+    # Van como solo lectura y no ocultos a propósito: la institución tiene que
+    # poder **ver** en qué grupo está una cuenta y si está activa. Lo que no
+    # puede es cambiarlo desde aquí.
+    DERIVADOS_DEL_ROL = ["rol", "is_staff", "groups", "user_permissions", "is_superuser"]
+
+    # `is_active` tiene sus propias reglas y su propio servicio (`TT-19`,
+    # `HU-42`): `desactivar_cuenta` se niega a que la institución se desactive a
+    # sí misma, porque entonces nadie podría reactivarla. Editando la casilla a
+    # mano esa regla no se aplica, y la institución se queda fuera del sistema
+    # sin forma de volver a entrar. Se cambia con las acciones del listado.
+    CON_SERVICIO_PROPIO = ["is_active"]
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is None:
             kwargs["form"] = AltaDePersonalForm
         return super().get_form(request, obj, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        """En el alta solo están los tres campos de `AltaDePersonalForm`."""
+        if obj is None:
+            return []
+        return [
+            "id", "creado_en", "last_login",
+            *self.DERIVADOS_DEL_ROL,
+            *self.CON_SERVICIO_PROPIO,
+        ]
 
     def has_add_permission(self, request):
         """Solo la institución educativa. Primer criterio de `HU-40`.
