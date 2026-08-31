@@ -12,7 +12,7 @@
 | responsable | Alejandro (análisis y UX) |
 | recorrido_el | 2026-08-31, sobre el entorno local |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento
 
@@ -20,6 +20,13 @@
 sale de abrir la pantalla y hacer la tarea; ninguna es una previsión. Las que se
 corrigieron dentro de `PR-16` lo dicen, y **las que no, también**: un recorrido que solo
 enumera lo que ya está arreglado no sirve de nada en la siguiente revisión.
+
+De las seis, cuatro se corrigieron. `[UX-4]` es deliberada —el código de tarjeta llega en
+`PR-17`— y `[UX-5]` es una limitación de estas dos semanas: falta la baja, que es `PR-19`.
+
+`[UX-6]` no era de la vista y se corrigió igual: la cuenta institucional era superusuario
+de Django, y eso le daba todos los permisos existan o no en la matriz. Se abrió como
+«pendiente de decisión» y el equipo decidió el mismo día retirar el privilegio.
 
 `INT-3` es el admin de Django (`DT-2`), así que aquí no se diseña una interfaz: se
 comprueba que **la que el framework genera sirve para lo que `HU-44` pide**, y se ajusta
@@ -106,38 +113,50 @@ trazabilidad que `OBJ-E2` pide del sistema.
 entonces, un estudiante matriculado por error se corrige editándolo, y uno matriculado de
 más se queda. Es una limitación real de estas dos semanas, no un defecto de la vista.
 
-### `[UX-6]` La institución puede editar los grupos de permisos — **NO corregido, y hay que decidirlo**
+### `[UX-6]` La institución podía editar los grupos de permisos — **corregido**
 
 En el índice del admin, junto a *Estudiantes*, *Acudientes*, *Usuarios* e *Instituciones
-educativas*, la institución ve **Grupos** de Django, y puede entrar a crearlos y
-modificarlos: `/admin/auth/group/add/` responde `200`.
+educativas*, la institución veía **Grupos** de Django, y podía entrar a crearlos y
+modificarlos: `/admin/auth/group/add/` respondía `200`.
 
-**Por qué importa.** Esos grupos **son** la matriz `[S11]`: `DT-11` sostiene `INV-4`
+**Por qué importaba.** Esos grupos **son** la matriz `[S11]`: `DT-11` sostiene `INV-4`
 —«las restricciones alimentarias no las desactiva la cafetería»— concediendo permisos por
 rol en la capa de datos. Quien puede editar un grupo puede concederle al cajero el permiso
-de escritura sobre las restricciones, y entonces `INV-4` se sostiene sobre una puerta que
-está abierta.
+de escritura sobre las restricciones el día que ese modelo exista, y entonces `INV-4` se
+sostiene sobre una puerta que está abierta.
 
-**Por qué ocurre y por qué no se corrige aquí.** La cuenta institucional se crea con
-`is_superuser=True` en el seed (`HU-39`), y un superusuario de Django tiene todos los
-permisos por definición, se declaren o no en la matriz. No lo introdujo `PR-16` y no se
-arregla en `PR-16`: tocarlo es cambiar cómo nace la cuenta institucional, que es `TT-10` y
-tiene sus propias pruebas.
+**Por qué ocurría.** La cuenta institucional se creaba con `is_superuser=True` en el seed
+(`TT-10`, `HU-39`), con el argumento de que es el actor con más permisos del prototipo. Es
+cierto que lo es; el problema es lo que esa bandera significa: un superusuario de Django
+tiene **todos** los permisos por definición, se declaren o no en la matriz.
 
-**Lo que hay que decidir**, y es una decisión de equipo, no del recorrido:
+**Qué se hizo.** Se retiró la bandera. La institución tiene ahora exactamente los nueve
+permisos que `cuentas/permisos.py` declara, conserva `is_staff` —entra al admin, que es
+`INT-3`— y una migración de datos la retira también de las bases ya sembradas, porque el
+seed es idempotente y no vuelve a tocar una institución que ya existe.
 
-1. **Dejarlo así y declararlo** como limitación identificada del prototipo (`ENT-06`),
-   igual que `DEC-9`, `DEC-10` y `DEC-11`. La institución es el actor de máxima confianza
-   del sistema y en el prototipo nadie más entra.
-2. **Quitarle el superusuario** y darle exactamente lo que la matriz declara. Es lo
-   coherente con `DT-11`, y hace que la prueba
-   `test_ningun_rol_tiene_permisos_de_mas` signifique algo también para `USR-5` —hoy pasa,
-   pero pasa sobre un actor al que los permisos no le aplican—. Cuesta revisar `TT-10` y
-   cada pantalla a la que la institución entra hoy.
+**Eran dos puertas, no una.** Quitar la bandera habría sido cosmético mientras el
+formulario de usuario siguiera ofreciendo `is_superuser`, `groups` y `user_permissions`:
+la institución se la habría devuelto con dos clics, o le habría concedido al cajero los
+permisos directamente sobre su cuenta, sin pasar por ningún grupo. Esos tres campos, más
+`rol` e `is_staff`, pasan a **solo lectura**: se ven —saber en qué grupo está una cuenta
+es parte de administrarla— pero no se editan, porque se derivan del rol y los asigna
+`asignar_grupo_del_rol`.
 
-Mientras no se decida, **`INV-4` está sostenida en el código y no en la cuenta**: los
-permisos declarados son correctos y el cajero no los tiene. Lo que falta es que nadie
-pueda concedérselos con dos clics.
+**Y apareció un tercero por el camino.** La casilla `is_active` también era editable, y
+eso saltaba por encima de `desactivar_cuenta`, que se niega a que la institución se
+desactive a sí misma porque después nadie podría reactivarla (`TT-19`, `HU-42`). Una
+casilla y la institución quedaba fuera del sistema sin forma de volver a entrar. También
+pasa a solo lectura: se cambia con las acciones del listado, que sí pasan por el servicio.
+
+**Lo que queda del formulario de usuario son dos campos editables**, `correo` y `nombre`.
+Todo lo demás, o se deriva del rol, o tiene un servicio con reglas propias. Es la forma
+que toma `DT-15` cuando se aplica de verdad al admin.
+
+**Lo que sigue siendo cierto y conviene no olvidar:** con la bandera puesta, la prueba
+`test_ningun_rol_tiene_permisos_de_mas` pasaba sobre un actor al que los permisos no le
+aplicaban. Es decir, el rol más poderoso del sistema era el único que esa prueba no
+vigilaba. Ahora sí, y hay una prueba que compara sus permisos efectivos contra la matriz.
 
 ---
 

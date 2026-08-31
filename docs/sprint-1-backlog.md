@@ -218,7 +218,7 @@ Sostiene `INV-7`. **No usar una secuencia ni derivar el código del identificado
 | `TT-34` ◆ | Vista de listado, búsqueda, alta individual y edición | Carlos | ☑ |
 | `TT-35` | Recorrido de experiencia de usuario de la vista de administración | Alejandro | ☑ |
 
-`TT-35` produjo `./recorrido-de-administracion-de-estudiantes.md`: seis observaciones sobre la vista construida, tres corregidas dentro del propio PR y una —`UX-6`, la institución puede editar los grupos de permisos— pendiente de decisión del equipo.
+`TT-35` produjo `./recorrido-de-administracion-de-estudiantes.md`: seis observaciones sobre la vista construida, cuatro corregidas dentro del propio PR. La cuarta, `UX-6`, no era de la vista: la cuenta institucional era superusuario de Django y podía editar los grupos de permisos con los que `DT-11` sostiene `INV-4`. Se le retiró el privilegio.
 
 ### `[HU-45]` Consulta del código de tarjeta vigente
 

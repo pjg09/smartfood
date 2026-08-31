@@ -576,11 +576,18 @@ desbloquea tres PR posteriores.
 > vigente en la ficha es `TT-36` y la historia que lo pide es `HU-45`: adelantarlo aquí
 > dejaría a `PR-17` sin su primera tarea. Queda anotado como `UX-4` en el recorrido.
 
-> **`TT-35` dejó un hallazgo sin corregir, y hay que decidirlo.** La cuenta institucional
-> es superusuario desde `TT-10`, así que puede editar los grupos de permisos — que son la
-> matriz `[S11]` con la que `DT-11` sostiene `INV-4`. No lo introdujo este PR y no se
-> arregla en él; está razonado como `UX-6` en `./recorrido-de-administracion-de-estudiantes.md`
-> con las dos salidas posibles.
+> **`TT-35` destapó un privilegio de más, y se corrigió aquí.** La cuenta institucional
+> era superusuario desde `TT-10`, así que podía editar los grupos de permisos — que son la
+> matriz `[S11]` con la que `DT-11` sostiene `INV-4`. Se le retiró la bandera y ahora tiene
+> exactamente los nueve permisos que la matriz declara. Eran **tres puertas**: la bandera,
+> los campos `is_superuser`, `groups` y `user_permissions` del formulario de usuario —que
+> permitían devolvérsela— y la casilla `is_active`, que saltaba por encima de las reglas de
+> `desactivar_cuenta`. Razonado como `UX-6` en
+> `./recorrido-de-administracion-de-estudiantes.md`.
+>
+> **No es una tarea nueva del sprint**: es un defecto contra `DT-11` y `[S11]`, que ya
+> decían lo que debía ocurrir. Va con migración de datos, porque el seed es idempotente y
+> no vuelve a tocar una institución ya sembrada.
 
 ---
 
