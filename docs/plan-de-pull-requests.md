@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **34** de 56 | **15** de 24 |
-| Pendientes | 22 | 9 |
+| **Finalizadas** | **37** de 56 | **16** de 24 |
+| Pendientes | 19 | 8 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 20 | 26 |
-| Carlos | 8 | 16 |
-| Alejandro | 4 | 9 |
+| Pedro | 21 | 26 |
+| Carlos | 9 | 16 |
+| Alejandro | 5 | 9 |
 | Naomi | 2 | 5 |
 
 `PR-14` añadió `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
@@ -119,7 +119,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☑ `#17` |
 | `PR-14` | `TT-28`–`TT-29`, `TT-56` | `HU-03` + `HU-04` · acceso de `USR-2` | ☑ |
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☑ |
-| `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☐ |
+| `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☑ |
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` | ☐ |
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☐ |
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` | ☐ |
@@ -554,17 +554,33 @@ del identificador del estudiante, nunca UUIDv7** —lleva timestamp y va ordenad
 | Rama | `feat/TT-33-administracion-de-estudiantes` |
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-44` |
-| Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna. Amplía la matriz `[S11]`, que es donde vive `INV-4` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-33` | Servicios de alta individual y de edición de estudiante | Pedro | ☐ |
-| `TT-34` ◆ | Vista de listado, búsqueda, alta individual y edición | Carlos | ☐ |
-| `TT-35` | Recorrido de experiencia de usuario de la vista de administración | Alejandro | ☐ |
+| `TT-33` | Servicios de alta individual y de edición de estudiante | Pedro | ☑ |
+| `TT-34` ◆ | Vista de listado, búsqueda, alta individual y edición | Carlos | ☑ |
+| `TT-35` | Recorrido de experiencia de usuario de la vista de administración | Alejandro | ☑ |
 
 `TT-34` es la vista sobre la que se apoyan `PR-17`, `PR-19` y `PR-20`. Integrarla pronto
 desbloquea tres PR posteriores.
+
+> **La advertencia que dejó `PR-15` está atendida.** El admin no guarda el estudiante por
+> su cuenta: el alta pasa por `crear_estudiante` y la edición por `editar_estudiante`
+> (`DT-15`). Hay una prueba que matricula desde el admin y comprueba que el estudiante sale
+> con código de tarjeta bien formado, que es la única forma de detectar que la delegación
+> se rompió.
+
+> **El código de tarjeta no se muestra en esta vista, a propósito.** Exponer el código
+> vigente en la ficha es `TT-36` y la historia que lo pide es `HU-45`: adelantarlo aquí
+> dejaría a `PR-17` sin su primera tarea. Queda anotado como `UX-4` en el recorrido.
+
+> **`TT-35` dejó un hallazgo sin corregir, y hay que decidirlo.** La cuenta institucional
+> es superusuario desde `TT-10`, así que puede editar los grupos de permisos — que son la
+> matriz `[S11]` con la que `DT-11` sostiene `INV-4`. No lo introdujo este PR y no se
+> arregla en él; está razonado como `UX-6` en `./recorrido-de-administracion-de-estudiantes.md`
+> con las dos salidas posibles.
 
 ---
 

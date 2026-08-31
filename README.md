@@ -16,7 +16,7 @@ cinco sprints de dos semanas.
 | | |
 |---|---|
 | Sprint | **1 de 5** — registro, perfiles, vinculación y catálogo |
-| Avance | 34 de 56 tareas · 15 de 24 Pull Requests |
+| Avance | 37 de 56 tareas · 16 de 24 Pull Requests |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
@@ -92,6 +92,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`desarrollo.md`](./docs/desarrollo.md) | Reconstrucción local, credenciales y comandos |
 | [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
 | [`despliegue.md`](./docs/despliegue.md) | Estado del entorno desplegado, sus restricciones y sus trampas |
+| [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
 
 ---
