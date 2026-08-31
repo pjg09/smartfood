@@ -17,11 +17,11 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | Documento | Para qué |
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
-| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-11`) |
+| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-21`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-1-backlog.md` | **Las 55 tareas del sprint en curso**, con responsable |
-| `docs/plan-de-pull-requests.md` | Las 55 tareas agrupadas en 24 PR, y **el estado de cada una** |
+| `docs/sprint-1-backlog.md` | **Las 56 tareas del sprint en curso**, con responsable |
+| `docs/plan-de-pull-requests.md` | Las 56 tareas agrupadas en 24 PR, y **el estado de cada una** |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -111,7 +111,7 @@ Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo dife
 ## Definición de Terminado
 
 En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
-**Pull Request**, no a la historia, porque 12 de las 55 tareas del sprint no cuelgan de ninguna.
+**Pull Request**, no a la historia, porque 13 de las 56 tareas del sprint no cuelgan de ninguna.
 
 Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (datos ficticios)
 aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se

@@ -1,0 +1,42 @@
+{% comment %} TT-29. Fragmento del estudiante elegido (`HU-04`).
+
+   Fragmento, no página: lo devuelve `estudiante_seleccionado` a cada clic del
+   selector, y lo incluye la página al pintarse por primera vez (`DT-16`).
+
+   **Todo lo que hay aquí es de un estudiante, no del acudiente.** Es el segundo
+   criterio de `HU-04`: el saldo, el límite diario y las restricciones son por
+   estudiante. Los tres llegan en sprints posteriores —billetera en el Sprint 2
+   (`HU-06`, `HU-09`), restricciones en el 3 (`HU-10`, `HU-11`)— y se declaran
+   aquí para que el sitio al que pertenecen quede fijado desde ahora. {% endcomment %}
+
+{% if seleccionado %}
+  <div class="rounded-lg bg-white p-6 shadow-sm">
+    <h2 class="text-lg font-semibold tracking-tight text-marca-900">
+      {{ seleccionado.nombre }}
+    </h2>
+    <p class="mt-1 text-sm text-slate-500">
+      Documento <span class="font-mono">{{ seleccionado.documento }}</span>
+    </p>
+
+    <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+      <div class="rounded-md border border-marca-100 p-4">
+        <dt class="text-sm font-medium text-marca-700">Saldo</dt>
+        <dd class="mt-1 text-sm text-slate-500">
+          Billetera individual de {{ seleccionado.nombre }}. Sprint 2.
+        </dd>
+      </div>
+      <div class="rounded-md border border-marca-100 p-4">
+        <dt class="text-sm font-medium text-marca-700">Límite diario</dt>
+        <dd class="mt-1 text-sm text-slate-500">
+          Se fija para {{ seleccionado.nombre }}, no para la cuenta. Sprint 3.
+        </dd>
+      </div>
+      <div class="rounded-md border border-marca-100 p-4">
+        <dt class="text-sm font-medium text-marca-700">Restricciones</dt>
+        <dd class="mt-1 text-sm text-slate-500">
+          Alérgenos y productos bloqueados de {{ seleccionado.nombre }}. Sprint 3.
+        </dd>
+      </div>
+    </dl>
+  </div>
+{% endif %}

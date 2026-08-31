@@ -150,7 +150,21 @@ AUTH_USER_MODEL = "cuentas.Usuario"
 # iniciar sesión también. Las tres propiedades tienen caso de prueba.
 PASSWORD_RESET_TIMEOUT = env.int("DJANGO_CADUCIDAD_INVITACION", default=60 * 60 * 24 * 7)
 
-LOGIN_URL = "/admin/login/"
+# `TT-56` (`DEC-12`). La pantalla de acceso común a los cuatro roles.
+#
+# **Antes apuntaba a `/admin/login/`, y eso dejaba fuera al acudiente**: ese
+# formulario exige `is_staff`, y `USR-2` no accede a la administración porque
+# `INT-1` no es el admin (`DT-2`). Un `@login_required` en la interfaz del
+# acudiente lo mandaba a una pantalla que iba a rechazarlo siempre.
+#
+# La ruta no es un camino de alta: `INV-6` e `INVD-1` siguen enteras y las
+# rutas de registro no existen (`DT-10`).
+LOGIN_URL = "acceso"
+
+# Tras entrar y tras salir, la portada. Es lo que reparte por rol, y así ningún
+# rol aterriza en una pantalla que no le corresponde.
+LOGIN_REDIRECT_URL = "inicio"
+LOGOUT_REDIRECT_URL = "inicio"
 
 # Base absoluta para los enlaces que viajan por correo. Un enlace de invitación
 # no puede ser relativo: se abre desde el cliente de correo, no desde el sitio.

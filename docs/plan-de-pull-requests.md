@@ -5,13 +5,13 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-PR-SPRINT1 |
-| titulo | Agrupación de las 55 tareas del Sprint 1 en Pull Requests, y estado de cada tarea |
+| titulo | Agrupación de las 56 tareas del Sprint 1 en Pull Requests, y estado de cada tarea |
 | documentos_fuente | `./sprint-1-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`) |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
-| tareas cubiertas | 55 de 55 (`TT-01` … `TT-55`) |
+| tareas cubiertas | 56 de 56 (`TT-01` … `TT-56`) |
 | pull requests | 24 (`PR-01` … `PR-24`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -36,7 +36,7 @@ sin adelantar tareas.
 
 De ahí sale la única propiedad que importa, y es demostrable:
 
-> El `ANEXO C` verifica que el orden de las 55 tareas es un orden topológico del grafo de
+> El `ANEXO C` verifica que el orden de las 55 tareas planificadas es un orden topológico del grafo de
 > dependencias: **ninguna tarea aparece antes de algo que la bloquea**. Si cada PR es un
 > bloque contiguo de ese orden, entonces toda dependencia de cualquier tarea de `PR-k`
 > está, o en `PR-k`, o en un PR anterior. **Nunca en uno posterior.**
@@ -86,15 +86,19 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **28** de 55 | **13** de 24 |
-| Pendientes | 27 | 11 |
+| **Finalizadas** | **31** de 56 | **14** de 24 |
+| Pendientes | 25 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 16 | 25 |
-| Carlos | 7 | 16 |
+| Pedro | 18 | 26 |
+| Carlos | 8 | 16 |
 | Alejandro | 3 | 9 |
 | Naomi | 2 | 5 |
+
+`PR-14` añadió `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
+habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
+`./decisiones-de-alcance.md`. Por eso el total pasa de 55 a 56.
 
 ### [S3.1] Estado de los 24 Pull Requests
 
@@ -113,7 +117,7 @@ este documento.
 | `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☑ `#15` |
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☑ `#16` |
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☑ `#17` |
-| `PR-14` | `TT-28`–`TT-29` | `HU-03` + `HU-04` | ☐ |
+| `PR-14` | `TT-28`–`TT-29`, `TT-56` | `HU-03` + `HU-04` · acceso de `USR-2` | ☑ |
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☐ |
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☐ |
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` | ☐ |
@@ -262,8 +266,9 @@ PR de una sola tarea documental. Es un `docs`: no publica versión.
 
 Extrae la Definición de Terminado a `./definicion-de-terminado.md` con identificadores
 citables (`DoD-1` … `DoD-6`) y la reescribe con **criterios condicionales**, porque la
-redacción original hablaba de historias y **12 de las 55 tareas del sprint no cuelgan de
-ninguna** — incluidos los cinco PR ya integrados.
+redacción original hablaba de historias y **13 de las 56 tareas del sprint no cuelgan de
+ninguna** — incluidos los cinco PR ya integrados. Eran 12 de 55 hasta que `PR-14` añadió
+`TT-56` (`DEC-12`), que tampoco cuelga de ninguna historia.
 
 ---
 
@@ -470,16 +475,25 @@ erratas se reporta entero, no obliga a subirlo diez veces.
 | Rama | `feat/TT-28-acudientes` |
 | Responsables | Pedro y Carlos |
 | Historias | `HU-03`, `HU-04` |
-| Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna. Sostiene sin romperlas `INV-6` e `INVD-1` (`TT-56` no es un camino de alta) |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-28` | Disparo de una invitación por acudiente al completarse la carga | Pedro | ☐ |
-| `TT-29` | Consulta de estudiantes a cargo y selector de estudiante en la interfaz del acudiente | Carlos | ☐ |
+| `TT-28` | Disparo de una invitación por acudiente al completarse la carga | Pedro | ☑ |
+| `TT-29` | Consulta de estudiantes a cargo y selector de estudiante en la interfaz del acudiente | Carlos | ☑ |
+| `TT-56` | Pantalla de acceso al sistema, común a los cuatro roles (`DEC-12`) | Pedro | ☑ |
 
 Dos historias de una tarea cada una, contiguas y del mismo asunto: el acudiente entra y ve
 a los suyos. El modelo ya lo resolvió `TT-21`.
+
+> **`TT-56` no estaba planificada, y `TT-29` no se podía terminar sin ella.** «El acudiente
+> entra» no lo construía ninguna de las 55 tareas: **ninguna de las 59 historias pide un
+> inicio de sesión**, y `LOGIN_URL` apuntaba a `/admin/login/`, que exige `is_staff` y
+> rechaza al acudiente siempre. Es habilitación no contabilizada, como las de `[S3]` del
+> sprint backlog, y se registra con identificador propio en `DEC-12`. Entra en este PR
+> porque es donde se necesita: la regla de corte de `[S1]` pide que un PR cierre algo
+> demostrable, y sin acceso `HU-04` no se demuestra.
 
 > **`DEC-9` cambia lo que `TT-28` tiene que construir.** La carga **genera** la invitación
 > de cada acudiente —token de un solo uso y con caducidad— pero **no la entrega por
@@ -487,6 +501,11 @@ a los suyos. El modelo ya lo resolvió `TT-21`.
 > ningún buzón. No hay que implementar envío masivo ni preocuparse por su latencia.
 > `HU-03` se demuestra tomando el enlace de un acudiente cargado y definiendo la
 > contraseña con él.
+>
+> **El enlace se saca con `manage.py invitacion <correo>`, de uno en uno.** No se lista en
+> la pantalla de la carga: es una credencial, y enseñárselos todos a la institución
+> contradiría de hecho `DEC-3`, cuyo valor es que quien crea la cuenta no llega a conocer la
+> clave del titular.
 
 ---
 

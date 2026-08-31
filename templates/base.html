@@ -1,5 +1,5 @@
 {% load static %}<!doctype html>
-{# Plantilla base de SmartFood (TT-05).
+{% comment %} Plantilla base de SmartFood (TT-05).
 
    De esta cuelga toda página servida por la aplicación. `DT-16` prevé una base
    por interfaz; esta es el tronco común, y cada interfaz añadirá la suya:
@@ -9,26 +9,26 @@
      INT-3  administración   no lleva plantillas: lo cubre el admin (`DT-2`)
 
    Los fragmentos que devuelven las vistas HTMX van en `templates/partials/`.
-   Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`). #}
+   Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`). {% endcomment %}
 <html lang="es" class="h-full">
 <head>
   <meta charset="utf-8">
-  {# Sin esto, `INT-1` se ve como una página de escritorio encogida en el
-     teléfono, que es justo desde donde entra el acudiente. #}
+  {% comment %} Sin esto, `INT-1` se ve como una página de escritorio encogida en el
+     teléfono, que es justo desde donde entra el acudiente. {% endcomment %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}SmartFood{% endblock %}</title>
 
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-  {# Vendorizado, sin CDN: la hoja de estilos y el script del prototipo no
-     dependen de que un tercero siga sirviéndolos el día de la sustentación. #}
+  {% comment %} Vendorizado, sin CDN: la hoja de estilos y el script del prototipo no
+     dependen de que un tercero siga sirviéndolos el día de la sustentación. {% endcomment %}
   <script src="{% static 'js/htmx.min.js' %}" defer></script>
   {% block cabecera %}{% endblock %}
 </head>
 
 <body class="h-full bg-marca-50 text-slate-900 antialiased flex flex-col">
 
-  {# Saltar al contenido: la primera parada del tabulador. En `INT-2` todo se
-     navega con teclado (`DT-16`), y aquí no cuesta nada darlo hecho. #}
+  {% comment %} Saltar al contenido: la primera parada del tabulador. En `INT-2` todo se
+     navega con teclado (`DT-16`), y aquí no cuesta nada darlo hecho. {% endcomment %}
   <a href="#contenido"
      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50
             focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg">
@@ -40,6 +40,25 @@
       <a href="/" class="text-lg font-semibold tracking-tight">SmartFood</a>
       <nav class="flex items-center gap-4 text-sm">
         {% block navegacion %}{% endblock %}
+
+        {% comment %} `TT-56`. Entrar y salir. No hay enlace a ningún registro porque no
+           existe ruta de registro (`INV-6`, `INVD-1`, `DT-10`). {% endcomment %}
+        {% if user.is_authenticated %}
+          {% if user.es_acudiente %}
+            <a href="{% url 'mis-estudiantes' %}" class="hover:underline">Mis estudiantes</a>
+          {% endif %}
+          <span class="hidden text-marca-100 sm:inline">{{ user.email }}</span>
+          <form method="post" action="{% url 'salir' %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="rounded-md border border-marca-100/40 px-3 py-1 hover:bg-marca-600
+                           focus:outline-none focus:ring-2 focus:ring-white">
+              Salir
+            </button>
+          </form>
+        {% else %}
+          <a href="{% url 'acceso' %}" class="hover:underline">Entrar</a>
+        {% endif %}
       </nav>
     </div>
   </header>

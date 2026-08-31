@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 
-{# Página provisional. Existe para que `TT-05` sea demostrable: sin algo que
-   extienda `base.html`, la plantilla base no se puede verificar en el entorno
+{% comment %} Portada. Existe para que `TT-05` sea demostrable: sin algo que extienda
+   `base.html`, la plantilla base no se puede verificar en el entorno
    desplegado, que es lo que exige la Definición de Terminado.
 
-   La sustituye `TT-11` (`PR-08`), cuando exista la pantalla de acceso. #}
+   **Corrección (`TT-56`).** Aquí decía que la sustituiría `TT-11` (`PR-08`)
+   «cuando exista la pantalla de acceso». Era falso: `TT-11` es la pantalla de
+   *definir contraseña* desde la invitación, no la de entrar, y ninguna tarea
+   del sprint construía esa segunda. La construye `TT-56` (`DEC-12`), y esta
+   portada se queda: es a donde se llega tras entrar, y desde aquí cada rol va a
+   lo suyo. {% endcomment %}
 
 {% block titulo %}SmartFood · Cafetería escolar{% endblock %}
 
@@ -17,11 +22,28 @@
       Gestión de cafeterías escolares con control parental y trazabilidad digital.
     </p>
 
-    <p class="mt-6 rounded-md bg-marca-100 px-4 py-3 text-sm text-marca-900">
-      Prototipo en construcción. Las cuentas no se crean desde aquí:
-      la institución da de alta a su personal y a sus estudiantes, y cada
-      persona recibe una invitación por correo.
-    </p>
+    {% if user.is_authenticated %}
+      <div class="mt-6 flex flex-wrap gap-3">
+        {% if user.es_acudiente %}
+          <a href="{% url 'mis-estudiantes' %}"
+             class="rounded-md bg-marca-700 px-4 py-2 text-sm font-medium text-white
+                    hover:bg-marca-600">Mis estudiantes</a>
+        {% endif %}
+        {% if user.is_staff %}
+          {% comment %} `INT-3` es el admin de Django (`DT-2`): el personal y la institución
+             operan desde allí, no desde plantillas propias. {% endcomment %}
+          <a href="{% url 'admin:index' %}"
+             class="rounded-md bg-marca-700 px-4 py-2 text-sm font-medium text-white
+                    hover:bg-marca-600">Administración</a>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="mt-6 rounded-md bg-marca-100 px-4 py-3 text-sm text-marca-900">
+        Prototipo en construcción. Las cuentas no se crean desde aquí:
+        la institución da de alta a su personal y a sus estudiantes, y cada
+        persona recibe una invitación por correo con la que define su contraseña.
+      </p>
+    {% endif %}
 
     <dl class="mt-6 grid gap-4 sm:grid-cols-3">
       <div class="rounded-md border border-marca-100 p-4">

@@ -16,7 +16,7 @@ cinco sprints de dos semanas.
 | | |
 |---|---|
 | Sprint | **1 de 5** — registro, perfiles, vinculación y catálogo |
-| Avance | 28 de 55 tareas · 13 de 24 Pull Requests |
+| Avance | 31 de 56 tareas · 14 de 24 Pull Requests |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
@@ -81,8 +81,8 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | Las 55 tareas del sprint en curso, con responsable y estado |
-| [`plan-de-pull-requests.md`](./docs/plan-de-pull-requests.md) | Esas 55 tareas agrupadas en 24 PR, y el estado de cada una |
+| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | Las 56 tareas del sprint en curso, con responsable y estado |
+| [`plan-de-pull-requests.md`](./docs/plan-de-pull-requests.md) | Esas 56 tareas agrupadas en 24 PR, y el estado de cada una |
 | [`definicion-de-terminado.md`](./docs/definicion-de-terminado.md) | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 
 **Cómo se trabaja**

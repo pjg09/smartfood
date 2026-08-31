@@ -118,3 +118,12 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def tiene_contrasena_definida(self):
         """¿El titular ya usó su invitación?"""
         return self.has_usable_password()
+
+    @property
+    def es_acudiente(self):
+        """`USR-2`. Lo consultan las plantillas para repartir la navegación.
+
+        Existe para no comparar contra la cadena `"acudiente"` en cada plantilla:
+        el día que un rol cambie de nombre, el sitio que hay que tocar es este.
+        """
+        return self.rol == Rol.ACUDIENTE
