@@ -77,6 +77,8 @@ Tres reglas (`DT-15`):
 2. **La invariante que la base pueda imponer, la impone la base.** Un `if` se olvida en el siguiente
    camino de escritura; una restricción no.
 3. **Los servicios no saben de HTTP.**
+   Reciben `actor` como argumento y lanzan `PermissionDenied` si no procede; nunca leen
+   `request.user`. El admin **también es una vista**: su `save_model` delega en el servicio.
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`.
@@ -84,6 +86,27 @@ devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django c
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
+
+## Cómo ejecutar
+
+Con `docker compose up -d` levantado, y siempre por `uv run`:
+
+```bash
+set -a && source .env && set +a
+uv run python manage.py <lo que sea>
+```
+
+Antes de cada PR, los tres tienen que pasar:
+
+```bash
+uv run python manage.py check
+uv run python manage.py makemigrations --check --dry-run   # DoD-3, el que más se olvida
+uv run python manage.py test
+```
+
+Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
+`transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
+`self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
 
 ## Definición de Terminado
 
@@ -98,6 +121,9 @@ salta**.
 gratuito del proveedor no lo sostiene (`[S2]` de `docs/despliegue.md`). Mientras dure, cada PR
 declara **cómo se verificó en local, con la salida real del comando**.
 
+**No ejecutes ninguna acción sobre Railway** mientras dure el congelamiento. El despliegue
+automático está desconectado a propósito.
+
 ## Convenciones
 
 - **Español** en respuestas, documentación y mensajes de commit. Identificadores del código y
@@ -108,6 +134,8 @@ declara **cómo se verificó en local, con la salida real del comando**.
 - **Trunk based development**: `main` protegida, ramas cortas, todo entra por PR con squash merge.
   Commits en Conventional Commits —`tipo(ámbito): resumen` en español, cuerpo con `Refs:`—, porque
   son los que disparan el versionado. El detalle está en `docs/convenciones-de-git.md`.
+- **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
+  instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
 - **Datos ficticios siempre** (`ALC-OUT-07`). Ningún dato real de ningún estudiante entra en este
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).
@@ -120,6 +148,8 @@ declara **cómo se verificó en local, con la salida real del comando**.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
    está ahí, para.
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
+5. Al terminar, marca la tarea `☑` **en los dos documentos** —`plan-de-pull-requests.md` y
+   `sprint-1-backlog.md`— dentro del propio PR, y actualiza los contadores. Deben coincidir.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. `[ANEXO D]` del backlog verifica el grafo de dependencias.
