@@ -42,8 +42,10 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
 
     La cuenta accede a la administración porque `INT-3` es el admin de Django
     (`DT-2`) y la institución es quien carga estudiantes desde allí. No se crea
-    con `createsuperuser`: eso fijaría una contraseña que alguien conocería,
-    contra `DEC-3` e `INVD-1`.
+    con `createsuperuser`, y por dos razones distintas: esa orden fijaría una
+    contraseña que alguien conocería —contra `DEC-3` e `INVD-1`— y además la
+    dejaría como superusuario, que es justo lo que no puede ser. Lo que puede
+    hacer sale de la matriz `[S11]` y de ningún otro sitio.
     """
     existente = Institucion.objects.select_related("usuario").first()
     if existente is not None:
@@ -62,10 +64,25 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
         accede_a_administracion=True,
         contrasena_de_desarrollo=contrasena_de_desarrollo,
     )
-    # La institución administra el sistema entero: es el actor con más permisos
-    # del prototipo. La matriz fina la construye `TT-15`.
-    usuario.is_superuser = True
-    usuario.save(update_fields=["is_superuser"])
+
+    # **La institución no es superusuario, y eso es deliberado.**
+    #
+    # Lo fue hasta el 2026-08-31, con el argumento de que es el actor con más
+    # permisos del prototipo. El recorrido de `TT-35` mostró lo que eso costaba:
+    # un superusuario de Django tiene **todos** los permisos por definición, se
+    # declaren o no en la matriz, así que la institución podía entrar a
+    # `/admin/auth/group/` y editar los grupos.
+    #
+    # Esos grupos **son** la matriz `[S11]`: es con ellos como `DT-11` sostiene
+    # `INV-4` —«las restricciones alimentarias no las desactiva la cafetería»—.
+    # Quien edita un grupo puede concederle al cajero la escritura sobre las
+    # restricciones, y entonces la invariante se sostiene sobre una puerta
+    # abierta.
+    #
+    # Sin la bandera, la institución tiene **exactamente** lo que
+    # `cuentas/permisos.py` declara, ni más ni menos, y la prueba
+    # `test_ningun_rol_tiene_permisos_de_mas` pasa a significar algo también
+    # para `USR-5`. Sigue con `is_staff`: entra al admin, que es `INT-3`.
 
     institucion = Institucion.objects.create(nombre=nombre, usuario=usuario)
     return institucion, True
