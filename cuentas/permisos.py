@@ -32,6 +32,19 @@ PERMISOS_POR_ROL = {
     Rol.INSTITUCION: {
         "cuentas.usuario": ["add", "view", "change"],
         "personas.institucion": ["view", "change"],
+        # `HU-44`, tercer criterio: administrar estudiantes es función
+        # **exclusiva** de la institución educativa. Aquí es donde se hace
+        # exclusiva; ningún otro rol la tiene, y esa ausencia es la mitad que
+        # importa.
+        #
+        # **Sin `delete`, y a propósito.** El estudiante que se va no se borra:
+        # se da de baja, que es un estado y conserva el historial (`DT-12`,
+        # `HU-51`). Borrar la fila destruiría la trazabilidad que `OBJ-E2` pide,
+        # y las claves ajenas van con `PROTECT` justamente por eso.
+        "personas.estudiante": ["add", "view", "change"],
+        # Ver al acudiente de un estudiante es parte de administrarlo. Escribirlo
+        # no: la cuenta del acudiente se gestiona desde `cuentas.usuario`.
+        "personas.acudiente": ["view"],
     },
     # `USR-4`. «Gestionar catálogo, precios e inventario» y «Consultar reportes
     # de ventas e inventario». Ningún modelo suyo existe todavía.

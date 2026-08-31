@@ -71,6 +71,23 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
     return institucion, True
 
 
+def _comprobar_que_administra_estudiantes(actor, accion):
+    """Solo la institución educativa, y con la cuenta activa (`[S11]`).
+
+    Tercer criterio de `HU-44`: administrar estudiantes es **función exclusiva
+    de la institución educativa**. Vive en el servicio y no en la vista porque
+    el admin es una vista más y `DT-15` no admite reglas que dependan de por
+    dónde se entre.
+    """
+    if actor is None or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            f"{accion} es función exclusiva de la institución educativa "
+            "(HU-44, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+
 @transaction.atomic
 def crear_estudiante(*, actor, nombre, documento, acudiente):
     """Da de alta a un estudiante con su código de tarjeta (`TT-32`, `HU-43`).
@@ -91,13 +108,7 @@ def crear_estudiante(*, actor, nombre, documento, acudiente):
     primer choque tumbaría la carga entera del colegio en lugar de sortear otro
     código.
     """
-    if actor is None or actor.rol != Rol.INSTITUCION:
-        raise PermissionDenied(
-            "Matricular estudiantes es función exclusiva de la institución "
-            "educativa (HU-43, [S11])."
-        )
-    if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+    _comprobar_que_administra_estudiantes(actor, "Matricular estudiantes")
 
     for intento in range(INTENTOS_DE_CODIGO):
         codigo = generar_codigo_de_tarjeta()
@@ -122,6 +133,53 @@ def crear_estudiante(*, actor, nombre, documento, acudiente):
         "intentos. Con 2^70 combinaciones esto no ocurre por azar: revisa el "
         "generador (INV-7, DT-9)."
     )
+
+
+# Lo único que la institución modifica de un estudiante ya matriculado.
+#
+# **El código de tarjeta no está, y esa ausencia es la regla.** Cambiarlo no es
+# «editar un campo»: es reasignar la tarjeta, tiene su propia historia (`HU-46`)
+# y su propia invariante —el código anterior queda invalidado de forma inmediata
+# y definitiva (`INVD-4`)—. Un `save()` desde el formulario no puede hacer eso de
+# tapadillo. Tampoco está `creado_en`, que es un hecho, no un dato.
+CAMPOS_EDITABLES = ("nombre", "documento", "acudiente")
+
+
+@transaction.atomic
+def editar_estudiante(*, actor, estudiante, **campos):
+    """Modifica los campos de un estudiante ya matriculado (`TT-33`, `HU-44`).
+
+    Segundo criterio de `HU-44`: «permite modificar los campos de un estudiante
+    ya cargado», que es lo que mantiene los datos al día durante el año y no solo
+    en la carga inicial.
+
+    Solo acepta los de `CAMPOS_EDITABLES`. Cualquier otro es un error explícito y
+    no un cambio silencioso: si algún día un formulario nuevo manda
+    `codigo_tarjeta`, esto se lo dice en vez de reasignarle la tarjeta al
+    estudiante sin que nadie lo pida.
+
+    Guarda con `update_fields` para no reescribir columnas que nadie tocó.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Editar estudiantes")
+
+    desconocidos = sorted(set(campos) - set(CAMPOS_EDITABLES))
+    if desconocidos:
+        raise ValueError(
+            f"No se pueden editar estos campos de un estudiante: "
+            f"{', '.join(desconocidos)}. Editables: {', '.join(CAMPOS_EDITABLES)}. "
+            "El código de tarjeta se reasigna, no se edita (HU-46, INVD-4)."
+        )
+
+    cambiados = []
+    for campo, valor in campos.items():
+        if getattr(estudiante, campo) != valor:
+            setattr(estudiante, campo, valor)
+            cambiados.append(campo)
+
+    if cambiados:
+        estudiante.save(update_fields=cambiados)
+
+    return estudiante
 
 
 @dataclass
