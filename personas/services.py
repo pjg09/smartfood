@@ -15,7 +15,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 from cuentas.models import Rol
-from cuentas.services import crear_cuenta
+from cuentas.services import crear_cuenta, generar_invitacion
 from personas.carga import leer
 from personas.models import Acudiente, Estudiante, Institucion
 from personas.validacion import ArchivoInvalido, validar
@@ -69,6 +69,7 @@ class ResultadoDeCarga:
     acudientes_creados: int = 0
     acudientes_reutilizados: int = 0
     estudiantes_creados: int = 0
+    invitaciones_generadas: int = 0
     avisos: list = field(default_factory=list)
 
     @property
@@ -93,9 +94,19 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
     criterio, `ALC-IN-04`). El correo es la identidad: filas con el mismo correo
     son la misma persona y comparten cuenta.
 
+    **Se genera una invitación por cada acudiente que la carga crea** (`TT-28`,
+    `HU-03`), dentro de esta misma transacción y sin entregarla por correo
+    (`DEC-9`). Generarla es construir su enlace, y hacerlo aquí comprueba que la
+    cuenta recién creada es activable: si alguna no lo fuera, la carga entera se
+    revierte en vez de dejar acudientes que nadie puede activar. El enlace **no
+    se guarda ni se muestra**: es una credencial, y se obtiene de una en una con
+    `manage.py invitacion <correo>` (`DEC-3`).
+
     `contrasena_de_desarrollo` asigna una clave conocida a las cuentas creadas y
-    no envía correo (`DEC-11`). Sin él, las cuentas nacen sin contraseña
-    utilizable y la invitación **se genera pero no se entrega** (`DEC-9`).
+    no envía correo (`DEC-11`). Por ese camino **tampoco se genera invitación**:
+    la cuenta ya tiene contraseña, así que no hay nada que activar. Sin él, las
+    cuentas nacen sin contraseña utilizable y la invitación se genera pero no se
+    entrega (`DEC-9`).
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
@@ -143,6 +154,14 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
                     documento=fila.documento_acudiente,
                 )
                 resultado.acudientes_creados += 1
+
+                # `TT-28`, `HU-03`: una invitación por acudiente cargado,
+                # automáticamente al completarse la carga. Con contraseña
+                # asignada (`DEC-11`) no hay invitación que generar: la cuenta
+                # ya está activada.
+                if not contrasena_de_desarrollo:
+                    generar_invitacion(usuario)
+                    resultado.invitaciones_generadas += 1
             acudientes_por_correo[correo] = acudiente
 
         Estudiante.objects.create(

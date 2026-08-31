@@ -46,6 +46,35 @@ def construir_enlace_de_invitacion(usuario):
     return f"{settings.URL_BASE.rstrip('/')}{ruta}"
 
 
+def generar_invitacion(usuario):
+    """Genera la invitación de un usuario **sin entregarla** (`TT-28`, `DEC-9`).
+
+    `DEC-9` separa dos cosas que antes iban juntas: **generar** la invitación y
+    **entregarla**. La carga masiva hace la primera y no la segunda, porque las
+    direcciones de los acudientes son ficticias (`ALC-OUT-07`) y cada rebote
+    degrada la reputación del remitente.
+
+    Generar es construir el enlace: el token no se almacena, se deriva del
+    usuario. Que se pueda construir no es trivial —una cuenta con contraseña ya
+    definida no admite invitación, y el `password=""` que cierra `TT-13` haría
+    creer que la tiene—, así que esta función **falla** en vez de devolver un
+    enlace inservible. Llamada dentro de la transacción de la carga, esa falla
+    revierte el archivo entero en lugar de dejar acudientes que nadie puede
+    activar.
+
+    Devuelve la URL absoluta. **Es una credencial**: quien la tiene puede fijar
+    la contraseña de esa cuenta. No se muestra en ninguna pantalla ni se guarda
+    en el resultado de la carga; se obtiene de una en una y a propósito, con
+    `manage.py invitacion <correo>`. Así `DEC-3` sigue en pie: quien crea la
+    cuenta no llega a conocer la clave del titular.
+    """
+    if usuario.tiene_contrasena_definida:
+        raise ValueError(
+            f"«{usuario.email}» ya definió su contraseña: no procede una invitación."
+        )
+    return construir_enlace_de_invitacion(usuario)
+
+
 def invitar(usuario):
     """Manda al titular la invitación con la que definirá su contraseña.
 
@@ -272,6 +301,7 @@ __all__ = [
     "crear_cuenta",
     "crear_cuenta_de_personal",
     "desactivar_cuenta",
+    "generar_invitacion",
     "invitar",
     "reactivar_cuenta",
     "reenviar_invitacion",

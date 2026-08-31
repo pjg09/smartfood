@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% comment %} TT-56. Pantalla de acceso, común a los cuatro roles (`DEC-3`, `DEC-12`).
+
+   No es un camino de alta: aquí solo entra quien ya tiene cuenta y ya definió
+   su contraseña con la invitación (`TT-11`). `INV-6` e `INVD-1` siguen enteras
+   y no hay enlace a ningún registro, porque no existe (`DT-10`). {% endcomment %}
+
+{% block titulo %}Entrar · SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto max-w-md rounded-lg bg-white p-6 shadow-sm sm:p-8">
+    <h1 class="text-xl font-semibold tracking-tight text-marca-900">Entrar</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Con el correo con el que te dieron de alta y la contraseña que definiste
+      desde tu invitación.
+    </p>
+
+    <form method="post" class="mt-6 space-y-4">
+      {% csrf_token %}
+
+      {% if form.errors %}
+        <div class="rounded-md bg-alerta-100 px-4 py-3 text-sm text-alerta-700" role="alert">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          {% for campo in form %}
+            {% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.username.id_for_label }}"
+               class="block text-sm font-medium text-slate-700">Correo electrónico</label>
+        <input type="email" name="{{ form.username.html_name }}"
+               id="{{ form.username.id_for_label }}"
+               autocomplete="username" autofocus required
+               class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2
+                      focus:border-marca-600 focus:outline-none focus:ring-1 focus:ring-marca-600">
+      </div>
+
+      <div>
+        <label for="{{ form.password.id_for_label }}"
+               class="block text-sm font-medium text-slate-700">Contraseña</label>
+        <input type="password" name="{{ form.password.html_name }}"
+               id="{{ form.password.id_for_label }}"
+               autocomplete="current-password" required
+               class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2
+                      focus:border-marca-600 focus:outline-none focus:ring-1 focus:ring-marca-600">
+      </div>
+
+      <button type="submit"
+              class="w-full rounded-md bg-marca-700 px-4 py-2 font-medium text-white
+                     hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
+                     focus:ring-offset-2">
+        Entrar
+      </button>
+    </form>
+
+    <p class="mt-6 border-t border-marca-100 pt-4 text-xs text-slate-500">
+      Las cuentas no se crean desde aquí. La institución da de alta a cada
+      persona y le envía una invitación con la que define su contraseña.
+    </p>
+  </div>
+{% endblock %}
