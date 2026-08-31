@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **31** de 56 | **14** de 24 |
-| Pendientes | 25 | 10 |
+| **Finalizadas** | **34** de 56 | **15** de 24 |
+| Pendientes | 22 | 9 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 18 | 26 |
+| Pedro | 20 | 26 |
 | Carlos | 8 | 16 |
-| Alejandro | 3 | 9 |
+| Alejandro | 4 | 9 |
 | Naomi | 2 | 5 |
 
 `PR-14` añadió `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
@@ -118,7 +118,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☑ `#16` |
 | `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☑ `#17` |
 | `PR-14` | `TT-28`–`TT-29`, `TT-56` | `HU-03` + `HU-04` · acceso de `USR-2` | ☑ |
-| `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☐ |
+| `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☑ |
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☐ |
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` | ☐ |
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☐ |
@@ -518,18 +518,31 @@ a los suyos. El modelo ya lo resolvió `TT-21`.
 | Responsables | Pedro y Alejandro |
 | Historias | `HU-14`, `HU-43` |
 | Invariantes | **`INV-7`** |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-30` | Generador criptográfico del código, con índice único y reintento ante colisión | Pedro | ☐ |
-| `TT-31` | Caso de prueba: unicidad y no secuencialidad sobre un lote grande de códigos | Alejandro | ☐ |
-| `TT-32` | Asignación del código al dar de alta al estudiante, por carga masiva y por alta individual | Pedro | ☐ |
+| `TT-30` | Generador criptográfico del código, con índice único y reintento ante colisión | Pedro | ☑ |
+| `TT-31` | Caso de prueba: unicidad y no secuencialidad sobre un lote grande de códigos | Alejandro | ☑ |
+| `TT-32` | Asignación del código al dar de alta al estudiante, por carga masiva y por alta individual | Pedro | ☑ |
 
 `TT-30` es una función pura, no depende de nada y se presta a escribir la prueba antes que
 la implementación: **el mejor primer commit del sprint**. **Nunca secuencia, nunca derivado
 del identificador del estudiante, nunca UUIDv7** —lleva timestamp y va ordenado
 (`DT-9`, `DT-17`)—: el código opera como credencial de acceso al saldo.
+
+> **Lo que quedó fijado, dentro de lo que `DT-17` dejaba abierto.** Catorce caracteres
+> —el rango era de 12 a 16— sobre un alfabeto de 32 símbolos: dígitos y mayúsculas sin
+> `I`, `L`, `O` ni `U`. Son **70 bits de aleatoriedad**. Mayúsculas y dígitos porque es lo
+> que Code 39 admite sin extensiones, que es el tercer criterio de `HU-43`; sin los cuatro
+> símbolos confundibles porque alguien va a teclear ese código cuando el lector falle.
+
+> **El «alta individual» de `TT-32` es hoy el servicio, no una pantalla.** La vista de
+> administración de estudiantes es `HU-44` y llega en `PR-16`, que es el siguiente. La
+> asignación vive en `personas.services.crear_estudiante`, que es el **único** camino de
+> alta: la carga masiva ya entra por ahí, y `TT-33` tiene que hacer que el admin delegue
+> en él en vez de escribir directamente (`DT-15`). Si `PR-16` crea el estudiante desde el
+> admin sin pasar por el servicio, `HU-43` se rompe en silencio.
 
 ---
 

@@ -12,13 +12,23 @@ Funciones, no clases.
 from dataclasses import dataclass, field
 
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 from cuentas.models import Rol
 from cuentas.services import crear_cuenta, generar_invitacion
 from personas.carga import leer
+from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante, Institucion
 from personas.validacion import ArchivoInvalido, validar
+
+# Cuántas veces se vuelve a intentar si el código sorteado ya existía (`DT-9`).
+#
+# Cinco es generoso hasta lo absurdo, y a propósito: con 2^70 combinaciones y un
+# colegio de miles de estudiantes, la probabilidad de una sola colisión ya es del
+# orden de 10^-15. Que haya cinco seguidas no va a ocurrir nunca. El reintento
+# existe porque `DT-9` lo pide y porque la alternativa —confiar en que no pase—
+# no es una garantía, no porque se espere usarlo.
+INTENTOS_DE_CODIGO = 5
 
 
 @transaction.atomic
@@ -61,6 +71,59 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
     return institucion, True
 
 
+@transaction.atomic
+def crear_estudiante(*, actor, nombre, documento, acudiente):
+    """Da de alta a un estudiante con su código de tarjeta (`TT-32`, `HU-43`).
+
+    **El código se asigna aquí y en ningún otro sitio.** Primer criterio de
+    `HU-43`: la asignación es automática al dar de alta al estudiante, sea por
+    carga masiva o individual. Las dos entran por esta función, así que no hay
+    un camino de alta que se olvide de generarlo. El admin de `HU-44` (`TT-33`)
+    delega también aquí: el admin es una vista y una vista nunca escribe
+    directamente (`DT-15`).
+
+    **Solo la institución educativa** matricula estudiantes (`[S11]`). El actor
+    llega como argumento: este servicio no sabe de HTTP.
+
+    El reintento ante colisión es la mitad de `DT-9` que el índice único no
+    puede cubrir. Cada intento va en su propio punto de guardado —el `atomic`
+    interno— porque una `IntegrityError` deja la transacción abortada: sin él, el
+    primer choque tumbaría la carga entera del colegio en lugar de sortear otro
+    código.
+    """
+    if actor is None or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "Matricular estudiantes es función exclusiva de la institución "
+            "educativa (HU-43, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    for intento in range(INTENTOS_DE_CODIGO):
+        codigo = generar_codigo_de_tarjeta()
+        try:
+            with transaction.atomic():
+                return Estudiante.objects.create(
+                    nombre=nombre,
+                    documento=documento,
+                    acudiente=acudiente,
+                    codigo_tarjeta=codigo,
+                )
+        except IntegrityError:
+            # Puede no haber sido el código: el documento del estudiante también
+            # es único, y ese choque no se arregla sorteando otro valor. Si el
+            # código sorteado no está en la base, el problema era otro y se
+            # propaga tal cual en vez de reintentar cinco veces en balde.
+            if not Estudiante.objects.filter(codigo_tarjeta=codigo).exists():
+                raise
+
+    raise RuntimeError(
+        f"No se pudo asignar un código de tarjeta libre en {INTENTOS_DE_CODIGO} "
+        "intentos. Con 2^70 combinaciones esto no ocurre por azar: revisa el "
+        "generador (INV-7, DT-9)."
+    )
+
+
 @dataclass
 class ResultadoDeCarga:
     """Lo que la carga hizo, para poder enseñárselo a quien la ejecutó."""
@@ -93,6 +156,10 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
     **Un mismo acudiente puede quedar a cargo de varios estudiantes** (cuarto
     criterio, `ALC-IN-04`). El correo es la identidad: filas con el mismo correo
     son la misma persona y comparten cuenta.
+
+    **Cada estudiante sale de aquí con su código de tarjeta** (`HU-43`), porque
+    el alta pasa por `crear_estudiante` y ese es el único sitio donde se asigna.
+    El código **no viene en el archivo**: lo genera el sistema (`INV-7`).
 
     **Se genera una invitación por cada acudiente que la carga crea** (`TT-28`,
     `HU-03`), dentro de esta misma transacción y sin entregarla por correo
@@ -164,7 +231,8 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
                     resultado.invitaciones_generadas += 1
             acudientes_por_correo[correo] = acudiente
 
-        Estudiante.objects.create(
+        crear_estudiante(
+            actor=actor,
             nombre=fila.nombre_estudiante,
             documento=fila.documento_estudiante,
             acudiente=acudiente,
