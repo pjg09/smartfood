@@ -1,8 +1,8 @@
-{# Fragmento de mensajes del framework (`django.contrib.messages`).
+{% comment %} Fragmento de mensajes del framework (`django.contrib.messages`).
 
    Es el primer habitante de `partials/` y fija la convención de `DT-16`: aquí
    viven los fragmentos que las vistas HTMX devuelven por separado, no páginas
-   completas. #}
+   completas. {% endcomment %}
 {% if messages %}
   <div class="mx-auto w-full max-w-5xl px-4 pt-4" role="status" aria-live="polite">
     {% for mensaje in messages %}
