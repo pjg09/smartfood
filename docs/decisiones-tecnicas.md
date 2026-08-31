@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 21 (`DT-1` … `DT-21`) |
+| decisiones | 22 (`DT-1` … `DT-22`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-14`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-22`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -288,6 +288,24 @@ El esquema está en 3NF. Conviene notar que **`DT-4` y `DT-5` son consecuencia d
 
 **La instantánea de `DT-8` parece una desnormalización y no lo es.** «La información nutricional que este producto declara hoy» y «la que declaraba cuando se vendió» son **dos hechos distintos**. El segundo depende funcionalmente de la clave de la línea de venta, no de la del producto, así que almacenarlo no es redundancia sino registrar un hecho que ninguna otra tabla contiene. Normalizarlo referenciando al producto actual haría que editar un producto reescribiera el pasado, y `HU-22` dejaría de cumplirse.
 
+#### `[DT-22]` Code 128 generado en el servidor, en SVG y con medidas en milímetros
+
+**Razón:** `TT-37` exige una vista imprimible y `ENT-02` es una prueba de concepto **con tarjetas físicas y un lector**. Esto cierra el punto abierto que el `ANEXO B` registraba: faltaba decidir la simbología y dónde se genera.
+
+**Simbología: Code 128, subconjunto B.** Codifica dígitos y mayúsculas, que es el alfabeto del código de tarjeta (`DT-9`), y es lo que todo lector USB trae activado de fábrica. Con 14 caracteres produce un símbolo de 189 módulos: **69 mm impreso**, zonas mudas incluidas, que cabe con margen en una tarjeta de 85,6 mm.
+
+**Descartado `EAN-13`**, que era la otra candidata. Son trece **dígitos** con dígito de control, asignados por GS1 para identificar productos de venta al público. Nuestro código es alfanumérico y es un identificador interno: no hay prefijo de empresa que pedir ni catálogo global en el que registrarlo. Usarlo obligaría a cambiar el código de tarjeta a numérico y a perder entropía justo donde `INV-7` la pide.
+
+**Descartado `Code 39`**, que también admite el alfabeto: produce un símbolo un tercio más ancho para el mismo contenido, y no aporta nada a cambio.
+
+**Generado en el servidor, no en el navegador.** Un código de barras rasterizado a la resolución de la pantalla se imprime borroso y deja de leerse. El SVG lleva el ancho en milímetros y sale del papel con la medida que se le pidió, sea cual sea la pantalla. Generarlo en el navegador obligaría además a vendorizar una biblioteca de JavaScript y a que la página imprimible dependiera de que ese script corriera.
+
+**Ancho de módulo 0,33 mm y zona muda de 10 módulos.** La norma admite bajar a 0,19 mm, pero eso es impresión industrial y lectores de gama alta; `ENT-02` va a tener una impresora de oficina y un lector económico. La zona muda no es margen estético: sin ella el lector no encuentra dónde empieza el símbolo.
+
+**La codificación la hace `python-barcode`; el dibujo es nuestro.** Escribir a mano el codificador de Code 128 —tres subconjuntos, suma de control en base 103, patrón de parada de trece módulos— es la clase de código que `DT-2` dice que no hay que escribir: un error sutil no se ve en pantalla, se ve cuando las tarjetas ya están impresas y el lector no las lee. El dibujo sí es nuestro, porque el SVG tiene que ir **en línea** en la página y con las medidas de arriba.
+
+**Nada se almacena.** El símbolo se genera en cada petición a partir del campo del estudiante. Es lo que sostiene el segundo criterio de `HU-45`: una imagen guardada seguiría enseñando un código correcto después de que `HU-46` lo reasignara, y esa tarjeta impresa ya no abre ningún saldo (`INVD-4`).
+
 ---
 
 ## [S2] Modelo de datos núcleo
@@ -431,7 +449,7 @@ Además, `TT-06` (envío de correo) y `TT-15` (permisos según `[S11]`) se apoya
 
 ## [ANEXO B] Puntos abiertos
 
-- **Presentación del código de barras.** `TT-37` exige una vista imprimible. Falta decidir la simbología (Code 128, EAN-13) y si se genera en el servidor o en el navegador. Condiciona `ENT-02`.
+- ~~**Presentación del código de barras.**~~ **Resuelto en `DT-22`** (2026-08-31, `PR-17`): Code 128 subconjunto B, generado en el servidor como SVG con medidas en milímetros. Se conserva la línea porque el punto estuvo abierto y la decisión se tomó después, no en la redacción original.
 - **Cálculo del saldo con el historial creciendo.** `DT-4` calcula el saldo por agregación. Para el volumen del prototipo sobra, pero conviene medirlo antes del Avance 2 y dejar registrada la cifra en `ENT-06` como limitación conocida.
 - **Estrategia de pruebas automatizadas.** La Definición de Terminado exige un caso de prueba por invariante, pero **no se ha decidido formalmente** si son pruebas automatizadas o guiones manuales. Alejandro es dueño del plan de pruebas (`[S12]`).
   **Resuelto de hecho, no de derecho:** lo construido hasta ahora lleva **114 pruebas automáticas** con el ejecutor de Django, y `DoD-5` se ha venido cumpliendo con ellas. El punto sigue abierto porque una práctica no es una decisión: falta que el dueño del plan de pruebas la adopte —o la cambie— y quede escrita. Mientras tanto, `DoD-5` dice «caso de prueba» sin adjetivo, a propósito (`[S2]` de `./definicion-de-terminado.md`).

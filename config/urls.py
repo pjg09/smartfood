@@ -15,6 +15,7 @@ from personas.views import (
     carga_de_estudiantes,
     estudiante_seleccionado,
     panel_del_acudiente,
+    tarjeta_del_estudiante,
 )
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
@@ -71,6 +72,13 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/",
         estudiante_seleccionado,
         name="estudiante-seleccionado",
+    ),
+    # Vista imprimible de la tarjeta (`TT-37`, `HU-45`). Es de la institución
+    # (`USR-5`), no del acudiente: quien produce la tarjeta es el colegio.
+    path(
+        "estudiantes/<uuid:estudiante_id>/tarjeta/",
+        tarjeta_del_estudiante,
+        name="tarjeta-del-estudiante",
     ),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

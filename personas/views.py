@@ -15,9 +15,14 @@ from django.views.decorators.http import require_http_methods
 
 from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
-from personas.models import Estudiante
-from personas.selectors import estudiante_a_cargo, estudiantes_a_cargo
+from personas.models import Estudiante, Institucion
+from personas.selectors import (
+    estudiante_a_cargo,
+    estudiante_para_la_institucion,
+    estudiantes_a_cargo,
+)
 from personas.services import cargar_estudiantes_y_acudientes
+from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
 
 
@@ -118,4 +123,43 @@ def estudiante_seleccionado(request, estudiante_id):
         request,
         "partials/estudiante-seleccionado.html",
         {"seleccionado": estudiante},
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def tarjeta_del_estudiante(request, estudiante_id):
+    """Vista imprimible de la tarjeta de un estudiante (`TT-37`, `HU-45`).
+
+    Habilita `ENT-02`: lo que sale de aquí se imprime y se pasa por un lector en
+    el Sprint 2. No es una pantalla de consulta con un adorno, es el insumo
+    físico de la siguiente demostración.
+
+    **El código de barras se genera en cada petición, a partir del campo del
+    estudiante.** Nada se almacena ni se cachea, y eso es lo que sostiene el
+    segundo criterio de `HU-45`: se muestra el código **vigente**. Una imagen
+    guardada seguiría enseñando un código correcto después de que `HU-46` lo
+    reasignara, y esa tarjeta impresa ya no abre ningún saldo (`INVD-4`).
+
+    **Una tarjeta por página, a propósito.** `ALC-OUT-04` excluye la producción
+    masiva; `ALC-OUT-05` pide «un número limitado de tarjetas» para la prueba de
+    concepto. Se imprimen de una en una, que para un conjunto reducido es
+    suficiente y deja la exclusión donde está.
+    """
+    try:
+        estudiante = estudiante_para_la_institucion(
+            actor=request.user, estudiante_id=estudiante_id
+        )
+    except Estudiante.DoesNotExist:
+        raise Http404("No hay ningún estudiante con ese identificador.") from None
+
+    return render(
+        request,
+        "personas/tarjeta.html",
+        {
+            "estudiante": estudiante,
+            "institucion": Institucion.objects.first(),
+            "codigo_de_barras": svg_del_codigo(estudiante.codigo_tarjeta),
+            "ancho_impreso_mm": ancho_mm(estudiante.codigo_tarjeta),
+        },
     )

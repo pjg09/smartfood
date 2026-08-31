@@ -87,17 +87,18 @@ La pregunta que la institución se hace no es «el estudiante 1001234501», es *
 Marta Ruiz»**. La búsqueda del listado cubre ahora nombre y documento del estudiante **y
 del acudiente**: escribir «Marta» devuelve a sus dos hijos.
 
-### `[UX-4]` El código de tarjeta no aparece por ninguna parte — **es deliberado, y llega en `PR-17`**
+### `[UX-4]` El código de tarjeta no aparecía por ninguna parte — **resuelto en `PR-17`**
 
-El listado muestra *Nombre*, *Documento*, *Acudiente* y *Creado en*. El código de tarjeta
-**no está**, ni en el listado ni en la ficha.
+Cuando se recorrió la vista, el listado mostraba *Nombre*, *Documento*, *Acudiente* y
+*Creado en*, y el código de tarjeta no estaba ni en el listado ni en la ficha.
 
-No es un olvido: exponer el código vigente en la ficha del estudiante es `TT-36`, y `HU-45`
-es la historia que lo pide. Adelantarlo aquí dejaría a `PR-17` sin su primera tarea.
+No era un olvido: exponer el código vigente es `TT-36`, y `HU-45` es la historia que lo
+pide. Adelantarlo en `PR-16` habría dejado a `PR-17` sin su primera tarea.
 
-**Queda anotado como lo que es: una vista incompleta a propósito, durante un PR.** Quien
-recorra esta pantalla antes de que `PR-17` entre verá una ficha de estudiante sin su
-tarjeta, y eso es lo esperado.
+`PR-17` lo añadió al listado, a la ficha y a la búsqueda —buscar por el código responde a
+la pregunta que se hace con una tarjeta suelta en la mano: **¿de quién es esta?**— y le
+puso al lado el enlace a la vista imprimible. **Sigue sin poder escribirse**: verlo no es
+poder editarlo (`HU-14`).
 
 ### `[UX-5]` No hay forma de borrar a un estudiante, y no debe haberla
 
@@ -179,9 +180,9 @@ funciona.
 
 ## [S4] Lo que este recorrido no cubre
 
-- **La vista imprimible del código de barras** (`TT-37`, `PR-17`). Es la pantalla que
-  produce el insumo físico de `ENT-02` y merece su propio recorrido: se imprime, y lo que
-  se imprime se escanea.
+- **La vista imprimible del código de barras** (`TT-37`), que entró en `PR-17` después de
+  este recorrido. Merece el suyo propio, y solo se puede hacer entero con una impresora y
+  un lector delante: es el insumo físico de `ENT-02`.
 - **La fotografía del estudiante** (`TT-52`, `PR-20`). Cambia la ficha y el listado.
 - **La baja** (`TT-42`, `PR-19`). Añade la acción que hoy `[UX-5]` echa en falta.
 - **Uso en móvil.** El admin de Django es responsivo, pero `INT-3` es de escritorio por
