@@ -44,3 +44,26 @@ def estudiante_a_cargo(*, usuario, estudiante_id):
     identificadores no revela si existen.
     """
     return estudiantes_a_cargo(usuario=usuario).get(pk=estudiante_id)
+
+
+def estudiante_para_la_institucion(*, actor, estudiante_id):
+    """Un estudiante, para quien administra la institución (`TT-36`, `HU-45`).
+
+    `HU-45` es de `USR-5`: consultar el código de tarjeta vigente para producir
+    la tarjeta que le corresponde. Ningún otro rol pasa por aquí — el acudiente
+    tiene `estudiante_a_cargo`, que filtra por los suyos —, y la comprobación
+    está en el selector porque es donde vive la regla (`DT-15`, `[S11]`).
+
+    Lanza `Estudiante.DoesNotExist` si no existe.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar la ficha de un estudiante exige identificarse.")
+    if actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "Consultar el código de tarjeta es función de la institución educativa "
+            "(HU-45, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return Estudiante.objects.select_related("acudiente").get(pk=estudiante_id)

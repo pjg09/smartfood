@@ -9,6 +9,8 @@ por su cuenta, el estudiante nacería sin código de tarjeta (`HU-43`, `INV-7`).
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
+from django.urls import reverse
+from django.utils.html import format_html
 
 from cuentas.models import Rol
 from personas.models import Acudiente, Estudiante, Institucion
@@ -53,8 +55,13 @@ class EstudianteAdmin(admin.ModelAdmin):
     """
 
     form = EstudianteForm
-    list_display = ["nombre", "documento", "acudiente", "creado_en"]
-    search_fields = ["nombre", "documento", "acudiente__nombre", "acudiente__documento"]
+    list_display = ["nombre", "documento", "codigo_tarjeta", "acudiente", "tarjeta"]
+    # `TT-36`. Buscar por el código responde a la pregunta inversa, que es la que
+    # se hace con una tarjeta suelta en la mano: **¿de quién es esta?**
+    search_fields = [
+        "nombre", "documento", "codigo_tarjeta",
+        "acudiente__nombre", "acudiente__documento",
+    ]
     ordering = ["nombre"]
     list_select_related = ["acudiente"]
 
@@ -71,7 +78,33 @@ class EstudianteAdmin(admin.ModelAdmin):
         dicen nada a quien está matriculando y compiten por su atención con los
         tres campos que sí tiene que llenar.
         """
-        return ["id", "creado_en"] if obj is not None else []
+        if obj is None:
+            return []
+        # `TT-36`, `HU-45`. El código **vigente** en la ficha, junto al enlace
+        # que lo imprime. De solo lectura porque lo genera el sistema (`HU-14`)
+        # y porque cambiarlo es reasignar la tarjeta, que es `HU-46`.
+        return ["id", "creado_en", "codigo_tarjeta", "tarjeta"]
+
+    @admin.display(description="código de tarjeta")
+    def codigo_tarjeta(self, obj):
+        """Espaciado para poder dictarlo o teclearlo sin perder la cuenta."""
+        return format_html(
+            '<span style="font-family:monospace;font-size:1.1em;'
+            'letter-spacing:0.2em">{}</span>',
+            obj.codigo_tarjeta,
+        )
+
+    @admin.display(description="tarjeta")
+    def tarjeta(self, obj):
+        """`TT-37`. El enlace a la vista imprimible.
+
+        Se abre en otra pestaña: quien está administrando estudiantes no quiere
+        perder el listado cada vez que manda una tarjeta a la impresora.
+        """
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener">Imprimir tarjeta</a>',
+            reverse("tarjeta-del-estudiante", args=[obj.pk]),
+        )
 
     def _es_la_institucion(self, request):
         """`[S11]` y tercer criterio de `HU-44`.

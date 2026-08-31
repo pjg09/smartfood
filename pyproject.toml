@@ -16,6 +16,10 @@ dependencies = [
     "django-tailwind-cli>=4.8",
     "django-storages[s3]>=1.14",
     "pillow>=11",
+    # TT-37 (DT-22): codificación Code 128 para la tarjeta imprimible. Solo la
+    # codificación; el dibujo del SVG es de `personas/tarjeta.py`. Sin Pillow de
+    # por medio: se pide el patrón de módulos, no una imagen.
+    "python-barcode>=0.15",
 ]
 
 # La versión la publica semantic-release como etiqueta de Git; no se escribe en
