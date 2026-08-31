@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 11 (`DEC-1` … `DEC-11`) |
+| decisiones | 12 (`DEC-1` … `DEC-12`) |
 | invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,8 +32,8 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-7` |
-| S2 | Invariantes derivadas | `INVD-1` … `INVD-5` |
+| S1 | Decisiones | `DEC-1` … `DEC-12` |
+| S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
 | ANEXO B | Puntos que siguen abiertos | Lo que estas decisiones no resuelven |
@@ -241,6 +241,32 @@ La advertencia era correcta y se cumple. En el camino con contraseña asignada, 
 
 ---
 
+### `[DEC-12]` El sistema tiene una pantalla de acceso propia, y no es un camino de alta
+
+*No cierra ningún `VAC`. Decisión posterior, tomada al construir `TT-29` (`PR-14`).*
+
+**Decidido:**
+
+- El prototipo tiene una **pantalla de acceso propia** —`/acceso/` y `/salir/`—, común a los cuatro roles que inician sesión, con las vistas que Django ya trae.
+- Es **trabajo de habilitación**, en el sentido de `[S3]` de `./sprint-1-backlog.md`: no proviene de ninguna historia. Se registra como `TT-56`, la tarea 56 del sprint.
+- **No es un camino de alta.** No hay enlace a ningún registro porque no existe ruta de registro (`DT-10`): `INV-6` e `INVD-1` siguen enteras y ninguna cuenta nace de ahí. La pantalla solo autentica a quien ya tiene cuenta y ya definió su contraseña con la invitación (`TT-11`).
+- El admin de Django sigue siendo `INT-3` (`DT-2`) y sigue teniendo su propio formulario de acceso. `DEC-12` no lo sustituye: lo complementa para los roles que no entran por ahí.
+
+**Justificación del equipo:** **ninguna de las 59 historias pide un inicio de sesión.** La única mención en todo el backlog es un criterio de `HU-42` —«una cuenta desactivada no puede iniciar sesión»— que **presupone** que el acceso existe sin pedir que se construya. Para `USR-3`, `USR-4` y `USR-5` eso no se notaba, porque el admin de Django resuelve su acceso (`INT-3`, `DT-2`). Para `USR-2` no había nada.
+
+El hueco se hizo visible al construir `TT-29`, que es «consulta de estudiantes a cargo y **selector de estudiante en la interfaz del acudiente**». Un acudiente no puede ver a *sus* estudiantes sin sesión iniciada, y no puede abrirla por `/admin/login/`: ese formulario exige `is_staff`, y el acudiente no accede a la administración porque `INT-1` no es el admin. Hasta esta decisión, `LOGIN_URL` apuntaba precisamente allí, así que la interfaz del acudiente redirigía a una puerta que iba a rechazarlo siempre.
+
+El `ANEXO C` de `./sprint-1-backlog.md` no lo detectó porque su grafo relaciona tareas entre sí, y esta no era tarea de nadie.
+
+**Coste:** una plantilla y dos rutas, del tamaño de `TT-11`. No se escribe autenticación propia —`./decisiones-tecnicas.md` la descarta en `[S4]`— sino que se usan `LoginView` y `LogoutView`.
+
+**Efecto sobre las historias:** ninguno. No cambia el texto ni los criterios de ninguna de las 59. Lo que hace es **hacer alcanzable** lo que `HU-04`, y todo lo que el acudiente hace en los sprints siguientes, ya daban por supuesto.
+
+> **Lo que NO se decide aquí.** No se añade recuperación de contraseña olvidada («¿olvidaste tu clave?»). El mecanismo existe —es el mismo generador de tokens de `TT-18`—, pero no hay historia que lo pida y exponerlo sin decidirlo sería alcance por la puerta de atrás. Mientras tanto, una contraseña olvidada se resuelve reenviando la invitación desde la vista de cuentas (`TT-17`).
+
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -273,6 +299,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-9` | **No añade alcance: lo recorta.** Retira la entrega por correo de las invitaciones de la carga masiva |
 | `DEC-10` | **No añade alcance.** Añade un camino alterno de seed para la cuenta institucional, fuera del que describe `HU-39` |
 | `DEC-11` | **No añade alcance.** Extiende ese camino alterno a todas las cuentas del prototipo |
+| `DEC-12` | **No añade alcance.** Habilita el acceso de `USR-2`, que las historias del acudiente daban por supuesto |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -295,6 +322,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (decisión posterior) Entrega de las invitaciones de la carga | **Decidido** | `DEC-9` | `HU-03` (criterio modificado) |
 | — (decisión posterior) Seed de la cuenta institucional | **Decidido** | `DEC-10` | `HU-39` (sin cambios en el texto) |
 | — (decisión posterior) Contraseñas asignadas en el prototipo | **Decidido** | `DEC-11` | `HU-03`, `HU-41` (sin cambios en el texto) |
+| — (hueco detectado) Inicio de sesión del acudiente | **Decidido** | `DEC-12` | `HU-04` y todo `USR-2` (sin cambios en el texto) |
 
 ---
 
@@ -307,6 +335,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Respaldo bibliográfico de la justificación de `DEC-1`.** Ver la advertencia en esa decisión.
 - **Pedidos anticipados de un estudiante desactivado.** `INVD-2` impide retirarlos, pero no se decidió qué ocurre con un pedido ya pagado si el estudiante queda desactivado o de baja: si se devuelve el saldo, si queda pendiente indefinidamente o si se anula.
 - **Retención y borrado de fotografías.** `DEC-8` no decide cuánto tiempo se conserva la fotografía de un estudiante dado de baja (`DEC-7`), ni si el acudiente puede exigir su eliminación. En una implementación real la Ley 1581 de 2012 lo exigiría.
+- **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.
 
 ---

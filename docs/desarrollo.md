@@ -7,10 +7,10 @@
 | doc_id | SMARTFOOD-TIC1-DESARROLLO |
 | titulo | Reconstrucción del entorno local, credenciales y comandos del día a día |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
-| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-10`) |
-| actualizado | 2026-08-30 |
+| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9`, `DEC-10`, `DEC-11`, `DEC-12`) |
+| actualizado | 2026-08-31 |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 Es la libreta del desarrollo: **cómo levantar el entorno desde cero, con qué se entra y
 qué comandos hacen falta a diario.** Si `./despliegue.md` describe el entorno desplegado,
@@ -63,10 +63,15 @@ Después, repetir desde `docker compose up -d`.
 
 | | |
 |---|---|
-| Interfaz | http://localhost:8000/admin/ |
+| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/acceso/ |
 | Usuario | `institucion@example.com` |
 | Contraseña | `smartfood-local-2026` |
 | Rol | `institucion` (`USR-5`), con acceso a la administración |
+
+**Hay dos puertas y no son intercambiables** (`TT-56`, `DEC-12`). `/admin/login/` exige
+`is_staff` y solo sirve a la institución y al personal de la cafetería. `/acceso/` es la
+pantalla común a los cuatro roles y es **la única por la que entra el acudiente**, que no
+accede a la administración porque `INT-1` no es el admin (`DT-2`).
 
 **Esta credencial se escribe aquí a propósito y no es un descuido.** Solo sirve contra
 `localhost`, sobre datos ficticios (`ALC-OUT-07`), en una base que se borra con un
@@ -114,6 +119,42 @@ titular define su contraseña— se dirige la invitación a un buzón real:
 uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
 ```
 
+### [S2.4] Entrar como acudiente
+
+Los acudientes nacen de la carga masiva (`HU-01`) y su invitación **se genera pero no se
+entrega** (`DEC-9`): sus direcciones son ficticias y no hay buzón que las reciba. Hay dos
+caminos, y sirven para cosas distintas.
+
+**Para demostrar `HU-03`** —el recorrido real: invitación, contraseña propia, acceso—, se
+carga el archivo normalmente y se saca el enlace de un acudiente concreto:
+
+```bash
+uv run python manage.py invitacion marta.ruiz@example.com
+```
+
+Imprime la URL de `/invitacion/…`. Se abre en el navegador, se define la contraseña y se
+entra por `/acceso/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
+contraseña de esa cuenta. Por eso se saca de uno en uno desde la terminal y no se lista en
+ninguna pantalla (`DEC-3`).
+
+**Para trabajar el día a día**, la carga admite contraseña asignada (`DEC-11`), y entonces
+no genera invitación porque la cuenta ya nace activada:
+
+```python
+# uv run python manage.py shell
+from personas.models import Institucion
+from personas.services import cargar_estudiantes_y_acudientes
+
+actor = Institucion.objects.select_related("usuario").first().usuario
+with open("estudiantes.csv", "rb") as f:
+    print(cargar_estudiantes_y_acudientes(
+        actor=actor, archivo=f, contrasena_de_desarrollo="smartfood-local-2026"
+    ))
+```
+
+Después, `/acceso/` con el correo del acudiente y esa contraseña lleva a
+`/mis-estudiantes/` (`TT-29`, `HU-04`).
+
 ---
 
 ## [S3] Comandos del día a día
@@ -134,6 +175,7 @@ uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
 | Consola de Django | `uv run python manage.py shell` |
 | Añadir dependencia | `uv add nombre-del-paquete` |
 | Probar el correo | `uv run python manage.py sendtestemail tu@correo.com` |
+| **Sacar un enlace de invitación** | `uv run python manage.py invitacion correo@example.com` |
 
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
@@ -155,6 +197,10 @@ Todas ficticias y solo válidas contra los contenedores de `compose.yaml`.
 **El correo no sale de tu máquina** mientras `EMAIL_URL` sea `consolemail://`. La
 invitación aparece en la terminal donde corre `runserver` o el comando: copia el enlace
 `/invitacion/…` y ábrelo en el navegador.
+
+Eso vale para las altas de una en una, que **sí** mandan correo. La carga masiva no manda
+ninguno (`DEC-9`), así que ahí no hay nada que copiar de la terminal: el enlace se saca con
+`manage.py invitacion` (`[S2.4]`).
 
 ---
 

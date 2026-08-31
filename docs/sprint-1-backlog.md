@@ -15,10 +15,10 @@
 | sprint | 1 de 5 |
 | semanas | 6 – 7 |
 | historias | 18 — las 16 iniciales más `HU-57` y `HU-59`, derivadas de `DEC-8` |
-| tareas | 55 (`TT-01` … `TT-55`) |
+| tareas | 56 (`TT-01` … `TT-56`) — 55 planificadas más `TT-56`, habilitación detectada al construir `PR-14` (`DEC-12`) |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -30,7 +30,7 @@
 6. Los identificadores `[TT-nn]` son estables y citables.
 7. **La columna `Estado` marca el avance.** `☑` es finalizada —integrada en `main`—, `☐` es pendiente. El
    plan no cambia: la columna se añade sin reordenar ni modificar ninguna tarea.
-8. El estado se lleva **también** en `./plan-de-pull-requests.md`, que agrupa estas 55 tareas en 24 Pull
+8. El estado se lleva **también** en `./plan-de-pull-requests.md`, que agrupa estas 56 tareas en 24 Pull
    Requests y añade el PR de cada una. Los dos documentos deben coincidir; si divergen, manda el plan de
    Pull Requests, porque es donde se marca al integrar. Las convenciones de ramas y commits están en
    `./convenciones-de-git.md` (`TT-01`).
@@ -41,7 +41,7 @@
 |---|---|---|
 | S1 | Objetivo del Sprint | `COM-2` |
 | S2 | Definición de Terminado | Puntero a `./definicion-de-terminado.md` (`COM-3`) |
-| S3 | Tareas de habilitación | `TT-01` … `TT-08`, sin historia asociada |
+| S3 | Tareas de habilitación | `TT-01` … `TT-08` y `TT-56`, sin historia asociada |
 | S4 | Tareas por historia | `TT-09` … `TT-46` |
 | S5 | Tareas de gestión del Sprint | `TT-47` … `TT-49` |
 | S6 | Reparto por responsable | Carga de cada integrante |
@@ -95,8 +95,17 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 | `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | Todo | ☑ |
 | `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | `HU-57`, `HU-59` | ☑ |
 | `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | `HU-57`, `HU-59` | ☑ |
+| `TT-56` | Pantalla de acceso al sistema, común a los cuatro roles (`DEC-12`) | Pedro | `HU-04`, y todo lo que hace `USR-2` | ☑ |
 
-**Las nueve se pueden hacer de entrada**, en el orden en que están: ninguna depende de nada que venga después. `TT-08`, el generador de datos ficticios, era la décima y se movió al final de `[S4]`, porque necesita que existan los modelos.
+**Las nueve primeras se pueden hacer de entrada**, en el orden en que están: ninguna depende de nada que venga después. `TT-08`, el generador de datos ficticios, era la décima y se movió al final de `[S4]`, porque necesita que existan los modelos.
+
+> **`TT-56` se añadió el 2026-08-31, con el sprint ya en marcha.** No es alcance nuevo: es
+> habilitación que la planeación no contabilizó. **Ninguna de las 59 historias pide un inicio
+> de sesión** —la única mención es un criterio de `HU-42` que lo *presupone*—, y para `USR-3`,
+> `USR-4` y `USR-5` no se notaba porque el admin de Django resuelve su acceso (`INT-3`,
+> `DT-2`). Para `USR-2` no había nada, y `TT-29` lo necesita. El razonamiento completo está en
+> `DEC-12` de `./decisiones-de-alcance.md`. Su sitio en el orden de construcción es **antes de
+> `TT-29`**; ver el `ANEXO C`.
 
 > Estas nueve tareas **no requieren esperar a la semana 6.** Ver `ANEXO A`.
 
@@ -176,13 +185,13 @@ El «todo o nada» de `TT-25` es el criterio de aceptación de la historia, no u
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-28` | Disparo de una invitación por acudiente al completarse la carga | Pedro | ☐ |
+| `TT-28` | Disparo de una invitación por acudiente al completarse la carga | Pedro | ☑ |
 
 ### `[HU-04]` Acudiente con varios estudiantes a cargo
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-29` | Consulta de estudiantes a cargo y selector de estudiante en la interfaz del acudiente | Carlos | ☐ |
+| `TT-29` | Consulta de estudiantes a cargo y selector de estudiante en la interfaz del acudiente | Carlos | ☑ |
 
 El modelo ya lo resuelve `TT-21`; lo que falta es la interfaz.
 
@@ -298,22 +307,22 @@ No son técnicas, pero forman parte del plan del sprint y las exige el marco de 
 
 | Integrante | Rol `[S12]` | Tareas | Cuáles |
 |---|---|---|---|
-| **Pedro** | Desarrollador backend | **25** | `TT-02`, `TT-03`, `TT-04`, `TT-06`, `TT-09`, `TT-10`, `TT-13`, `TT-15`, `TT-16`, `TT-18`, `TT-19`, `TT-21`, `TT-23`, `TT-25`, `TT-28`, `TT-30`, `TT-32`, `TT-33`, `TT-38`, `TT-41`, `TT-43`, `TT-50`, `TT-51`, `TT-53`, `TT-55` |
+| **Pedro** | Desarrollador backend | **26** | `TT-02`, `TT-03`, `TT-04`, `TT-06`, `TT-09`, `TT-10`, `TT-13`, `TT-15`, `TT-16`, `TT-18`, `TT-19`, `TT-21`, `TT-23`, `TT-25`, `TT-28`, `TT-30`, `TT-32`, `TT-33`, `TT-38`, `TT-41`, `TT-43`, `TT-50`, `TT-51`, `TT-53`, `TT-55`, `TT-56` |
 | **Carlos** | Desarrollador frontend | **16** | `TT-05`, `TT-11`, `TT-12`, `TT-17`, `TT-20`, `TT-24`, `TT-26`, `TT-29`, `TT-34`, `TT-36`, `TT-37`, `TT-39`, `TT-42`, `TT-45`, `TT-52`, `TT-54` |
 | **Alejandro** | Analista de datos y UX | **9** | `TT-08`, `TT-14`, `TT-22`, `TT-27`, `TT-31`, `TT-35`, `TT-40`, `TT-44`, `TT-46` |
 | **Naomi** | Líder de proyecto | **5** | `TT-01`, `TT-07`, `TT-47`, `TT-48`, `TT-49` |
 
-**Total: 55 tareas.**
+**Total: 56 tareas.**
 
 ---
 
 ## [ANEXO A] Riesgo de sobrecarga
 
-El Sprint 1 concentra **18 de las 59 historias (31 %) en 2 de las 10 semanas (20 %)**, y además carga con las ocho tareas de habilitación que ninguna historia contabiliza. Es el sprint con menos velocidad del proyecto —el equipo aún está montando el entorno y aprendiendo el stack— y el que más trabajo tiene.
+El Sprint 1 concentra **18 de las 59 historias (31 %) en 2 de las 10 semanas (20 %)**, y además carga con las **diez** tareas de habilitación que ninguna historia contabiliza: las de `[S3]`. Eran ocho cuando se escribió este anexo; `DEC-8` sumó `TT-50` y `TT-55`, y `DEC-12` sumó `TT-56`. Es el sprint con menos velocidad del proyecto —el equipo aún está montando el entorno y aprendiendo el stack— y el que más trabajo tiene.
 
-Sobre 2 desarrolladores, Pedro sale a **25 tareas en 10 días hábiles**. No es realista a tiempo parcial.
+Sobre 2 desarrolladores, Pedro sale a **26 tareas en 10 días hábiles**. No es realista a tiempo parcial.
 
-`DEC-8` empeoró el cuadro: añadió `HU-57` y `HU-59` con cinco tareas más. La contrapartida es que `DT-2` descarga a Carlos —siete de sus dieciséis tareas están marcadas `◆` y se reducen a declarar el modelo en el admin—, pero **ninguna de las de Pedro se reduce**.
+`DEC-8` empeoró el cuadro: añadió `HU-57` y `HU-59` con cinco tareas más, y `DEC-12` sumó `TT-56`. La contrapartida es que `DT-2` descarga a Carlos —siete de sus dieciséis tareas están marcadas `◆` y se reducen a declarar el modelo en el admin—, pero **ninguna de las de Pedro se reduce**.
 
 **Tres salidas, en orden de preferencia:**
 
@@ -341,12 +350,14 @@ Los responsables se asignaron según la matriz de roles `[S12]` de `./smartfood.
 
 ## [ANEXO C] Verificación del orden de construcción
 
-El orden en que aparecen las 55 tareas se comprobó por script contra el grafo de dependencias derivado de lo que hace cada una:
+El orden en que aparecen las 55 tareas planificadas se comprobó por script contra el grafo de dependencias derivado de lo que hace cada una:
 
 | Comprobación | Resultado |
 |---|---|
 | Tareas colocadas | 55 de 55, ninguna repetida |
 | Tareas situadas antes de algo que las bloquea | **0** |
+
+**`TT-56` se añadió después de esa verificación** y no se renumeró nada: los identificadores son estables y citables (`[S0.2]`, regla 6). Su número es el más alto, pero **su sitio en el orden de construcción es antes de `TT-29`**, que es la tarea que la necesita. Está en `[S3]` con las demás de habilitación, y la tabla de abajo registra la dependencia. La propiedad del orden se conserva: al llegar a `TT-29`, `TT-56` ya está hecha, porque las dos entran en el mismo Pull Request (`PR-14`).
 
 **Se desarrolla de arriba abajo, sin excepciones.** Al llegar a cualquier tarea, todo lo que necesita ya está hecho.
 
@@ -362,6 +373,8 @@ Las que no son obvias mirando solo la historia a la que pertenece cada tarea:
 | `TT-16` Alta de cuenta de personal | `TT-15` Roles y permisos, `TT-06` Correo | `HU-40`, habilitación |
 | `TT-23` Carga del archivo | `TT-21` Modelos, `TT-22` Formato | `HU-01` |
 | `TT-28` Invitación al acudiente | `TT-23` Carga, `TT-06` Correo | `HU-01`, habilitación |
+| `TT-29` Panel del acudiente | `TT-56` Pantalla de acceso, `TT-21` Modelos | Habilitación, `HU-01` |
+| `TT-56` Pantalla de acceso | `TT-05` Plantilla base, `TT-09` Modelo de usuario | Habilitación, `HU-39` |
 | `TT-32` Código en el alta | `TT-30` Generador, `TT-23` Carga | `HU-14`, `HU-01` |
 | `TT-36` Código en la ficha | `TT-32` Asignación, `TT-34` Vista | `HU-43`, `HU-44` |
 | `TT-38` Reasignación | `TT-30` Generador, `TT-32` Asignación | `HU-14`, `HU-43` |
