@@ -12,6 +12,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from personas.codigo import ALFABETO, LONGITUD
+
 
 class Acudiente(models.Model):
     """Quien responde por uno o varios estudiantes (`USR-2`).
@@ -46,15 +48,27 @@ class Acudiente(models.Model):
 class Estudiante(models.Model):
     """El estudiante. **No tiene cuenta**: `USR-1` no inicia sesión (`[S10.1]`).
 
-    Se identifica en el punto de venta con el código de su tarjeta, que llega en
-    `TT-30` y `TT-32` — y que **no viene del archivo de carga**: generarlo es del
-    sistema (`INV-7`). El estado de baja llega con `HU-51`, y la clave de la
-    fotografía con `HU-57`.
+    Se identifica en el punto de venta con el código de su tarjeta. El estado de
+    baja llega con `HU-51`, y la clave de la fotografía con `HU-57`.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
     nombre = models.CharField("nombre", max_length=200)
     documento = models.CharField("documento", max_length=20, unique=True)
+
+    # `TT-32`, `HU-43`, `INV-7`. **No viene del archivo de carga**: lo genera el
+    # sistema (`personas.codigo`), y por eso no es editable — ni en el admin, ni
+    # en un formulario, ni por descuido. Primer criterio de `HU-14`: «el código
+    # lo genera el sistema, no una persona».
+    #
+    # `unique=True` es la mitad de `DT-9` que la base puede imponer; la otra
+    # mitad es el reintento ante colisión, que está en `services.py`.
+    codigo_tarjeta = models.CharField(
+        "código de tarjeta",
+        max_length=LONGITUD,
+        unique=True,
+        editable=False,
+    )
 
     # `PROTECT` y no `CASCADE`: borrar un acudiente no puede llevarse por
     # delante a sus estudiantes ni el historial que cuelga de ellos.
@@ -71,6 +85,21 @@ class Estudiante(models.Model):
         verbose_name = "estudiante"
         verbose_name_plural = "estudiantes"
         ordering = ["nombre"]
+        constraints = [
+            # La forma del código, impuesta por la base y no por un `if`
+            # (`DT-15`). No puede comprobar que sea aleatorio —eso no es una
+            # propiedad de un valor, sino de cómo se produjo, y lo vigila
+            # `TT-31`—, pero sí que tenga la longitud fijada y que use solo
+            # caracteres imprimibles como código de barras (`HU-43`).
+            #
+            # Sirve para lo que un `if` no serviría: el día que alguien escriba
+            # un código a mano desde un `shell` o una migración, la base lo
+            # rechaza.
+            models.CheckConstraint(
+                condition=models.Q(codigo_tarjeta__regex=rf"^[{ALFABETO}]{{{LONGITUD}}}$"),
+                name="estudiante_codigo_tarjeta_con_forma_valida",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.nombre} ({self.documento})"
