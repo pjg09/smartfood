@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **37** de 56 | **16** de 24 |
-| Pendientes | 19 | 8 |
+| **Finalizadas** | **39** de 56 | **17** de 24 |
+| Pendientes | 17 | 7 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 21 | 26 |
-| Carlos | 9 | 16 |
+| Carlos | 11 | 16 |
 | Alejandro | 5 | 9 |
 | Naomi | 2 | 5 |
 
@@ -120,7 +120,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-14` | `TT-28`–`TT-29`, `TT-56` | `HU-03` + `HU-04` · acceso de `USR-2` | ☑ |
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☑ |
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☑ |
-| `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` | ☐ |
+| `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` · `DT-22` | ☑ |
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☐ |
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` | ☐ |
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☐ |
@@ -599,16 +599,31 @@ desbloquea tres PR posteriores.
 | Rama | `feat/TT-36-codigo-vigente` |
 | Responsable | Carlos |
 | Historia | `HU-45` |
-| Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna. Cierra el punto abierto de la simbología con `DT-22` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-36` | Exposición del código vigente en la ficha del estudiante | Carlos | ☐ |
-| `TT-37` | Vista imprimible del código de barras | Carlos | ☐ |
+| `TT-36` | Exposición del código vigente en la ficha del estudiante | Carlos | ☑ |
+| `TT-37` | Vista imprimible del código de barras | Carlos | ☑ |
 
 **Habilita `ENT-02`.** Sin tarjetas impresas no hay prueba de concepto del lector en el
 Sprint 2: no es un adorno, es el insumo físico de la siguiente demostración.
+
+> **Cierra el punto abierto del `ANEXO B` de `./decisiones-tecnicas.md`**, que dejaba sin
+> decidir la simbología y dónde se genera. Queda como `DT-22`: **Code 128** subconjunto B,
+> en el **servidor**, en **SVG** y con medidas en milímetros. Un símbolo rasterizado a la
+> resolución de la pantalla se imprime borroso y deja de escanearse, y esto se imprime.
+
+> **Lo que estas pruebas no pueden hacer es escanear.** No hay lector en el ejecutor, así
+> que la lectura real es de `ENT-02`, en el Sprint 2. Lo que sí se comprueba es lo que
+> fallaría en silencio: el patrón de módulos que se dibuja se lee de vuelta y se verifica
+> que es un mensaje Code 128 válido para ese código, con su suma de control.
+
+> **El código de barras no se almacena en ninguna parte.** Se genera en cada petición desde
+> el campo del estudiante, y eso es lo que sostiene «código **vigente**»: una imagen
+> guardada seguiría siendo correcta después de que `PR-18` reasignara el código, y esa
+> tarjeta impresa ya no abre ningún saldo (`INVD-4`).
 
 ---
 

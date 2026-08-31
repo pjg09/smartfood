@@ -18,7 +18,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-21`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-22`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-1-backlog.md` | **Las 56 tareas del sprint en curso**, con responsable |
 | `docs/plan-de-pull-requests.md` | Las 56 tareas agrupadas en 24 PR, y **el estado de cada una** |

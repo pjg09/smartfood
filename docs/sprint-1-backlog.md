@@ -224,10 +224,10 @@ Sostiene `INV-7`. **No usar una secuencia ni derivar el código del identificado
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-36` | Exposición del código vigente en la ficha del estudiante | Carlos | ☐ |
-| `TT-37` | Vista imprimible del código de barras | Carlos | ☐ |
+| `TT-36` | Exposición del código vigente en la ficha del estudiante | Carlos | ☑ |
+| `TT-37` | Vista imprimible del código de barras | Carlos | ☑ |
 
-`TT-37` habilita `ENT-02`: sin tarjetas impresas no hay prueba de concepto del lector en el Sprint 2.
+`TT-37` habilita `ENT-02`: sin tarjetas impresas no hay prueba de concepto del lector en el Sprint 2. La simbología quedó decidida en `DT-22`: Code 128, generado en el servidor como SVG con medidas en milímetros.
 
 ### `[HU-46]` Reasignación del código de tarjeta
 

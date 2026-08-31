@@ -162,6 +162,18 @@ with open("estudiantes.csv", "rb") as f:
 Después, `/acceso/` con el correo del acudiente y esa contraseña lleva a
 `/mis-estudiantes/` (`TT-29`, `HU-04`).
 
+### [S2.5] Imprimir la tarjeta de un estudiante
+
+Desde el admin, en el listado de estudiantes o en su ficha: **Imprimir tarjeta**. Abre
+`/estudiantes/<id>/tarjeta/`, que es la vista imprimible (`TT-37`).
+
+Es de la institución, no del acudiente: quien produce la tarjeta es el colegio (`HU-45`).
+
+**Al imprimir, al 100 %.** Si el navegador ajusta a la página, las barras se estrechan por
+debajo de lo que resuelve un lector económico y la tarjeta deja de escanearse. El símbolo
+mide 69 mm de ancho con sus zonas mudas, que son parte del código y no margen: recortar
+por ahí lo inutiliza. El detalle está en `DT-22`.
+
 ---
 
 ## [S3] Comandos del día a día
