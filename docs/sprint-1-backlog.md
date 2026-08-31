@@ -199,8 +199,8 @@ El modelo ya lo resuelve `TT-21`; lo que falta es la interfaz.
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-30` | Generador criptográfico del código, con índice único y reintento ante colisión | Pedro | ☐ |
-| `TT-31` | Caso de prueba: unicidad y no secuencialidad sobre un lote grande de códigos | Alejandro | ☐ |
+| `TT-30` | Generador criptográfico del código, con índice único y reintento ante colisión | Pedro | ☑ |
+| `TT-31` | Caso de prueba: unicidad y no secuencialidad sobre un lote grande de códigos | Alejandro | ☑ |
 
 Sostiene `INV-7`. **No usar una secuencia ni derivar el código del identificador del estudiante**: el anteproyecto lo prohíbe explícitamente porque el código opera como credencial de acceso al saldo.
 
@@ -208,7 +208,7 @@ Sostiene `INV-7`. **No usar una secuencia ni derivar el código del identificado
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-32` | Asignación del código al dar de alta al estudiante, por carga masiva y por alta individual | Pedro | ☐ |
+| `TT-32` | Asignación del código al dar de alta al estudiante, por carga masiva y por alta individual | Pedro | ☑ |
 
 ### `[HU-44]` Vista de administración de estudiantes
 
