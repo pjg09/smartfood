@@ -759,10 +759,13 @@ necesita algo del PR de al lado, no es paralelo: espera a que se integre.
    uno al otro.** Alejandro y Naomi pueden revisar los PR documentales y los de pruebas,
    pero no cubren backend. Si Pedro es el único que entiende `PR-21`, la revisión de ese PR
    es un trámite: por eso se pide revisión de los dos.
-3. **`PR-03` bloquea la Definición de Terminado, no la construcción.** Se puede seguir
-   desarrollando sin él, pero **ninguna historia se puede dar por terminada** hasta que el
-   entorno desplegado exista. Retrasarlo acumula historias «casi hechas», que es
-   exactamente el fallo que `ANEXO A` advierte para el día 10.
+3. **~~`PR-03` bloquea la Definición de Terminado~~ — superado por los hechos.** `PR-03` se
+   integró y el entorno llegó a funcionar, pero **se congeló el 2026-08-30**: el plan
+   gratuito del proveedor no lo sostiene (`[S2]` de `./despliegue.md`). `DoD-4` quedó
+   suspendido y cada PR declara su verificación local. El riesgo que esta advertencia
+   describía —acumular historias «casi hechas» a la espera del despliegue— **ya no
+   aplica**, porque ninguna espera por él. El riesgo nuevo es el contrario: que al
+   restaurarse `DoD-4` haya que volver sobre lo ya cerrado para demostrarlo.
 4. **Si el sprint desborda**, la salida 2 de `ANEXO A` mueve `HU-42`, `HU-46` y `HU-51` al
    Sprint 2. En este plan eso es sacar `PR-11`, `PR-18` y `PR-19`: quedan 21 PR y 48
    tareas. Ninguno de los tres bloquea a los demás, y por eso son los candidatos.

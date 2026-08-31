@@ -433,7 +433,8 @@ Además, `TT-06` (envío de correo) y `TT-15` (permisos según `[S11]`) se apoya
 
 - **Presentación del código de barras.** `TT-37` exige una vista imprimible. Falta decidir la simbología (Code 128, EAN-13) y si se genera en el servidor o en el navegador. Condiciona `ENT-02`.
 - **Cálculo del saldo con el historial creciendo.** `DT-4` calcula el saldo por agregación. Para el volumen del prototipo sobra, pero conviene medirlo antes del Avance 2 y dejar registrada la cifra en `ENT-06` como limitación conocida.
-- **Estrategia de pruebas automatizadas.** La Definición de Terminado exige un caso de prueba por invariante, pero no se decidió si son pruebas automatizadas o guiones manuales. Alejandro es dueño del plan de pruebas (`[S12]`).
+- **Estrategia de pruebas automatizadas.** La Definición de Terminado exige un caso de prueba por invariante, pero **no se ha decidido formalmente** si son pruebas automatizadas o guiones manuales. Alejandro es dueño del plan de pruebas (`[S12]`).
+  **Resuelto de hecho, no de derecho:** lo construido hasta ahora lleva **114 pruebas automáticas** con el ejecutor de Django, y `DoD-5` se ha venido cumpliendo con ellas. El punto sigue abierto porque una práctica no es una decisión: falta que el dueño del plan de pruebas la adopte —o la cambie— y quede escrita. Mientras tanto, `DoD-5` dice «caso de prueba» sin adjetivo, a propósito (`[S2]` de `./definicion-de-terminado.md`).
 - **Caducidad de las URL firmadas.** `DT-18` fija que la fotografía se sirve firmada, no cuántos minutos dura la firma.
 - **PaaS concreto.** `DT-13` fija el tipo de despliegue, no el proveedor. **Resuelto en la práctica:** el entorno de pruebas está en Railway, y el bucket es el suyo (`DT-21`). La decisión sigue sin ser normativa: `DT-13` no obliga a ese proveedor.
 
