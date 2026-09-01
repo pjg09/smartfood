@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **44** de 56 | **19** de 24 |
-| Pendientes | 12 | 5 |
+| **Finalizadas** | **46** de 56 | **20** de 24 |
+| Pendientes | 10 | 4 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 23 | 26 |
-| Carlos | 13 | 16 |
+| Pedro | 24 | 26 |
+| Carlos | 14 | 16 |
 | Alejandro | 6 | 9 |
 | Naomi | 2 | 5 |
 
@@ -123,7 +123,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` · `DT-22` | ☑ |
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☑ |
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` · protege `INV-2` | ☑ |
-| `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☐ |
+| `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☑ |
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☐ |
 | `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☐ |
 | `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☐ |
@@ -707,16 +707,30 @@ Baja **lógica**. Un `DELETE` destruiría el historial del que se reconstruye el
 | Rama | `feat/TT-51-fotografia-del-estudiante` |
 | Responsables | Pedro y Carlos |
 | Historia | `HU-57` |
-| Invariantes | ninguna; se apoya en `DT-18` y `DT-20` |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna; se apoya en `DT-18`, `DT-20` y `DT-21` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-51` | Campo de clave de objeto en el estudiante y servicio de carga y reemplazo de la fotografía | Pedro | ☐ |
-| `TT-52` ◆ | Carga de la fotografía desde la ficha del estudiante | Carlos | ☐ |
+| `TT-51` | Campo de clave de objeto en el estudiante y servicio de carga y reemplazo de la fotografía | Pedro | ☑ |
+| `TT-52` ◆ | Carga de la fotografía desde la ficha del estudiante | Carlos | ☑ |
 
 Bucket **privado**, URL firmada de caducidad corta. La fotografía **no es obligatoria**: su
 ausencia no puede impedir ninguna operación, y el PR tiene que demostrarlo.
+
+> **«No es obligatoria» se demuestra haciendo, no mirando el campo.** Hay una clase de
+> pruebas que, sin fotografía, matricula, imprime la tarjeta, reasigna el código, da de
+> baja, abre el panel del acudiente y la ficha del admin. Ninguna de esas operaciones la
+> necesita, y la ficha lo dice en vez de dejar un hueco en blanco.
+
+> **El campo no es un `FileField`.** Guarda la clave del objeto, que es lo que `DT-18`
+> pide, y un `FileField` ata el almacenamiento a la definición de la clase: aquí hace falta
+> resolverlo en cada uso, porque los ajustes cambian entre local, entorno desplegado y
+> pruebas.
+
+> **La fotografía no va en la tarjeta impresa.** Que el cajero compruebe que la tarjeta la
+> presenta su dueño es `HU-58`, y ocurre en la pantalla de cobro del Sprint 2, no en el
+> papel.
 
 ---
 

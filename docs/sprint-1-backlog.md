@@ -252,8 +252,8 @@ Baja **lógica**: borrar el registro destruiría el historial que sostiene `INV-
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-51` | Campo de clave de objeto en el estudiante y servicio de carga y reemplazo de la fotografía | Pedro | ☐ |
-| `TT-52` ◆ | Carga de la fotografía desde la ficha del estudiante | Carlos | ☐ |
+| `TT-51` | Campo de clave de objeto en el estudiante y servicio de carga y reemplazo de la fotografía | Pedro | ☑ |
+| `TT-52` ◆ | Carga de la fotografía desde la ficha del estudiante | Carlos | ☑ |
 
 La base guarda **la clave del objeto, nunca el binario** (`DT-18`). La fotografía **no es obligatoria**: su ausencia no impide ninguna operación. Los avatares del seed los produce `TT-08`, que sostiene `INVD-6`.
 
