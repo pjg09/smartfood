@@ -24,7 +24,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
-from catalogo.models import Alergeno, Categoria, Producto
+from catalogo.models import Categoria
 from catalogo.selectors import productos_en_el_catalogo
 from catalogo.services import crear_producto, guardar_imagen, quitar_imagen
 from config.imagenes import ImagenInvalida

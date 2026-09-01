@@ -19,7 +19,7 @@ from django.core.exceptions import PermissionDenied
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
-from cuentas.models import Rol, Usuario
+from cuentas.models import Rol
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from personas.models import Acudiente, Estudiante
 from personas.selectors import estudiante_para_la_institucion

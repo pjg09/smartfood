@@ -9,6 +9,7 @@ atrás, ya que lo vendido lleva copiado lo que había (`DT-8`).
 Lo que sostiene `INV-5` está aparte, en `tests_alergenos.py` (`TT-46`).
 """
 
+import re
 from decimal import Decimal
 
 from django.db import IntegrityError, transaction
@@ -227,6 +228,69 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
         )
 
         self.assertEqual({a.nombre for a in producto.alergenos.all()}, {"Maní"})
+
+    def test_editar_sin_tocar_los_alergenos_no_los_borra(self):
+        """El flanco de `INV-5` que está en la vista y no en el modelo.
+
+        `declarar_alergenos` **reemplaza**, no acumula: recibe la lista completa
+        y deja el producto declarando exactamente eso. Si el formulario no
+        trajera marcados los que ya tiene, el navegador enviaría una selección
+        vacía al cambiar cualquier otro campo, y editar el nombre de un producto
+        le **borraría los alérgenos declarados**. `HU-11` dejaría de proteger a
+        un estudiante alérgico sin que nada fallara.
+
+        `TT-46` vigila que el modelo no materialice la lista; esto vigila que la
+        pantalla no la vacíe.
+        """
+        producto = self.producto(alergenos=[self.lactosa])
+        url = reverse("admin:catalogo_producto_change", args=[producto.pk])
+
+        # Lo que el navegador ve marcado en el formulario.
+        cuerpo = self.client.get(url).content.decode()
+        bloque = re.search(
+            r'name="alergenos_declarados".*?</select>', cuerpo, flags=re.S
+        )
+        self.assertIsNotNone(bloque, "el formulario no ofrece los alérgenos")
+        marcados = re.findall(r'<option value="([0-9a-f-]{36})" selected>', bloque.group(0))
+        self.assertEqual(
+            marcados, [str(self.lactosa.pk)],
+            "el formulario no trae marcados los alérgenos que el producto ya declara",
+        )
+
+        # Y lo que el navegador devuelve al cambiar solo el nombre.
+        self.client.post(
+            url,
+            {
+                "nombre": "Pan de queso grande",
+                "precio": "2500",
+                "categoria": str(self.categoria.pk),
+                "activo": "on",
+                "alergenos_declarados": marcados,
+            },
+        )
+
+        producto.refresh_from_db()
+        self.assertEqual(producto.nombre, "Pan de queso grande")
+        self.assertEqual(
+            [a.nombre for a in producto.alergenos.all()], ["Lactosa"],
+            "editar el nombre le borró los alérgenos declarados (INV-5)",
+        )
+
+    def test_el_alta_no_ofrece_quitar_una_imagen_que_no_existe(self):
+        """`UX-1` del recorrido de `TT-35`, aplicado también aquí."""
+        cuerpo = self.client.get(reverse("admin:catalogo_producto_add")).content.decode()
+
+        self.assertNotIn("Quitar la imagen actual", cuerpo)
+        self.assertNotIn("Imagen actual:", cuerpo)
+        self.assertIn('name="imagen"', cuerpo)
+
+    def test_la_ficha_si_los_ofrece(self):
+        producto = self.producto()
+        cuerpo = self.client.get(
+            reverse("admin:catalogo_producto_change", args=[producto.pk])
+        ).content.decode()
+
+        self.assertIn("Quitar la imagen actual", cuerpo)
 
     def test_no_ofrece_borrar_ninguno_de_los_tres(self):
         producto = self.producto()

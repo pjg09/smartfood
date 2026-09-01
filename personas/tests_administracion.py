@@ -356,6 +356,23 @@ class HallazgosDelRecorridoTest(BaseDeAdministracion):
         ).content.decode()
         self.assertIn("Creado en:", cuerpo)
 
+    def test_el_alta_no_ofrece_quitar_una_fotografia_que_no_existe(self):
+        """`UX-1`, que se aplicó a «Id» y «Creado en» y faltaba aquí."""
+        self.client.force_login(self.actor)
+        cuerpo = self.client.get(reverse("admin:personas_estudiante_add")).content.decode()
+
+        self.assertNotIn("Quitar la fotografía actual", cuerpo)
+        self.assertIn('name="fotografia"', cuerpo)
+
+    def test_la_ficha_si_lo_ofrece(self):
+        estudiante = self.matricular()
+        self.client.force_login(self.actor)
+        cuerpo = self.client.get(
+            reverse("admin:personas_estudiante_change", args=[estudiante.pk])
+        ).content.decode()
+
+        self.assertIn("Quitar la fotografía actual", cuerpo)
+
     def test_el_acudiente_se_elige_buscando_y_no_de_una_lista_entera(self):
         """Con un colegio real, el `<select>` es una lista de cientos."""
         self.client.force_login(self.actor)
