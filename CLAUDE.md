@@ -102,6 +102,8 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   modelo, no el formulario.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+- **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
+  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve».
 
 ## Cómo ejecutar
 
@@ -111,6 +113,17 @@ Con `docker compose up -d` levantado, y siempre por `uv run`:
 set -a && source .env && set +a
 uv run python manage.py <lo que sea>
 ```
+
+Para tener una base con la que trabajar —institución, personal, familias con avatares y
+catálogo, todo ficticio e idempotente—:
+
+```bash
+uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
+  --estudiantes 12
+```
+
+Se entra por `/acceso/`, que es la puerta de los cuatro roles. Las credenciales locales y el
+recorrido de cada rol están en `docs/desarrollo.md`.
 
 Antes de cada PR, los tres tienen que pasar:
 
