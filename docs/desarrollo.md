@@ -150,8 +150,16 @@ Los acudientes nacen de la carga masiva (`HU-01`) y su invitación **se genera p
 entrega** (`DEC-9`): sus direcciones son ficticias y no hay buzón que las reciba. Hay dos
 caminos, y sirven para cosas distintas.
 
-**Para demostrar `HU-03`** —el recorrido real: invitación, contraseña propia, acceso—, se
-carga el archivo normalmente y se saca el enlace de un acudiente concreto:
+**Para demostrar `HU-03`** —el recorrido real: invitación, contraseña propia, acceso— hay
+que usar un acudiente **que no tenga contraseña**, y eso significa uno cargado por la
+pantalla de `/carga/`: esos nacen sin contraseña utilizable.
+
+> **Los acudientes que siembra `--estudiantes N` no sirven para esto.** El seed les asigna
+> contraseña (`DEC-11`), así que `manage.py invitacion` los rechaza con «ya definió su
+> contraseña». Es correcto y es lo que se quiere para el día a día; para la demostración,
+> carga un archivo.
+
+Con un acudiente recién cargado, se saca su enlace:
 
 ```bash
 uv run python manage.py invitacion marta.ruiz@example.com
