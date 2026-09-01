@@ -107,6 +107,19 @@ class EstudianteAdmin(admin.ModelAdmin):
     # los identifica.
     autocomplete_fields = ["acudiente"]
 
+    def get_fields(self, request, obj=None):
+        """En el alta no se ofrece quitar lo que todavía no existe.
+
+        `UX-1` del recorrido de `TT-35`. Se decide aquí y no borrando el campo
+        del formulario: el admin arma sus secciones a partir de `base_fields`,
+        antes de que exista instancia alguna, así que un campo quitado del
+        formulario y presente en la sección revienta al renderizar.
+        """
+        campos = super().get_fields(request, obj)
+        if obj is None:
+            return [c for c in campos if c != "quitar_fotografia"]
+        return campos
+
     def get_readonly_fields(self, request, obj=None):
         """`TT-35`. En el alta no se enseñan campos que aún no tienen valor.
 

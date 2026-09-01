@@ -89,7 +89,21 @@ class ProductoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk:
+        # **`instance.pk` no sirve para saber si es un alta.** La clave primaria
+        # es UUIDv7 generado en la aplicación (`DT-17`), así que una instancia
+        # recién construida ya la tiene antes de guardarse: hay que preguntar
+        # por `_state.adding`.
+        #
+        # De ocultar «quitar la imagen» en el alta se encarga
+        # `ProductoAdmin.get_fieldsets`, no este formulario: el admin arma sus
+        # secciones a partir de `base_fields`, antes de que exista instancia
+        # alguna, y un campo quitado aquí y presente en la sección revienta al
+        # renderizar.
+        if not self.instance._state.adding:
+            # **Sin esto, editar el nombre de un producto le borra los alérgenos
+            # declarados**: el formulario los enviaría vacíos y
+            # `declarar_alergenos` reemplaza, no acumula. `INV-5` rota en
+            # silencio. Hay prueba que lo vigila.
             self.fields["alergenos_declarados"].initial = self.instance.alergenos.all()
 
 
@@ -172,6 +186,22 @@ class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
     form = ProductoForm
     readonly_fields = ["id", "creado_en", "imagen_actual"]
     actions = ["accion_retirar", "accion_devolver"]
+
+    def get_fieldsets(self, request, obj=None):
+        """En el alta no se enseña «imagen actual»: todavía no hay ninguna."""
+        secciones = super().get_fieldsets(request, obj)
+        if obj is not None:
+            return secciones
+
+        limpias = []
+        for titulo, opciones in secciones:
+            campos = [
+                c for c in opciones["fields"]
+                if c not in ("imagen_actual", "quitar_imagen")
+            ]
+            if campos:
+                limpias.append((titulo, {**opciones, "fields": campos}))
+        return limpias
 
     fieldsets = [
         (None, {"fields": ["nombre", "precio", "categoria", "activo"]}),

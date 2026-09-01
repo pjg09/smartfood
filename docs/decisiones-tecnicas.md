@@ -374,7 +374,7 @@ Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`).
 | `INV-1` Sin saldo negativo | `DT-1`, `DT-6` | Validación dentro del bloqueo pesimista |
 | `INV-2` Saldo reconstruible | `DT-4` | El saldo **es** la suma del historial |
 | `INV-3` Existencias explicables | `DT-5` | Las existencias **son** la suma del historial |
-| `INV-4` Restricciones no desactivables | `DT-11` | Sin permiso de escritura para cajero, admin ni institución |
+| `INV-4` Restricciones no desactivables | `DT-11` | Ningún rol tiene permiso de escritura **sobre las restricciones**: la administración escribe su catálogo (`HU-26`) y nada más |
 | `INV-5` Bloqueo por condición | `DT-7` | Relación evaluada en la venta, no lista materializada |
 | `INV-6` Sin autorregistro | `DT-10` | Las rutas de registro no existen |
 | `INV-7` Código aleatorio | `DT-9` | Generador criptográfico con índice único |

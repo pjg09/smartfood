@@ -16,7 +16,6 @@ lista materializada de productos bloqueados por estudiante (`DT-7`). Si se
 modelara al revés, `HU-11` del Sprint 3 no se podría construir sin rehacer esto.
 """
 
-import re
 import uuid
 
 from django.core.validators import MinValueValidator

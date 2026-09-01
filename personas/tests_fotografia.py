@@ -27,7 +27,7 @@ from PIL import Image
 from config.imagenes import ImagenInvalida, tiene_exif
 from cuentas.models import Rol
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
-from personas.models import Acudiente, Estudiante
+from personas.models import Acudiente
 from personas.services import (
     crear_estudiante,
     dar_de_alta_la_institucion,
