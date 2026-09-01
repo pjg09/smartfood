@@ -15,7 +15,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_toke
 from django.test import TestCase
 
 from cuentas.models import Rol, Usuario
-from cuentas.permisos import PERMISOS_POR_ROL, nombre_del_grupo
+from cuentas.permisos import ESCRITURA_PROHIBIDA, PERMISOS_POR_ROL, nombre_del_grupo
 from cuentas.services import sincronizar_grupos_y_permisos
 
 
@@ -55,15 +55,52 @@ class MatrizDePermisosTest(TestCase):
                     "conceder por fuera de la matriz rompe INV-4.",
                 )
 
-    def test_la_cafeteria_no_escribe_sobre_nada_todavia(self):
-        """`INV-4` hoy: cajero y administrador no tienen NINGUNA escritura."""
-        for rol in (Rol.CAJERO, Rol.ADMINISTRADOR):
+    def _escrituras_de(self, rol):
+        return {
+            p for p in self._permisos_de(rol)
+            if any(a in p for a in ("add_", "change_", "delete_"))
+        }
+
+    def test_el_cajero_no_escribe_sobre_nada(self):
+        """`[S11]` le da registrar ventas y consultar. Ningún modelo suyo existe."""
+        self.assertEqual(self._escrituras_de(Rol.CAJERO), set())
+
+    def test_la_administracion_solo_escribe_su_propio_dominio(self):
+        """`INV-4`, en la forma que sobrevive a que la cafetería tenga modelos.
+
+        Hasta `PR-21` esta prueba exigía que el administrador no escribiera
+        **nada**, y pasaba porque no había qué escribir. Eso no era `INV-4`: era
+        una foto del momento. `[S11]` le concede «gestionar catálogo, precios e
+        inventario», así que ahora escribe — y lo que `INV-4` prohíbe es otra
+        cosa, la de abajo.
+        """
+        escrituras = self._escrituras_de(Rol.ADMINISTRADOR)
+
+        self.assertNotEqual(escrituras, set(), "el catálogo es suyo (HU-26)")
+        ajenas = {p for p in escrituras if not p.startswith("catalogo.")}
+        self.assertEqual(
+            ajenas, set(),
+            "la administración de la cafetería escribió fuera de su dominio",
+        )
+
+    def test_la_cafeteria_no_escribe_lo_que_inv_4_protege(self):
+        """La mitad que importa: restricciones, saldo y límite diario.
+
+        `ESCRITURA_PROHIBIDA` las declara y ninguna tiene modelo todavía. La
+        prueba mira los permisos por su nombre, así que **el día que el modelo
+        exista, esto ya lo está vigilando**.
+        """
+        for rol, prohibidas in ESCRITURA_PROHIBIDA.items():
             with self.subTest(rol=rol):
-                escrituras = {
-                    p for p in self._permisos_de(rol)
-                    if any(a in p for a in ("add_", "change_", "delete_"))
-                }
-                self.assertEqual(escrituras, set())
+                for concepto in ["restriccion", "alergeno_restringido", "saldo",
+                                 "limite", "movimientobilletera"]:
+                    culpables = {
+                        p for p in self._escrituras_de(rol) if concepto in p.lower()
+                    }
+                    self.assertEqual(
+                        culpables, set(),
+                        f"«{rol}» escribe sobre {concepto}: {prohibidas} (INV-4)",
+                    )
 
     def test_solo_la_institucion_puede_crear_cuentas(self):
         """Primer criterio de `HU-40`, en la capa de datos."""

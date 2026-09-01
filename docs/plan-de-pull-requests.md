@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **46** de 56 | **20** de 24 |
-| Pendientes | 10 | 4 |
+| **Finalizadas** | **50** de 56 | **21** de 24 |
+| Pendientes | 6 | 3 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 24 | 26 |
-| Carlos | 14 | 16 |
-| Alejandro | 6 | 9 |
+| Pedro | 25 | 26 |
+| Carlos | 15 | 16 |
+| Alejandro | 8 | 9 |
 | Naomi | 2 | 5 |
 
 `PR-14` añadió `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
@@ -124,7 +124,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☑ |
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` · protege `INV-2` | ☑ |
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☑ |
-| `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☐ |
+| `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☑ |
 | `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☐ |
 | `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☐ |
 | `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
@@ -743,14 +743,14 @@ ausencia no puede impedir ninguna operación, y el PR tiene que demostrarlo.
 | Responsables | Pedro, Alejandro y Carlos |
 | Historia | `HU-26` |
 | Invariantes | **`INV-5`** |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-43` | Modelos de producto, categoría y alérgeno, con **relación** producto–alérgeno | Pedro | ☐ |
-| `TT-44` | Definición de los campos nutricionales que consumirán las reglas de recomendación | Alejandro | ☐ |
-| `TT-45` ◆ | Vista de gestión del catálogo | Carlos | ☐ |
-| `TT-46` | Caso de prueba: el alérgeno se relaciona, no se copia como lista de productos | Alejandro | ☐ |
+| `TT-43` | Modelos de producto, categoría y alérgeno, con **relación** producto–alérgeno | Pedro | ☑ |
+| `TT-44` | Definición de los campos nutricionales que consumirán las reglas de recomendación | Alejandro | ☑ |
+| `TT-45` ◆ | Vista de gestión del catálogo | Carlos | ☑ |
+| `TT-46` | Caso de prueba: el alérgeno se relaciona, no se copia como lista de productos | Alejandro | ☑ |
 
 **El PR más delicado del sprint.** `TT-43` decide si `HU-11` del Sprint 3 se puede
 construir o hay que rehacer el modelo. `INV-5` exige que el bloqueo por alérgeno se aplique
@@ -759,6 +759,24 @@ existen. Si el alérgeno se modela como una lista materializada de productos blo
 PR se rechaza aunque las pruebas pasen: `TT-46` existe precisamente para detectarlo.
 
 Revisión obligatoria de los dos desarrolladores, no de uno.
+
+> **`TT-46` ataca la lista materializada por dos lados.** Uno de comportamiento: se
+> consulta un alérgeno, se agrega **después** un producto que lo declara, y la respuesta
+> cambia sola. Otro estructural: no existe en ningún modelo un sitio donde guardar esa
+> lista, y si mañana alguien lo añade, la prueba falla antes de que llegue a la venta.
+
+> **`TT-44` fijó los campos por porción vendible, no por 100 g**, y esa es la decisión de
+> la que más depende el Sprint 4. La venta copia estos valores (`DT-8`) y los reportes los
+> suman: con valores por 100 g cada suma necesitaría además el peso de la porción, y el día
+> que falte, el agregado sale más bajo que el real y parece un dato en vez de un hueco. El
+> razonamiento entero está en `./campos-nutricionales.md`.
+
+> **Dos pruebas anteriores tuvieron que cambiar, y conviene saber por qué.** Exigían que la
+> cafetería no escribiera **nada** y pasaban porque no había qué escribir; eso no era
+> `INV-4`, era una foto del momento. Ahora dicen lo que la invariante dice: el administrador
+> escribe su catálogo y nada más, y ni él ni el cajero escriben sobre restricciones, saldo
+> ni límite diario — comprobado **por nombre**, de modo que ya vigila los modelos que aún
+> no existen.
 
 ---
 

@@ -55,10 +55,15 @@ class AltaDePersonalTest(TestCase):
         self.assertEqual(
             [g.name for g in admin.groups.all()], ["rol:administrador"]
         )
-        # `INV-4`: sin ninguna escritura, porque la matriz no le concede ninguna.
-        escrituras = [p for p in admin.get_all_permissions()
-                      if any(a in p for a in ("add_", "change_", "delete_"))]
-        self.assertEqual(escrituras, [])
+        # `INV-4`: escribe su catálogo (`HU-26`) y nada más. Hasta `PR-21` esta
+        # comprobación exigía cero escrituras y pasaba porque no había qué
+        # escribir; eso era una foto del momento, no la invariante.
+        escrituras = {p for p in admin.get_all_permissions()
+                      if any(a in p for a in ("add_", "change_", "delete_"))}
+        self.assertTrue(escrituras, "el catálogo es suyo")
+        self.assertEqual(
+            {p for p in escrituras if not p.startswith("catalogo.")}, set()
+        )
 
     def test_solo_la_institucion_puede_dar_de_alta(self):
         """Primer criterio de `HU-40`."""
