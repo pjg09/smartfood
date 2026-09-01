@@ -10,6 +10,7 @@ salvo el código de tarjeta, que tiene su propia regla (`INV-7`, `DT-9`).
 import uuid
 
 from django.conf import settings
+from django.core.files.storage import storages
 from django.db import models
 
 from personas.codigo import ALFABETO, LONGITUD
@@ -118,6 +119,22 @@ class Estudiante(models.Model):
     # congelado de `HU-52`.
     dado_de_baja_en = models.DateTimeField("dado de baja en", null=True, blank=True, editable=False)
 
+    # `TT-51`, `HU-57`, `DT-18`. **La base guarda la clave del objeto, nunca el
+    # binario.** El binario vive en el almacenamiento privado, y la clave es lo
+    # único que viaja por aquí.
+    #
+    # `[S2]` de `decisiones-tecnicas.md` lo llama `foto_clave` y eso es
+    # exactamente lo que guarda. No es un `FileField` a propósito: ese campo ata
+    # el almacenamiento a la definición de la clase, y aquí hace falta
+    # resolverlo en cada uso —los ajustes cambian entre local, entorno
+    # desplegado y pruebas—.
+    #
+    # **Vacío es un valor legítimo.** Segundo criterio de `HU-57`: la fotografía
+    # no es obligatoria y su ausencia no impide ninguna operación.
+    foto_clave = models.CharField(
+        "clave de la fotografía", max_length=200, blank=True, default="", editable=False
+    )
+
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
 
     class Meta:
@@ -159,6 +176,26 @@ class Estudiante(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.documento})"
+
+    @property
+    def tiene_foto(self):
+        return bool(self.foto_clave)
+
+    @property
+    def url_de_la_foto(self):
+        """URL **firmada y de caducidad corta** de la fotografía, o `None`.
+
+        La fotografía de un menor no puede quedar en una URL adivinable ni en
+        una que siga sirviendo meses después (`DEC-8`, `ALC-OUT-08`). La firma y
+        su caducidad las pone el almacenamiento `privado` (`DT-18`, `DT-21`); el
+        modelo solo pregunta.
+
+        Se resuelve en cada llamada, no al definir la clase: los ajustes de
+        almacenamiento cambian entre local, entorno desplegado y pruebas.
+        """
+        if not self.foto_clave:
+            return None
+        return storages["privado"].url(self.foto_clave)
 
     @property
     def esta_de_baja(self):

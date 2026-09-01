@@ -12,11 +12,13 @@ Funciones, no clases.
 from dataclasses import dataclass, field
 
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from cuentas.models import Rol
 from cuentas.services import crear_cuenta, generar_invitacion
+from config.imagenes import procesar_imagen
 from personas.carga import leer
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import (
@@ -206,6 +208,79 @@ def reasignar_codigo_de_tarjeta(*, actor, estudiante):
         "Con 2^70 combinaciones esto no ocurre por azar: revisa el generador "
         "(INV-7, DT-9)."
     )
+
+
+def _borrar_del_almacenamiento(clave):
+    """Quita el objeto anterior. Un fallo aquí no puede tumbar la operación.
+
+    Si el borrado falla —el objeto ya no estaba, el almacenamiento no responde—
+    lo que queda es un huérfano ocupando sitio, no un dato incorrecto. Propagar
+    el error dejaría al estudiante sin la fotografía nueva por no haber podido
+    tirar la vieja, que es peor.
+    """
+    if not clave:
+        return
+    try:
+        storages["privado"].delete(clave)
+    except Exception:  # noqa: BLE001 — ver el docstring
+        pass
+
+
+@transaction.atomic
+def guardar_fotografia(*, actor, estudiante, archivo):
+    """Carga o reemplaza la fotografía de un estudiante (`TT-51`, `HU-57`).
+
+    **El fichero no se guarda tal cual.** Pasa por `config.imagenes`, que lo
+    decodifica y lo vuelve a codificar desde cero (`DT-20`): valida por
+    contenido y no por nombre, neutraliza los ficheros políglotos y **retira el
+    EXIF**. Eso último no es higiene: la fotografía de un menor tomada con un
+    teléfono lleva dentro la ubicación GPS donde se tomó, y guardarla sería
+    añadir un dato personal que nadie pidió (`ALC-OUT-08`, Ley 1581 de 2012).
+
+    Va al almacenamiento **privado**, que sirve con URL firmada y de caducidad
+    corta (`DT-18`, `DT-21`).
+
+    **Reemplazar borra la anterior.** No se conserva historial de fotografías:
+    ninguna historia lo pide, y guardar retratos de menores que ya nadie usa es
+    exactamente lo que `ALC-OUT-08` desaconseja.
+
+    El borrado va **después** de confirmar la transacción: si esta se deshiciera
+    después de borrar, el estudiante se quedaría apuntando a un objeto que ya no
+    existe.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Cargar la fotografía de un estudiante")
+
+    contenido, nombre = procesar_imagen(archivo)
+
+    anterior = estudiante.foto_clave
+    clave = storages["privado"].save(nombre, contenido)
+
+    estudiante.foto_clave = clave
+    estudiante.save(update_fields=["foto_clave"])
+
+    transaction.on_commit(lambda: _borrar_del_almacenamiento(anterior))
+    return estudiante
+
+
+@transaction.atomic
+def quitar_fotografia(*, actor, estudiante):
+    """Deja al estudiante sin fotografía (`HU-57`, segundo criterio).
+
+    Que no sea obligatoria significa que se pueda quitar, no solo que se pueda
+    no poner. Es además el camino que la Ley 1581 exige tener: el titular puede
+    pedir que su imagen se elimine.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Quitar la fotografía de un estudiante")
+
+    anterior = estudiante.foto_clave
+    if not anterior:
+        return estudiante
+
+    estudiante.foto_clave = ""
+    estudiante.save(update_fields=["foto_clave"])
+
+    transaction.on_commit(lambda: _borrar_del_almacenamiento(anterior))
+    return estudiante
 
 
 class EstudianteNoOperativo(Exception):

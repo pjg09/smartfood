@@ -193,6 +193,19 @@ recargar (`INVD-2`).
 otro estado y sí tiene vuelta. La baja no se deshace: la reactivación de `HU-49` es de la
 desactivación, que es un tercer estado y llega en el Sprint 2.
 
+### [S2.8] Cargar la fotografía de un estudiante
+
+En la ficha del estudiante, campo **Fotografía**. Es opcional: sin ella todo funciona
+igual (`HU-57`). Para quitarla, la casilla **Quitar la fotografía actual**.
+
+Lo que se guarda no es el fichero que subiste: la canalización lo decodifica y lo vuelve a
+codificar a WEBP, lo reduce al lado máximo y **le retira el EXIF**, la ubicación GPS
+incluida (`DT-20`). Va al prefijo `privado/` del bucket y se sirve con URL firmada que
+caduca en cinco minutos (`DT-18`, `DT-21`).
+
+**En el prototipo son avatares generados, nunca personas reales** (`INVD-6`,
+`ALC-OUT-07`). No es una preferencia: es la Ley 1581 de 2012 sobre datos de menores.
+
 ---
 
 ## [S3] Comandos del día a día

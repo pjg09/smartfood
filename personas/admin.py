@@ -15,11 +15,14 @@ from django.utils.html import format_html
 
 from cuentas.models import Rol
 from personas.models import Acudiente, EstadoDelEstudiante, Estudiante, Institucion
+from config.imagenes import ImagenInvalida
 from personas.services import (
     CAMPOS_EDITABLES,
     crear_estudiante,
     dar_de_baja,
     editar_estudiante,
+    guardar_fotografia,
+    quitar_fotografia,
     reasignar_codigo_de_tarjeta,
 )
 
@@ -44,6 +47,25 @@ class EstudianteForm(forms.ModelForm):
     Primer criterio de `HU-14`: lo genera el sistema, no una persona.
     """
 
+    # `TT-52`, `HU-57`. No es un campo del modelo, y no puede serlo: lo que el
+    # modelo guarda es **la clave** del objeto (`DT-18`), y el fichero que sube
+    # la institución no se guarda tal cual — pasa por la canalización de
+    # `DT-20`, que lo re-codifica y le retira el EXIF—. El formulario recibe el
+    # fichero; quien lo procesa y decide qué se almacena es el servicio
+    # (`DT-15`).
+    fotografia = forms.ImageField(
+        label="Fotografía",
+        required=False,
+        help_text=(
+            "Opcional. Se recorta a un lado máximo, se re-codifica y se le retira "
+            "el EXIF —la ubicación GPS incluida— antes de guardarla. En el "
+            "prototipo son avatares generados, nunca personas reales (INVD-6)."
+        ),
+    )
+    quitar_fotografia = forms.BooleanField(
+        label="Quitar la fotografía actual", required=False
+    )
+
     class Meta:
         model = Estudiante
         fields = ["nombre", "documento", "acudiente"]
@@ -62,7 +84,10 @@ class EstudianteAdmin(admin.ModelAdmin):
     """
 
     form = EstudianteForm
-    list_display = ["nombre", "documento", "estado", "codigo_tarjeta", "acudiente", "tarjeta"]
+    list_display = [
+        "nombre", "documento", "estado", "codigo_tarjeta",
+        "tiene_foto", "acudiente", "tarjeta",
+    ]
     # Quién sigue en el colegio es la primera pregunta del listado, y por defecto
     # se ven todos. `TT-41`.
     list_filter = ["estado"]
@@ -94,7 +119,31 @@ class EstudianteAdmin(admin.ModelAdmin):
         # `TT-36`, `HU-45`. El código **vigente** en la ficha, junto al enlace
         # que lo imprime. De solo lectura porque lo genera el sistema (`HU-14`)
         # y porque cambiarlo es reasignar la tarjeta, que es `HU-46`.
-        return ["id", "creado_en", "estado", "dado_de_baja_en", "codigo_tarjeta", "tarjeta"]
+        return [
+            "id", "creado_en", "estado", "dado_de_baja_en",
+            "codigo_tarjeta", "tarjeta", "fotografia_actual",
+        ]
+
+    @admin.display(boolean=True, description="foto")
+    def tiene_foto(self, obj):
+        return obj.tiene_foto
+
+    @admin.display(description="fotografía actual")
+    def fotografia_actual(self, obj):
+        """`TT-52`. Se sirve por URL firmada y de caducidad corta (`DT-18`).
+
+        La ausencia se dice, no se deja en blanco: el segundo criterio de
+        `HU-57` es que la fotografía no sea obligatoria, y una ficha sin nada
+        donde debería haber algo se lee como un error.
+        """
+        if not obj.tiene_foto:
+            return "Sin fotografía. No es obligatoria (HU-57)."
+        return format_html(
+            '<img src="{}" alt="Fotografía de {}" '
+            'style="max-height:180px;border-radius:6px">',
+            obj.url_de_la_foto,
+            obj.nombre,
+        )
 
     @admin.display(description="código de tarjeta")
     def codigo_tarjeta(self, obj):
@@ -256,6 +305,9 @@ class EstudianteAdmin(admin.ModelAdmin):
         `editar_estudiante` porque ahí es donde se decide qué campos son
         editables — el código de tarjeta no lo es: se reasigna (`HU-46`).
         """
+        fotografia = form.cleaned_data.get("fotografia")
+        quitar = form.cleaned_data.get("quitar_fotografia")
+
         try:
             if change:
                 # `obj` ya trae los valores del formulario, así que la instancia
@@ -271,6 +323,7 @@ class EstudianteAdmin(admin.ModelAdmin):
                     },
                 )
                 obj.refresh_from_db()
+                self._aplicar_fotografia(request, obj, fotografia, quitar)
                 return
 
             estudiante = crear_estudiante(
@@ -287,8 +340,47 @@ class EstudianteAdmin(admin.ModelAdmin):
         obj.refresh_from_db()
         self.message_user(
             request,
-            f"Estudiante matriculado. Su código de tarjeta se generó "
-            f"automáticamente y no se puede escribir a mano (HU-43, INV-7).",
+            "Estudiante matriculado. Su código de tarjeta se generó "
+            "automáticamente y no se puede escribir a mano (HU-43, INV-7).",
+            messages.SUCCESS,
+        )
+        self._aplicar_fotografia(request, obj, fotografia, quitar)
+
+    def _aplicar_fotografia(self, request, estudiante, fotografia, quitar):
+        """`TT-52`. Delega en el servicio, que es quien procesa y almacena.
+
+        **Un fallo de la fotografía no deshace el alta ni la edición.** La
+        fotografía no es obligatoria (`HU-57`), así que un fichero que no se
+        puede procesar es un aviso, no un error que tire el resto del trabajo.
+        """
+        if quitar and not fotografia:
+            quitar_fotografia(actor=request.user, estudiante=estudiante)
+            estudiante.refresh_from_db()
+            self.message_user(request, "Fotografía retirada.", messages.SUCCESS)
+            return
+
+        if not fotografia:
+            return
+
+        try:
+            guardar_fotografia(
+                actor=request.user, estudiante=estudiante, archivo=fotografia
+            )
+        except ImagenInvalida as error:
+            self.message_user(
+                request,
+                f"No se guardó la fotografía: {'; '.join(error.messages)} "
+                "El resto de los datos sí se guardó: la fotografía no es "
+                "obligatoria (HU-57).",
+                messages.WARNING,
+            )
+            return
+
+        estudiante.refresh_from_db()
+        self.message_user(
+            request,
+            "Fotografía guardada. Se re-codificó y se le retiró el EXIF antes de "
+            "almacenarla (DT-20).",
             messages.SUCCESS,
         )
 
