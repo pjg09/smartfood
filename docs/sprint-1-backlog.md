@@ -243,8 +243,8 @@ Sostiene `INVD-4`. Si el código anterior sigue siendo válido, `HU-47` y `HU-48
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-41` | Estado de baja en el estudiante, conservando íntegro su historial | Pedro | ☐ |
-| `TT-42` ◆ | Acción de dar de baja en la ficha del estudiante | Carlos | ☐ |
+| `TT-41` | Estado de baja en el estudiante, conservando íntegro su historial | Pedro | ☑ |
+| `TT-42` ◆ | Acción de dar de baja en la ficha del estudiante | Carlos | ☑ |
 
 Baja **lógica**: borrar el registro destruiría el historial que sostiene `INV-2`.
 

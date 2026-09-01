@@ -182,6 +182,17 @@ que se va a invalidar, porque **esto no se deshace**: el código actual deja de 
 a nadie en ese mismo momento (`INVD-4`), y la tarjeta que el estudiante lleva encima queda
 inservible. Después hay que imprimir la nueva; el mensaje trae el enlace.
 
+### [S2.7] Dar de baja a un estudiante que se retiró
+
+En el listado del admin, **Dar de baja (se retiró del colegio)**, con confirmación. La
+baja es **lógica**: no borra nada, el historial y el saldo se conservan y siguen siendo
+consultables (`HU-51`, `HU-52`). Desde ese momento el estudiante no puede comprar ni
+recargar (`INVD-2`).
+
+**No confundir con la tarjeta perdida.** Eso es reasignar el código (`[S2.6]`), que es
+otro estado y sí tiene vuelta. La baja no se deshace: la reactivación de `HU-49` es de la
+desactivación, que es un tercer estado y llega en el Sprint 2.
+
 ---
 
 ## [S3] Comandos del día a día
