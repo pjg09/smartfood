@@ -46,16 +46,24 @@ docker compose up -d      # PostgreSQL, MinIO y el bucket
 uv sync                   # dependencias exactas de uv.lock
 
 uv run python manage.py migrate
-uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026'
+uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
+  --estudiantes 12
 uv run python manage.py runserver
 ```
 
-En `http://localhost:8000`, y la administración en `/admin/` con
-`institucion@example.com` / `smartfood-local-2026`.
+`--estudiantes` no es opcional si quieres algo que mirar: sin él solo se crea la cuenta de
+la institución, y los listados salen vacíos. Con él quedan sembrados el personal de la
+cafetería, doce estudiantes con sus acudientes y avatares, y el catálogo con imágenes.
+Todo ficticio (`ALC-OUT-07`) y se puede volver a ejecutar sin duplicar nada.
 
-**Los comandos del día a día, las credenciales y qué hacer cuando algo no arranca están
-en [`docs/desarrollo.md`](./docs/desarrollo.md)**, que es la guía completa. Aquí solo está
-lo justo para levantarlo.
+En `http://localhost:8000`. **Se entra por `/acceso/`**, que es la puerta de los cuatro
+roles; el admin de `/admin/` acepta a la institución y al personal de la cafetería, pero
+nunca al acudiente. Empieza con `institucion@example.com` y la contraseña de arriba.
+
+**Qué pantalla hay y quién alcanza cada una está en
+[`docs/mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md).** Los comandos del día
+a día, las credenciales de los demás roles y qué hacer cuando algo no arranca, en
+[`docs/desarrollo.md`](./docs/desarrollo.md). Aquí solo está lo justo para levantarlo.
 
 ---
 
@@ -90,6 +98,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | Documento | Para qué |
 |---|---|
 | [`desarrollo.md`](./docs/desarrollo.md) | Reconstrucción local, credenciales y comandos |
+| [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
 | [`despliegue.md`](./docs/despliegue.md) | Estado del entorno desplegado, sus restricciones y sus trampas |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |

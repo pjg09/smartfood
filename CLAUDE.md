@@ -25,9 +25,10 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
+| `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
-| `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes, con lo que quedó sin corregir (`TT-35`) |
+| `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.** Ocho
@@ -89,6 +90,22 @@ devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django c
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
+### Trampas de este stack, ya pagadas
+
+- **`instance.pk` no distingue un alta.** La clave primaria es UUIDv7 generado en la
+  aplicación (`DT-17`): una instancia recién construida **ya la tiene**. Pregunta por
+  `instance._state.adding`.
+- **Ocultar un campo del admin no se hace borrándolo del formulario.** El admin arma sus
+  secciones desde `base_fields`, antes de que exista instancia: un `del self.fields[...]`
+  revienta al renderizar. Se decide en `get_fields()` / `get_fieldsets()`.
+- **Un `ManyToMany` con `through` no se edita desde el admin**, y el campo del formulario que
+  lo sustituya **no puede llamarse igual** que el del modelo: la comprobación `E013` mira el
+  modelo, no el formulario.
+- **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
+  sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+- **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
+  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve».
+
 ## Cómo ejecutar
 
 Con `docker compose up -d` levantado, y siempre por `uv run`:
@@ -97,6 +114,17 @@ Con `docker compose up -d` levantado, y siempre por `uv run`:
 set -a && source .env && set +a
 uv run python manage.py <lo que sea>
 ```
+
+Para tener una base con la que trabajar —institución, personal, familias con avatares y
+catálogo, todo ficticio e idempotente—:
+
+```bash
+uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
+  --estudiantes 12
+```
+
+Se entra por `/acceso/`, que es la puerta de los cuatro roles. Las credenciales locales y el
+recorrido de cada rol están en `docs/desarrollo.md`.
 
 Antes de cada PR, los tres tienen que pasar:
 
@@ -109,6 +137,17 @@ uv run python manage.py test
 Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
 `transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
 `self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
+
+Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
+con `django.test.Client`. Hace falta añadir el host que usa el cliente:
+
+```bash
+DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py shell -c '…'
+```
+
+**Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
+con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
+— este último ata el almacenamiento a la definición de la clase y el `override` no le llega.
 
 ## Definición de Terminado
 
