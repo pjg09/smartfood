@@ -1,0 +1,69 @@
+{% extends "admin/base_site.html" %}
+
+{% comment %}
+TT-39. Confirmación de la reasignación del código de tarjeta (`HU-46`).
+
+**Por qué hay una pantalla en medio.** Reasignar no se deshace: el código
+anterior queda invalidado de forma inmediata y definitiva (`INVD-4`), y la
+tarjeta que el estudiante lleva encima deja de servir en ese momento. Un clic
+por error obliga a reimprimir y a que el estudiante pase un día sin poder
+comprar. La confirmación dice exactamente qué se va a invalidar, con el código a
+la vista.
+{% endcomment %}
+
+{% block title %}Reasignar el código de tarjeta | {{ site_title }}{% endblock %}
+
+{% block content %}
+  <h1>Reasignar el código de tarjeta</h1>
+
+  <p style="max-width:70ch">
+    A {% if estudiantes|length == 1 %}este estudiante se le asignará un código
+    nuevo{% else %}estos {{ estudiantes|length }} estudiantes se les asignará un
+    código nuevo{% endif %}, aleatorio y distinto del actual.
+  </p>
+
+  <ul class="messagelist">
+    <li class="warning">
+      <strong>El código actual queda invalidado de inmediato y para siempre.</strong>
+      La tarjeta que {% if estudiantes|length == 1 %}lleva encima{% else %}llevan
+      encima{% endif %} deja de identificar a nadie en el mismo momento, y hay que
+      imprimir la nueva. Esto no se puede deshacer.
+    </li>
+  </ul>
+
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Estudiante</th>
+        <th scope="col">Documento</th>
+        <th scope="col">Código que se invalida</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for estudiante in estudiantes %}
+        <tr>
+          <td>{{ estudiante.nombre }}</td>
+          <td>{{ estudiante.documento }}</td>
+          <td style="font-family:monospace;letter-spacing:0.2em">
+            {{ estudiante.codigo_tarjeta }}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for estudiante in estudiantes %}
+      <input type="hidden" name="_selected_action" value="{{ estudiante.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="accion_reasignar_codigo">
+    <input type="hidden" name="confirmado" value="si">
+
+    <div class="submit-row">
+      <input type="submit" class="default"
+             value="Sí, reasignar e invalidar {% if estudiantes|length == 1 %}el código actual{% else %}los códigos actuales{% endif %}">
+      <a href="{{ volver }}" class="button cancel-link">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

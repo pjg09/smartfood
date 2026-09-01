@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **39** de 56 | **17** de 24 |
-| Pendientes | 17 | 7 |
+| **Finalizadas** | **42** de 56 | **18** de 24 |
+| Pendientes | 14 | 6 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 21 | 26 |
-| Carlos | 11 | 16 |
-| Alejandro | 5 | 9 |
+| Pedro | 22 | 26 |
+| Carlos | 12 | 16 |
+| Alejandro | 6 | 9 |
 | Naomi | 2 | 5 |
 
 `PR-14` añadió `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
@@ -121,7 +121,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☑ |
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☑ |
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` · `DT-22` | ☑ |
-| `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☐ |
+| `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☑ |
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` | ☐ |
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☐ |
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☐ |
@@ -636,16 +636,31 @@ Sprint 2: no es un adorno, es el insumo físico de la siguiente demostración.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-46` |
 | Invariantes | **`INVD-4`** |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-38` | Servicio de reasignación que invalida el código anterior de forma definitiva | Pedro | ☐ |
-| `TT-39` | Acción de reasignar en la ficha, con confirmación | Carlos | ☐ |
-| `TT-40` | Caso de prueba: el código anterior deja de identificar a nadie | Alejandro | ☐ |
+| `TT-38` | Servicio de reasignación que invalida el código anterior de forma definitiva | Pedro | ☑ |
+| `TT-39` | Acción de reasignar en la ficha, con confirmación | Carlos | ☑ |
+| `TT-40` | Caso de prueba: el código anterior deja de identificar a nadie | Alejandro | ☑ |
 
 Si el código anterior sigue siendo válido, `HU-47` y `HU-48` del Sprint 2 no protegen nada.
 `TT-40` es la prueba que lo impide y va en este PR, no después.
+
+> **«Inmediata y definitiva» no es un `if`: el código anterior deja de existir.** Es el
+> mismo campo único, y al sobrescribirlo ninguna consulta por el valor viejo encuentra a
+> nadie. Se descartó guardar el historial de códigos con una bandera de cuál está vigente:
+> una bandera se puede olvidar en la siguiente consulta, y `INVD-4` volvería a depender de
+> que todos los caminos de lectura se acuerden de filtrar.
+
+> **Queda un flanco declarado, no cerrado.** El generador podría devolver algún día un
+> código ya retirado y dárselo a otro estudiante: una tarjeta vieja identificaría entonces
+> a otra persona. Es una entre 10^21 por sorteo y está anotado como punto abierto en el
+> `ANEXO B` de `./decisiones-tecnicas.md`, con lo que costaría cerrarlo.
+
+> **La identificación por escaneo es `HU-15`, del Sprint 2.** «No identifica a nadie» se
+> comprueba hoy en la base, que es donde se puede comprobar de verdad; el punto de venta
+> buscará por este mismo campo único, así que la propiedad se conservará por construcción.
 
 ---
 

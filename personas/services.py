@@ -152,6 +152,56 @@ def crear_estudiante(*, actor, nombre, documento, acudiente):
     )
 
 
+@transaction.atomic
+def reasignar_codigo_de_tarjeta(*, actor, estudiante):
+    """Le da al estudiante un código nuevo y **mata el anterior** (`TT-38`, `HU-46`).
+
+    Es la reposición de la tarjeta cuando se pierde, se deteriora o se sospecha
+    que fue copiada. Sostiene `INVD-4`: **reasignar invalida el anterior de forma
+    inmediata y definitiva.**
+
+    «Inmediata» y «definitiva» no salen de un `if` ni de un campo `vigente` que
+    haya que acordarse de mirar: **el código anterior deja de existir**. Es el
+    mismo campo, único, y al sobrescribirlo ninguna consulta por el valor viejo
+    encuentra a nadie. Un modelo con una lista de códigos y una bandera de cuál
+    está activo dejaría la puerta a que alguien consultara sin filtrar por ella;
+    aquí no hay bandera que olvidar.
+
+    Devuelve `(anterior, nuevo)`, porque quien lo llama necesita el anterior para
+    decir qué tarjeta acaba de quedar inservible.
+
+    **El nuevo nunca es el que acaba de retirarse.** El generador es aleatorio y
+    podría devolver el mismo —una entre 10^21—, y eso resucitaría la tarjeta que
+    se está reponiendo. Cuesta una comparación y quita el único caso en que
+    `INVD-4` dependería del azar.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Reasignar el código de tarjeta")
+
+    anterior = estudiante.codigo_tarjeta
+
+    for _ in range(INTENTOS_DE_CODIGO):
+        codigo = generar_codigo_de_tarjeta()
+        if codigo == anterior:
+            continue
+        try:
+            with transaction.atomic():
+                estudiante.codigo_tarjeta = codigo
+                estudiante.save(update_fields=["codigo_tarjeta"])
+            return anterior, codigo
+        except IntegrityError:
+            # Igual que en el alta: si el código sorteado no está en la base, el
+            # choque era de otra cosa y se propaga en vez de reintentar en balde.
+            estudiante.codigo_tarjeta = anterior
+            if not Estudiante.objects.filter(codigo_tarjeta=codigo).exists():
+                raise
+
+    raise RuntimeError(
+        f"No se pudo reasignar un código libre en {INTENTOS_DE_CODIGO} intentos. "
+        "Con 2^70 combinaciones esto no ocurre por azar: revisa el generador "
+        "(INV-7, DT-9)."
+    )
+
+
 # Lo único que la institución modifica de un estudiante ya matriculado.
 #
 # **El código de tarjeta no está, y esa ausencia es la regla.** Cambiarlo no es

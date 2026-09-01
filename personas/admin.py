@@ -9,12 +9,18 @@ por su cuenta, el estudiante nacería sin código de tarjeta (`HU-43`, `INV-7`).
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
 from cuentas.models import Rol
 from personas.models import Acudiente, Estudiante, Institucion
-from personas.services import CAMPOS_EDITABLES, crear_estudiante, editar_estudiante
+from personas.services import (
+    CAMPOS_EDITABLES,
+    crear_estudiante,
+    editar_estudiante,
+    reasignar_codigo_de_tarjeta,
+)
 
 
 @admin.register(Institucion)
@@ -64,6 +70,7 @@ class EstudianteAdmin(admin.ModelAdmin):
     ]
     ordering = ["nombre"]
     list_select_related = ["acudiente"]
+    actions = ["accion_reasignar_codigo"]
 
     # `TT-35`. Con un colegio de verdad, un `<select>` con todos los acudientes
     # es una lista de cientos de nombres que hay que recorrer a ojo. El
@@ -93,6 +100,55 @@ class EstudianteAdmin(admin.ModelAdmin):
             'letter-spacing:0.2em">{}</span>',
             obj.codigo_tarjeta,
         )
+
+    @admin.action(description="Reasignar el código de tarjeta (invalida el actual)")
+    def accion_reasignar_codigo(self, request, queryset):
+        """`TT-39`, `HU-46`. Con confirmación, porque no se deshace.
+
+        `INVD-4`: el código anterior queda invalidado de forma inmediata y
+        definitiva. La tarjeta que el estudiante lleva encima deja de servir en
+        ese momento, así que un clic por error le cuesta un día sin poder
+        comprar. La pantalla intermedia enseña qué código se va a invalidar
+        antes de hacerlo.
+
+        El admin es una vista: delega en el servicio, no escribe (`DT-15`).
+        """
+        estudiantes = list(queryset)
+
+        if request.POST.get("confirmado") != "si":
+            return TemplateResponse(
+                request,
+                "admin/personas/estudiante/confirmar-reasignacion.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "titulo": "Reasignar el código de tarjeta",
+                    "estudiantes": estudiantes,
+                    "volver": reverse("admin:personas_estudiante_changelist"),
+                },
+            )
+
+        for estudiante in estudiantes:
+            try:
+                anterior, nuevo = reasignar_codigo_de_tarjeta(
+                    actor=request.user, estudiante=estudiante
+                )
+            except PermissionDenied as error:
+                self.message_user(request, f"{estudiante.nombre}: {error}", messages.ERROR)
+                continue
+
+            self.message_user(
+                request,
+                format_html(
+                    "{}: el código <code>{}</code> queda invalidado y ya no "
+                    "identifica a nadie. El nuevo es <code>{}</code> — "
+                    '<a href="{}" target="_blank" rel="noopener">imprime la tarjeta</a>.',
+                    estudiante.nombre,
+                    anterior,
+                    nuevo,
+                    reverse("tarjeta-del-estudiante", args=[estudiante.pk]),
+                ),
+                messages.SUCCESS,
+            )
 
     @admin.display(description="tarjeta")
     def tarjeta(self, obj):
