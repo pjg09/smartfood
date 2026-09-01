@@ -89,6 +89,20 @@ devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django c
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
+### Trampas de este stack, ya pagadas
+
+- **`instance.pk` no distingue un alta.** La clave primaria es UUIDv7 generado en la
+  aplicación (`DT-17`): una instancia recién construida **ya la tiene**. Pregunta por
+  `instance._state.adding`.
+- **Ocultar un campo del admin no se hace borrándolo del formulario.** El admin arma sus
+  secciones desde `base_fields`, antes de que exista instancia: un `del self.fields[...]`
+  revienta al renderizar. Se decide en `get_fields()` / `get_fieldsets()`.
+- **Un `ManyToMany` con `through` no se edita desde el admin**, y el campo del formulario que
+  lo sustituya **no puede llamarse igual** que el del modelo: la comprobación `E013` mira el
+  modelo, no el formulario.
+- **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
+  sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+
 ## Cómo ejecutar
 
 Con `docker compose up -d` levantado, y siempre por `uv run`:
@@ -109,6 +123,17 @@ uv run python manage.py test
 Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
 `transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
 `self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
+
+Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
+con `django.test.Client`. Hace falta añadir el host que usa el cliente:
+
+```bash
+DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py shell -c '…'
+```
+
+**Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
+con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
+— este último ata el almacenamiento a la definición de la clase y el `override` no le llega.
 
 ## Definición de Terminado
 
