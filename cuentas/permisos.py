@@ -47,8 +47,19 @@ PERMISOS_POR_ROL = {
         "personas.acudiente": ["view"],
     },
     # `USR-4`. «Gestionar catálogo, precios e inventario» y «Consultar reportes
-    # de ventas e inventario». Ningún modelo suyo existe todavía.
-    Rol.ADMINISTRADOR: {},
+    # de ventas e inventario». El catálogo ya existe (`TT-43`); el inventario y
+    # los reportes llegan en sprints posteriores.
+    #
+    # **Sin `delete` en ninguno de los tres**, y por el mismo motivo que en
+    # `personas`: un producto que ya se vendió no puede desaparecer, porque el
+    # historial de inventario lo referencia y sin él las existencias dejan de
+    # explicarse (`INV-3`). Se retira del catálogo, que es un estado.
+    Rol.ADMINISTRADOR: {
+        "catalogo.producto": ["add", "view", "change"],
+        "catalogo.categoria": ["add", "view", "change"],
+        "catalogo.alergeno": ["add", "view", "change"],
+        "catalogo.productoalergeno": ["add", "view", "change", "delete"],
+    },
     # `USR-3`. «Registrar ventas» y «Consultar restricciones» —consultar, no
     # modificar: ahí está `INV-4`—. Ningún modelo suyo existe todavía.
     Rol.CAJERO: {},
@@ -78,7 +89,7 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         "Consultar saldo de un estudiante (solo al cobrar)",
     ],
     Rol.ADMINISTRADOR: [
-        "Gestionar catálogo, precios e inventario",
+        "Gestionar el inventario",
         "Consultar restricciones de un estudiante",
         "Consultar reportes de ventas e inventario",
     ],
