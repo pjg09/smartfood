@@ -261,10 +261,10 @@ La base guarda **la clave del objeto, nunca el binario** (`DT-18`). La fotograf�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-43` | Modelos de producto, categoría y alérgeno, con **relación** producto–alérgeno | Pedro | ☐ |
-| `TT-44` | Definición de los campos nutricionales que consumirán las reglas de recomendación | Alejandro | ☐ |
-| `TT-45` ◆ | Vista de gestión del catálogo | Carlos | ☐ |
-| `TT-46` | Caso de prueba: el alérgeno se relaciona, no se copia como lista de productos | Alejandro | ☐ |
+| `TT-43` | Modelos de producto, categoría y alérgeno, con **relación** producto–alérgeno | Pedro | ☑ |
+| `TT-44` | Definición de los campos nutricionales que consumirán las reglas de recomendación | Alejandro | ☑ |
+| `TT-45` ◆ | Vista de gestión del catálogo | Carlos | ☑ |
+| `TT-46` | Caso de prueba: el alérgeno se relaciona, no se copia como lista de productos | Alejandro | ☑ |
 
 `TT-43` es la tarea más delicada del sprint. `INV-5` exige que el bloqueo por alérgeno se aplique **sobre la condición**, de modo que cubra productos futuros. Si el alérgeno se modela como una lista de productos bloqueados, `HU-11` del Sprint 3 queda rota y hay que rehacer el modelo. `TT-44` es de Alejandro porque él define las reglas de recomendación (`[S12]`) y esos campos son su insumo.
 

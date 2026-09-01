@@ -26,6 +26,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
+| `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes, con lo que quedó sin corregir (`TT-35`) |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
