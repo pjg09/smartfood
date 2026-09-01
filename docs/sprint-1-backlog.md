@@ -233,9 +233,9 @@ Sostiene `INV-7`. **No usar una secuencia ni derivar el código del identificado
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-38` | Servicio de reasignación que invalida el código anterior de forma definitiva | Pedro | ☐ |
-| `TT-39` | Acción de reasignar en la ficha, con confirmación | Carlos | ☐ |
-| `TT-40` | Caso de prueba: el código anterior deja de identificar a nadie | Alejandro | ☐ |
+| `TT-38` | Servicio de reasignación que invalida el código anterior de forma definitiva | Pedro | ☑ |
+| `TT-39` | Acción de reasignar en la ficha, con confirmación | Carlos | ☑ |
+| `TT-40` | Caso de prueba: el código anterior deja de identificar a nadie | Alejandro | ☑ |
 
 Sostiene `INVD-4`. Si el código anterior sigue siendo válido, `HU-47` y `HU-48` no protegen nada.
 

@@ -174,6 +174,14 @@ debajo de lo que resuelve un lector económico y la tarjeta deja de escanearse. 
 mide 69 mm de ancho con sus zonas mudas, que son parte del código y no margen: recortar
 por ahí lo inutiliza. El detalle está en `DT-22`.
 
+### [S2.6] Reponer una tarjeta perdida
+
+En el listado de estudiantes del admin, se selecciona al estudiante y se elige
+**Reasignar el código de tarjeta**. Hay una pantalla de confirmación que enseña el código
+que se va a invalidar, porque **esto no se deshace**: el código actual deja de identificar
+a nadie en ese mismo momento (`INVD-4`), y la tarjeta que el estudiante lleva encima queda
+inservible. Después hay que imprimir la nueva; el mensaje trae el enlace.
+
 ---
 
 ## [S3] Comandos del día a día
