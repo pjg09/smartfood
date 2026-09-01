@@ -86,14 +86,14 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **52** de 56 | **22** de 24 |
-| Pendientes | 4 | 2 |
+| **Finalizadas** | **53** de 56 | **23** de 24 |
+| Pendientes | 3 | 1 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 26 | 26 |
 | Carlos | 16 | 16 |
-| Alejandro | 8 | 9 |
+| Alejandro | 9 | 9 |
 | Naomi | 2 | 5 |
 
 El total incluye `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
@@ -126,7 +126,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☑ |
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☑ |
 | `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☑ |
-| `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☐ |
+| `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☑ |
 | `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
 
 ---
@@ -824,11 +824,11 @@ públicos en el proveedor, así que **la imagen la sirve la aplicación** con ca
 | Responsable | Alejandro |
 | Historia | — (transversal) |
 | Invariantes | **`INVD-6`**; `ALC-OUT-07` |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-08` | Generador de datos ficticios para pruebas, con avatares (`ALC-OUT-07`, `INVD-6`) | Alejandro | ☐ |
+| `TT-08` | Generador de datos ficticios para pruebas, con avatares (`ALC-OUT-07`, `INVD-6`) | Alejandro | ☑ |
 
 **Es la única tarea del sprint que crece por partes.** Su esqueleto se monta en `PR-08` y
 se amplía a lo largo del sprint; este PR es donde **queda terminada**, cuando ya existen
@@ -842,6 +842,20 @@ los tres bloques que tiene que sembrar:
 
 `INVD-6` es una regla de operación: **ninguna fotografía corresponde a una persona real.**
 Los avatares se generan; no se descargan de ningún sitio.
+
+> **La garantía es que no existe el camino, no que se elija bien la fuente.** Las imágenes
+> se dibujan con figuras geométricas, y hay una prueba estructural de que el módulo no sabe
+> hablar por la red. Tampoco se usan servicios de «caras generadas»: son personas sintéticas
+> pero plausibles, y una foto que **parece** una persona real acaba tratándose como tal.
+
+> **El seed siembra también el personal de la cafetería**, y no por completitud: el catálogo
+> lo crea `crear_producto`, que exige un actor con rol de administración porque ahí es donde
+> `[S11]` pone el catálogo. Sin esas cuentas no hay quién lo siembre.
+
+> **Sin invitaciones por correo.** Las direcciones son ficticias y no corresponden a ningún
+> buzón; cada rebote degrada la reputación del remitente (`DEC-9`). El seed asigna
+> contraseña, que es la opción con nombre que `DEC-11` exige de cada servicio de alta —y que
+> `crear_cuenta_de_personal` no tenía hasta este PR—.
 
 ---
 

@@ -189,7 +189,7 @@ def sincronizar_grupos_y_permisos():
 
 
 @transaction.atomic
-def crear_cuenta_de_personal(*, actor, email, rol, nombre=""):
+def crear_cuenta_de_personal(*, actor, email, rol, nombre="", contrasena_de_desarrollo=None):
     """Da de alta a un cajero o administrador de la cafetería (`TT-16`, `HU-40`).
 
     **Solo la institución educativa puede hacerlo** —primer criterio de
@@ -198,6 +198,12 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre=""):
 
     Dispara la invitación de `HU-41`, así que quien crea la cuenta **no llega a
     conocer nunca la clave del titular**.
+
+    `contrasena_de_desarrollo` es la excepción que `DEC-11` declara para todas
+    las altas del prototipo: asigna una clave conocida y **no envía invitación**.
+    Existe para el seed (`TT-08`), cuyas direcciones son ficticias y no
+    corresponden a ningún buzón (`ALC-OUT-07`, `DEC-9`). Por el camino normal
+    —sin este argumento— `HU-41` se cumple entera.
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
@@ -219,6 +225,7 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre=""):
         nombre=nombre,
         # `INT-3` es el admin de Django (`DT-2`): el personal opera desde allí.
         accede_a_administracion=True,
+        contrasena_de_desarrollo=contrasena_de_desarrollo,
     )
 
 
