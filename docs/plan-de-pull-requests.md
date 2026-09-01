@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **42** de 56 | **18** de 24 |
-| Pendientes | 14 | 6 |
+| **Finalizadas** | **44** de 56 | **19** de 24 |
+| Pendientes | 12 | 5 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 22 | 26 |
-| Carlos | 12 | 16 |
+| Pedro | 23 | 26 |
+| Carlos | 13 | 16 |
 | Alejandro | 6 | 9 |
 | Naomi | 2 | 5 |
 
@@ -122,7 +122,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☑ |
 | `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` · `DT-22` | ☑ |
 | `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☑ |
-| `PR-19` | `TT-41`–`TT-42` | `HU-51` | ☐ |
+| `PR-19` | `TT-41`–`TT-42` | `HU-51` · protege `INV-2` | ☑ |
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☐ |
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☐ |
 | `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☐ |
@@ -672,16 +672,30 @@ Si el código anterior sigue siendo válido, `HU-47` y `HU-48` del Sprint 2 no p
 | Rama | `feat/TT-41-baja-logica` |
 | Responsables | Pedro y Carlos |
 | Historia | `HU-51` |
-| Invariantes | protege **`INV-2`** |
-| Estado | ☐ Pendiente |
+| Invariantes | protege **`INV-2`**; deja montada la puerta de `INVD-2` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-41` | Estado de baja en el estudiante, conservando íntegro su historial | Pedro | ☐ |
-| `TT-42` ◆ | Acción de dar de baja en la ficha del estudiante | Carlos | ☐ |
+| `TT-41` | Estado de baja en el estudiante, conservando íntegro su historial | Pedro | ☑ |
+| `TT-42` ◆ | Acción de dar de baja en la ficha del estudiante | Carlos | ☑ |
 
 Baja **lógica**. Un `DELETE` destruiría el historial del que se reconstruye el saldo
 (`INV-2`, `DT-4`). Si el PR contiene un borrado físico, no se integra.
+
+> **La máquina de estados va entera, aunque solo se use un tercio.** `DT-12` pide tres
+> estados y descarta el booleano. `desactivado` existe en el modelo desde ahora porque una
+> máquina de estados se declara entera o no lo es; lo que llega en el Sprint 2 con `HU-47`
+> es el servicio que transita a él.
+
+> **`INVD-2` deja su puerta puesta antes de tener quién la use.** Ni la billetera ni la
+> venta existen todavía, así que `comprobar_que_puede_operar` no la llama nadie: se
+> escribe aquí porque la regla es de `HU-51` y `DEC-7`, y dejarla para el sprint que la
+> necesita es dejarla al descuido de quien escriba la venta. Ya contempla los dos estados.
+
+> **El código de tarjeta no se libera al dar de baja**, y podría parecer que sí. Liberarlo
+> permitiría que otro estudiante lo recibiera, y entonces una tarjeta vieja identificaría a
+> otra persona — lo mismo que `INVD-4` evita al reasignar.
 
 ---
 
