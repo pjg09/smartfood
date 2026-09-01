@@ -272,8 +272,8 @@ La base guarda **la clave del objeto, nunca el binario** (`DT-18`). La fotograf�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☐ |
-| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☐ |
+| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☑ |
+| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☑ |
 
 ### Tarea transversal: datos ficticios
 

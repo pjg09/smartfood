@@ -86,13 +86,13 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **50** de 56 | **21** de 24 |
-| Pendientes | 6 | 3 |
+| **Finalizadas** | **52** de 56 | **22** de 24 |
+| Pendientes | 4 | 2 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 25 | 26 |
-| Carlos | 15 | 16 |
+| Pedro | 26 | 26 |
+| Carlos | 16 | 16 |
 | Alejandro | 8 | 9 |
 | Naomi | 2 | 5 |
 
@@ -125,7 +125,7 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-19` | `TT-41`–`TT-42` | `HU-51` · protege `INV-2` | ☑ |
 | `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☑ |
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☑ |
-| `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☐ |
+| `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☑ |
 | `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☐ |
 | `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
 
@@ -788,16 +788,33 @@ Revisión obligatoria de los dos desarrolladores, no de uno.
 | Rama | `feat/TT-53-imagen-del-producto` |
 | Responsables | Pedro y Carlos |
 | Historia | `HU-59` |
-| Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Invariantes | ninguna; se apoya en `DT-20` y `DT-21` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☐ |
-| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☐ |
+| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☑ |
+| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☑ |
 
 Bucket **público**: la imagen de un producto no es sensible y firmar cincuenta URL para
 pintar la lista del punto de venta es coste sin contrapartida (`DT-18`).
+
+> **Corrección: no hay bucket público.** Este bloque se escribió con `DT-18`, que preveía
+> dos buckets. `DT-21` lo corrigió al descubrir que el proveedor **no ofrece buckets
+> públicos en ningún plan**: hay un bucket con dos prefijos, y `publico/` significa **no
+> sensible**, no accesible sin credenciales. La razón que da este bloque sigue siendo la
+> buena; lo que cambia es cómo se sirve la imagen — **la sirve la aplicación** con caché
+> larga, no una URL del bucket.
+
+> **La ruta lleva la clave, no el identificador del producto**, y de ahí sale que la
+> respuesta se pueda cachear como inmutable durante un mes: al reemplazar la imagen cambia
+> la clave, cambia la URL, y no hay caché que invalidar. Es lo que `INT-2` necesita para no
+> descargar el catálogo entero en cada pintado.
+
+> **La comprobación de la clave no es cosmética.** El almacenamiento antepone el prefijo a
+> lo que se le pida, así que una clave con `..` alcanzaría `privado/`, donde está la
+> fotografía de un menor. Solo se acepta la forma exacta que produce la canalización, y hay
+> prueba de extremo a extremo que lo intenta.
 
 ---
 

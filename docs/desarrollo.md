@@ -206,6 +206,20 @@ caduca en cinco minutos (`DT-18`, `DT-21`).
 **En el prototipo son avatares generados, nunca personas reales** (`INVD-6`,
 `ALC-OUT-07`). No es una preferencia: es la Ley 1581 de 2012 sobre datos de menores.
 
+### [S2.9] Cargar la imagen de un producto
+
+En la ficha del producto, campo **Imagen**. Es opcional: sin ella el producto se vende
+igual (`HU-59`).
+
+Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y
+se reduce (`DT-20`)— pero va al prefijo `publico/`, que significa **no sensible**, no
+accesible sin credenciales (`DT-21`). **La sirve la aplicación**, en
+`/catalogo/imagenes/<clave>`, con caché de un mes y sin firma: una firma caduca, y el
+punto de venta tendría que volver a pedir el catálogo entero solo para renovar enlaces.
+
+La URL lleva la clave y no el identificador del producto: al reemplazar la imagen cambia
+la clave, así que cambia la URL y no hay nada que invalidar.
+
 ---
 
 ## [S3] Comandos del día a día
