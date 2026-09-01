@@ -278,7 +278,7 @@ La base guarda **la clave del objeto, nunca el binario** (`DT-18`). La fotograf�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-08` | Generador de datos ficticios para pruebas, con avatares (`ALC-OUT-07`, `INVD-6`) | Alejandro | ☐ |
+| `TT-08` | Generador de datos ficticios para pruebas, con avatares (`ALC-OUT-07`, `INVD-6`) | Alejandro | ☑ |
 
 **Va aquí porque aquí es donde queda terminada**, no porque se empiece ahora. Es la única tarea del sprint que crece por partes, a medida que aparecen los modelos:
 

@@ -34,7 +34,8 @@ docker compose up -d          # PostgreSQL, MinIO y el bucket
 uv sync                       # dependencias exactas de uv.lock
 
 uv run python manage.py migrate
-uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026'
+uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
+  --estudiantes 12
 
 uv run python manage.py runserver
 ```
@@ -124,6 +125,24 @@ titular define su contraseña— se dirige la invitación a un buzón real:
 ```bash
 uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
 ```
+
+### [S2.3.1] Qué siembra `--estudiantes N`
+
+Con esa opción, `sembrar` deja el prototipo listo para trabajar (`TT-08`):
+
+| Qué | Cuánto |
+|---|---|
+| Personal de la cafetería | Un cajero y un administrador, con contraseña asignada |
+| Acudientes y estudiantes | `N` estudiantes; uno de cada cuatro acudientes con dos hijos |
+| Avatares | Uno por estudiante, **dibujado**, nunca descargado (`INVD-6`) |
+| Catálogo | 5 categorías, 8 alérgenos y 16 productos con su nutricional e imagen |
+
+**Es idempotente**: se puede ejecutar en cada despliegue sin duplicar nada ni volver a
+subir imágenes. Todos los correos son `@example.com` y todos los datos son inventados
+(`ALC-OUT-07`). Con `--sin-imagenes` va más rápido, si solo hacen falta los datos.
+
+Las cuentas del personal son `cajero@example.com` y `administracion@example.com`, con la
+misma contraseña que se le pase al comando.
 
 ### [S2.4] Entrar como acudiente
 
