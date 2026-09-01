@@ -10,6 +10,7 @@ from django.contrib.auth import views as vistas_de_auth
 from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 
+from catalogo.views import imagen_del_producto
 from config.salud import salud
 from personas.views import (
     carga_de_estudiantes,
@@ -79,6 +80,15 @@ urlpatterns = [
         "estudiantes/<uuid:estudiante_id>/tarjeta/",
         tarjeta_del_estudiante,
         name="tarjeta-del-estudiante",
+    ),
+    # Imagen del producto (`TT-53`, `HU-59`, `DT-21`). La sirve la aplicación
+    # con caché larga en lugar de firmar una URL: no es sensible, y una firma
+    # caduca. La ruta lleva la clave, que cambia al reemplazar la imagen, así
+    # que la respuesta puede cachearse como inmutable.
+    path(
+        "catalogo/imagenes/<str:clave>",
+        imagen_del_producto,
+        name="imagen-del-producto",
     ),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

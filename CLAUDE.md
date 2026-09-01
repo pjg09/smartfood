@@ -163,3 +163,17 @@ congelada; no la edites. Si una decisión cambia, se actualiza aquí, con su ide
 
 Ninguna afirmación de estos documentos se inventa: cada una cita el identificador del que sale. Al
 añadir contenido, mantén esa propiedad o el documento pierde su valor.
+
+**Lo que se queda atrás se reescribe, no se anota.** Cuando una afirmación deja de ser cierta
+—porque una decisión posterior la corrigió o porque el código cambió—, se **reescribe en presente**
+para que diga lo que hoy es verdad. Nada de «esto decía X, y ahora Y»: quien lee el documento
+necesita el estado actual, no su arqueología. La justificación que siga siendo válida se conserva;
+lo que cambió, se cambia.
+
+Dos excepciones, porque ahí la historia **es** el contenido:
+
+- **Los registros de decisiones** —`DEC-n`, `DT-n`, `INVD-n`— no se reescriben: una decisión
+  posterior que corrige a otra se añade con su propio identificador y dice a cuál corrige, como
+  `DT-21` hace con `DT-18`. Borrar la anterior dejaría sin explicación por qué el código es así.
+- **Las listas de puntos abiertos y de hallazgos** —`ANEXO B`, los `UX-n` del recorrido— marcan el
+  punto como resuelto y dicen dónde. Que el punto llegó a estar abierto es información.

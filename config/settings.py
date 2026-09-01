@@ -152,10 +152,10 @@ PASSWORD_RESET_TIMEOUT = env.int("DJANGO_CADUCIDAD_INVITACION", default=60 * 60 
 
 # `TT-56` (`DEC-12`). La pantalla de acceso común a los cuatro roles.
 #
-# **Antes apuntaba a `/admin/login/`, y eso dejaba fuera al acudiente**: ese
-# formulario exige `is_staff`, y `USR-2` no accede a la administración porque
-# `INT-1` no es el admin (`DT-2`). Un `@login_required` en la interfaz del
-# acudiente lo mandaba a una pantalla que iba a rechazarlo siempre.
+# **No apunta a `/admin/login/`, y no puede hacerlo**: ese formulario exige
+# `is_staff`, y `USR-2` no accede a la administración porque `INT-1` no es el
+# admin (`DT-2`). Con él, un `@login_required` en la interfaz del acudiente lo
+# manda a una pantalla que va a rechazarlo siempre.
 #
 # La ruta no es un camino de alta: `INV-6` e `INVD-1` siguen enteras y las
 # rutas de registro no existen (`DT-10`).

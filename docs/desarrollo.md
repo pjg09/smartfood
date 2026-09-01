@@ -101,12 +101,11 @@ URL pública en internet y esa cuenta administra el sistema entero: escribir su 
 se la daría a cualquiera con acceso al repositorio —hoy cuatro personas, mañana quien
 evalúe— y quedaría en el historial de git para siempre.
 
-**No es superusuario de Django**, eso sí, desde el 2026-08-31: tiene exactamente los
-permisos que declara `cuentas/permisos.py` y no puede editar los grupos con los que
-`DT-11` sostiene `INV-4`. El razonamiento está en `UX-6` de
-`./recorrido-de-administracion-de-estudiantes.md`. Si algún día el admin le devuelve un
-`403` sobre algo que debería poder hacer, el sitio donde se arregla es la matriz, no la
-cuenta.
+**No es superusuario de Django**: tiene exactamente los permisos que declara
+`cuentas/permisos.py` y no puede editar los grupos con los que `DT-11` sostiene `INV-4`.
+El razonamiento está en `UX-6` de `./recorrido-de-administracion-de-estudiantes.md`. Si el
+admin le devuelve un `403` sobre algo que debería poder hacer, el sitio donde se arregla es
+la matriz, no la cuenta.
 
 ### [S2.3] Por qué la institución tiene contraseña y las demás cuentas no
 
@@ -205,6 +204,20 @@ caduca en cinco minutos (`DT-18`, `DT-21`).
 
 **En el prototipo son avatares generados, nunca personas reales** (`INVD-6`,
 `ALC-OUT-07`). No es una preferencia: es la Ley 1581 de 2012 sobre datos de menores.
+
+### [S2.9] Cargar la imagen de un producto
+
+En la ficha del producto, campo **Imagen**. Es opcional: sin ella el producto se vende
+igual (`HU-59`).
+
+Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y
+se reduce (`DT-20`)— pero va al prefijo `publico/`, que significa **no sensible**, no
+accesible sin credenciales (`DT-21`). **La sirve la aplicación**, en
+`/catalogo/imagenes/<clave>`, con caché de un mes y sin firma: una firma caduca, y el
+punto de venta tendría que volver a pedir el catálogo entero solo para renovar enlaces.
+
+La URL lleva la clave y no el identificador del producto: al reemplazar la imagen cambia
+la clave, así que cambia la URL y no hay nada que invalidar.
 
 ---
 

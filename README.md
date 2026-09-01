@@ -16,7 +16,7 @@ cinco sprints de dos semanas.
 | | |
 |---|---|
 | Sprint | **1 de 5** — registro, perfiles, vinculación y catálogo |
-| Avance | 50 de 56 tareas · 21 de 24 Pull Requests |
+| Avance | 52 de 56 tareas · 22 de 24 Pull Requests |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático

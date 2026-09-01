@@ -99,13 +99,12 @@ Trabajo sin el cual ninguna historia del sprint puede construirse. **No proviene
 
 **Las nueve primeras se pueden hacer de entrada**, en el orden en que están: ninguna depende de nada que venga después. `TT-08`, el generador de datos ficticios, era la décima y se movió al final de `[S4]`, porque necesita que existan los modelos.
 
-> **`TT-56` se añadió el 2026-08-31, con el sprint ya en marcha.** No es alcance nuevo: es
-> habilitación que la planeación no contabilizó. **Ninguna de las 59 historias pide un inicio
-> de sesión** —la única mención es un criterio de `HU-42` que lo *presupone*—, y para `USR-3`,
-> `USR-4` y `USR-5` no se notaba porque el admin de Django resuelve su acceso (`INT-3`,
-> `DT-2`). Para `USR-2` no había nada, y `TT-29` lo necesita. El razonamiento completo está en
-> `DEC-12` de `./decisiones-de-alcance.md`. Su sitio en el orden de construcción es **antes de
-> `TT-29`**; ver el `ANEXO C`.
+> **`TT-56` es habilitación que la planeación no contabilizó, no alcance nuevo.** **Ninguna
+> de las 59 historias pide un inicio de sesión** —la única mención es un criterio de `HU-42`
+> que lo *presupone*—, y para `USR-3`, `USR-4` y `USR-5` no se nota porque el admin de Django
+> resuelve su acceso (`INT-3`, `DT-2`). Para `USR-2` no hay nada, y `TT-29` lo necesita. El
+> razonamiento completo está en `DEC-12` de `./decisiones-de-alcance.md`. Su sitio en el orden
+> de construcción es **antes de `TT-29`**; ver el `ANEXO C`.
 
 > Estas nueve tareas **no requieren esperar a la semana 6.** Ver `ANEXO A`.
 
@@ -272,8 +271,8 @@ La base guarda **la clave del objeto, nunca el binario** (`DT-18`). La fotograf�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☐ |
-| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☐ |
+| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☑ |
+| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☑ |
 
 ### Tarea transversal: datos ficticios
 
@@ -320,11 +319,11 @@ No son técnicas, pero forman parte del plan del sprint y las exige el marco de 
 
 ## [ANEXO A] Riesgo de sobrecarga
 
-El Sprint 1 concentra **18 de las 59 historias (31 %) en 2 de las 10 semanas (20 %)**, y además carga con las **diez** tareas de habilitación que ninguna historia contabiliza: las de `[S3]`. Eran ocho cuando se escribió este anexo; `DEC-8` sumó `TT-50` y `TT-55`, y `DEC-12` sumó `TT-56`. Es el sprint con menos velocidad del proyecto —el equipo aún está montando el entorno y aprendiendo el stack— y el que más trabajo tiene.
+El Sprint 1 concentra **18 de las 59 historias (31 %) en 2 de las 10 semanas (20 %)**, y además carga con las **diez** tareas de habilitación que ninguna historia contabiliza: las de `[S3]`. Es el sprint con menos velocidad del proyecto —el equipo aún está montando el entorno y aprendiendo el stack— y el que más trabajo tiene.
 
 Sobre 2 desarrolladores, Pedro sale a **26 tareas en 10 días hábiles**. No es realista a tiempo parcial.
 
-`DEC-8` empeoró el cuadro: añadió `HU-57` y `HU-59` con cinco tareas más, y `DEC-12` sumó `TT-56`. La contrapartida es que `DT-2` descarga a Carlos —siete de sus dieciséis tareas están marcadas `◆` y se reducen a declarar el modelo en el admin—, pero **ninguna de las de Pedro se reduce**.
+`DEC-8` empeora el cuadro: añade `HU-57` y `HU-59` con cinco tareas más, y `DEC-12` suma `TT-56`. La contrapartida es que `DT-2` descarga a Carlos —siete de sus dieciséis tareas están marcadas `◆` y se reducen a declarar el modelo en el admin—, pero **ninguna de las de Pedro se reduce**.
 
 **Tres salidas, en orden de preferencia:**
 
@@ -359,7 +358,7 @@ El orden en que aparecen las 55 tareas planificadas se comprobó por script cont
 | Tareas colocadas | 55 de 55, ninguna repetida |
 | Tareas situadas antes de algo que las bloquea | **0** |
 
-**`TT-56` se añadió después de esa verificación** y no se renumeró nada: los identificadores son estables y citables (`[S0.2]`, regla 6). Su número es el más alto, pero **su sitio en el orden de construcción es antes de `TT-29`**, que es la tarea que la necesita. Está en `[S3]` con las demás de habilitación, y la tabla de abajo registra la dependencia. La propiedad del orden se conserva: al llegar a `TT-29`, `TT-56` ya está hecha, porque las dos entran en el mismo Pull Request (`PR-14`).
+**`TT-56` queda fuera de esa verificación** y no se renumera nada: los identificadores son estables y citables (`[S0.2]`, regla 6). Su número es el más alto, pero **su sitio en el orden de construcción es antes de `TT-29`**, que es la tarea que la necesita. Está en `[S3]` con las demás de habilitación, y la tabla de abajo registra la dependencia. La propiedad del orden se conserva: al llegar a `TT-29`, `TT-56` ya está hecha, porque las dos entran en el mismo Pull Request (`PR-14`).
 
 **Se desarrolla de arriba abajo, sin excepciones.** Al llegar a cualquier tarea, todo lo que necesita ya está hecho.
 
