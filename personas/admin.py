@@ -14,10 +14,11 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from cuentas.models import Rol
-from personas.models import Acudiente, Estudiante, Institucion
+from personas.models import Acudiente, EstadoDelEstudiante, Estudiante, Institucion
 from personas.services import (
     CAMPOS_EDITABLES,
     crear_estudiante,
+    dar_de_baja,
     editar_estudiante,
     reasignar_codigo_de_tarjeta,
 )
@@ -61,7 +62,10 @@ class EstudianteAdmin(admin.ModelAdmin):
     """
 
     form = EstudianteForm
-    list_display = ["nombre", "documento", "codigo_tarjeta", "acudiente", "tarjeta"]
+    list_display = ["nombre", "documento", "estado", "codigo_tarjeta", "acudiente", "tarjeta"]
+    # Quién sigue en el colegio es la primera pregunta del listado, y por defecto
+    # se ven todos. `TT-41`.
+    list_filter = ["estado"]
     # `TT-36`. Buscar por el código responde a la pregunta inversa, que es la que
     # se hace con una tarjeta suelta en la mano: **¿de quién es esta?**
     search_fields = [
@@ -70,7 +74,7 @@ class EstudianteAdmin(admin.ModelAdmin):
     ]
     ordering = ["nombre"]
     list_select_related = ["acudiente"]
-    actions = ["accion_reasignar_codigo"]
+    actions = ["accion_reasignar_codigo", "accion_dar_de_baja"]
 
     # `TT-35`. Con un colegio de verdad, un `<select>` con todos los acudientes
     # es una lista de cientos de nombres que hay que recorrer a ojo. El
@@ -90,7 +94,7 @@ class EstudianteAdmin(admin.ModelAdmin):
         # `TT-36`, `HU-45`. El código **vigente** en la ficha, junto al enlace
         # que lo imprime. De solo lectura porque lo genera el sistema (`HU-14`)
         # y porque cambiarlo es reasignar la tarjeta, que es `HU-46`.
-        return ["id", "creado_en", "codigo_tarjeta", "tarjeta"]
+        return ["id", "creado_en", "estado", "dado_de_baja_en", "codigo_tarjeta", "tarjeta"]
 
     @admin.display(description="código de tarjeta")
     def codigo_tarjeta(self, obj):
@@ -100,6 +104,57 @@ class EstudianteAdmin(admin.ModelAdmin):
             'letter-spacing:0.2em">{}</span>',
             obj.codigo_tarjeta,
         )
+
+    @admin.action(description="Dar de baja (se retiró del colegio)")
+    def accion_dar_de_baja(self, request, queryset):
+        """`TT-42`, `HU-51`. Con confirmación: la baja no se deshace.
+
+        No hay historia que la revierta —`HU-49` reactiva de la desactivación,
+        que es otro estado— así que la pantalla intermedia recuerda además cuál
+        es la acción que sí tiene vuelta: si la tarjeta se perdió, lo que
+        corresponde es reasignar el código, no dar de baja.
+
+        El admin es una vista: delega en el servicio, no escribe (`DT-15`).
+        """
+        estudiantes = list(queryset)
+
+        if request.POST.get("confirmado") != "si":
+            return TemplateResponse(
+                request,
+                "admin/personas/estudiante/confirmar-baja.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "titulo": "Dar de baja",
+                    "estudiantes": estudiantes,
+                    "volver": reverse("admin:personas_estudiante_changelist"),
+                },
+            )
+
+        dados, ya_estaban = 0, 0
+        for estudiante in estudiantes:
+            estaba = estudiante.estado
+            try:
+                dar_de_baja(actor=request.user, estudiante=estudiante)
+            except PermissionDenied as error:
+                self.message_user(request, f"{estudiante.nombre}: {error}", messages.ERROR)
+                continue
+
+            if estaba == EstadoDelEstudiante.BAJA:
+                ya_estaban += 1
+            else:
+                dados += 1
+
+        if dados:
+            self.message_user(
+                request,
+                f"Estudiantes dados de baja: {dados}. Su historial y su saldo se "
+                "conservan íntegros y siguen siendo consultables.",
+                messages.SUCCESS,
+            )
+        if ya_estaban:
+            self.message_user(
+                request, f"Ya estaban de baja: {ya_estaban}.", messages.INFO
+            )
 
     @admin.action(description="Reasignar el código de tarjeta (invalida el actual)")
     def accion_reasignar_codigo(self, request, queryset):

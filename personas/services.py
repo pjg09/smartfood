@@ -13,12 +13,18 @@ from dataclasses import dataclass, field
 
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from cuentas.models import Rol
 from cuentas.services import crear_cuenta, generar_invitacion
 from personas.carga import leer
 from personas.codigo import generar_codigo_de_tarjeta
-from personas.models import Acudiente, Estudiante, Institucion
+from personas.models import (
+    Acudiente,
+    EstadoDelEstudiante,
+    Estudiante,
+    Institucion,
+)
 from personas.validacion import ArchivoInvalido, validar
 
 # Cuántas veces se vuelve a intentar si el código sorteado ya existía (`DT-9`).
@@ -200,6 +206,71 @@ def reasignar_codigo_de_tarjeta(*, actor, estudiante):
         "Con 2^70 combinaciones esto no ocurre por azar: revisa el generador "
         "(INV-7, DT-9)."
     )
+
+
+class EstudianteNoOperativo(Exception):
+    """`INVD-2`. El estudiante no está en condiciones de comprar ni recargar."""
+
+
+def comprobar_que_puede_operar(estudiante):
+    """Puerta única de `INVD-2`: ni desactivado ni de baja opera.
+
+    **La llaman los servicios que mueven dinero o existencias.** Hoy no existe
+    ninguno —la billetera es el Sprint 2 y la venta también—, y por eso esta
+    función se escribe ahora y no entonces: la regla es de `HU-51` y `DEC-7`, y
+    dejarla para el sprint que la necesita es dejarla al descuido de quien
+    escriba la venta.
+
+    Está aquí y no en la vista porque `INVD-2` no puede depender de por dónde se
+    entre (`DT-15`).
+    """
+    if estudiante.puede_operar:
+        return
+
+    if estudiante.estado == EstadoDelEstudiante.BAJA:
+        raise EstudianteNoOperativo(
+            f"{estudiante.nombre} está de baja: se retiró del colegio. Su saldo "
+            "queda congelado y consultable, pero no se compra ni se recarga "
+            "sobre él (HU-51, HU-52, INVD-2)."
+        )
+
+    raise EstudianteNoOperativo(
+        f"{estudiante.nombre} está desactivado y no puede comprar ni recargar "
+        "(INVD-2)."
+    )
+
+
+@transaction.atomic
+def dar_de_baja(*, actor, estudiante):
+    """El estudiante se retiró del colegio (`TT-41`, `HU-51`).
+
+    **Baja lógica, nunca borrado.** Es el primer criterio de la historia y la
+    razón de que `DEC-7` exista: borrar la fila destruiría el historial de
+    consumo y de movimientos, que es de donde se reconstruye el saldo (`INV-2`,
+    `DT-4`) y donde vive la trazabilidad que es el objeto del proyecto. Aquí no
+    se borra nada: se cambia un estado y se anota la fecha.
+
+    **Es un estado distinto de la desactivación** (`HU-47`, Sprint 2). «Se
+    retiró del colegio» no es «perdió la tarjeta»: la segunda es reversible y la
+    puede pedir el acudiente; esta no, y solo la da la institución.
+
+    **El código de tarjeta no se toca.** Podría parecer que hay que liberarlo, y
+    es justo lo contrario: sigue siendo el código de ese estudiante en su
+    historial, y liberarlo permitiría que otro lo recibiera y que una tarjeta
+    vieja identificara a otra persona — lo mismo que `INVD-4` evita al reasignar.
+    Que no pueda comprar lo garantiza el estado, no la ausencia del código.
+
+    Es **idempotente**: dar de baja a quien ya está de baja no cambia la fecha.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Dar de baja a un estudiante")
+
+    if estudiante.estado == EstadoDelEstudiante.BAJA:
+        return estudiante
+
+    estudiante.estado = EstadoDelEstudiante.BAJA
+    estudiante.dado_de_baja_en = timezone.now()
+    estudiante.save(update_fields=["estado", "dado_de_baja_en"])
+    return estudiante
 
 
 # Lo único que la institución modifica de un estudiante ya matriculado.

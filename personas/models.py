@@ -45,6 +45,26 @@ class Acudiente(models.Model):
         return self.usuario.email
 
 
+class EstadoDelEstudiante(models.TextChoices):
+    """Los tres estados de `DT-12`. **No es un booleano, y esa es la decisión.**
+
+    Un `activo = True/False` no distinguiría «perdió la tarjeta» de «se retiró
+    del colegio», y `DEC-7` exige separarlos: la desactivación es reversible y
+    la puede pedir el acudiente (`HU-47`, `HU-48`); la baja la da la institución
+    cuando el estudiante deja el colegio, y conserva íntegro su historial.
+
+    `INVD-2` los junta para una sola cosa: **ni desactivado ni de baja se puede
+    comprar**. Para todo lo demás son estados distintos.
+    """
+
+    ACTIVO = "activo", "Activo"
+    # `HU-47`, `HU-48` y `HU-49`, del Sprint 2. El estado existe desde ahora
+    # porque la máquina de estados se declara entera o no es una máquina de
+    # estados; lo que todavía no existe es el servicio que transita a él.
+    DESACTIVADO = "desactivado", "Desactivado"
+    BAJA = "baja", "De baja"
+
+
 class Estudiante(models.Model):
     """El estudiante. **No tiene cuenta**: `USR-1` no inicia sesión (`[S10.1]`).
 
@@ -79,6 +99,25 @@ class Estudiante(models.Model):
         verbose_name="acudiente",
     )
 
+    # `TT-41`, `HU-51`, `DT-12`. **Baja lógica, nunca borrado**: el historial de
+    # consumo y de movimientos se conserva íntegro, que es lo que sostiene
+    # `INV-2` —el saldo se reconstruye desde el historial— y la trazabilidad que
+    # es el objeto del proyecto (`OBJ-E2`).
+    estado = models.CharField(
+        "estado",
+        max_length=12,
+        choices=EstadoDelEstudiante.choices,
+        default=EstadoDelEstudiante.ACTIVO,
+        editable=False,
+    )
+
+    # Cuándo se dio de baja. Nulo mientras no lo esté.
+    #
+    # No es adorno: «este estudiante está de baja» y «se retiró en tal fecha»
+    # son dos hechos distintos, y el segundo es el que hace auditable el saldo
+    # congelado de `HU-52`.
+    dado_de_baja_en = models.DateTimeField("dado de baja en", null=True, blank=True, editable=False)
+
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
 
     class Meta:
@@ -99,10 +138,41 @@ class Estudiante(models.Model):
                 condition=models.Q(codigo_tarjeta__regex=rf"^[{ALFABETO}]{{{LONGITUD}}}$"),
                 name="estudiante_codigo_tarjeta_con_forma_valida",
             ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    estado__in=[e.value for e in EstadoDelEstudiante]
+                ),
+                name="estudiante_estado_valido",
+            ),
+            # La fecha de baja y el estado no pueden contradecirse. Lo impone la
+            # base y no un `if` (`DT-15`): un `if` cubre el camino que hoy
+            # conocemos —el servicio— y no el `update()` que alguien escriba
+            # mañana en un `shell`.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(estado="baja", dado_de_baja_en__isnull=False)
+                    | ~models.Q(estado="baja") & models.Q(dado_de_baja_en__isnull=True)
+                ),
+                name="estudiante_fecha_de_baja_coherente",
+            ),
         ]
 
     def __str__(self):
         return f"{self.nombre} ({self.documento})"
+
+    @property
+    def esta_de_baja(self):
+        return self.estado == EstadoDelEstudiante.BAJA
+
+    @property
+    def puede_operar(self):
+        """`INVD-2`. Ni desactivado ni de baja se compra o se recarga.
+
+        Lo consultan los servicios que mueven dinero o existencias, que llegan
+        en el Sprint 2. Vive aquí, junto al estado, para que ninguno tenga que
+        reconstruir la regla por su cuenta.
+        """
+        return self.estado == EstadoDelEstudiante.ACTIVO
 
 
 class Institucion(models.Model):

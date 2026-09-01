@@ -1,0 +1,66 @@
+{% extends "admin/base_site.html" %}
+
+{% comment %}
+TT-42. Confirmación de la baja del estudiante (`HU-51`).
+
+La baja no se deshace: no hay historia que la revierta, y la reactivación de
+`HU-49` es de la desactivación, que es otro estado. Por eso hay una pantalla en
+medio, igual que en la reasignación del código.
+{% endcomment %}
+
+{% block title %}Dar de baja | {{ site_title }}{% endblock %}
+
+{% block content %}
+  <h1>Dar de baja</h1>
+
+  <p style="max-width:70ch">
+    {% if estudiantes|length == 1 %}Este estudiante se retiró del colegio.
+    {% else %}Estos {{ estudiantes|length }} estudiantes se retiraron del colegio.{% endif %}
+  </p>
+
+  <ul class="messagelist">
+    <li class="warning">
+      <strong>La baja no se deshace.</strong> Desde ese momento no se puede comprar
+      ni recargar. El historial y el saldo <strong>se conservan íntegros</strong> y
+      siguen siendo consultables: la baja no borra nada.
+    </li>
+    <li class="info">
+      ¿La tarjeta se perdió o se deterioró? Eso no es una baja.
+      Reasigna el código, que sí tiene vuelta.
+    </li>
+  </ul>
+
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Estudiante</th>
+        <th scope="col">Documento</th>
+        <th scope="col">Acudiente</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for estudiante in estudiantes %}
+        <tr>
+          <td>{{ estudiante.nombre }}</td>
+          <td>{{ estudiante.documento }}</td>
+          <td>{{ estudiante.acudiente.nombre }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for estudiante in estudiantes %}
+      <input type="hidden" name="_selected_action" value="{{ estudiante.pk }}">
+    {% endfor %}
+    <input type="hidden" name="action" value="accion_dar_de_baja">
+    <input type="hidden" name="confirmado" value="si">
+
+    <div class="submit-row">
+      <input type="submit" class="default"
+             value="Sí, dar de baja{% if estudiantes|length > 1 %} a los {{ estudiantes|length }}{% endif %}">
+      <a href="{{ volver }}" class="button cancel-link">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}
