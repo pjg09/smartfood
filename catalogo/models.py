@@ -16,10 +16,12 @@ lista materializada de productos bloqueados por estudiante (`DT-7`). Si se
 modelara al revés, `HU-11` del Sprint 3 no se podría construir sin rehacer esto.
 """
 
+import re
 import uuid
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 
 
 class Categoria(models.Model):
@@ -146,6 +148,18 @@ class Producto(models.Model):
     # Nutriente crítico del etiquetado frontal.
     sodio_mg = models.PositiveIntegerField("sodio (mg)", null=True, blank=True)
 
+    # --- Imagen (`TT-53`, `HU-59`) ------------------------------------------
+
+    # Como la fotografía del estudiante: **la base guarda la clave del objeto,
+    # nunca el binario** (`DT-18`). Va al prefijo `publico/`, que no significa
+    # accesible sin credenciales sino **no sensible** (`DT-21`).
+    #
+    # Vacío es un valor legítimo: segundo criterio de `HU-59`, un producto sin
+    # imagen se vende igual.
+    imagen_clave = models.CharField(
+        "clave de la imagen", max_length=200, blank=True, default="", editable=False
+    )
+
     # --- Estado -------------------------------------------------------------
 
     # Retirar del catálogo, no borrar. Un producto que ya se vendió no puede
@@ -187,6 +201,28 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def tiene_imagen(self):
+        return bool(self.imagen_clave)
+
+    @property
+    def url_de_la_imagen(self):
+        """La sirve **la aplicación**, no una URL firmada (`DT-21`).
+
+        La imagen de un producto no es sensible, y firmar cincuenta URL para
+        pintar la lista del punto de venta es coste sin contrapartida (`DT-18`).
+        Además, una URL firmada caduca: el punto de venta tendría que volver a
+        pedir la lista entera cada pocos minutos solo para renovar enlaces.
+
+        La ruta lleva **la clave**, no el identificador del producto, y de ahí
+        sale que la respuesta se pueda cachear como inmutable: al reemplazar la
+        imagen cambia la clave, así que cambia la URL y no hay nada que
+        invalidar.
+        """
+        if not self.imagen_clave:
+            return None
+        return reverse("imagen-del-producto", kwargs={"clave": self.imagen_clave})
 
     @property
     def declara_informacion_nutricional(self):

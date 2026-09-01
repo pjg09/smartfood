@@ -10,9 +10,11 @@ Funciones, no clases.
 """
 
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import storages
 from django.db import transaction
 
 from catalogo.models import Alergeno, Categoria, Producto, ProductoAlergeno
+from config.imagenes import procesar_imagen
 from cuentas.models import Rol
 
 
@@ -118,6 +120,59 @@ def declarar_alergenos(*, actor, producto, alergenos):
     return producto
 
 
+def _borrar_del_almacenamiento(clave):
+    """Un fallo al borrar deja un huérfano, no un dato incorrecto: no propaga."""
+    if not clave:
+        return
+    try:
+        storages["publico"].delete(clave)
+    except Exception:  # noqa: BLE001 — ver el docstring
+        pass
+
+
+@transaction.atomic
+def guardar_imagen(*, actor, producto, archivo):
+    """Carga o reemplaza la imagen de un producto (`TT-53`, `HU-59`).
+
+    Misma canalización que la fotografía del estudiante (`DT-20`): se decodifica
+    y se vuelve a codificar desde cero, así que se valida por contenido y no por
+    nombre y se neutraliza cualquier fichero polígloto. Aquí no hay EXIF de un
+    menor que retirar, pero la superficie de ataque es la misma: una imagen
+    servida tal como se subió es un vector de XSS.
+
+    Va al prefijo `publico/`, que no significa accesible sin credenciales sino
+    **no sensible** (`DT-21`): la sirve la aplicación con caché larga.
+    """
+    _comprobar_que_gestiona_el_catalogo(actor, "Cargar la imagen de un producto")
+
+    contenido, nombre = procesar_imagen(archivo)
+
+    anterior = producto.imagen_clave
+    clave = storages["publico"].save(nombre, contenido)
+
+    producto.imagen_clave = clave
+    producto.save(update_fields=["imagen_clave"])
+
+    transaction.on_commit(lambda: _borrar_del_almacenamiento(anterior))
+    return producto
+
+
+@transaction.atomic
+def quitar_imagen(*, actor, producto):
+    """Deja el producto sin imagen. Se sigue vendiendo igual (`HU-59`)."""
+    _comprobar_que_gestiona_el_catalogo(actor, "Quitar la imagen de un producto")
+
+    anterior = producto.imagen_clave
+    if not anterior:
+        return producto
+
+    producto.imagen_clave = ""
+    producto.save(update_fields=["imagen_clave"])
+
+    transaction.on_commit(lambda: _borrar_del_almacenamiento(anterior))
+    return producto
+
+
 @transaction.atomic
 def retirar_del_catalogo(*, actor, producto):
     """Deja de ofrecerse, sin borrarse.
@@ -152,5 +207,7 @@ __all__ = [
     "declarar_alergenos",
     "devolver_al_catalogo",
     "editar_producto",
+    "guardar_imagen",
+    "quitar_imagen",
     "retirar_del_catalogo",
 ]

@@ -14,6 +14,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import PermissionDenied
+from django.utils.html import format_html
 
 from catalogo.models import Alergeno, Categoria, Producto, ProductoAlergeno
 from catalogo.services import (
@@ -21,8 +22,11 @@ from catalogo.services import (
     declarar_alergenos,
     devolver_al_catalogo,
     editar_producto,
+    guardar_imagen,
+    quitar_imagen,
     retirar_del_catalogo,
 )
+from config.imagenes import ImagenInvalida
 from cuentas.models import Rol
 
 # Los campos nutricionales, en el orden del etiquetado (`TT-44`).
@@ -62,6 +66,21 @@ class ProductoForm(forms.ModelForm):
             "Lo que este producto contiene. No es una lista de bloqueos: el "
             "bloqueo lo configura el acudiente sobre el alérgeno (HU-11, INV-5)."
         ),
+    )
+
+    # `TT-54`, `HU-59`. Como en la fotografía del estudiante: el modelo guarda
+    # la clave (`DT-18`) y el fichero pasa por la canalización antes de
+    # almacenarse (`DT-20`), así que el campo es del formulario y no del modelo.
+    imagen = forms.ImageField(
+        label="Imagen del producto",
+        required=False,
+        help_text=(
+            "Opcional: un producto sin imagen se vende igual. Se re-codifica "
+            "antes de guardarla, y la sirve la aplicación con caché larga."
+        ),
+    )
+    quitar_imagen = forms.BooleanField(
+        label="Quitar la imagen actual", required=False
     )
 
     class Meta:
@@ -143,16 +162,29 @@ class AlergenoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
-    list_display = ["nombre", "categoria", "precio", "alergenos_del_producto", "activo"]
+    list_display = [
+        "nombre", "categoria", "precio", "tiene_imagen",
+        "alergenos_del_producto", "activo",
+    ]
     list_filter = ["categoria", "activo", "alergenos"]
     search_fields = ["nombre", "categoria__nombre"]
     ordering = ["nombre"]
     form = ProductoForm
-    readonly_fields = ["id", "creado_en"]
+    readonly_fields = ["id", "creado_en", "imagen_actual"]
     actions = ["accion_retirar", "accion_devolver"]
 
     fieldsets = [
         (None, {"fields": ["nombre", "precio", "categoria", "activo"]}),
+        (
+            "Imagen",
+            {
+                "fields": ["imagen_actual", "imagen", "quitar_imagen"],
+                "description": (
+                    "Para que el cajero reconozca el producto de un vistazo y la "
+                    "fila avance más rápido (HU-59, INT-2)."
+                ),
+            },
+        ),
         (
             "Alérgenos declarados",
             {
@@ -203,6 +235,7 @@ class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
                     **campos,
                 )
                 obj.refresh_from_db()
+                self._aplicar_imagen(request, obj, form)
                 return
 
             producto = crear_producto(actor=request.user, **campos)
@@ -211,6 +244,41 @@ class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
 
         obj.pk = producto.pk
         obj.refresh_from_db()
+        self._aplicar_imagen(request, obj, form)
+
+    def _aplicar_imagen(self, request, producto, form):
+        """`TT-54`. Delega en el servicio, que es quien procesa y almacena.
+
+        **Un fallo de la imagen no deshace el resto.** La imagen no es
+        obligatoria (`HU-59`), así que un fichero que no se puede procesar es un
+        aviso y no un error que tire el precio o los alérgenos que sí se
+        guardaron.
+        """
+        imagen = form.cleaned_data.get("imagen")
+        quitar = form.cleaned_data.get("quitar_imagen")
+
+        if quitar and not imagen:
+            quitar_imagen(actor=request.user, producto=producto)
+            producto.refresh_from_db()
+            self.message_user(request, "Imagen retirada.", messages.SUCCESS)
+            return
+
+        if not imagen:
+            return
+
+        try:
+            guardar_imagen(actor=request.user, producto=producto, archivo=imagen)
+        except ImagenInvalida as error:
+            self.message_user(
+                request,
+                f"No se guardó la imagen: {'; '.join(error.messages)} El resto "
+                "del producto sí se guardó: la imagen no es obligatoria (HU-59).",
+                messages.WARNING,
+            )
+            return
+
+        producto.refresh_from_db()
+        self.message_user(request, "Imagen guardada.", messages.SUCCESS)
 
     def save_related(self, request, form, formsets, change):
         """Los alérgenos también pasan por el servicio.
@@ -224,6 +292,20 @@ class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
             producto=form.instance,
             alergenos=form.cleaned_data.get("alergenos_declarados", []),
         )
+
+    @admin.display(description="imagen actual")
+    def imagen_actual(self, obj):
+        if not obj.tiene_imagen:
+            return "Sin imagen. Un producto sin imagen se vende igual (HU-59)."
+        return format_html(
+            '<img src="{}" alt="Imagen de {}" style="max-height:180px;border-radius:6px">',
+            obj.url_de_la_imagen,
+            obj.nombre,
+        )
+
+    @admin.display(boolean=True, description="imagen")
+    def tiene_imagen(self, obj):
+        return obj.tiene_imagen
 
     @admin.display(description="alérgenos")
     def alergenos_del_producto(self, obj):
