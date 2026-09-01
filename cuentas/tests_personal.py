@@ -55,9 +55,8 @@ class AltaDePersonalTest(TestCase):
         self.assertEqual(
             [g.name for g in admin.groups.all()], ["rol:administrador"]
         )
-        # `INV-4`: escribe su catálogo (`HU-26`) y nada más. Hasta `PR-21` esta
-        # comprobación exigía cero escrituras y pasaba porque no había qué
-        # escribir; eso era una foto del momento, no la invariante.
+        # `INV-4`: escribe su catálogo (`HU-26`) y nada más. Exigir cero escrituras
+        # sería una foto del momento y no la invariante.
         escrituras = {p for p in admin.get_all_permissions()
                       if any(a in p for a in ("add_", "change_", "delete_"))}
         self.assertTrue(escrituras, "el catálogo es suyo")

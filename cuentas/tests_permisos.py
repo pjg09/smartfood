@@ -68,11 +68,10 @@ class MatrizDePermisosTest(TestCase):
     def test_la_administracion_solo_escribe_su_propio_dominio(self):
         """`INV-4`, en la forma que sobrevive a que la cafetería tenga modelos.
 
-        Hasta `PR-21` esta prueba exigía que el administrador no escribiera
-        **nada**, y pasaba porque no había qué escribir. Eso no era `INV-4`: era
-        una foto del momento. `[S11]` le concede «gestionar catálogo, precios e
-        inventario», así que ahora escribe — y lo que `INV-4` prohíbe es otra
-        cosa, la de abajo.
+        **Exigir que el administrador no escriba nada no es `INV-4`**: es una foto
+        del momento, y deja de proteger en cuanto aparece el primer modelo suyo.
+        `[S11]` le concede «gestionar catálogo, precios e inventario», así que
+        escribe; lo que la invariante prohíbe es otra cosa, la de abajo.
         """
         escrituras = self._escrituras_de(Rol.ADMINISTRADOR)
 

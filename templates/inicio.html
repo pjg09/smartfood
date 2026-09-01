@@ -4,12 +4,9 @@
    `base.html`, la plantilla base no se puede verificar en el entorno
    desplegado, que es lo que exige la Definición de Terminado.
 
-   **Corrección (`TT-56`).** Aquí decía que la sustituiría `TT-11` (`PR-08`)
-   «cuando exista la pantalla de acceso». Era falso: `TT-11` es la pantalla de
-   *definir contraseña* desde la invitación, no la de entrar, y ninguna tarea
-   del sprint construía esa segunda. La construye `TT-56` (`DEC-12`), y esta
-   portada se queda: es a donde se llega tras entrar, y desde aquí cada rol va a
-   lo suyo. {% endcomment %}
+   Es a donde se llega tras entrar por `/acceso/` (`TT-56`), y desde aquí cada
+   rol va a lo suyo. No la sustituye ninguna otra pantalla: `TT-11` es la de
+   *definir contraseña* desde la invitación, que es otra cosa. {% endcomment %}
 
 {% block titulo %}SmartFood · Cafetería escolar{% endblock %}
 

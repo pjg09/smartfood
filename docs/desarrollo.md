@@ -101,12 +101,11 @@ URL pública en internet y esa cuenta administra el sistema entero: escribir su 
 se la daría a cualquiera con acceso al repositorio —hoy cuatro personas, mañana quien
 evalúe— y quedaría en el historial de git para siempre.
 
-**No es superusuario de Django**, eso sí, desde el 2026-08-31: tiene exactamente los
-permisos que declara `cuentas/permisos.py` y no puede editar los grupos con los que
-`DT-11` sostiene `INV-4`. El razonamiento está en `UX-6` de
-`./recorrido-de-administracion-de-estudiantes.md`. Si algún día el admin le devuelve un
-`403` sobre algo que debería poder hacer, el sitio donde se arregla es la matriz, no la
-cuenta.
+**No es superusuario de Django**: tiene exactamente los permisos que declara
+`cuentas/permisos.py` y no puede editar los grupos con los que `DT-11` sostiene `INV-4`.
+El razonamiento está en `UX-6` de `./recorrido-de-administracion-de-estudiantes.md`. Si el
+admin le devuelve un `403` sobre algo que debería poder hacer, el sitio donde se arregla es
+la matriz, no la cuenta.
 
 ### [S2.3] Por qué la institución tiene contraseña y las demás cuentas no
 

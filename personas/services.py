@@ -75,11 +75,10 @@ def dar_de_alta_la_institucion(*, nombre, email, contrasena_de_desarrollo=None):
 
     # **La institución no es superusuario, y eso es deliberado.**
     #
-    # Lo fue hasta el 2026-08-31, con el argumento de que es el actor con más
-    # permisos del prototipo. El recorrido de `TT-35` mostró lo que eso costaba:
+    # Es el actor con más permisos del prototipo, y aun así no lleva la bandera:
     # un superusuario de Django tiene **todos** los permisos por definición, se
-    # declaren o no en la matriz, así que la institución podía entrar a
-    # `/admin/auth/group/` y editar los grupos.
+    # declaren o no en la matriz, y con ella la institución entra a
+    # `/admin/auth/group/` y edita los grupos.
     #
     # Esos grupos **son** la matriz `[S11]`: es con ellos como `DT-11` sostiene
     # `INV-4` —«las restricciones alimentarias no las desactiva la cafetería»—.
