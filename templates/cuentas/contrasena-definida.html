@@ -1,18 +1,33 @@
-{% extends "base.html" %}
+{% extends "base-acceso.html" %}
+
+{% comment %} TT-11. Confirmación de que la contraseña quedó definida. {% endcomment %}
 
 {% block titulo %}Contraseña definida · SmartFood{% endblock %}
 
+{% block titulo_panel %}
+  Listo:<br><span class="texto-degradado">ya puedes entrar</span>
+{% endblock %}
+
 {% block contenido %}
-  <div class="mx-auto max-w-md rounded-lg bg-white p-6 shadow-sm sm:p-8">
-    <h1 class="text-xl font-semibold tracking-tight text-marca-900">Listo</h1>
-    <p class="mt-2 text-sm text-slate-600">
+  <div class="flex flex-col gap-3">
+    <span class="flex h-11 w-11 items-center justify-center rounded-md bg-exito-suave text-exito-fuerte">
+      <svg class="h-5 w-5" aria-hidden="true"><use href="#i-correcto"></use></svg>
+    </span>
+    <h1 class="font-display text-3xl tracking-tight text-texto">Listo</h1>
+    <p class="text-base text-texto-suave">
       Tu contraseña quedó guardada. Ya puedes entrar con tu correo.
     </p>
-    <a href="{% url 'admin:login' %}"
-       class="mt-6 inline-block rounded-md bg-marca-700 px-4 py-2 font-medium text-white
-              hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
-              focus:ring-offset-2">
+
+    {% comment %} Lleva a `/acceso/`, que es la puerta de los CUATRO roles (`TT-56`,
+       `DEC-12`). Antes apuntaba al formulario del admin, que exige `is_staff` y
+       rechaza siempre al acudiente (`USR-2`) — es decir, justo a quien acaba de
+       definir su contraseña desde la invitación de `HU-03`. {% endcomment %}
+    <a href="{% url 'acceso' %}"
+       class="mt-3 inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md
+              bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
+              transition-colors hover:bg-primario-fuerte">
       Entrar
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
     </a>
   </div>
 {% endblock %}

@@ -1,130 +1,186 @@
-{% extends "base.html" %}
+{% extends "base-aplicacion.html" %}
 
-{# TT-24. Pantalla de carga con selección de archivo y resultado (HU-01). #}
+{% comment %} TT-24. Pantalla de carga con selección de archivo y resultado (`HU-01`).
+
+   **La carga es todo o nada**, y la pantalla tiene que decirlo antes y después:
+   si el archivo trae un error, no se escribe ni una fila. El reporte de `TT-26`
+   lista todos los problemas, no el primero, porque corregirlos de uno en uno
+   son diez viajes al mismo archivo (`HU-02`).
+{% endcomment %}
 
 {% block titulo %}Cargar estudiantes · SmartFood{% endblock %}
 
 {% block contenido %}
-  <div class="mx-auto max-w-2xl">
-    <h1 class="text-2xl font-semibold tracking-tight text-marca-900">Cargar estudiantes</h1>
-    <p class="mt-2 max-w-prose text-slate-600">
-      Un archivo CSV con una fila por estudiante. Si un acudiente tiene varios hijos
-      matriculados, aparece en varias filas y quedará con una sola cuenta.
-    </p>
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Cargar estudiantes</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Un archivo CSV con una fila por estudiante. Si un acudiente tiene varios
+        hijos matriculados aparece en varias filas y queda con una sola cuenta.
+      </p>
+    </header>
 
     {% if error %}
-      <div class="mt-6 rounded-md bg-alerta-100 px-4 py-3 text-sm text-alerta-700" role="alert">
-        <p class="font-medium">No se pudo leer el archivo</p>
-        <p class="mt-1">{{ error }}</p>
-        <p class="mt-2">No se escribió nada.</p>
+      {% comment %} El archivo que ni siquiera se puede leer como CSV. {% endcomment %}
+      <div role="alert"
+           class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4">
+        <svg class="mt-0.5 h-5 w-5 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        <div class="flex flex-col gap-1 text-sm text-error-fuerte">
+          <p class="text-base font-semibold">No se pudo leer el archivo</p>
+          <p>{{ error }}</p>
+          <p>No se escribió nada.</p>
+        </div>
       </div>
     {% endif %}
 
     {% if errores %}
-      {# TT-26. El reporte identifica los errores encontrados (HU-02). #}
-      <div class="mt-6 rounded-md border border-alerta-600 bg-alerta-100 px-4 py-4 text-sm"
-           role="alert">
-        <p class="font-medium text-alerta-700">
-          No se cargó nada: el archivo tiene {{ errores|length }}
-          {% if errores|length == 1 %}error{% else %}errores{% endif %}.
-        </p>
-        <p class="mt-1 text-alerta-700">
-          La carga es todo o nada. Corrige el archivo y vuelve a subirlo.
-        </p>
+      <div role="alert" class="flex flex-col gap-4 rounded-md border border-error bg-error-suave p-4">
+        <div class="flex items-start gap-3">
+          <svg class="mt-0.5 h-5 w-5 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div class="flex flex-col gap-1 text-sm text-error-fuerte">
+            <p class="text-base font-semibold">
+              No se cargó nada: el archivo tiene {{ errores|length }}
+              {% if errores|length == 1 %}error{% else %}errores{% endif %}.
+            </p>
+            <p>La carga es todo o nada. Corrige el archivo y vuelve a subirlo.</p>
+          </div>
+        </div>
 
-        <div class="mt-4 overflow-x-auto">
-          <table class="w-full text-left text-slate-700">
-            <thead class="border-b border-alerta-600/30 text-xs uppercase text-alerta-700">
+        {% comment %} La tabla desborda DENTRO de su caja, no en la página: un desbordamiento
+           de página movería la barra lateral y la cabecera. El ancho mínimo lo
+           fija el número de columnas, no la pantalla. {% endcomment %}
+        <div class="overflow-x-auto">
+          <table class="tabla-datos tabla-md text-sm text-texto">
+            <thead class="border-b border-error/30 text-xs uppercase text-error-fuerte">
               <tr>
-                <th class="py-1 pr-4">Fila</th>
-                <th class="py-1 pr-4">Columna</th>
-                <th class="py-1 pr-4">Valor</th>
-                <th class="py-1">Qué pasa</th>
+                <th class="py-2 pr-4 font-semibold">Fila</th>
+                <th class="py-2 pr-4 font-semibold">Columna</th>
+                <th class="py-2 pr-4 font-semibold">Valor</th>
+                <th class="py-2 font-semibold">Qué pasa</th>
               </tr>
             </thead>
             <tbody>
               {% for e in errores %}
-                <tr class="border-b border-alerta-600/10 align-top">
-                  <td class="py-1 pr-4 font-mono text-xs">{{ e.fila|default:"—" }}</td>
-                  <td class="py-1 pr-4 font-mono text-xs">{{ e.columna }}</td>
-                  <td class="py-1 pr-4 font-mono text-xs break-all">{{ e.valor|default:"(vacío)" }}</td>
-                  <td class="py-1">{{ e.mensaje }}</td>
+                <tr class="border-b border-error/10 align-top">
+                  <td class="py-2 pr-4 font-mono text-xs tabular-nums">{{ e.fila|default:"—" }}</td>
+                  <td class="py-2 pr-4 font-mono text-xs">{{ e.columna }}</td>
+                  <td class="py-2 pr-4 font-mono text-xs break-all">{{ e.valor|default:"(vacío)" }}</td>
+                  <td class="py-2">{{ e.mensaje }}</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
-        <p class="mt-3 text-xs text-alerta-700">
+        <p class="text-xs text-error-fuerte">
           El número de fila es el que ves en tu editor: la fila 1 es el encabezado.
         </p>
       </div>
     {% endif %}
 
     {% if resultado %}
-      <div class="mt-6 rounded-md bg-marca-100 px-4 py-4 text-sm text-marca-900" role="status">
-        <p class="font-medium">Carga completada</p>
-        <dl class="mt-3 grid gap-2 sm:grid-cols-2">
-          <div class="flex justify-between gap-4">
-            <dt>Filas leídas</dt><dd class="font-semibold">{{ resultado.filas_leidas }}</dd>
+      <div role="status" class="flex flex-col gap-4 rounded-md border border-exito bg-exito-suave p-4">
+        <div class="flex items-center gap-3">
+          <svg class="h-5 w-5 text-exito-fuerte" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <p class="text-base font-semibold text-exito-fuerte">Carga completada</p>
+        </div>
+        <dl class="grid gap-3 tablet:grid-cols-4">
+          <div class="flex flex-col gap-1 rounded-md bg-superficie p-3">
+            <dt class="text-sm font-medium text-texto-suave">Filas leídas</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">{{ resultado.filas_leidas }}</dd>
           </div>
-          <div class="flex justify-between gap-4">
-            <dt>Estudiantes creados</dt><dd class="font-semibold">{{ resultado.estudiantes_creados }}</dd>
+          <div class="flex flex-col gap-1 rounded-md bg-superficie p-3">
+            <dt class="text-sm font-medium text-texto-suave">Estudiantes creados</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">{{ resultado.estudiantes_creados }}</dd>
           </div>
-          <div class="flex justify-between gap-4">
-            <dt>Acudientes creados</dt><dd class="font-semibold">{{ resultado.acudientes_creados }}</dd>
+          <div class="flex flex-col gap-1 rounded-md bg-superficie p-3">
+            <dt class="text-sm font-medium text-texto-suave">Acudientes creados</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">{{ resultado.acudientes_creados }}</dd>
           </div>
-          <div class="flex justify-between gap-4">
-            <dt>Acudientes ya existentes</dt><dd class="font-semibold">{{ resultado.acudientes_reutilizados }}</dd>
+          <div class="flex flex-col gap-1 rounded-md bg-superficie p-3">
+            <dt class="text-sm font-medium text-texto-suave">Acudientes ya existentes</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">{{ resultado.acudientes_reutilizados }}</dd>
           </div>
         </dl>
       </div>
     {% endif %}
 
     <form method="post" enctype="multipart/form-data"
-          class="mt-6 rounded-lg bg-white p-6 shadow-sm">
+          class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
       {% csrf_token %}
 
       {% if form.errors %}
-        <div class="mb-4 rounded-md bg-alerta-100 px-4 py-3 text-sm text-alerta-700">
-          {% for campo in form %}{% for e in campo.errors %}<p>{{ e }}</p>{% endfor %}{% endfor %}
+        <div role="alert"
+             class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+          <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div class="text-sm text-error-fuerte">
+            {% for campo in form %}{% for e in campo.errors %}<p>{{ e }}</p>{% endfor %}{% endfor %}
+          </div>
         </div>
       {% endif %}
 
-      <label for="{{ form.archivo.id_for_label }}"
-             class="block text-sm font-medium text-slate-700">{{ form.archivo.label }}</label>
-      <input type="file" name="{{ form.archivo.html_name }}" id="{{ form.archivo.id_for_label }}"
-             accept=".csv,text/csv" required
-             class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm
-                    file:mr-3 file:rounded file:border-0 file:bg-marca-100 file:px-3 file:py-1
-                    file:text-marca-900 focus:border-marca-600 focus:outline-none
-                    focus:ring-1 focus:ring-marca-600">
-      <p class="mt-1 text-xs text-slate-500">{{ form.archivo.help_text }}</p>
+      <div class="flex flex-col gap-1">
+        <label for="{{ form.archivo.id_for_label }}" class="text-base font-medium text-texto">
+          {{ form.archivo.label }}
+        </label>
+        {% comment %} El botón de «examinar» lo dibuja el NAVEGADOR, y no mira una sola clase
+           nuestra: mira `color-scheme`, que fija la hoja de estilos según el
+           tema. Lo que sí se puede tocar es el botón interno con `file:`. {% endcomment %}
+        <input type="file" name="{{ form.archivo.html_name }}" id="{{ form.archivo.id_for_label }}"
+               accept=".csv,text/csv" required
+               class="w-full rounded-md border border-borde bg-superficie px-3 py-2.5 text-base
+                      text-texto transition-colors hover:border-acento focus:border-acento
+                      focus:outline-none file:mr-3 file:rounded-sm file:border-0
+                      file:bg-primario-suave file:px-3 file:py-1 file:text-sm
+                      file:font-medium file:text-acento-fuerte">
+        <p class="text-sm text-texto-suave">{{ form.archivo.help_text }}</p>
+      </div>
 
       <button type="submit"
-              class="mt-5 w-full rounded-md bg-marca-700 px-4 py-2 font-medium text-white
-                     hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
-                     focus:ring-offset-2 sm:w-auto">
+              class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md
+                     bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
+                     transition-colors hover:bg-primario-fuerte tablet:w-fit">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cargar"></use></svg>
         Cargar archivo
       </button>
     </form>
 
-    <details class="mt-6 rounded-lg border border-marca-100 bg-white p-4 text-sm">
-      <summary class="cursor-pointer font-medium text-marca-700">Columnas del archivo</summary>
-      <div class="mt-3 overflow-x-auto">
-        <table class="w-full text-left text-slate-600">
-          <thead class="text-xs uppercase text-slate-500">
-            <tr><th class="py-1 pr-4">Columna</th><th class="py-1">Obligatoria</th></tr>
+    {% comment %} `<details>` nativo: abre y cierra sin JavaScript, con teclado y con lector
+       de pantalla, sin escribir una línea de accesibilidad. {% endcomment %}
+    <details class="rounded-md border border-borde bg-superficie p-4 shadow-sm">
+      <summary class="cursor-pointer text-base font-semibold text-acento-fuerte
+                      marker:content-none [&::-webkit-details-marker]:hidden">
+        Columnas del archivo
+      </summary>
+      <div class="mt-4 overflow-x-auto">
+        <table class="tabla-datos tabla-sm text-sm text-texto">
+          <thead class="border-b border-borde text-xs uppercase text-texto-suave">
+            <tr>
+              <th class="py-2 pr-4 font-semibold">Columna</th>
+              <th class="py-2 font-semibold">Obligatoria</th>
+            </tr>
           </thead>
-          <tbody>
-            <tr><td class="py-1 pr-4 font-mono text-xs">documento_estudiante</td><td>Sí</td></tr>
-            <tr><td class="py-1 pr-4 font-mono text-xs">nombre_estudiante</td><td>Sí</td></tr>
-            <tr><td class="py-1 pr-4 font-mono text-xs">documento_acudiente</td><td>Sí</td></tr>
-            <tr><td class="py-1 pr-4 font-mono text-xs">nombre_acudiente</td><td>Sí</td></tr>
-            <tr><td class="py-1 pr-4 font-mono text-xs">correo_acudiente</td><td>Sí — identifica la cuenta</td></tr>
+          <tbody class="text-texto-suave">
+            <tr class="border-b border-borde">
+              <td class="py-2 pr-4 font-mono text-xs text-texto">documento_estudiante</td><td class="py-2">Sí</td>
+            </tr>
+            <tr class="border-b border-borde">
+              <td class="py-2 pr-4 font-mono text-xs text-texto">nombre_estudiante</td><td class="py-2">Sí</td>
+            </tr>
+            <tr class="border-b border-borde">
+              <td class="py-2 pr-4 font-mono text-xs text-texto">documento_acudiente</td><td class="py-2">Sí</td>
+            </tr>
+            <tr class="border-b border-borde">
+              <td class="py-2 pr-4 font-mono text-xs text-texto">nombre_acudiente</td><td class="py-2">Sí</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-4 font-mono text-xs text-texto">correo_acudiente</td>
+              <td class="py-2">Sí — identifica la cuenta</td>
+            </tr>
           </tbody>
         </table>
-        <p class="mt-3 text-xs text-slate-500">
+        <p class="mt-3 text-sm text-texto-suave">
           El código de tarjeta lo genera el sistema y no viene en el archivo.
         </p>
       </div>

@@ -1,64 +1,86 @@
-{% extends "base.html" %}
+{% extends "base-acceso.html" %}
 
 {% comment %} TT-56. Pantalla de acceso, común a los cuatro roles (`DEC-3`, `DEC-12`).
 
-   No es un camino de alta: aquí solo entra quien ya tiene cuenta y ya definió
-   su contraseña con la invitación (`TT-11`). `INV-6` e `INVD-1` siguen enteras
-   y no hay enlace a ningún registro, porque no existe (`DT-10`). {% endcomment %}
+   No es un camino de alta: aquí solo entra quien ya tiene cuenta y ya definió su
+   contraseña con la invitación (`TT-11`). `INV-6` e `INVD-1` siguen enteras y no
+   hay enlace a ningún registro, porque no existe (`DT-10`). {% endcomment %}
 
 {% block titulo %}Entrar · SmartFood{% endblock %}
 
 {% block contenido %}
-  <div class="mx-auto max-w-md rounded-lg bg-white p-6 shadow-sm sm:p-8">
-    <h1 class="text-xl font-semibold tracking-tight text-marca-900">Entrar</h1>
-    <p class="mt-2 text-sm text-slate-600">
-      Con el correo con el que te dieron de alta y la contraseña que definiste
-      desde tu invitación.
-    </p>
+  <h1 class="font-display text-3xl tracking-tight text-texto">Entra a tu cuenta</h1>
+  <p class="mt-2 text-base text-texto-suave">
+    Con el correo con el que te dieron de alta y la contraseña que definiste desde
+    tu invitación.
+  </p>
 
-    <form method="post" class="mt-6 space-y-4">
-      {% csrf_token %}
+  {% comment %} El error va en su propio bloque y no colgando del campo de contraseña:
+     «correo o contraseña incorrectos» no es un fallo de ese campo, y marcarlo
+     como inválido le dice a un lector de pantalla algo que no es cierto.
 
-      {% if form.errors %}
-        <div class="rounded-md bg-alerta-100 px-4 py-3 text-sm text-alerta-700" role="alert">
-          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-          {% for campo in form %}
-            {% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}
-          {% endfor %}
-        </div>
-      {% endif %}
+     `role="alert"` para que se anuncie al aparecer: sin él, quien no ve la
+     pantalla no se entera de que el intento falló, solo nota que no pasa nada.
+  {% endcomment %}
+  {% if form.errors %}
+    <div role="alert"
+         class="mt-6 flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+      <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <div class="text-sm text-error-fuerte">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        {% for campo in form %}{% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}{% endfor %}
+      </div>
+    </div>
+  {% endif %}
 
-      <div>
-        <label for="{{ form.username.id_for_label }}"
-               class="block text-sm font-medium text-slate-700">Correo electrónico</label>
+  <form method="post" class="mt-6 flex flex-col gap-4">
+    {% csrf_token %}
+
+    <div class="flex flex-col gap-1">
+      <label for="{{ form.username.id_for_label }}" class="text-base font-medium text-texto">
+        Correo electrónico
+      </label>
+      {% comment %} El hueco del icono se reserva con `pl-10`: puesto solo con posición
+         absoluta, el texto pasaría por debajo del icono al escribir. {% endcomment %}
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-correo"></use></svg>
         <input type="email" name="{{ form.username.html_name }}"
                id="{{ form.username.id_for_label }}"
                autocomplete="username" autofocus required
-               class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2
-                      focus:border-marca-600 focus:outline-none focus:ring-1 focus:ring-marca-600">
+               class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+                      transition-colors placeholder:text-texto-suave hover:border-acento
+                      focus:border-acento focus:outline-none
+                      {% if form.errors %}border-error{% else %}border-borde{% endif %}">
       </div>
+    </div>
 
-      <div>
-        <label for="{{ form.password.id_for_label }}"
-               class="block text-sm font-medium text-slate-700">Contraseña</label>
+    <div class="flex flex-col gap-1">
+      <label for="{{ form.password.id_for_label }}" class="text-base font-medium text-texto">
+        Contraseña
+      </label>
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-candado"></use></svg>
         <input type="password" name="{{ form.password.html_name }}"
                id="{{ form.password.id_for_label }}"
                autocomplete="current-password" required
-               class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2
-                      focus:border-marca-600 focus:outline-none focus:ring-1 focus:ring-marca-600">
+               class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+                      transition-colors hover:border-acento focus:border-acento focus:outline-none
+                      {% if form.errors %}border-error{% else %}border-borde{% endif %}">
       </div>
+    </div>
 
-      <button type="submit"
-              class="w-full rounded-md bg-marca-700 px-4 py-2 font-medium text-white
-                     hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
-                     focus:ring-offset-2">
-        Entrar
-      </button>
-    </form>
+    <button type="submit"
+            class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md
+                   bg-primario text-lg font-medium whitespace-nowrap text-sobre-primario
+                   transition-colors hover:bg-primario-fuerte">
+      Entrar
+    </button>
+  </form>
 
-    <p class="mt-6 border-t border-marca-100 pt-4 text-xs text-slate-500">
-      Las cuentas no se crean desde aquí. La institución da de alta a cada
-      persona y le envía una invitación con la que define su contraseña.
-    </p>
-  </div>
+  <p class="mt-8 border-t border-borde pt-4 text-sm text-texto-suave">
+    Las cuentas no se crean desde aquí. La institución da de alta a cada persona y
+    le envía una invitación con la que define su contraseña.
+  </p>
 {% endblock %}

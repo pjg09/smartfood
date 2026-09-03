@@ -1,0 +1,25 @@
+{% comment %} El logotipo de SmartFood (DT-23).
+
+   Es un logotipo tipográfico: la palabra, en la tipografía de titulares de la
+   marca, con «Food» en el acento. No hay símbolo dibujado, y es una decisión, no
+   una carencia — un prototipo académico no tiene identidad gráfica propia que
+   defender, y un símbolo inventado para la ocasión envejece peor que el nombre
+   bien puesto.
+
+   Se escribe una vez y se incluye: sale en la cabecera pública, en la barra de
+   la aplicación, en el cajón de móvil y en el panel de la pantalla de acceso, y
+   son cuatro sitios donde el mismo ajuste tendría que repetirse.
+
+   Parámetros:
+     tono   `oscuro` cuando va sobre el marino del héroe o de la barra lateral,
+            que es marino en LOS DOS TEMAS: ahí los alias normales dejan el texto
+            invisible y hacen falta las constantes `sobre-oscuro` y
+            `acento-claro`. Sin `tono`, sigue al tema.
+     tamano `sm`, `md` (por defecto) o `lg`.
+
+   Ejemplo:  {% templatetag openblock %} include "partials/marca.html" with tono="oscuro" tamano="lg" {% templatetag closeblock %}
+{% endcomment %}
+<span class="font-display font-semibold tracking-tight whitespace-nowrap
+             {% if tamano == 'sm' %}text-lg{% elif tamano == 'lg' %}text-3xl{% else %}text-xl{% endif %}
+             {% if tono == 'oscuro' %}text-sobre-oscuro{% else %}text-texto{% endif %}">Smart<span
+    class="{% if tono == 'oscuro' %}text-acento-claro{% else %}text-acento-fuerte{% endif %}">Food</span></span>

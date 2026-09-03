@@ -1,0 +1,31 @@
+{% comment %} Selector de tema (DT-23).
+
+   Tres estados y no dos: claro, oscuro y **el del sistema**, que es el que trae
+   por defecto. Sin el tercero, quien tiene el teléfono en oscuro entra a una
+   pantalla clara y tiene que elegir a mano lo que ya había elegido en su
+   aparato.
+
+   Es un `<select>` y no tres botones: son tres opciones excluyentes de una sola
+   cosa, que es exactamente lo que un `select` anuncia a un lector de pantalla, y
+   ocupa el ancho de un control en la barra en vez del de tres.
+
+   El valor lo pone `interfaz.js` al montar, no el servidor: la preferencia vive
+   en el navegador de cada persona, no en su cuenta. {% endcomment %}
+<label class="flex items-center gap-2">
+  <span class="sr-only">Tema</span>
+  {% comment %} `tono="oscuro"` cuando va dentro del cajón o de la barra lateral, que son
+     paneles oscuros en LOS DOS temas: ahí `bg-superficie` es blanca en tema claro
+     y el control se ve como un parche. {% endcomment %}
+  <select data-selector-de-tema
+          class="h-9 rounded-md border px-2 text-sm transition-colors
+                 focus:border-acento focus:outline-none
+                 {% if tono == 'oscuro' %}
+                   w-full border-nav-hover bg-nav-hover text-nav-texto hover:border-acento-claro
+                 {% else %}
+                   border-borde bg-superficie text-texto-suave hover:border-acento
+                 {% endif %}">
+    <option value="sistema">Tema del sistema</option>
+    <option value="claro">Tema claro</option>
+    <option value="oscuro">Tema oscuro</option>
+  </select>
+</label>

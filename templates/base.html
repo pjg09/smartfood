@@ -1,81 +1,79 @@
 {% load static %}<!doctype html>
-{% comment %} Plantilla base de SmartFood (TT-05).
+{% comment %} Plantilla base de SmartFood (TT-05, DT-23).
 
-   De esta cuelga toda página servida por la aplicación. `DT-16` prevé una base
-   por interfaz; esta es el tronco común, y cada interfaz añadirá la suya:
+   Es el tronco: `<head>`, tema, iconos y nada más. De ella cuelgan las dos bases
+   con forma, y cada pantalla extiende la que le corresponde (`DT-16`):
 
-     INT-1  acudiente        móvil primero — es como entra (`[INT-1]`)
-     INT-2  punto de venta   escritorio, teclado, sin diálogos (Sprint 2)
-     INT-3  administración   no lleva plantillas: lo cubre el admin (`DT-2`)
+     base-publica.html      antes de entrar — portada, acceso, invitación
+     base-aplicacion.html   con sesión: barra superior y barra lateral (`INT-1`)
+     admin/base_site.html   `INT-3` es el admin de Django (`DT-2`), tematizado
+
+   `INT-2`, el punto de venta, llega en el Sprint 2 y tendrá la suya: es una
+   pantalla de teclado, sin diálogos y sin barra que estorbe.
 
    Los fragmentos que devuelven las vistas HTMX van en `templates/partials/`.
-   Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`). {% endcomment %}
+   Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
+{% endcomment %}
 <html lang="es" class="h-full">
 <head>
   <meta charset="utf-8">
   {% comment %} Sin esto, `INT-1` se ve como una página de escritorio encogida en el
      teléfono, que es justo desde donde entra el acudiente. {% endcomment %}
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% comment %} El navegador pinta su propio fondo (barras, sobredesplazamiento) antes
+     que el nuestro; sin esto, en tema oscuro asoma blanco por los bordes. {% endcomment %}
+  <meta name="color-scheme" content="light dark">
   <title>{% block titulo %}SmartFood{% endblock %}</title>
 
+  {% comment %} **Va antes de la hoja de estilos y sin `defer`, a propósito.**
+
+     Es lo único de esta aplicación que tiene que correr antes de que el navegador
+     pinte el primer píxel: si el tema se aplicara desde `interfaz.js`, quien tiene
+     el tema oscuro vería un fogonazo blanco en cada navegación. Son seis líneas y
+     no pueden vivir en el fichero diferido.
+
+     `data-tema` sólo se pone si hay elección explícita; su ausencia significa
+     «lo que diga el sistema», que es lo que resuelve la media query. {% endcomment %}
+  <script>
+    (function () {
+      try {
+        var tema = localStorage.getItem("smartfood:tema");
+        if (tema === "claro" || tema === "oscuro") {
+          document.documentElement.setAttribute("data-tema", tema);
+        }
+        if (localStorage.getItem("smartfood:barra-colapsada") === "si") {
+          document.documentElement.setAttribute("data-barra-colapsada", "si");
+        }
+      } catch (e) {
+        /* Navegación privada con el almacenamiento bloqueado: se queda el tema
+           del sistema, que es el valor por defecto y no rompe nada. */
+      }
+    })();
+  </script>
+
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-  {% comment %} Vendorizado, sin CDN: la hoja de estilos y el script del prototipo no
-     dependen de que un tercero siga sirviéndolos el día de la sustentación. {% endcomment %}
+  {% comment %} Vendorizado, sin CDN: la hoja de estilos y los scripts del prototipo no
+     dependen de que un tercero siga sirviéndolos el día de la sustentación —ni de
+     que ese tercero se entere de quién los pide. {% endcomment %}
   <script src="{% static 'js/htmx.min.js' %}" defer></script>
+  <script src="{% static 'js/interfaz.js' %}" defer></script>
   {% block cabecera %}{% endblock %}
 </head>
 
-<body class="h-full bg-marca-50 text-slate-900 antialiased flex flex-col">
+<body class="min-h-full bg-fondo font-texto text-texto antialiased">
+
+  {% include "partials/iconos.html" %}
 
   {% comment %} Saltar al contenido: la primera parada del tabulador. En `INT-2` todo se
      navega con teclado (`DT-16`), y aquí no cuesta nada darlo hecho. {% endcomment %}
   <a href="#contenido"
      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50
-            focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:shadow-lg">
+            focus:rounded-md focus:bg-superficie focus:px-4 focus:py-2 focus:text-texto
+            focus:shadow-lg">
     Saltar al contenido
   </a>
 
-  <header class="bg-marca-700 text-white">
-    <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-      <a href="/" class="text-lg font-semibold tracking-tight">SmartFood</a>
-      <nav class="flex items-center gap-4 text-sm">
-        {% block navegacion %}{% endblock %}
-
-        {% comment %} `TT-56`. Entrar y salir. No hay enlace a ningún registro porque no
-           existe ruta de registro (`INV-6`, `INVD-1`, `DT-10`). {% endcomment %}
-        {% if user.is_authenticated %}
-          {% if user.es_acudiente %}
-            <a href="{% url 'mis-estudiantes' %}" class="hover:underline">Mis estudiantes</a>
-          {% endif %}
-          <span class="hidden text-marca-100 sm:inline">{{ user.email }}</span>
-          <form method="post" action="{% url 'salir' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="rounded-md border border-marca-100/40 px-3 py-1 hover:bg-marca-600
-                           focus:outline-none focus:ring-2 focus:ring-white">
-              Salir
-            </button>
-          </form>
-        {% else %}
-          <a href="{% url 'acceso' %}" class="hover:underline">Entrar</a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
-
-  {% include "partials/mensajes.html" %}
-
-  <main id="contenido" class="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
-    {% block contenido %}{% endblock %}
-  </main>
-
-  <footer class="border-t border-marca-100 bg-white">
-    <div class="mx-auto max-w-5xl px-4 py-4 text-xs text-slate-500">
-      Prototipo académico · Proyecto Aplicado en TIC 1 · UPB
-      <span class="mx-1">·</span>
-      Todos los datos son ficticios
-    </div>
-  </footer>
+  {% block armazon %}{% endblock %}
 
   {% block scripts %}{% endblock %}
 </body>

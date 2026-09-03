@@ -1,8 +1,28 @@
-/* Hoja de estilos de SmartFood (TT-05).
+/* Hoja de estilos de SmartFood (TT-05, DT-23).
+ *
+ * **Este es el único fichero del proyecto donde puede aparecer un valor de
+ * color literal.** En una plantilla se usa el alias; si un color hace falta y
+ * no está aquí, lo que falta es el token, no la excepción.
+ *
+ * El sistema visual es el de FoodCash, portado tal cual (`DT-23`): misma
+ * paleta, misma tipografía, mismos alias de intención y los mismos dos temas.
+ * No es una preferencia estética — es un sistema ya validado en producción, con
+ * los contrastes medidos, y rehacerlo aquí sería tirar esa validación.
  *
  * Tailwind v4 se configura desde CSS, no desde un `tailwind.config.js`.
- * Los tokens de abajo son la paleta y la tipografía del prototipo; todo lo
- * demás son utilidades de Tailwind aplicadas en las plantillas.
+ *
+ * ---------------------------------------------------------------------------
+ * CÓMO ESTÁ ORGANIZADO
+ *
+ *   1. La PALETA CRUDA (`--sf-marino`, `--sf-teal`…) son los colores de marca.
+ *      No se usan nunca directamente en una plantilla.
+ *   2. Los ALIAS DE INTENCIÓN (`--color-superficie`, `--color-primario`…) dicen
+ *      PARA QUÉ sirve un color, no cuál es. Son los únicos que generan clases
+ *      de Tailwind, y son los que cambian entre tema claro y oscuro.
+ *
+ * Por eso no existe `bg-neutro-100` ni `bg-marino`: en modo oscuro darían un
+ * bloque blanco sobre fondo negro.
+ * ---------------------------------------------------------------------------
  *
  * Vive FUERA de `assets/`, que es STATICFILES_DIRS: si estuviera dentro,
  * collectstatic intentaría resolver el `@import "tailwindcss"` como una ruta
@@ -17,35 +37,864 @@
 /* Le dice a Tailwind dónde buscar las clases que se usan, para no incluir en
  * la hoja final las miles que no se usan. */
 @source "../templates";
+@source "../config";
 @source "../cuentas";
 @source "../personas";
 @source "../catalogo";
 
-@theme {
-  /* Verde: es una cafetería escolar, y el color va asociado a lo saludable,
-   * que es de lo que trata el control parental (HU-11, HU-17). */
-  --color-marca-50: oklch(0.97 0.02 155);
-  --color-marca-100: oklch(0.94 0.05 155);
-  --color-marca-500: oklch(0.65 0.15 155);
-  --color-marca-600: oklch(0.56 0.14 155);
-  --color-marca-700: oklch(0.46 0.12 155);
-  --color-marca-900: oklch(0.30 0.08 155);
+/* ==========================================================================
+ * VARIANTE `colapsada:`
+ *
+ * La barra lateral de `INT-1` se colapsa a iconos, y eso cambia media docena de
+ * medidas repartidas por el armazón: el ancho de la barra, el margen del lienzo,
+ * el relleno de cada enlace y si la etiqueta se ve o no.
+ *
+ * El estado vive en un atributo del elemento RAÍZ (lo pone el script inline de
+ * `base.html` antes de pintar, y lo cambia `interfaz.js`), así que cualquier
+ * elemento de la página puede reaccionar sin encadenar `group` hasta el
+ * armazón. Con esto se escribe `colapsada:w-20` donde antes haría falta
+ * `group-data-[colapsada=si]:w-20` y un `group` en el ancestro correcto.
+ * ========================================================================== */
 
-  /* Reservado para saldo insuficiente y bloqueo por alérgeno (INV-1, INV-5).
-   * El rojo del sistema no se usa para nada decorativo. */
-  --color-alerta-100: oklch(0.94 0.04 25);
-  --color-alerta-600: oklch(0.58 0.20 25);
-  --color-alerta-700: oklch(0.49 0.18 25);
+@custom-variant colapsada (&:where(:root[data-barra-colapsada="si"] *));
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+/* Su contraria, y **hace falta que sea explícita**. Dos utilidades que tocan la
+ * misma propiedad (`tablet:ml-78` frente a `tablet:colapsada:ml-28`) dependen
+ * del orden en que Tailwind las escriba, y ese orden no es algo sobre lo que
+ * apoyar el ancho del lienzo. Con las dos variantes, los dos casos son
+ * excluyentes y no compiten.
+ *
+ * Va anclada a `:root`: sin eso, `:not([data-barra-colapsada="si"]) *` coincide
+ * siempre —`body` nunca lleva el atributo, y basta con que UN ancestro no lo
+ * lleve— y la barra se quedaría desplegada al colapsarla. */
+@custom-variant desplegada (&:where(:root:not([data-barra-colapsada="si"]) *));
+
+/* ==========================================================================
+ * TIPOGRAFÍAS AUTO-HOSPEDADAS
+ *
+ * NO se cargan desde el CDN de Google: enviaría la IP de cada acudiente —y de
+ * cada menor que mire la pantalla con su familia— a un tercero en cada visita,
+ * y este proyecto tiene obligaciones de Ley 1581 de 2012 (`ALC-OUT-08`). Los
+ * .woff2 están en `assets/fuentes/` y los sirve la propia aplicación.
+ *
+ * Poppins para titulares (geométrica, la que usa la marca); Inter para el
+ * cuerpo, elegida por legibilidad en interfaz densa — el punto de venta del
+ * Sprint 2 (`INT-2`) es una tabla de precios que se lee de pie y con prisa.
+ * Inter es variable: un solo fichero cubre de 400 a 600.
+ *
+ * Las rutas son relativas a la hoja COMPILADA (`assets/css/tailwind.css`), no a
+ * este fichero. Whitenoise las reescribe al versionar (`CompressedManifest…`),
+ * así que tienen que resolver contra `assets/`.
+ *
+ * `font-display: swap` a propósito: antes texto con la fuente del sistema que
+ * un hueco en blanco.
+ * ========================================================================== */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("../fuentes/inter-400-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* El punto de venta (INT-2) se opera con teclado y sin ratón (DT-16). Un foco
- * invisible ahí no es un detalle estético: es un cajero que no sabe dónde está
- * escribiendo con cola delante. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("../fuentes/inter-400-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fuentes/poppins-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fuentes/poppins-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fuentes/poppins-700-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fuentes/poppins-700-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ==========================================================================
+ * PALETA CRUDA Y TEMAS
+ *
+ * Los colores de marca son:
+ *   #278FA2 teal · #1A375C marino · #EAEAEA gris · #5BADA4 agua · #3C755D bosque
+ * ========================================================================== */
+
+:root {
+  /* --- Paleta cruda. No usar en plantillas. --- */
+  --sf-marino: #1a375c;
+  --sf-teal: #278fa2;
+  --sf-agua: #5bada4;
+  --sf-bosque: #3c755d;
+  --sf-rojo: #d24444;
+  --sf-ambar: #a9661c;
+
+  --sf-neutro-0: #ffffff;
+  --sf-neutro-50: #f8f9fa;
+  --sf-neutro-100: #f1f3f5;
+  --sf-neutro-200: #eaeaea;
+  --sf-neutro-300: #c6cdd6;
+  --sf-neutro-400: #98a5b6;
+  --sf-neutro-500: #76879d;
+  --sf-neutro-600: #536985;
+  --sf-neutro-700: #354f70;
+  --sf-neutro-800: #1a375c;
+  --sf-neutro-900: #11243c;
+
+  /* --- TEMA CLARO --- */
+
+  /* En claro la elevación la da la sombra, no el color: superficie y elevada
+   * son el mismo blanco. En oscuro no funciona así (ver más abajo). */
+  --t-fondo: var(--sf-neutro-50);
+  --t-superficie: var(--sf-neutro-0);
+  --t-superficie-alta: var(--sf-neutro-0);
+  --t-superficie-hover: var(--sf-neutro-100);
+  --t-borde: var(--sf-neutro-200);
+  --t-texto: var(--sf-neutro-800);
+  /* neutro-600 y no neutro-500: el 500 da 3,67 sobre blanco, y el texto
+   * secundario es justo donde más se nota la falta de contraste. */
+  --t-texto-suave: var(--sf-neutro-600);
+
+  /* Primario = marino, no teal. El teal da 3,79 sobre blanco, por debajo del
+   * 4,5 de WCAG AA; el marino da 12,03 (AAA). */
+  --t-primario: var(--sf-marino);
+  --t-primario-suave: #e8ebef;
+  --t-primario-fuerte: #142945;
+  --t-sobre-primario: var(--sf-neutro-0);
+
+  /* Acento (teal): enlaces, iconos, elementos activos. Para TEXTO usa
+   * `acento-fuerte` (6,11); la base sólo vale en superficies grandes. */
+  --t-acento: var(--sf-teal);
+  --t-acento-suave: #e9f4f6;
+  --t-acento-fuerte: #1d6b7a;
+
+  /* Verde agua: decorativo. 2,64 sobre blanco — NUNCA lleva texto. */
+  --t-agua: var(--sf-agua);
+  --t-agua-suave: #eff7f6;
+
+  --t-exito: var(--sf-bosque);
+  --t-exito-suave: #ecf1ef;
+  --t-exito-fuerte: #2d5846;
+
+  /* El rojo significa seguridad alimentaria (alérgeno bloqueado, `INV-5`) o
+   * dinero (saldo insuficiente, `INV-1`). **No es decorativo**, y por eso no
+   * se usa para adornar tarjetas ni cabeceras: gastarlo en decoración le quita
+   * fuerza justo donde el sistema lo necesita. */
+  --t-error: var(--sf-rojo);
+  --t-error-suave: #fbecec;
+  --t-error-fuerte: #9e3333;
+  --t-sobre-error: var(--sf-neutro-0);
+
+  --t-aviso: var(--sf-ambar);
+  --t-aviso-suave: #f6f0e8;
+  --t-aviso-fuerte: #7f4d15;
+
+  /* --- CONSTANTES SOBRE BLOQUE OSCURO FIJO ---
+   *
+   * Estos seis NO cambian entre temas, y ése es justo su motivo de existir. El
+   * héroe de la portada y el panel de acceso son marino en los dos temas, así
+   * que ahí los alias normales fallan sin que se note al mirar en claro:
+   * `text-sobre-primario` en tema OSCURO vale #060c14 — tinta casi negra sobre
+   * marino, invisible.
+   *
+   * Contrastes medidos sobre el marino (#1a375c, y el degradado sólo lo
+   * oscurece): sobre-oscuro 10,9 · sobre-oscuro-suave 6,9. El botón claro da
+   * 15,1 entre su fondo y su tinta. El teal de marca da 3,17 ahí y el rojo
+   * 2,66 — ninguno llega a AA; sus versiones claras dan 7,1 y 6,0. */
+  --t-sobre-oscuro: #f4f7fa;
+  --t-sobre-oscuro-suave: #b8c6d6;
+  --t-accion-clara: #f4f7fa;
+  --t-sobre-accion-clara: #11243c;
+  --t-acento-claro: #7fd4e2;
+  --t-error-claro: #ff9b9b;
+
+  /* --- PAPEL ---
+   *
+   * Constantes por el mismo motivo que las de arriba, sólo que el bloque fijo
+   * aquí es una hoja: **el papel es blanco en los dos temas**. Sin esto, quien
+   * tenga el tema oscuro e imprima la tarjeta del estudiante (`TT-37`, `ENT-02`)
+   * se lleva tinta clara sobre un fondo que la impresora no pinta — o sea, una
+   * hoja casi en blanco— y no hay forma de verlo desde la aplicación, porque en
+   * pantalla se ve perfecto.
+   *
+   * `tinta` no es negro puro: el negro absoluto sobre blanco cansa al leer y en
+   * impresión láser empasta los remates de la tipografía. #1a1a1a da 17,4 de
+   * contraste, de sobra para AAA. `filete` para las líneas de tabla, que
+   * impresas tienen que ser más claras que en pantalla o dominan la página. */
+  --t-papel: #ffffff;
+  --t-tinta: #1a1a1a;
+  --t-tinta-suave: #595959;
+  --t-filete: #c8c8c8;
+
+  /* --- Barra de navegación lateral ---
+   * Es un panel oscuro en LOS DOS temas: separa la navegación del contenido de
+   * un vistazo. Por eso tiene tokens propios y no reutiliza `superficie`, que
+   * en tema claro es blanca. El fondo se despega 13,90 del lienzo en claro.
+   *
+   * El elemento activo lleva texto BLANCO sobre el degradado teal → agua, y
+   * para que cumpla AA hizo falta oscurecer el degradado (4,54 y 4,56; con los
+   * tonos plenos el blanco caía a 2,64 en el extremo verde). No lo cambies a
+   * texto oscuro «para ganar contraste»: el blanco ya cumple AA aquí, y es lo
+   * que hace destacar la sección activa sobre el resto de la lista (14,66 de
+   * contraste contra la barra, frente a los 9,15 del texto inactivo). */
+  --t-nav-fondo: #142945;
+  --t-nav-fondo-fin: #0d1b2e;
+  --t-nav-activo: #238192;
+  --t-nav-activo-fin: #438079;
+  --t-nav-hover: #23364f;
+  --t-nav-texto: #c6cdd6;
+  --t-nav-sobre-activo: var(--sf-neutro-0);
+
+  /* Velo de los diálogos: el marino más oscuro, translúcido. Un negro puro
+   * apaga el color de la página; el marino la mantiene "detrás", que es lo que
+   * un diálogo debe comunicar. */
+  --t-velo: rgb(17 36 60 / 0.55);
+
+  /* Series de cifras que hay que distinguir entre sí sin que signifiquen
+   * estado. **Nunca uses `error`, `exito` o `aviso` como serie**: significan
+   * alérgeno bloqueado, movimiento correcto y límite a punto de agotarse. Se
+   * asignan siempre en el mismo orden y no se reciclan. */
+  --t-serie-1: #0090ad;
+  --t-serie-2: #eb6834;
+  --t-serie-3: #1baf7a;
+  --t-serie-4: #eda100;
+  --t-serie-5: #e87ba4;
+
+  --t-sombra-sm: 0 1px 2px 0 rgb(17 36 60 / 0.06);
+  --t-sombra-md: 0 4px 6px -1px rgb(17 36 60 / 0.08), 0 2px 4px -2px rgb(17 36 60 / 0.05);
+  --t-sombra-lg: 0 10px 15px -3px rgb(17 36 60 / 0.1), 0 4px 6px -4px rgb(17 36 60 / 0.05);
+}
+
+/**
+ * TEMA OSCURO
+ *
+ * No es "el claro con los colores invertidos". Tres cosas cambian de raíz:
+ *
+ *   1. El primario deja de ser el marino: sobre fondo oscuro es casi invisible.
+ *      Pasa a ser el teal, y el texto que va encima pasa a ser OSCURO, no
+ *      blanco (5,07 frente a 3,79 — el blanco sobre teal no cumple AA).
+ *   2. Los fondos "suave" (el aviso de saldo insuficiente, el de alérgeno) son
+ *      tintes OSCUROS del color, no versiones claras: un chip claro sobre fondo
+ *      oscuro deslumbra.
+ *   3. La elevación la da el color, no la sombra — una sombra negra sobre fondo
+ *      negro no se ve. Por eso `superficie-alta` sí se distingue aquí.
+ *
+ * Las superficies se derivan del marino, nunca negro puro: el negro absoluto
+ * produce halo alrededor del texto claro y cansa en jornadas largas.
+ *
+ * `screen and`: EL TEMA OSCURO NO SE IMPRIME. Se apaga aquí, en el origen, y no
+ * persiguiendo tokens en el bloque `@media print`: acotando los dos bloques
+ * oscuros a `screen`, la impresión cae sola en el `:root` claro y cualquier
+ * pantalla que se imprima mañana ya sale bien.
+ */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --t-fondo: #060c14;
+    --t-superficie: #0c1929;
+    --t-superficie-alta: #102239;
+    --t-superficie-hover: #102239;
+    --t-borde: #162f4e;
+    --t-texto: #eff1f4;
+    --t-texto-suave: #a8b3c1;
+
+    --t-primario: var(--sf-teal);
+    --t-primario-suave: #0d2632;
+    --t-primario-fuerte: #5dabb9;
+    --t-sobre-primario: #060c14;
+
+    --t-acento: var(--sf-agua);
+    --t-acento-suave: #162b33;
+    --t-acento-fuerte: #84c2bb;
+
+    --t-agua: var(--sf-agua);
+    --t-agua-suave: #162b33;
+
+    --t-exito: #598a75;
+    --t-exito-suave: #16252a;
+    --t-exito-fuerte: #83a798;
+
+    --t-error: #d65353;
+    --t-error-suave: #2c1b24;
+    --t-error-fuerte: #e07e7e;
+    --t-sobre-error: #060c14;
+
+    --t-aviso: #af712c;
+    --t-aviso-suave: #25211d;
+    --t-aviso-fuerte: #c39561;
+
+    --t-nav-fondo: #102239;
+    --t-nav-fondo-fin: #0a1626;
+    --t-nav-hover: #1d3352;
+
+    --t-velo: rgb(0 0 0 / 0.7);
+
+    --t-serie-1: #00a3c4;
+    --t-serie-2: #d95926;
+    --t-serie-3: #199e70;
+    --t-serie-4: #c98500;
+    --t-serie-5: #d55181;
+
+    /* En oscuro la sombra sirve para separar del fondo, no para elevar: más
+     * opaca y más difusa que en claro. */
+    --t-sombra-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --t-sombra-md: 0 4px 8px -2px rgb(0 0 0 / 0.5);
+    --t-sombra-lg: 0 12px 20px -4px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* Selección explícita de la persona. Gana sobre la preferencia del sistema.
+ * Duplicado a propósito: `@media` no puede envolver a `:root[data-tema]` con la
+ * especificidad correcta sin invertir la precedencia. `@media screen` por el
+ * mismo motivo que el bloque de arriba, y envolver en `screen` NO cambia la
+ * especificidad del selector. */
+@media screen {
+  :root[data-tema="oscuro"] {
+    --t-fondo: #060c14;
+    --t-superficie: #0c1929;
+    --t-superficie-alta: #102239;
+    --t-superficie-hover: #102239;
+    --t-borde: #162f4e;
+    --t-texto: #eff1f4;
+    --t-texto-suave: #a8b3c1;
+
+    --t-primario: var(--sf-teal);
+    --t-primario-suave: #0d2632;
+    --t-primario-fuerte: #5dabb9;
+    --t-sobre-primario: #060c14;
+
+    --t-acento: var(--sf-agua);
+    --t-acento-suave: #162b33;
+    --t-acento-fuerte: #84c2bb;
+
+    --t-agua: var(--sf-agua);
+    --t-agua-suave: #162b33;
+
+    --t-exito: #598a75;
+    --t-exito-suave: #16252a;
+    --t-exito-fuerte: #83a798;
+
+    --t-error: #d65353;
+    --t-error-suave: #2c1b24;
+    --t-error-fuerte: #e07e7e;
+    --t-sobre-error: #060c14;
+
+    --t-aviso: #af712c;
+    --t-aviso-suave: #25211d;
+    --t-aviso-fuerte: #c39561;
+
+    --t-nav-fondo: #102239;
+    --t-nav-fondo-fin: #0a1626;
+    --t-nav-hover: #1d3352;
+
+    --t-velo: rgb(0 0 0 / 0.7);
+
+    --t-serie-1: #00a3c4;
+    --t-serie-2: #d95926;
+    --t-serie-3: #199e70;
+    --t-serie-4: #c98500;
+    --t-serie-5: #d55181;
+
+    --t-sombra-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --t-sombra-md: 0 4px 8px -2px rgb(0 0 0 / 0.5);
+    --t-sombra-lg: 0 12px 20px -4px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* ==========================================================================
+ * LO QUE VE TAILWIND
+ * ========================================================================== */
+
+@theme {
+  /* Se borra TODO lo que Tailwind trae por defecto. Es el corazón de la regla:
+   * sin esto existen `bg-blue-500`, `text-slate-700` y otras doscientas clases
+   * que no son de la marca, y a la tercera pantalla la paleta vuelve a ser lo
+   * que cada quien tuviera a mano. Si un color hace falta, se añade aquí con
+   * nombre de intención. */
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --breakpoint-*: initial;
+
+  /* --- Color: sólo alias de intención. --- */
+  --color-fondo: var(--t-fondo);
+  --color-superficie: var(--t-superficie);
+  --color-superficie-alta: var(--t-superficie-alta);
+  --color-superficie-hover: var(--t-superficie-hover);
+  --color-borde: var(--t-borde);
+  --color-texto: var(--t-texto);
+  --color-texto-suave: var(--t-texto-suave);
+
+  --color-primario: var(--t-primario);
+  --color-primario-suave: var(--t-primario-suave);
+  --color-primario-fuerte: var(--t-primario-fuerte);
+  --color-sobre-primario: var(--t-sobre-primario);
+
+  --color-acento: var(--t-acento);
+  --color-acento-suave: var(--t-acento-suave);
+  --color-acento-fuerte: var(--t-acento-fuerte);
+
+  --color-agua: var(--t-agua);
+  --color-agua-suave: var(--t-agua-suave);
+
+  --color-exito: var(--t-exito);
+  --color-exito-suave: var(--t-exito-suave);
+  --color-exito-fuerte: var(--t-exito-fuerte);
+
+  --color-error: var(--t-error);
+  --color-error-suave: var(--t-error-suave);
+  --color-error-fuerte: var(--t-error-fuerte);
+  --color-sobre-error: var(--t-sobre-error);
+
+  --color-aviso: var(--t-aviso);
+  --color-aviso-suave: var(--t-aviso-suave);
+  --color-aviso-fuerte: var(--t-aviso-fuerte);
+
+  --color-nav-fondo: var(--t-nav-fondo);
+  --color-nav-fondo-fin: var(--t-nav-fondo-fin);
+  --color-nav-activo: var(--t-nav-activo);
+  --color-nav-activo-fin: var(--t-nav-activo-fin);
+  --color-nav-hover: var(--t-nav-hover);
+  --color-nav-texto: var(--t-nav-texto);
+  --color-sobre-nav-activo: var(--t-nav-sobre-activo);
+
+  --color-velo: var(--t-velo);
+
+  /* Constantes sobre bloque oscuro fijo (héroe y panel de acceso). Iguales en
+   * los dos temas a propósito: ver la nota en la paleta. */
+  --color-sobre-oscuro: var(--t-sobre-oscuro);
+  --color-sobre-oscuro-suave: var(--t-sobre-oscuro-suave);
+  --color-accion-clara: var(--t-accion-clara);
+  --color-sobre-accion-clara: var(--t-sobre-accion-clara);
+  --color-acento-claro: var(--t-acento-claro);
+  --color-error-claro: var(--t-error-claro);
+
+  /* Papel: constantes, ver la nota en la paleta. Las usa el bloque
+   * `@media print` y la tarjeta imprimible de `TT-37`. */
+  --color-papel: var(--t-papel);
+  --color-tinta: var(--t-tinta);
+  --color-tinta-suave: var(--t-tinta-suave);
+  --color-filete: var(--t-filete);
+
+  --color-serie-1: var(--t-serie-1);
+  --color-serie-2: var(--t-serie-2);
+  --color-serie-3: var(--t-serie-3);
+  --color-serie-4: var(--t-serie-4);
+  --color-serie-5: var(--t-serie-5);
+
+  /* Transparente y "el color actual" siguen haciendo falta. */
+  --color-transparente: transparent;
+  --color-actual: currentColor;
+
+  /* --- Tipografía --- */
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-texto: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+
+  /* Escala cerrada a propósito: si un diseño pide un tamaño que no está aquí,
+   * se ajusta el diseño o se discute añadir el escalón. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  /* Los dos últimos escalones existen SÓLO para el titular de la portada. Una
+   * pantalla de trabajo no necesita nada por encima de 4xl. */
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1.05;
+
+  /* Tailwind v4 deriva toda la escala (`p-1`, `gap-6`, …) de esta base. */
+  --spacing: 0.25rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --shadow-sm: var(--t-sombra-sm);
+  --shadow-md: var(--t-sombra-md);
+  --shadow-lg: var(--t-sombra-lg);
+
+  /* --- Puntos de ruptura: MOBILE-FIRST ---
+   * Son `min-width`. Los estilos sin prefijo son los del móvil y cada escalón
+   * AÑADE. Tres, no doce, y con nombre: `tablet:` dice para qué aparato es el
+   * salto, y `sm:` no. El acudiente entra desde el teléfono (`INT-1`) y el
+   * punto de venta corre en 1024×600 (`INT-2`), que es justo `escritorio`. */
+  --breakpoint-tablet: 48rem;
+  --breakpoint-escritorio: 64rem;
+  --breakpoint-amplio: 80rem;
+}
+
+/* ==========================================================================
+ * BASE
+ * ========================================================================== */
+
 @layer base {
+  html {
+    font-family: var(--font-texto);
+    color: var(--color-texto);
+    background-color: var(--color-fondo);
+    -webkit-text-size-adjust: 100%;
+    /* `light dark` significa «soporto los dos, ELIGE TÚ» — y quien elige es la
+     * preferencia del sistema operativo. Es el tercer estado del selector de
+     * tema, y lo que hay que ANULAR en los otros dos: ver el bloque de abajo. */
+    color-scheme: light dark;
+  }
+
+  /**
+   * EL TEMA FORZADO TAMBIÉN FIJA `color-scheme`, y esto no es cosmética.
+   *
+   * Los tokens de arriba pintan lo que dibujamos nosotros. Lo que dibuja el
+   * NAVEGADOR (el desplegable de un `select`, el botón «examinar» del campo de
+   * archivo de `TT-24`, las casillas, las barras de desplazamiento) no mira una
+   * sola clase nuestra: mira `color-scheme`. Sin esto, forzar el tema claro
+   * desde un sistema en oscuro deja la página clara y esos controles negros.
+   */
+  :root[data-tema="claro"] {
+    color-scheme: light;
+  }
+
+  :root[data-tema="oscuro"] {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+
+  /* Un único anillo de foco para toda la aplicación. El punto de venta (`INT-2`)
+   * se opera con teclado y sin ratón (`DT-16`): un foco invisible ahí no es un
+   * detalle estético, es un cajero que no sabe dónde está escribiendo con cola
+   * delante. Va con el acento y no con el primario porque tiene que verse
+   * también SOBRE un botón primario. */
   :focus-visible {
-    outline: 2px solid var(--color-marca-600);
+    outline: 2px solid var(--color-acento);
     outline-offset: 2px;
+  }
+
+  /* El punto de venta se maneja con lector de código de barras: la selección
+   * accidental de texto al hacer doble clic estorba más de lo que ayuda. */
+  button {
+    user-select: none;
+  }
+
+  /* Un SVG dentro de un contenedor flex es comprimible: si el texto de al lado
+   * no cabe, el navegador aplasta el icono en vez de cortar el texto. Se pone
+   * aquí una vez en lugar de un `shrink-0` en cada icono, que es lo mismo pero
+   * olvidable. El código de barras de `TT-37` se sobrescribe en su plantilla. */
+  svg {
+    flex-shrink: 0;
+  }
+
+  /**
+   * Menos movimiento, de verdad.
+   *
+   * `motion-reduce:transform-none` de Tailwind NO sirve para esto: escribe
+   * `transform: none`, pero las utilidades de v4 desplazan y escalan con las
+   * propiedades independientes `translate` y `scale`, que `transform` no toca.
+   * El `!important` está justificado: es una preferencia de accesibilidad de la
+   * persona y debe ganar siempre.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      translate: none !important;
+      scale: none !important;
+      rotate: none !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+/* ==========================================================================
+ * SUPERFICIES COMPUESTAS
+ *
+ * Un degradado, una malla o un desenfoque no caben en una clase de utilidad sin
+ * escribir un valor arbitrario (`bg-[radial-gradient(...)]`), que es justo lo
+ * que este fichero existe para evitar. La salida no es relajar la regla: es
+ * darle nombre al recurso y dejarlo aquí, donde los literales sí viven.
+ *
+ * Son de intención, igual que los colores: `superficie-heroe`, no
+ * `degradado-azul-diagonal`.
+ * ========================================================================== */
+
+@layer components {
+  /**
+   * Fondo del héroe. Marino en LOS DOS TEMAS — por eso usa la paleta cruda y no
+   * los alias: aquí no puede cambiar nada al pasar a oscuro, o el texto claro
+   * que lleva encima se queda sin fondo que lo sostenga.
+   *
+   * Tres capas: un halo teal arriba (de donde "sale la luz"), un halo agua en la
+   * esquina y el degradado marino de base. El orden importa — los halos van
+   * antes porque en `background-image` la primera capa es la de arriba.
+   */
+  .superficie-heroe {
+    background-color: #11243c;
+    background-image:
+      radial-gradient(125% 85% at 50% -15%, rgb(39 143 162 / 0.42) 0%, transparent 62%),
+      radial-gradient(75% 55% at 100% 5%, rgb(91 173 164 / 0.24) 0%, transparent 58%),
+      linear-gradient(180deg, #16304f 0%, #1a375c 48%, #11243c 100%);
+  }
+
+  /**
+   * Malla técnica sobre el héroe. Se desvanece hacia los bordes con una máscara:
+   * sin ella el patrón choca con el final de la sección y se ve el corte, que es
+   * lo que delata una malla puesta "de adorno".
+   */
+  .malla-heroe {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 3.5rem 3.5rem;
+    -webkit-mask-image: radial-gradient(95% 70% at 50% 20%, #000 0%, transparent 78%);
+    mask-image: radial-gradient(95% 70% at 50% 20%, #000 0%, transparent 78%);
+  }
+
+  /**
+   * Auroras: las manchas de color que respiran detrás del titular.
+   * `filter: blur()` sobre un radial ya difuminado, no sobre un círculo duro —
+   * un borde nítido desenfocado deja un halo con banding en pantallas de 8 bits.
+   */
+  .aurora {
+    border-radius: 9999px;
+    filter: blur(72px);
+    animation: derivar 22s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .aurora-teal {
+    background-image: radial-gradient(circle, rgb(39 143 162 / 0.85) 0%, transparent 70%);
+  }
+
+  .aurora-agua {
+    background-image: radial-gradient(circle, rgb(91 173 164 / 0.7) 0%, transparent 70%);
+    animation-delay: -9s;
+    animation-duration: 26s;
+  }
+
+  /**
+   * Titular con degradado. Sólo para la palabra destacada del `h1`: en un
+   * párrafo el texto recortado pierde legibilidad. El degradado va de claro a
+   * claro, así que si un navegador no soporta `background-clip: text` degrada a
+   * "blanco", no a "nada".
+   */
+  .texto-degradado {
+    background-image: linear-gradient(100deg, #8fdcea 0%, #a8e3da 45%, #ffffff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /** Panel oscuro reutilizable. Más plano que el héroe. */
+  .panel-marino {
+    background-color: #16304f;
+    background-image:
+      radial-gradient(100% 120% at 0% 0%, rgb(39 143 162 / 0.35) 0%, transparent 60%),
+      radial-gradient(80% 100% at 100% 100%, rgb(91 173 164 / 0.2) 0%, transparent 65%);
+  }
+
+  /** Pastilla translúcida sobre un bloque oscuro: iconos y chips del héroe. */
+  .cristal {
+    background-color: rgb(255 255 255 / 0.1);
+    border: 1px solid rgb(255 255 255 / 0.16);
+    backdrop-filter: blur(8px);
+  }
+
+  /** Filete superior de una tarjeta destacada. */
+  .filete-acento {
+    background-image: linear-gradient(90deg, transparent, rgb(39 143 162 / 0.9), transparent);
+  }
+
+  /**
+   * Tablas de datos: el reporte de errores de la carga (`TT-26`) y las listas
+   * que vengan. Una tabla no se reflujar a 390 px sin volverse ilegible, así que
+   * **desborda dentro de su caja** y se lee arrastrando. Lo que NO puede pasar
+   * es que desborde la PÁGINA: eso mueve la barra y la cabecera.
+   *
+   * El escalón se elige por el NÚMERO DE COLUMNAS, no por la pantalla: la tabla
+   * es igual de ancha en un móvil que en un monitor, sólo cambia cuánto se ve.
+   */
+  .tabla-datos {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  /** 2 columnas: las del formato de carga (`docs/formato-de-carga.md`). */
+  .tabla-sm {
+    min-width: 22rem;
+  }
+
+  /** 4 columnas: fila, columna, valor y qué pasa (`HU-02`). */
+  .tabla-md {
+    min-width: 40rem;
+  }
+
+  /**
+   * La tarjeta física del estudiante (`TT-37`, `HU-45`, `ENT-02`).
+   *
+   * 85,6 × 54 mm son las medidas de una tarjeta bancaria: es el formato para el
+   * que están hechas las fundas y las impresoras de credenciales. Va en
+   * milímetros y no en píxeles porque **esto se imprime**: un símbolo medido en
+   * píxeles sale a la resolución que decida el navegador y deja de leerse.
+   */
+  .tarjeta-fisica {
+    width: 85.6mm;
+    height: 54mm;
+    box-sizing: border-box;
+  }
+
+  /**
+   * Indicador de HTMX. La clase `htmx-indicator` la pone HTMX: el elemento está
+   * oculto salvo mientras hay una petición en vuelo. Sin esto, el selector de
+   * estudiante (`TT-29`) no da ninguna señal en una red lenta y se pulsa dos
+   * veces.
+   */
+  .htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+  }
+
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    opacity: 1;
+  }
+}
+
+@keyframes derivar {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 2.5rem 1.5rem;
+  }
+}
+
+/* ==========================================================================
+ * IMPRESIÓN
+ *
+ * La tarjeta del estudiante (`TT-37`) es papel de verdad: `ENT-02` necesita una
+ * tarjeta impresa, no una captura de pantalla. Tres reglas valen para cualquier
+ * página que se imprima, y una de ellas no se puede descubrir mirando:
+ *
+ *   1. **El tema oscuro no se imprime.** Ya está apagado en origen (los dos
+ *      bloques oscuros están acotados a `screen`); esto es el cinturón para que
+ *      el navegador tampoco meta sus propios estilos de UA oscuros.
+ *   2. **`print-color-adjust: exact`.** Sin esto Chrome descarta los fondos.
+ *   3. **La aplicación no es el documento.** Barra superior, menú y botones no
+ *      van en una hoja: se ocultan con `.no-imprimir`.
+ * ========================================================================== */
+
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  :root,
+  html,
+  body {
+    background: var(--color-papel) !important;
+    color: var(--color-tinta) !important;
+    color-scheme: light;
+  }
+
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .no-imprimir {
+    display: none !important;
+  }
+
+  /* El armazón coloca el contenido con márgenes para las barras fijas. Sin
+   * esto, la hoja sale con 18 rem de blanco a la izquierda. */
+  .lienzo-impresion {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Sin sombras ni fondos de superficie: gastan tóner y no se ven en papel. */
+  .bloque-impresion {
+    break-inside: avoid;
+    border-color: var(--color-filete) !important;
+    box-shadow: none !important;
+  }
+
+  /* La tarjeta del estudiante, en papel: sin sombra —no se ve— y con un filete
+   * fino de tinta que marca por dónde recortar. En milímetros, como el resto de
+   * sus medidas: es un objeto físico, no una caja de pantalla. */
+  .tarjeta-fisica {
+    box-shadow: none !important;
+    border: 0.3mm solid var(--color-tinta) !important;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
   }
 }

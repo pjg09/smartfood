@@ -1,60 +1,254 @@
-{% extends "base.html" %}
+{% extends "base-publica.html" %}
 
-{% comment %} Portada. Existe para que `TT-05` sea demostrable: sin algo que extienda
-   `base.html`, la plantilla base no se puede verificar en el entorno
-   desplegado, que es lo que exige la Definición de Terminado.
+{% comment %} Portada. Existe para que `TT-05` sea demostrable: sin algo que extienda la
+   base, la plantilla base no se puede verificar.
 
-   Es a donde se llega tras entrar por `/acceso/` (`TT-56`), y desde aquí cada
-   rol va a lo suyo. No la sustituye ninguna otra pantalla: `TT-11` es la de
-   *definir contraseña* desde la invitación, que es otra cosa. {% endcomment %}
+   Es a donde se llega tras entrar por `/acceso/` (`TT-56`), y desde aquí cada rol
+   va a lo suyo. No la sustituye ninguna otra pantalla: `TT-11` es la de definir
+   contraseña desde la invitación, que es otra cosa.
+
+   **Lo que cuenta es lo que el sistema hace, no lo que hará.** Las tres promesas
+   del héroe son invariantes vigentes (`INV-1`, `INV-4`, `INV-2`), no una lista
+   de intenciones: el saldo negativo es imposible, las restricciones no las
+   levanta la cafetería y el saldo se reconstruye desde el historial.
+{% endcomment %}
 
 {% block titulo %}SmartFood · Cafetería escolar{% endblock %}
 
+{% comment %} Debajo hay héroe marino: la cabecera puede nacer transparente. {% endcomment %}
+{% block sobre_heroe %}si{% endblock %}
+
 {% block contenido %}
-  <div class="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-    <h1 class="text-2xl font-semibold tracking-tight text-marca-900 sm:text-3xl">
-      SmartFood
-    </h1>
-    <p class="mt-2 max-w-prose text-slate-600">
-      Gestión de cafeterías escolares con control parental y trazabilidad digital.
-    </p>
+  {% comment %} ---------------------------------------------------------------- Héroe {% endcomment %}
+  <section class="superficie-heroe relative overflow-hidden">
+    <div aria-hidden="true" class="malla-heroe pointer-events-none absolute inset-0"></div>
+    <div aria-hidden="true"
+         class="aurora aurora-teal pointer-events-none absolute -top-40 -left-32 h-96 w-96 opacity-55"></div>
+    <div aria-hidden="true"
+         class="aurora aurora-agua pointer-events-none absolute -right-40 bottom-0 h-96 w-96 opacity-45"></div>
 
-    {% if user.is_authenticated %}
-      <div class="mt-6 flex flex-wrap gap-3">
-        {% if user.es_acudiente %}
-          <a href="{% url 'mis-estudiantes' %}"
-             class="rounded-md bg-marca-700 px-4 py-2 text-sm font-medium text-white
-                    hover:bg-marca-600">Mis estudiantes</a>
-        {% endif %}
-        {% if user.is_staff %}
-          {% comment %} `INT-3` es el admin de Django (`DT-2`): el personal y la institución
-             operan desde allí, no desde plantillas propias. {% endcomment %}
-          <a href="{% url 'admin:index' %}"
-             class="rounded-md bg-marca-700 px-4 py-2 text-sm font-medium text-white
-                    hover:bg-marca-600">Administración</a>
-        {% endif %}
+    <div class="relative mx-auto flex max-w-6xl flex-col gap-8 px-4 pt-32 pb-20 escritorio:px-8 escritorio:pt-40 escritorio:pb-28">
+      <div class="flex flex-col gap-6">
+        <span class="cristal inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-sm text-sobre-oscuro-suave">
+          <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-escudo"></use></svg>
+          Prototipo académico · datos ficticios
+        </span>
+
+        {% comment %} El degradado solo va en la palabra destacada: en un párrafo entero el
+           texto recortado pierde legibilidad. {% endcomment %}
+        <h1 class="max-w-3xl font-display text-4xl leading-tight text-sobre-oscuro escritorio:text-6xl">
+          La cafetería del colegio,<br><span class="texto-degradado">bajo control</span>
+        </h1>
+
+        <p class="max-w-xl text-lg text-sobre-oscuro-suave">
+          Saldo, límite diario y alérgenos bloqueados, en el mismo sitio para la
+          familia y para quien está en la caja. Sin efectivo en el bolsillo de un
+          menor y con cada movimiento registrado.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3">
+          {% if user.is_authenticated %}
+            {% comment %} Con sesión abierta, la portada no vuelve a ofrecer «entrar»: lleva
+               a donde esa persona trabaja. {% endcomment %}
+            {% if user.es_acudiente %}
+              <a href="{% url 'mis-estudiantes' %}"
+                 class="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
+                        bg-accion-clara px-6 text-lg font-medium whitespace-nowrap
+                        text-sobre-accion-clara transition-opacity hover:opacity-90">
+                <svg class="h-5 w-5" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+                Mis estudiantes
+              </a>
+            {% endif %}
+            {% if user.is_staff %}
+              {% comment %} `INT-3` es el admin de Django (`DT-2`): el personal y la
+                 institución operan desde allí, no desde plantillas propias. {% endcomment %}
+              <a href="{% url 'admin:index' %}"
+                 class="cristal inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
+                        px-6 text-lg font-medium whitespace-nowrap text-sobre-oscuro
+                        transition-colors hover:bg-sobre-oscuro/15">
+                <svg class="h-5 w-5" aria-hidden="true"><use href="#i-ajustes"></use></svg>
+                Administración
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'acceso' %}"
+               class="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
+                      bg-accion-clara px-6 text-lg font-medium whitespace-nowrap
+                      text-sobre-accion-clara transition-opacity hover:opacity-90">
+              <svg class="h-5 w-5" aria-hidden="true"><use href="#i-candado"></use></svg>
+              Entrar
+            </a>
+            <a href="#acceso"
+               class="cristal inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
+                      px-6 text-lg font-medium whitespace-nowrap text-sobre-oscuro
+                      transition-colors hover:bg-sobre-oscuro/15">
+              Cómo se consigue una cuenta
+            </a>
+          {% endif %}
+        </div>
       </div>
-    {% else %}
-      <p class="mt-6 rounded-md bg-marca-100 px-4 py-3 text-sm text-marca-900">
-        Prototipo en construcción. Las cuentas no se crean desde aquí:
-        la institución da de alta a su personal y a sus estudiantes, y cada
-        persona recibe una invitación por correo con la que define su contraseña.
+
+      {% comment %} Las tres promesas. Son invariantes, y por eso están aquí y no en una
+         lista de funcionalidades: no dependen de que nadie se acuerde de
+         cumplirlas. {% endcomment %}
+      <ul class="mt-6 grid gap-4 tablet:grid-cols-3">
+        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
+            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+          </span>
+          <h2 class="text-lg font-semibold text-sobre-oscuro">Nunca en negativo</h2>
+          <p class="text-base text-sobre-oscuro-suave">
+            Si no alcanza el saldo, la venta no se hace. No hay fiado ni sobregiro.
+          </p>
+        </li>
+        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
+            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+          </span>
+          <h2 class="text-lg font-semibold text-sobre-oscuro">Lo que bloquea la familia, queda bloqueado</h2>
+          <p class="text-base text-sobre-oscuro-suave">
+            La cafetería no puede levantar una restricción de alérgenos ni un límite.
+          </p>
+        </li>
+        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
+            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-documento"></use></svg>
+          </span>
+          <h2 class="text-lg font-semibold text-sobre-oscuro">Todo se puede reconstruir</h2>
+          <p class="text-base text-sobre-oscuro-suave">
+            El saldo es la suma de sus movimientos. No hay una cifra suelta que
+            pueda discrepar del historial.
+          </p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  {% comment %} ------------------------------------------------------- Quién usa qué {% endcomment %}
+  <section id="roles" class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-20 escritorio:px-8">
+    <div class="flex flex-col gap-3">
+      <h2 class="font-display text-3xl tracking-tight text-texto">Quién usa qué</h2>
+      <p class="max-w-2xl text-lg text-texto-suave">
+        Cuatro roles con sesión. El estudiante no tiene cuenta: se identifica con
+        el código de su tarjeta en la caja, que es otra cosa distinta.
       </p>
-    {% endif %}
+    </div>
 
-    <dl class="mt-6 grid gap-4 sm:grid-cols-3">
-      <div class="rounded-md border border-marca-100 p-4">
-        <dt class="text-sm font-medium text-marca-700">Acudiente</dt>
-        <dd class="mt-1 text-sm text-slate-600">Saldo, consumo y restricciones de sus estudiantes.</dd>
+    <div class="grid gap-4 tablet:grid-cols-2 escritorio:grid-cols-4">
+      {% comment %} La franja superior de cada tarjeta usa las series decorativas y no
+         `error`, `aviso` ni `exito`: esos tres significan alérgeno bloqueado,
+         límite a punto de agotarse y movimiento correcto. Gastarlos en adorno
+         les quita fuerza donde hacen falta. {% endcomment %}
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-1 to-serie-1/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-1/10 text-serie-1">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-personas"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Acudiente</h3>
+        <p class="text-base font-medium text-texto">
+          Consulta el saldo y el consumo de sus estudiantes, fija el límite diario
+          y bloquea alérgenos. Entra desde el teléfono.
+        </p>
+      </article>
+
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-3 to-serie-3/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-3/10 text-serie-3">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Cajero</h3>
+        <p class="text-base font-medium text-texto">
+          Cobra con el lector de código de barras. El sistema le dice qué no puede
+          vender y por qué.
+        </p>
+      </article>
+
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-4 to-serie-4/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-4/10 text-serie-4">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-ajustes"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Administración de la cafetería</h3>
+        <p class="text-base font-medium text-texto">
+          Catálogo, precios, información nutricional, alérgenos declarados e
+          inventario.
+        </p>
+      </article>
+
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-5 to-serie-5/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-5/10 text-serie-5">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Institución educativa</h3>
+        <p class="text-base font-medium text-texto">
+          Carga el padrón, vincula cada estudiante con su acudiente y produce las
+          tarjetas.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  {% comment %} -------------------------------------------------------- Cómo se entra {% endcomment %}
+  <section id="acceso" class="border-t border-borde bg-superficie">
+    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-20 escritorio:px-8">
+      <div class="flex flex-col gap-3">
+        <h2 class="font-display text-3xl tracking-tight text-texto">Cómo se entra</h2>
+        <p class="max-w-2xl text-lg text-texto-suave">
+          <strong class="font-semibold text-texto">Aquí no hay registro</strong>, y no
+          es que falte: no existe ninguna ruta para crear una cuenta por cuenta
+          propia. Un sistema que maneja datos de menores no se abre a quien pase por
+          delante.
+        </p>
       </div>
-      <div class="rounded-md border border-marca-100 p-4">
-        <dt class="text-sm font-medium text-marca-700">Cafetería</dt>
-        <dd class="mt-1 text-sm text-slate-600">Punto de venta, catálogo e inventario.</dd>
-      </div>
-      <div class="rounded-md border border-marca-100 p-4">
-        <dt class="text-sm font-medium text-marca-700">Institución</dt>
-        <dd class="mt-1 text-sm text-slate-600">Alta de estudiantes, acudientes y personal.</dd>
-      </div>
-    </dl>
-  </div>
+
+      <ol class="grid gap-4 tablet:grid-cols-3">
+        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+                       font-display text-lg text-acento-fuerte">1</span>
+          <h3 class="text-lg font-semibold text-texto">La institución da de alta</h3>
+          <p class="text-base text-texto-suave">
+            Carga el padrón de estudiantes y sus acudientes, o da de alta al personal
+            de la cafetería.
+          </p>
+        </li>
+        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+                       font-display text-lg text-acento-fuerte">2</span>
+          <h3 class="text-lg font-semibold text-texto">Llega una invitación</h3>
+          <p class="text-base text-texto-suave">
+            Un correo con un enlace que caduca y deja de valer en cuanto se usa.
+            Quien crea la cuenta nunca conoce la contraseña.
+          </p>
+        </li>
+        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+                       font-display text-lg text-acento-fuerte">3</span>
+          <h3 class="text-lg font-semibold text-texto">Cada quien define la suya</h3>
+          <p class="text-base text-texto-suave">
+            Desde ese enlace, y ya se entra por la misma puerta que los otros tres
+            roles.
+          </p>
+        </li>
+      </ol>
+
+      {% if not user.is_authenticated %}
+        <a href="{% url 'acceso' %}"
+           class="inline-flex h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-full
+                  bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
+                  transition-colors hover:bg-primario-fuerte">
+          Ya tengo cuenta
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
+        </a>
+      {% endif %}
+    </div>
+  </section>
 {% endblock %}

@@ -86,6 +86,12 @@ Tres reglas (`DT-15`):
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`.
 
+Diseño (`DT-23`): el sistema visual —paleta, tipografía, armazones— se adopta entero de un
+producto en producción del mismo dominio, no se inventa aquí. **`estilos/fuente.css` es el
+único fichero con colores literales**; en las plantillas se usan alias de intención
+(`bg-superficie`, `text-texto`, `border-borde`, `text-error-fuerte`). Tres armazones cuelgan de
+`base.html`: `base-publica.html`, `base-acceso.html` y `base-aplicacion.html`.
+
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
@@ -105,6 +111,13 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
 - **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
   Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve».
+- **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
+  no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
+  `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
+  (`config/tests_plantillas.py`).
+- **El rojo y el ámbar significan algo**: saldo insuficiente o alérgeno bloqueado (`INV-1`,
+  `INV-5`) y límite a punto de agotarse. Para adornar hay cinco colores de serie sin
+  significado; gastar los de estado en decoración les quita fuerza donde hacen falta.
 
 ## Cómo ejecutar
 

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load interfaz %}
+
+{% comment %} Armazón de la aplicación con sesión (TT-05, DT-23): barra superior flotante,
+   barra lateral oscura y cajón de móvil.
+
+   Es `INT-1` —por donde entra el acudiente (`USR-2`)— y también el marco de las
+   pantallas propias de la institución, como la carga del padrón (`TT-24`). Lo
+   que cambia entre roles es la lista de secciones, que la arma
+   `menu_de_navegacion` a partir del rol; el cromo es el mismo.
+
+   **En móvil la barra lateral no se colapsa: se abre y se cierra como un cajón
+   sobre el contenido**, porque a 390 px no caben las dos cosas. El mismo botón
+   hace una cosa u otra según el ancho (`assets/js/interfaz.js`).
+
+   Bloques que puede rellenar una pantalla:
+     barra       la zona derecha de la barra superior (el selector de estudiante)
+     contenido   el lienzo
+{% endcomment %}
+
+{% block armazon %}
+  {% comment %} `no-imprimir` va aquí, en el armazón, y no en cada pantalla exportable:
+     puesto por pantalla, la primera que se olvide sale con el menú impreso.
+
+     En móvil la barra va pegada al techo y a todo el ancho: cada píxel cuenta y
+     una barra flotante roba 32 px de alto útil. Desde tablet flota.
+
+     Ojo con `overflow-hidden`: RECORTA lo que no quepa y lo hace sin ningún
+     aviso. Si añades algo a la barra, míralo a 320 px, no sólo a 390. {% endcomment %}
+  <header class="no-imprimir fixed inset-x-0 top-0 z-30 flex h-16 overflow-hidden
+                 border-b border-borde shadow-sm
+                 tablet:inset-x-4 tablet:top-4 tablet:h-18 tablet:rounded-2xl
+                 tablet:border-0 tablet:shadow-lg">
+
+    {% comment %} El botón de las tres rayas, pegado al borde. En móvil mide 56 px de
+       ancho en vez de 80: los 24 que suelta se los queda lo que haya a su
+       derecha, que es lo que se estaba recortando. Sigue siendo un blanco táctil
+       de 56 × 64, por encima de los 44 px que pide WCAG. {% endcomment %}
+    <button type="button" data-alternar-barra
+            aria-label="Menú de secciones" aria-expanded="true"
+            class="flex h-full w-14 shrink-0 flex-col items-center justify-center gap-1
+                   bg-linear-135 from-primario to-primario-fuerte transition-colors
+                   hover:from-primario-fuerte hover:to-primario tablet:w-20">
+      <span aria-hidden="true" class="h-1 w-6 rounded-sm bg-sobre-primario tablet:w-7"></span>
+      <span aria-hidden="true" class="h-1 w-6 rounded-sm bg-sobre-primario tablet:w-7"></span>
+      <span aria-hidden="true" class="h-1 w-6 rounded-sm bg-sobre-primario tablet:w-7"></span>
+    </button>
+
+    {% comment %} `min-w-0` para que esta caja pueda encogerse por debajo del ancho de su
+       contenido. Sin él, un hijo flexible se niega a bajar de su tamaño natural,
+       la caja se sale de la cabecera y `overflow-hidden` corta la última pieza
+       sin que nada lo indique. {% endcomment %}
+    <div class="flex min-w-0 flex-1 items-center justify-between gap-2 bg-superficie px-3
+                tablet:gap-5 tablet:px-4 escritorio:px-8">
+
+      {% comment %} El logotipo va también en móvil: en `INT-1` la barra no lleva ninguna
+         otra pieza todavía —el selector de estudiante vive en el lienzo— y sin
+         él quedaba una franja vacía al lado del botón. Cuando el Sprint 2 traiga
+         piezas a la barra habrá que medirlo otra vez a 320 px. {% endcomment %}
+      <a href="{% url 'inicio' %}" class="min-w-0 truncate">
+        {% include "partials/marca.html" %}
+      </a>
+
+      {% comment %} El espaciador va ANTES de lo que trae la pantalla, no en medio: en
+         escritorio lo empuja contra el borde derecho. En móvil está oculto, así
+         que `justify-between` reparte las piezas entre los dos extremos. {% endcomment %}
+      <div class="hidden flex-1 tablet:block"></div>
+
+      {% block barra %}{% endblock %}
+
+      {% comment %} Quién tiene la sesión abierta. Se oculta antes que nada al estrechar:
+         un correo largo se come la barra entera. {% endcomment %}
+      <span class="hidden max-w-56 truncate text-sm text-texto-suave escritorio:inline">
+        {{ user.email }}
+      </span>
+
+      <div class="hidden tablet:block">{% include "partials/selector-de-tema.html" %}</div>
+
+      {% comment %} Salir es un formulario porque `/salir/` solo acepta POST. En móvil no
+         está aquí: vive en el cajón, con el resto de la navegación. {% endcomment %}
+      <form method="post" action="{% url 'salir' %}" class="hidden tablet:block">
+        {% csrf_token %}
+        <button type="submit" aria-label="Cerrar sesión"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md
+                       border border-borde bg-superficie-hover text-texto-suave
+                       transition-all hover:-translate-y-0.5 hover:border-primario
+                       hover:bg-primario hover:text-sobre-primario hover:shadow-lg">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-salir"></use></svg>
+        </button>
+      </form>
+    </div>
+  </header>
+
+  {% comment %} Barra lateral flotante, desde tablet. `top-26` son los 16 px de margen más
+     los 72 de la barra superior más 16 de separación. {% endcomment %}
+  <aside class="no-imprimir fixed top-26 bottom-4 left-4 z-20 hidden overflow-hidden
+                rounded-2xl bg-linear-to-b from-nav-fondo to-nav-fondo-fin shadow-lg
+                transition-all duration-500 tablet:block
+                tablet:desplegada:w-70 tablet:colapsada:w-20">
+    {% menu_de_navegacion %}
+  </aside>
+
+  {% comment %} El lienzo deja sitio a las dos barras. `lienzo-impresion` anula esos
+     márgenes al imprimir: están para dejar hueco a dos barras que en la hoja no
+     existen (`TT-37` sale de aquí). {% endcomment %}
+  <main id="contenido"
+        class="lienzo-impresion px-4 pt-20 pb-6 transition-all duration-500
+               tablet:pt-26 tablet:desplegada:ml-78 tablet:colapsada:ml-28">
+    {% include "partials/mensajes.html" %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  {% comment %} Cajón de móvil. Nace oculto con `hidden` (el atributo, no la clase): así
+     no depende de que el JavaScript llegue para no taparlo todo. {% endcomment %}
+  <div data-cajon hidden class="no-imprimir fixed inset-0 z-40 tablet:hidden">
+    <button type="button" data-cerrar-cajon aria-label="Cerrar el menú"
+            class="absolute inset-0 h-full w-full bg-velo"></button>
+    <div class="absolute inset-y-0 left-0 flex w-70 flex-col
+                bg-linear-to-b from-nav-fondo to-nav-fondo-fin shadow-lg">
+      {% comment %} Alineado con la barra superior de móvil, que mide 64. {% endcomment %}
+      <div class="flex h-16 items-center justify-between px-4">
+        {% include "partials/marca.html" with tono="oscuro" tamano="sm" %}
+        <button type="button" data-cerrar-cajon aria-label="Cerrar el menú"
+                class="flex h-10 w-10 items-center justify-center rounded-md
+                       text-nav-texto hover:bg-nav-hover">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+        </button>
+      </div>
+      {% comment %} `colapsable=False`: en un teléfono el menú no se colapsa nunca, y una
+         columna de iconos sin etiqueta no se entiende. {% endcomment %}
+      <div class="flex-1 overflow-y-auto">{% menu_de_navegacion colapsable=False %}</div>
+      <div class="border-t border-nav-hover p-4">
+        {% include "partials/selector-de-tema.html" with tono="oscuro" %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -271,6 +271,17 @@ la clave, así que cambia la URL y no hay nada que invalidar.
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
 
+**Los colores y las medidas viven en `estilos/fuente.css`, y sólo ahí** (`DT-23`). En una
+plantilla se usa el alias de intención —`bg-superficie`, `text-texto`, `border-borde`— nunca un
+hexadecimal ni la paleta de fábrica de Tailwind, que está borrada: `bg-slate-500` **no pinta
+nada y tampoco da error**. Los puntos de ruptura son `tablet:`, `escritorio:` y `amplio:`;
+`sm:` y `lg:` no existen. `uv run python manage.py test config.tests_plantillas` comprueba las
+dos reglas.
+
+Para ver una pantalla en el otro tema no hace falta cambiar el sistema operativo: el selector
+de la barra tiene tres estados —claro, oscuro y el del sistema— y la elección se guarda en el
+navegador.
+
 ---
 
 ## [S4] Qué hay levantado en local
@@ -317,6 +328,8 @@ editado sin su migración no da error hasta que otra persona levanta el proyecto
 | `connection refused` al puerto 5432 | `docker compose up -d` no está levantado |
 | `the database system is starting up` | PostgreSQL despertando; reintenta en unos segundos |
 | Una clase de Tailwind no se aplica | Falta `tailwind build` o `tailwind watch` |
+| Una clase de color no pinta nada, y no hay error | Es de la paleta de fábrica, que está borrada: usa un alias (`DT-23`) |
+| El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |
 | `NoSuchBucket` al subir una imagen | `docker compose down -v` borró el bucket; vuelve a levantar |
 | El admin dice que no existe la tabla | Falta `migrate` |
