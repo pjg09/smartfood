@@ -7,10 +7,10 @@
 | doc_id | SMARTFOOD-TIC1-MAPA |
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
-| documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`); `./desarrollo.md` |
-| actualizado | 2026-09-01, al cierre del Sprint 1 |
+| documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`); `./desarrollo.md` |
+| actualizado | 2026-09-01, al cierre del Sprint 1; interfaz revisada con `DT-23` el mismo día |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué responde este documento
 
@@ -40,7 +40,8 @@ acudiente ficticio.
 
 ## [S2] Las once rutas
 
-Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`).
+Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
+los mismos colores desde `DT-23`.
 
 | Ruta | Qué es | Quién | Tarea |
 |---|---|---|---|
@@ -74,6 +75,27 @@ Dos filas piden explicación:
 - **La imagen del producto se sirve sin sesión, a propósito** (`DT-21`). «Público» significa
   *no sensible*: es la fotografía de una empanada. Exigir sesión no protegería nada y
   rompería la caché que `INT-2` necesita. La clave no se adivina: la genera el servidor.
+
+### [S2.1] De qué armazón cuelga cada pantalla
+
+Tres armazones sobre una base común (`DT-23`, `DT-16`). Cuál usa una pantalla no es
+decoración: decide si lleva barra lateral, si la cabecera puede ir sobre un bloque oscuro y
+qué pasa al imprimirla.
+
+| Armazón | Qué pinta | Pantallas |
+|---|---|---|
+| `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
+| `base-acceso.html` | Dos columnas: panel de marca y formulario | `/acceso/`, `/invitacion/…`, `/invitacion/lista/` |
+| `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37` |
+| `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |
+
+**El punto de venta (`INT-2`) tendrá el suyo en el Sprint 2**: se opera con teclado y lector,
+y la barra lateral le quita a la rejilla de productos el espacio donde el cajero pulsa.
+
+**El tema —claro, oscuro o el del sistema— es una preferencia del navegador de cada
+persona, no de su cuenta.** No se guarda en la base y no viaja entre aparatos. El del admin
+es el suyo propio: Django lo resuelve con su botón y su atributo, y no se fuerzan a
+coincidir porque dejaría media pantalla en cada tema.
 
 ---
 
@@ -122,7 +144,11 @@ Acciones de retirar y devolver al catálogo. **Nada se borra**: retirar es un es
 
 `/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno. Si alguno está
 de baja, lo dice. El saldo, el límite diario y las restricciones **son suyos y llegan en los
-sprints 2 y 3**; hoy la pantalla declara dónde irán.
+sprints 2 y 3**; hoy la pantalla declara dónde irán y **cuándo**, en vez de enseñar un cero
+—un saldo en cero y un saldo que todavía no existe no son lo mismo—.
+
+Entra desde el teléfono (`INT-1`), así que la pantalla se diseña a 390 px primero: la barra
+lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 ### Cajero (`USR-3`)
 

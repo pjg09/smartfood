@@ -225,7 +225,11 @@ class LaVistaImprimibleTest(BaseConEstudiante):
         self.client.force_login(self.actor)
         cuerpo = self.client.get(self._url()).content.decode()
 
-        svg = re.search(r"<svg .*?</svg>", cuerpo, flags=re.S).group(0)
+        # Se busca por `role="img"`, que es lo que distingue al símbolo del
+        # resto de los SVG de la página: desde `DT-23` la plantilla lleva
+        # iconos, y todos van `aria-hidden` porque son decorativos. Buscar «el
+        # primer <svg> del cuerpo» daba con el primer icono del armazón.
+        svg = re.search(r'<svg xmlns[^>]*role="img".*?</svg>', cuerpo, flags=re.S).group(0)
         self.assertEqual(svg, svg_del_codigo(self.estudiante.codigo_tarjeta))
 
     def test_avisa_de_imprimir_al_cien_por_ciento(self):

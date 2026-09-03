@@ -1,15 +1,29 @@
-{% comment %} Fragmento de mensajes del framework (`django.contrib.messages`).
+{% comment %} Mensajes del framework (`django.contrib.messages`), con el lenguaje visual
+   del resto de la interfaz (DT-23).
 
-   Es el primer habitante de `partials/` y fija la convención de `DT-16`: aquí
-   viven los fragmentos que las vistas HTMX devuelven por separado, no páginas
-   completas. {% endcomment %}
+   El color no es decorativo: el rojo de `error` significa en este sistema saldo
+   insuficiente (`INV-1`) o alérgeno bloqueado (`INV-5`), y el ámbar de `warning`,
+   un límite a punto de agotarse. Por eso `info` va en superficie neutra y no en
+   un color de estado — gastar el rojo en avisos corrientes le quita fuerza justo
+   donde el sistema lo necesita.
+
+   `role="status"` y no `alert`: `alert` interrumpe al lector de pantalla, y
+   estos mensajes son la consecuencia de algo que la persona acaba de hacer.
+{% endcomment %}
 {% if messages %}
-  <div class="mx-auto w-full max-w-5xl px-4 pt-4" role="status" aria-live="polite">
+  <div class="mx-auto mb-6 flex w-full max-w-5xl flex-col gap-2" role="status" aria-live="polite">
     {% for mensaje in messages %}
-      <div class="mb-2 rounded-md px-4 py-3 text-sm
-                  {% if mensaje.tags == 'error' %}bg-alerta-100 text-alerta-700
-                  {% else %}bg-marca-100 text-marca-900{% endif %}">
-        {{ mensaje }}
+      <div class="flex items-start gap-3 rounded-md border p-3 text-sm
+                  {% if mensaje.tags == 'error' %}border-error bg-error-suave text-error-fuerte
+                  {% elif mensaje.tags == 'warning' %}border-aviso bg-aviso-suave text-aviso-fuerte
+                  {% elif mensaje.tags == 'success' %}border-exito bg-exito-suave text-exito-fuerte
+                  {% else %}border-borde bg-superficie-hover text-texto{% endif %}">
+        <svg class="mt-0.5 h-4 w-4" aria-hidden="true">
+          {% comment %} En una sola línea: un `href` de fragmento con espacios o saltos
+             dentro no resuelve, y el icono desaparece sin dar ningún error. {% endcomment %}
+          <use href="{% if mensaje.tags == 'error' or mensaje.tags == 'warning' %}#i-alerta{% elif mensaje.tags == 'success' %}#i-correcto{% else %}#i-informacion{% endif %}"></use>
+        </svg>
+        <p>{{ mensaje }}</p>
       </div>
     {% endfor %}
   </div>

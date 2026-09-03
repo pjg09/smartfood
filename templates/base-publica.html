@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% comment %} Armazón de lo que se ve ANTES de entrar (TT-05, DT-23): cabecera flotante y
+   pie. Hoy solo lo usa la portada; cualquier página pública que venga después
+   —un aviso legal, una 404 con forma— cuelga de aquí y ya nace igual.
+
+   La cabecera es **transparente mientras se está arriba del todo** y se opaca al
+   bajar. Eso solo funciona si debajo hay un bloque oscuro: sobre un fondo claro,
+   la tinta clara del logotipo y de los enlaces desaparece. Por eso no se decide
+   sola — la pantalla lo declara con `{% templatetag openblock %} block sobre_heroe {% templatetag closeblock %}si{% templatetag openblock %} endblock {% templatetag closeblock %}`, y sin
+   esa declaración la cabecera nace opaca, que es lo que no puede salir mal.
+{% endcomment %}
+
+{% block armazon %}
+  {% comment %} El centinela: un píxel al principio del documento. Que esté a la vista o
+     no es lo que dice si seguimos arriba. Se mira con `IntersectionObserver` y
+     no escuchando `scroll`, que se dispara decenas de veces por segundo para
+     responder a una pregunta de dos estados. {% endcomment %}
+  <div data-centinela-cabecera aria-hidden="true" class="absolute top-0 h-px w-full"></div>
+
+  <header data-cabecera-publica data-sobre-heroe="{% block sobre_heroe %}no{% endblock %}"
+          class="group fixed inset-x-0 top-0 z-40 transition-colors duration-300
+                 border-b border-borde bg-superficie/90 backdrop-blur
+                 data-[arriba=si]:border-transparente data-[arriba=si]:bg-transparente
+                 data-[arriba=si]:backdrop-blur-none">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 p-4 escritorio:px-8">
+      <a href="{% url 'inicio' %}" aria-label="SmartFood, ir al inicio">
+        {% comment %} Arriba del todo el logotipo va sobre el héroe, que es marino en los
+           DOS temas: ahí tiene que ser el de tinta clara o desaparece. Se pintan
+           los dos y se enseña uno — es un puñado de bytes y evita depender de
+           JavaScript para que el nombre del producto se lea. {% endcomment %}
+        <span class="group-data-[arriba=si]:hidden">{% include "partials/marca.html" %}</span>
+        <span class="hidden group-data-[arriba=si]:inline">
+          {% include "partials/marca.html" with tono="oscuro" %}
+        </span>
+      </a>
+
+      <nav aria-label="Secciones" class="flex items-center gap-2 tablet:gap-6">
+        <a href="#roles"
+           class="hidden text-sm font-medium transition-colors tablet:inline
+                  text-texto hover:text-acento-fuerte
+                  group-data-[arriba=si]:text-sobre-oscuro
+                  group-data-[arriba=si]:hover:opacity-70">Quién usa qué</a>
+        <a href="#acceso"
+           class="hidden text-sm font-medium transition-colors tablet:inline
+                  text-texto hover:text-acento-fuerte
+                  group-data-[arriba=si]:text-sobre-oscuro
+                  group-data-[arriba=si]:hover:opacity-70">Cómo se entra</a>
+
+        <div class="group-data-[arriba=si]:hidden">
+          {% include "partials/selector-de-tema.html" %}
+        </div>
+
+        {% comment %} Arriba del todo, el acceso es de cristal: un botón sólido competiría
+           con el del héroe, que está tres centímetros más abajo. Al bajar, el
+           héroe ya no está y pasa a ser el primario sólido. {% endcomment %}
+        {% if user.is_authenticated %}
+          <a href="{% url 'inicio' %}"
+             class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
+                    transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
+                    group-data-[arriba=si]:cristal group-data-[arriba=si]:bg-transparente
+                    group-data-[arriba=si]:text-sobre-oscuro">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
+            Ir a mi panel
+          </a>
+        {% else %}
+          <a href="{% url 'acceso' %}"
+             class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
+                    transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
+                    group-data-[arriba=si]:cristal group-data-[arriba=si]:bg-transparente
+                    group-data-[arriba=si]:text-sobre-oscuro">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+            Entrar
+          </a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    {% include "partials/mensajes.html" %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-borde bg-superficie">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 escritorio:px-8">
+      <div class="flex flex-col gap-3 tablet:flex-row tablet:items-center tablet:justify-between">
+        {% include "partials/marca.html" %}
+        <p class="text-sm text-texto-suave">
+          Cafetería escolar con control parental y trazabilidad digital.
+        </p>
+      </div>
+
+      {% comment %} No es letra pequeña de relleno: `ALC-OUT-07` y `ALC-OUT-08` obligan a
+         que en este sistema no haya un solo dato real de un menor, y decirlo en
+         la propia pantalla es parte de sostenerlo — quien vaya a cargar un
+         padrón de verdad tiene que leerlo antes, no después. {% endcomment %}
+      <p class="border-t border-borde pt-6 text-xs text-texto-suave">
+        Prototipo académico · Proyecto Aplicado en TIC 1 · UPB
+        <span class="mx-1">·</span>
+        <strong class="font-semibold text-texto">Todos los datos son ficticios.</strong>
+        No se trata información real de ningún estudiante (Ley 1581 de 2012).
+      </p>
+    </div>
+  </footer>
+{% endblock %}

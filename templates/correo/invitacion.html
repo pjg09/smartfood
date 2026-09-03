@@ -1,7 +1,21 @@
 {% comment %} Versión HTML de la invitación (TT-12). La de texto plano es la obligatoria:
    una invitación que un cliente de correo no muestra es una cuenta que no se
-   activa. Sin CSS externo ni imágenes: los clientes de correo no los cargan. {% endcomment %}
-<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#0f172a;line-height:1.6;max-width:34rem">
+   activa.
+
+   **Aquí los colores van escritos a mano, y es la única excepción a la regla de
+   `estilos/fuente.css`.** Un correo no puede usar variables CSS ni una hoja
+   externa: Gmail y Outlook las descartan, y con ellas se iría el color entero.
+   Son los mismos valores de la paleta —marino #1a375c y teal #278fa2— copiados,
+   no otros; si la marca cambia, este fichero es el segundo sitio que tocar.
+
+   Sin imágenes ni fondos oscuros de cuerpo: los clientes de correo no cargan las
+   primeras, y el tema oscuro de un cliente invierte lo segundo sin avisar. {% endcomment %}
+<div style="font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;color:#1a375c;line-height:1.6;max-width:34rem">
+
+  <p style="font-family:'Poppins',Georgia,serif;font-size:1.25rem;font-weight:600;color:#1a375c;margin:0 0 1.25rem">
+    Smart<span style="color:#1d6b7a">Food</span>
+  </p>
+
   <p>Hola {{ nombre }}:</p>
 
   <p>La institución educativa te dio acceso a <strong>SmartFood</strong> como {{ rol }}.</p>
@@ -10,29 +24,29 @@
 
   <p style="margin:1.75rem 0">
     <a href="{{ enlace }}"
-       style="background:#166534;color:#ffffff;padding:.75rem 1.5rem;border-radius:.375rem;
+       style="background:#1a375c;color:#ffffff;padding:.75rem 1.5rem;border-radius:.5rem;
               text-decoration:none;display:inline-block;font-weight:600">
       Definir mi contraseña
     </a>
   </p>
 
-  <p style="color:#475569;font-size:.875rem">
+  <p style="color:#536985;font-size:.875rem">
     Si el botón no funciona, copia esta dirección en tu navegador:<br>
     <span style="word-break:break-all">{{ enlace }}</span>
   </p>
 
-  <p style="color:#475569;font-size:.875rem">
+  <p style="color:#536985;font-size:.875rem">
     El enlace vale {{ dias_de_validez }} días y deja de servir en cuanto lo uses.
     Si caduca, pide que te reenvíen la invitación.
   </p>
 
-  <p style="color:#475569;font-size:.875rem">
+  <p style="color:#536985;font-size:.875rem">
     Si no esperabas este correo, ignóralo: sin definir la contraseña, la cuenta no
     puede usarse.
   </p>
 
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:1.5rem 0">
-  <p style="color:#64748b;font-size:.75rem">
+  <hr style="border:none;border-top:1px solid #eaeaea;margin:1.5rem 0">
+  <p style="color:#76879d;font-size:.75rem">
     SmartFood · prototipo académico · Proyecto Aplicado en TIC 1 · UPB
   </p>
 </div>

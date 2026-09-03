@@ -1,111 +1,96 @@
-{% extends "base.html" %}
+{% extends "base-aplicacion.html" %}
 
 {% comment %}
 TT-37. Vista imprimible de la tarjeta del estudiante (`HU-45`, `ENT-02`).
 
 Lo que se ve en pantalla es lo que sale del papel: la tarjeta se dibuja con las
-medidas de una tarjeta real —85,6 × 54 mm, las de una tarjeta bancaria— y el
-código de barras lleva su ancho en milímetros, no en píxeles. Un símbolo medido
-en píxeles se imprime a la resolución que decida el navegador y deja de leerse.
+medidas de una tarjeta real —85,6 × 54 mm, las de una bancaria— y el código de
+barras lleva su ancho en milímetros, no en píxeles. Un símbolo medido en píxeles
+se imprime a la resolución que decida el navegador y deja de leerse.
 
-Al imprimir desaparece todo lo que no es la tarjeta: cabecera, pie, botón y
-notas. `ENT-02` necesita papel con una tarjeta, no una captura de pantalla.
+Al imprimir desaparece todo lo que no es la tarjeta: barras, botón y notas van
+con `no-imprimir`, y el tema oscuro está apagado en origen para que la hoja no
+salga en negativo. Las medidas y las reglas de papel viven en
+`estilos/fuente.css` (`.tarjeta-fisica` y el bloque `@media print`), no en un
+`<style>` aquí: son las mismas para cualquier cosa que este sistema imprima.
 {% endcomment %}
 
 {% block titulo %}Tarjeta de {{ estudiante.nombre }} · SmartFood{% endblock %}
 
-{% block cabecera %}
-  <style>
-    /* Medidas de una tarjeta bancaria: es el formato para el que están hechas
-       las fundas y las impresoras de credenciales. */
-    .tarjeta {
-      width: 85.6mm;
-      height: 54mm;
-      box-sizing: border-box;
-    }
-
-    @media print {
-      /* Sin márgenes del navegador: los del papel los pone la tarjeta. */
-      @page { margin: 12mm; }
-
-      body { background: #fff; }
-      header, footer, .no-imprimir { display: none !important; }
-      main { max-width: none; padding: 0; margin: 0; }
-
-      /* Sin sombras ni fondos: gastan tóner y no se ven en papel. */
-      .tarjeta {
-        box-shadow: none;
-        border: 0.3mm solid #000;
-      }
-    }
-  </style>
-{% endblock %}
-
 {% block contenido %}
-  <div class="no-imprimir mb-6 flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight text-marca-900">
-        Tarjeta de {{ estudiante.nombre }}
-      </h1>
-      <p class="mt-1 text-sm text-slate-600">
-        Este es su código <strong>vigente</strong>. Si se reasigna, esta tarjeta
-        deja de servir en el mismo momento y hay que imprimirla de nuevo.
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+
+    <header class="no-imprimir flex flex-wrap items-start justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">
+          Tarjeta de {{ estudiante.nombre }}
+        </h1>
+        <p class="text-base font-medium text-texto-suave">
+          Este es su código <strong class="font-semibold text-texto">vigente</strong>. Si se
+          reasigna, esta tarjeta deja de servir en el mismo momento y hay que
+          imprimirla de nuevo.
+        </p>
+      </div>
+      <button type="button" onclick="window.print()"
+              class="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md
+                     bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
+                     transition-colors hover:bg-primario-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+        Imprimir
+      </button>
+    </header>
+
+    {% comment %} La tarjeta es blanca en los DOS temas: es papel, no pantalla. Por eso usa
+       `papel`, `tinta` y `filete` —constantes— y no `superficie` y `texto`, que
+       en oscuro darían una tarjeta negra que la impresora no pinta. {% endcomment %}
+    <div class="tarjeta-fisica flex flex-col rounded-lg border border-filete bg-papel p-4 shadow-md">
+      <div class="flex items-baseline justify-between">
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-tinta">
+          {{ institucion.nombre|default:"SmartFood" }}
+        </span>
+        <span class="text-[10px] uppercase tracking-widest text-tinta-suave">Cafetería</span>
+      </div>
+
+      <p class="mt-2 truncate text-base font-semibold text-tinta">{{ estudiante.nombre }}</p>
+      <p class="text-xs text-tinta-suave">
+        Documento <span class="font-mono">{{ estudiante.documento }}</span>
       </p>
+
+      <div class="mt-3 flex flex-col items-center">
+        {% comment %}
+        El SVG lo construye `personas.tarjeta` a partir del código, y el código
+        solo puede contener dígitos y mayúsculas: lo impone una `CheckConstraint`
+        de la base (`TT-32`). No hay texto de nadie de por medio.
+        {% endcomment %}
+        {{ codigo_de_barras|safe }}
+
+        {% comment %}
+        La interpretación legible. No es decoración: cuando el lector falla, es lo
+        que alguien teclea. Va espaciada para que no se lea de corrido.
+        {% endcomment %}
+        <span class="mt-1 font-mono text-xs tracking-[0.2em] text-tinta">
+          {{ estudiante.codigo_tarjeta }}
+        </span>
+      </div>
     </div>
-    <button type="button" onclick="window.print()"
-            class="rounded-md bg-marca-700 px-4 py-2 text-sm font-medium text-white
-                   hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
-                   focus:ring-offset-2">
-      Imprimir
-    </button>
-  </div>
 
-  <div class="tarjeta rounded-lg border border-slate-300 bg-white p-4 shadow-sm">
-    <div class="flex items-baseline justify-between">
-      <span class="text-[10px] font-semibold uppercase tracking-widest text-marca-700">
-        {{ institucion.nombre|default:"SmartFood" }}
-      </span>
-      <span class="text-[10px] uppercase tracking-widest text-slate-400">Cafetería</span>
+    <div class="no-imprimir flex flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-1/10 text-serie-1">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+        </span>
+        <h2 class="text-lg font-semibold text-texto">Antes de imprimir</h2>
+      </div>
+      <ul class="flex list-disc flex-col gap-2 pl-5 text-base text-texto-suave">
+        <li>
+          El símbolo mide <strong class="font-semibold text-texto">{{ ancho_impreso_mm|floatformat:1 }} mm</strong>
+          de ancho, márgenes incluidos. Imprime <strong class="font-semibold text-texto">al 100 %</strong>:
+          si el navegador lo ajusta a la página, las barras se estrechan y el lector
+          deja de leerlas.
+        </li>
+        <li>Es <strong class="font-semibold text-texto">Code 128</strong>, que todo lector USB trae activado de fábrica.</li>
+        <li>Los márgenes blancos de los lados son parte del código. Recortar por ahí lo inutiliza.</li>
+      </ul>
     </div>
-
-    <p class="mt-2 truncate text-base font-semibold text-slate-900">
-      {{ estudiante.nombre }}
-    </p>
-    <p class="text-xs text-slate-500">
-      Documento <span class="font-mono">{{ estudiante.documento }}</span>
-    </p>
-
-    <div class="mt-3 flex flex-col items-center">
-      {% comment %}
-      El SVG lo construye `personas.tarjeta` a partir del código, y el código
-      solo puede contener dígitos y mayúsculas: lo impone una `CheckConstraint`
-      de la base (`TT-32`). No hay texto de nadie de por medio.
-      {% endcomment %}
-      {{ codigo_de_barras|safe }}
-
-      {% comment %}
-      La interpretación legible. No es decoración: cuando el lector falla, es lo
-      que alguien teclea. Va espaciada para que no se lea de corrido.
-      {% endcomment %}
-      <span class="mt-1 font-mono text-xs tracking-[0.2em] text-slate-900">
-        {{ estudiante.codigo_tarjeta }}
-      </span>
-    </div>
-  </div>
-
-  <div class="no-imprimir mt-6 rounded-lg border border-marca-100 bg-white p-4 text-sm text-slate-600">
-    <p class="font-medium text-marca-700">Antes de imprimir</p>
-    <ul class="mt-2 list-disc space-y-1 pl-5">
-      <li>
-        El símbolo mide <strong>{{ ancho_impreso_mm|floatformat:1 }} mm</strong> de ancho, márgenes
-        incluidos. Imprime <strong>al 100 %</strong>: si el navegador lo ajusta a la página,
-        las barras se estrechan y el lector deja de leerlas.
-      </li>
-      <li>Es <strong>Code 128</strong>, que todo lector USB trae activado de fábrica.</li>
-      <li>
-        Los márgenes blancos de los lados son parte del código. Recortar por ahí
-        lo inutiliza.
-      </li>
-    </ul>
   </div>
 {% endblock %}

@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` el 2026-09-01 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 22 (`DT-1` … `DT-22`) |
+| decisiones | 23 (`DT-1` … `DT-23`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-22`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-23`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -305,6 +305,26 @@ El esquema está en 3NF. Conviene notar que **`DT-4` y `DT-5` son consecuencia d
 **La codificación la hace `python-barcode`; el dibujo es nuestro.** Escribir a mano el codificador de Code 128 —tres subconjuntos, suma de control en base 103, patrón de parada de trece módulos— es la clase de código que `DT-2` dice que no hay que escribir: un error sutil no se ve en pantalla, se ve cuando las tarjetas ya están impresas y el lector no las lee. El dibujo sí es nuestro, porque el SVG tiene que ir **en línea** en la página y con las medidas de arriba.
 
 **Nada se almacena.** El símbolo se genera en cada petición a partir del campo del estudiante. Es lo que sostiene el segundo criterio de `HU-45`: una imagen guardada seguiría enseñando un código correcto después de que `HU-46` lo reasignara, y esa tarjeta impresa ya no abre ningún saldo (`INVD-4`).
+
+#### `[DT-23]` El sistema visual se adopta entero de un producto ya validado, no se diseña aquí
+
+**Razón:** decisión del equipo, tomada el 2026-09-01. No la obliga ninguna invariante: `DT-16` fija el stack de la interfaz (Tailwind y HTMX) pero no dice de qué color es nada, y hasta aquí la paleta era una elección provisional del andamiaje de `TT-05`.
+
+**Qué se adopta.** La paleta de marca (marino `#1A375C`, teal `#278FA2`, verde agua `#5BADA4`, verde bosque `#3C755D`), la tipografía (Poppins para titulares, Inter para cuerpo), la escala de espaciado y tamaños, los tres puntos de ruptura con nombre (`tablet`, `escritorio`, `amplio`) y la estructura de pantalla: barra superior flotante, barra lateral oscura que se colapsa, y pantallas de puerta a dos columnas con panel de marca.
+
+**De dónde sale.** De un producto en producción del mismo dominio —gestión de cafeterías escolares— cuyos contrastes están medidos uno a uno y cuya interfaz ya pasó por usuarios reales. **La alternativa era diseñar un sistema visual desde cero para un prototipo de cinco sprints**, con dos personas desarrollando, y llegar a la sustentación con una paleta que nadie ha comprobado. Adoptar uno validado no ahorra trabajo: ahorra el riesgo de que la interfaz sea el eslabón sin verificar de un proyecto donde todo lo demás está justificado.
+
+**Lo que NO se adopta: la identidad.** SmartFood no lleva el logotipo, el nombre ni la marca de ese producto. El logotipo es tipográfico —la palabra, con «Food» en el acento— y se genera desde la propia hoja de estilos. Un prototipo académico firmado con la marca de una empresa cuenta algo que no es cierto sobre quién lo hizo y para quién.
+
+**Un solo fichero con colores literales: `estilos/fuente.css`.** Todo lo demás usa **alias de intención** (`superficie`, `texto`, `primario`, `acento`, `error`), nunca la paleta cruda ni la de fábrica de Tailwind, que se borra entera con `--color-*: initial`. Dos plantillas quedan fuera y las dos por el mismo motivo —no cargan la hoja, así que un token ahí no resolvería a nada—: el correo de invitación (los clientes de correo descartan las variables CSS) y `admin/base_site.html` (incluir Tailwind en el admin traería su `preflight` y desarmaría `INT-3`). `config/tests_plantillas.py` vigila las dos reglas: ni un hexadecimal suelto, ni una clase de la paleta de fábrica —que, borrada la paleta, **no pinta nada y tampoco da error**.
+
+**Dos temas, claro y oscuro, y el oscuro no es el claro invertido.** El primario deja de ser el marino y pasa a ser el teal, el texto que va encima pasa a ser oscuro (el blanco sobre teal se queda en 3,79 y no cumple AA), y la elevación la da el color en vez de la sombra. Hay además cuatro constantes que **no cambian entre temas** —`sobre-oscuro`, `accion-clara`, `acento-claro` y las de papel—, porque el héroe es marino y el papel es blanco en los dos temas: ahí los alias que siguen al tema dejarían tinta casi negra sobre marino, o una hoja impresa casi en blanco.
+
+**El tema oscuro no se imprime.** Se apaga en el origen, acotando los dos bloques oscuros a `@media screen`, y no persiguiendo tokens dentro de `@media print`: así la impresión cae sola en el tema claro y cualquier pantalla imprimible que se añada mañana ya sale bien. Lo que se imprime hoy es la tarjeta de `TT-37`, que es papel de verdad (`ENT-02`).
+
+**`INT-3` se tematiza, no se reescribe.** El admin de Django ya está escrito contra sus propias variables CSS (`--primary`, `--header-bg`, …), así que hablar el idioma de la marca cuesta un `admin/base_site.html` que las redefine. Rehacer sus plantillas sería construir a mano justo lo que `DT-2` decidió no construir.
+
+**Consecuencia sobre `DT-16`.** Sigue vigente y sin cambios: una vista HTMX devuelve un fragmento, nunca una página. Lo que `DT-23` añade es que hay **tres armazones** —`base-publica.html`, `base-acceso.html` y `base-aplicacion.html`— colgando de una base común, y que `INT-2` tendrá el suyo en el Sprint 2.
 
 ---
 

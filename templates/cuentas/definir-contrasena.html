@@ -1,58 +1,80 @@
-{% extends "base.html" %}
+{% extends "base-acceso.html" %}
 
 {% comment %} TT-11. La misma pantalla sirve a los cuatro roles: el mecanismo de acceso es
-   único (DEC-3). La reutilizan HU-39, HU-41 y HU-03. {% endcomment %}
+   único (`DEC-3`). La reutilizan `HU-39`, `HU-41` y `HU-03`. {% endcomment %}
 
 {% block titulo %}Define tu contraseña · SmartFood{% endblock %}
 
+{% block titulo_panel %}
+  Tu cuenta,<br><span class="texto-degradado">solo tuya</span>
+{% endblock %}
+
 {% block contenido %}
-  <div class="mx-auto max-w-md rounded-lg bg-white p-6 shadow-sm sm:p-8">
-    {% if validlink %}
-      <h1 class="text-xl font-semibold tracking-tight text-marca-900">Define tu contraseña</h1>
-      <p class="mt-2 text-sm text-slate-600">
-        Nadie más la conocerá. Es la única forma de entrar a tu cuenta.
-      </p>
+  {% if validlink %}
+    <h1 class="font-display text-3xl tracking-tight text-texto">Define tu contraseña</h1>
+    <p class="mt-2 text-base text-texto-suave">
+      Nadie más la conocerá. Es la única forma de entrar a tu cuenta.
+    </p>
 
-      <form method="post" class="mt-6 space-y-4">
-        {% csrf_token %}
+    <form method="post" class="mt-6 flex flex-col gap-4">
+      {% csrf_token %}
 
-        {% if form.errors %}
-          <div class="rounded-md bg-alerta-100 px-4 py-3 text-sm text-alerta-700">
+      {% if form.errors %}
+        <div role="alert"
+             class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+          <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div class="text-sm text-error-fuerte">
             {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-            {% for campo in form %}
-              {% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}
-            {% endfor %}
+            {% for campo in form %}{% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}{% endfor %}
           </div>
-        {% endif %}
+        </div>
+      {% endif %}
 
-        {% for campo in form %}
-          <div>
-            <label for="{{ campo.id_for_label }}" class="block text-sm font-medium text-slate-700">
-              {{ campo.label }}
-            </label>
+      {% comment %} Los dos campos los pone Django (`PasswordResetConfirmView`): se
+         recorren en vez de escribirlos, para que el día que el formulario cambie
+         no haya que acordarse de esta plantilla. {% endcomment %}
+      {% for campo in form %}
+        <div class="flex flex-col gap-1">
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">
+            {{ campo.label }}
+          </label>
+          <div class="relative">
+            <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+                 aria-hidden="true"><use href="#i-candado"></use></svg>
             <input type="password" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
                    autocomplete="new-password" required
-                   class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2
-                          focus:border-marca-600 focus:outline-none focus:ring-1 focus:ring-marca-600">
-            {% if campo.help_text %}
-              <div class="mt-1 text-xs text-slate-500">{{ campo.help_text|safe }}</div>
-            {% endif %}
+                   class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+                          transition-colors hover:border-acento focus:border-acento focus:outline-none
+                          {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
           </div>
-        {% endfor %}
+          {% if campo.help_text %}
+            {% comment %} Las reglas de contraseña de Django llegan como lista HTML. Van al
+               mismo escalón de texto que el resto del apoyo: a 12 px, lo que
+               explica un campo se leía más pequeño que lo que se escribe
+               dentro. {% endcomment %}
+            <div class="text-sm text-texto-suave [&_li]:list-disc [&_ul]:mt-1 [&_ul]:flex
+                        [&_ul]:flex-col [&_ul]:gap-1 [&_ul]:pl-5">{{ campo.help_text|safe }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
 
-        <button type="submit"
-                class="w-full rounded-md bg-marca-700 px-4 py-2 font-medium text-white
-                       hover:bg-marca-600 focus:outline-none focus:ring-2 focus:ring-marca-600
-                       focus:ring-offset-2">
-          Guardar contraseña
-        </button>
-      </form>
-    {% else %}
-      <h1 class="text-xl font-semibold tracking-tight text-marca-900">Este enlace ya no sirve</h1>
-      <p class="mt-2 text-sm text-slate-600">
+      <button type="submit"
+              class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md
+                     bg-primario text-lg font-medium whitespace-nowrap text-sobre-primario
+                     transition-colors hover:bg-primario-fuerte">
+        Guardar contraseña
+      </button>
+    </form>
+  {% else %}
+    <div class="flex flex-col gap-3">
+      <span class="flex h-11 w-11 items-center justify-center rounded-md bg-aviso-suave text-aviso-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      </span>
+      <h1 class="font-display text-3xl tracking-tight text-texto">Este enlace ya no sirve</h1>
+      <p class="text-base text-texto-suave">
         Las invitaciones caducan y dejan de valer en cuanto se usan. Si todavía no
         definiste tu contraseña, pide que te reenvíen la invitación.
       </p>
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
 {% endblock %}

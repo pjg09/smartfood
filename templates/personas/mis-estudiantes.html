@@ -1,53 +1,95 @@
-{% extends "base.html" %}
+{% extends "base-aplicacion.html" %}
+{% load interfaz %}
 
-{% comment %} TT-29. Interfaz del acudiente (`INT-1`, `HU-04`): sus estudiantes a cargo y
-   el selector para moverse entre ellos.
+{% comment %} TT-29. Interfaz del acudiente (`INT-1`, `HU-04`): sus estudiantes a cargo y el
+   selector para moverse entre ellos.
 
-   Móvil primero: es como entra el acudiente (`[INT-1]`). El selector es una
-   fila de botones HTMX que reemplazan el panel de la derecha; cada uno pide su
-   fragmento, no la página entera (`DT-16`). {% endcomment %}
+   Móvil primero: es como entra el acudiente (`[INT-1]`). El selector es una fila
+   de botones HTMX que reemplazan el panel de abajo; cada uno pide su fragmento,
+   no la página entera (`DT-16`). {% endcomment %}
 
 {% block titulo %}Mis estudiantes · SmartFood{% endblock %}
 
 {% block contenido %}
-  <h1 class="text-2xl font-semibold tracking-tight text-marca-900">Mis estudiantes</h1>
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
 
-  {% if estudiantes %}
-    <p class="mt-2 max-w-prose text-slate-600">
-      {% if estudiantes|length == 1 %}
-        Tienes un estudiante a tu cargo.
-      {% else %}
-        Tienes {{ estudiantes|length }} estudiantes a tu cargo, en esta misma cuenta.
-        Elige de quién quieres ver el detalle.
+    <header class="flex flex-col gap-1">
+      {% comment %} Saluda a quien tiene la sesión abierta, que es el acudiente. El
+         estudiante se elige abajo y su nombre ya sale en el selector: repetirlo
+         aquí confunde sobre a quién se le está hablando. {% endcomment %}
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">
+        Hola{% if user.nombre %}, {{ user.nombre|nombre_de_pila }}{% endif %}
+      </h1>
+      <p class="text-base font-medium text-texto-suave">
+        {% if estudiantes %}
+          {% if estudiantes|length == 1 %}
+            Tienes un estudiante a tu cargo.
+          {% else %}
+            Tienes {{ estudiantes|length }} estudiantes a tu cargo, en esta misma cuenta.
+          {% endif %}
+        {% else %}
+          Tu cuenta funciona; lo que falta es que te vinculen un estudiante.
+        {% endif %}
+      </p>
+    </header>
+
+    {% if estudiantes %}
+      {% comment %} El selector. Con un solo estudiante no aporta nada y no se dibuja.
+
+         Marcar cuál está elegido es cosa del navegador y no del servidor: el
+         fragmento que devuelve HTMX es el detalle, no el selector (`DT-16`), así
+         que `interfaz.js` mueve el `aria-current` al pulsar. Es cromo — quién
+         puede ver a qué estudiante lo decide el selector de datos, que responde
+         404 para uno que no esté a cargo. {% endcomment %}
+      {% if estudiantes|length > 1 %}
+        <div data-selector-estudiante role="group" aria-label="Elegir estudiante"
+             class="flex flex-wrap gap-2">
+          {% for estudiante in estudiantes %}
+            <button type="button"
+                    hx-get="{% url 'estudiante-seleccionado' estudiante.id %}"
+                    hx-target="#detalle-del-estudiante"
+                    hx-swap="innerHTML"
+                    hx-indicator="#cargando-estudiante"
+                    {% if estudiante == seleccionado %}aria-current="true"{% endif %}
+                    class="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4
+                           text-base font-medium whitespace-nowrap transition-colors
+                           border-borde bg-superficie text-texto hover:border-acento
+                           aria-[current=true]:border-transparente aria-[current=true]:bg-primario
+                           aria-[current=true]:text-sobre-primario">
+              {{ estudiante.nombre }}
+            </button>
+          {% endfor %}
+          {% comment %} Sin esto, en una red lenta el panel se queda igual un segundo y se
+             vuelve a pulsar. La clase la enciende y la apaga HTMX. {% endcomment %}
+          <span id="cargando-estudiante" class="htmx-indicator self-center text-sm text-texto-suave">
+            Cargando…
+          </span>
+        </div>
       {% endif %}
-    </p>
 
-    {# El selector. Con un solo estudiante no aporta nada y no se dibuja. #}
-    {% if estudiantes|length > 1 %}
-      <div class="mt-6 flex flex-wrap gap-2" role="group" aria-label="Elegir estudiante">
-        {% for estudiante in estudiantes %}
-          <button type="button"
-                  hx-get="{% url 'estudiante-seleccionado' estudiante.id %}"
-                  hx-target="#detalle-del-estudiante"
-                  hx-swap="innerHTML"
-                  class="rounded-full border border-marca-600 px-4 py-2 text-sm font-medium
-                         text-marca-700 hover:bg-marca-100 focus:outline-none
-                         focus:ring-2 focus:ring-marca-600 focus:ring-offset-2">
-            {{ estudiante.nombre }}
-          </button>
-        {% endfor %}
+      <div id="detalle-del-estudiante">
+        {% include "partials/estudiante-seleccionado.html" %}
+      </div>
+    {% else %}
+      {% comment %} Sin estudiantes vinculados se llega por dos caminos que el acudiente no
+         puede distinguir: o la institución todavía no terminó de cargar el
+         padrón, o su estudiante se dio de baja. El texto no afirma cuál es
+         —decir el equivocado preocupa de más o de menos— y se limita a decir a
+         quién preguntar. Y es a la institución: el padrón es suyo (`HU-01`), la
+         cafetería no puede tocarlo. {% endcomment %}
+      <div role="status"
+           class="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-md border
+                  border-dashed border-borde bg-superficie p-8 text-center">
+        <span class="flex h-14 w-14 items-center justify-center rounded-full bg-acento-suave">
+          <svg class="h-7 w-7 text-acento-fuerte" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+        </span>
+        <h2 class="font-display text-xl text-texto">Todavía no tienes estudiantes a tu cargo</h2>
+        <p class="text-base font-medium text-texto-suave">
+          Los vincula la institución educativa al cargar sus datos; no se añaden
+          desde aquí. Escríbeles y lo revisan: en cuanto lo hagan, aparecerán aquí
+          sin que tengas que hacer nada más.
+        </p>
       </div>
     {% endif %}
-
-    <div id="detalle-del-estudiante" class="mt-6">
-      {% include "partials/estudiante-seleccionado.html" %}
-    </div>
-  {% else %}
-    <div class="mt-6 rounded-lg bg-white p-6 shadow-sm" role="status">
-      <p class="text-slate-600">
-        No hay ningún estudiante a tu cargo todavía. Los vincula la institución
-        educativa al cargar sus datos; no se añaden desde aquí.
-      </p>
-    </div>
-  {% endif %}
+  </div>
 {% endblock %}

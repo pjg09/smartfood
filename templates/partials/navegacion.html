@@ -1,0 +1,72 @@
+{% comment %} La lista de secciones del rol (DT-23). La pinta `menu_de_navegacion`.
+
+   Vive sobre el panel oscuro de la barra, así que usa los tokens `nav-*` y no
+   los de superficie: `text-texto` en tema claro es el marino y aquí
+   desaparecería.
+
+   La entrada activa lleva el degradado de marca —teal a verde agua— con texto
+   BLANCO y una pestaña clara pegada al borde izquierdo. El blanco es lo que la
+   hace destacar sobre el resto de la lista: 14,66 de contraste contra la barra,
+   frente a los 9,15 del texto inactivo. Para que cumpla AA el degradado va algo
+   oscurecido respecto a los tonos plenos (con ellos, el blanco caía a 2,64 en el
+   extremo verde); las medidas están en `estilos/fuente.css`.
+
+   Qué es cada cosa:
+     entradas     las secciones del rol, ya filtradas
+     ruta_actual  el `view_name` de la petición, para marcar la activa
+     colapsable   si las etiquetas se esconden al colapsar la barra
+{% endcomment %}
+<nav aria-label="Secciones" class="flex h-full flex-col gap-1 py-6">
+  {% for entrada in entradas %}
+    <a href="{% url entrada.ruta %}"
+       {% if colapsable %}title="{{ entrada.etiqueta }}"{% endif %}
+       {% if entrada.ruta == ruta_actual %}aria-current="page"{% endif %}
+       class="relative flex h-14 items-center overflow-hidden rounded-lg mx-4 px-6
+              transition-all duration-300
+              {% if colapsable %}colapsada:mx-2 colapsada:justify-center colapsada:px-3{% endif %}
+              {% if entrada.ruta == ruta_actual %}
+                bg-linear-135 from-nav-activo to-nav-activo-fin font-semibold
+                text-sobre-nav-activo shadow-md
+              {% else %}
+                font-medium text-nav-texto hover:translate-x-1 hover:bg-nav-hover
+              {% endif %}">
+      {% if entrada.ruta == ruta_actual %}
+        <span aria-hidden="true"
+              class="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-sobre-nav-activo
+                     {% if colapsable %}colapsada:hidden{% endif %}"></span>
+      {% endif %}
+      <span class="flex w-6 shrink-0 items-center justify-center">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#{{ entrada.icono }}"></use></svg>
+      </span>
+      <span class="ml-4 flex-1 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
+        {{ entrada.etiqueta }}
+      </span>
+    </a>
+  {% endfor %}
+
+  {% comment %} Cerrar sesión cierra la lista, separado por una línea: es la única
+     acción de la barra que no navega a ningún sitio.
+
+     Es un formulario y no un enlace porque `/salir/` **solo acepta POST** — un
+     `GET` responde 405. Cerrar la sesión de alguien es un efecto, y los efectos
+     no se disparan porque un acelerador del navegador precargue un enlace.
+  {% endcomment %}
+  <form method="post" action="{% url 'salir' %}"
+        class="mt-auto mx-4 {% if colapsable %}colapsada:mx-2{% endif %}">
+    {% csrf_token %}
+    {% comment %} El margen va en el formulario y no en el botón: con `w-full` y `mx-4`
+       a la vez, el botón mide el ancho de la barra MÁS los márgenes y se sale. {% endcomment %}
+    <button type="submit"
+            {% if colapsable %}title="Cerrar sesión"{% endif %}
+            class="flex h-14 w-full items-center rounded-lg border-t border-nav-hover pt-1
+                   px-6 font-medium text-nav-texto transition-colors hover:bg-nav-hover
+                   {% if colapsable %}colapsada:justify-center colapsada:px-3{% endif %}">
+      <span class="flex w-6 shrink-0 items-center justify-center">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-salir"></use></svg>
+      </span>
+      <span class="ml-4 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
+        Cerrar sesión
+      </span>
+    </button>
+  </form>
+</nav>

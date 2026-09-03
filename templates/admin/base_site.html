@@ -1,0 +1,253 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% comment %} `INT-3` con los colores del resto del sistema (DT-23).
+
+   El admin de Django **no lleva plantillas propias** (`DT-2`): es donde trabajan
+   la institución (`USR-5`) y la administración de la cafetería (`USR-4`), y
+   rehacerlo pantalla por pantalla sería construir a mano lo que `DT-2` decidió no
+   construir. Lo que sí se puede hacer sin tocar una sola plantilla de Django es
+   **redefinir sus variables de color**, que es exactamente lo que hay aquí: el
+   admin ya está escrito contra `--primary`, `--header-bg` y compañía desde
+   Django 4.2, así que basta con darles los valores de la marca.
+
+   Los valores van escritos a mano y no como `var(--color-…)` de Tailwind: esta
+   página **no carga la hoja de Tailwind**. Incluirla traería su `preflight`
+   —el reset de márgenes, tipos y tablas— y desarmaría el admin entero. Son los
+   mismos colores de `estilos/fuente.css`, copiados; si la marca cambia, este
+   fichero es el tercer sitio que tocar, después de la hoja y del correo.
+
+   **El tema oscuro del admin es el suyo, no el nuestro.** Django lo resuelve con
+   `prefers-color-scheme` y su propio selector `data-theme`, y nuestro selector
+   escribe `data-tema` en la aplicación. Son dos mecanismos distintos y no se
+   fuerzan a coincidir: intentarlo dejaría media pantalla en un tema y media en
+   otro cada vez que uno de los dos cambie.
+
+   Comprobados los contrastes que el cambio toca: blanco sobre el marino de la
+   cabecera 12,03; el teal de acento, en su versión oscurecida (#1d6b7a), 6,11
+   sobre blanco — el teal pleno de marca da 3,79 y no llega a AA, así que **no se
+   usa para texto ni para fondos con texto encima**.
+{% endcomment %}
+
+{% block extrastyle %}{{ block.super }}
+  <style>
+    /* Las mismas tipografías auto-hospedadas de la aplicación. Se declaran otra
+       vez porque el admin no carga la hoja de Tailwind; los ficheros son los
+       mismos, así que el navegador los reutiliza de su caché. */
+    @font-face {
+      font-family: "Inter";
+      font-style: normal;
+      font-weight: 400 600;
+      font-display: swap;
+      src: url("{% static 'fuentes/inter-400-600-latin.woff2' %}") format("woff2");
+    }
+    @font-face {
+      font-family: "Poppins";
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url("{% static 'fuentes/poppins-600-latin.woff2' %}") format("woff2");
+    }
+
+    html[data-theme="light"], :root {
+      /* Acento oscurecido, no el teal pleno: el admin pone texto encima. */
+      --primary: #1d6b7a;
+      --secondary: #1a375c;
+      --accent: #7fd4e2;
+      --primary-fg: #fff;
+
+      --body-fg: #1a375c;
+      --body-quiet-color: #536985;
+      --body-medium-color: #354f70;
+      --body-loud-color: #11243c;
+
+      --header-color: #b8c6d6;
+      --header-branding-color: var(--accent);
+      --header-bg: var(--secondary);
+      /* Fijo, no heredado del primario: ver la nota del bloque oscuro. */
+      --header-link-color: #f4f7fa;
+
+      --breadcrumbs-fg: #b8c6d6;
+      --breadcrumbs-link-fg: #f4f7fa;
+      --breadcrumbs-bg: #142945;
+
+      --link-fg: #1d6b7a;
+      --link-hover-color: #142945;
+      --link-selected-fg: #1a375c;
+
+      --hairline-color: #eaeaea;
+      --border-color: #c6cdd6;
+
+      /* El rojo del sistema significa dinero o seguridad alimentaria (`INV-1`,
+         `INV-5`), y aquí se usa para lo mismo: errores y borrados. */
+      --error-fg: #9e3333;
+      --delete-button-bg: #9e3333;
+      --delete-button-hover-bg: #7a2828;
+
+      --message-info-bg: #e9f4f6;
+      --message-success-bg: #ecf1ef;
+      --message-warning-bg: #f6f0e8;
+      --message-error-bg: #fbecec;
+
+      --darkened-bg: #f8f9fa;
+      --selected-bg: #f1f3f5;
+      --selected-row: #e9f4f6;
+
+      --button-bg: var(--secondary);
+      --button-hover-bg: #142945;
+      --default-button-bg: #1d6b7a;
+      --default-button-hover-bg: #1a375c;
+      --close-button-bg: #536985;
+      --close-button-hover-bg: #354f70;
+      --object-tools-bg: #1d6b7a;
+      --object-tools-hover-bg: #142945;
+
+      --font-family-primary: "Inter", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* --- TEMA OSCURO ---
+       **Van DOS bloques con los mismos valores, y no es un descuido.** Django
+       resuelve su tema oscuro con `@media (prefers-color-scheme: dark) { :root }`
+       y con `html[data-theme="dark"]` para la elección explícita del botón; como
+       este `<style>` va después de sus hojas, un `:root` nuestro sin la media
+       query GANA a los dos y deja los colores claros sobre el fondo negro de
+       Django: texto azul marino sobre negro y el panel de acciones en blanco.
+       Comprobado en pantalla, no deducido.
+
+       En oscuro el acento se aclara y el texto que va encima pasa a ser oscuro:
+       el blanco sobre teal se queda en 3,79 y no cumple AA. Es la misma regla
+       que sigue la aplicación. */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #278fa2;
+        --primary-fg: #060c14;
+        --secondary: #102239;
+        --accent: #7fd4e2;
+
+        --body-fg: #eff1f4;
+        --body-quiet-color: #a8b3c1;
+        --body-medium-color: #c6cdd6;
+        --body-loud-color: #ffffff;
+        --body-bg: #0c1929;
+
+        --header-color: #b8c6d6;
+        --header-bg: #102239;
+        /* **Explícito, y no `var(--primary-fg)` como lo deja Django.** En oscuro el
+           primario pasa a ser el teal y su tinta pasa a ser oscura (#060c14), que es
+           lo correcto ENCIMA de un botón teal — pero la cabecera es marina en los DOS
+           temas, así que ahí esa misma tinta deja «ver el sitio / cambiar contraseña /
+           terminar sesión» casi negros sobre azul oscuro. Es la trampa que resuelven
+           las constantes `sobre-oscuro`. Da 10,9 de contraste sobre el marino. */
+        --header-link-color: #f4f7fa;
+        --breadcrumbs-bg: #0d1b2e;
+        --breadcrumbs-fg: #b8c6d6;
+        --breadcrumbs-link-fg: #f4f7fa;
+
+        --link-fg: #5dabb9;
+        --link-hover-color: #84c2bb;
+        --link-selected-fg: #7fd4e2;
+
+        --hairline-color: #162f4e;
+        --border-color: #23364f;
+        --darkened-bg: #102239;
+        --selected-bg: #162f4e;
+        --selected-row: #1d3352;
+
+        --error-fg: #e07e7e;
+        --delete-button-bg: #9e3333;
+        --delete-button-hover-bg: #7a2828;
+        --button-bg: #1d6b7a;
+        --button-hover-bg: #278fa2;
+        --default-button-bg: #278fa2;
+        --default-button-hover-bg: #1d6b7a;
+        --object-tools-bg: #1d6b7a;
+        --object-tools-hover-bg: #278fa2;
+
+        --message-info-bg: #0d2632;
+        --message-success-bg: #16252a;
+        --message-warning-bg: #25211d;
+        --message-error-bg: #2c1b24;
+      }
+    }
+
+    html[data-theme="dark"] {
+      --primary: #278fa2;
+      --primary-fg: #060c14;
+      --secondary: #102239;
+      --accent: #7fd4e2;
+
+      --body-fg: #eff1f4;
+      --body-quiet-color: #a8b3c1;
+      --body-medium-color: #c6cdd6;
+      --body-loud-color: #ffffff;
+      --body-bg: #0c1929;
+
+      --header-color: #b8c6d6;
+      --header-bg: #102239;
+      /* **Explícito, y no `var(--primary-fg)` como lo deja Django.** En oscuro el
+         primario pasa a ser el teal y su tinta pasa a ser oscura (#060c14), que es
+         lo correcto ENCIMA de un botón teal — pero la cabecera es marina en los DOS
+         temas, así que ahí esa misma tinta deja «ver el sitio / cambiar contraseña /
+         terminar sesión» casi negros sobre azul oscuro. Es la trampa que resuelven
+         las constantes `sobre-oscuro`. Da 10,9 de contraste sobre el marino. */
+      --header-link-color: #f4f7fa;
+      --breadcrumbs-bg: #0d1b2e;
+      --breadcrumbs-fg: #b8c6d6;
+      --breadcrumbs-link-fg: #f4f7fa;
+
+      --link-fg: #5dabb9;
+      --link-hover-color: #84c2bb;
+      --link-selected-fg: #7fd4e2;
+
+      --hairline-color: #162f4e;
+      --border-color: #23364f;
+      --darkened-bg: #102239;
+      --selected-bg: #162f4e;
+      --selected-row: #1d3352;
+
+      --error-fg: #e07e7e;
+      --delete-button-bg: #9e3333;
+      --delete-button-hover-bg: #7a2828;
+      --button-bg: #1d6b7a;
+      --button-hover-bg: #278fa2;
+      --default-button-bg: #278fa2;
+      --default-button-hover-bg: #1d6b7a;
+      --object-tools-bg: #1d6b7a;
+      --object-tools-hover-bg: #278fa2;
+
+      --message-info-bg: #0d2632;
+      --message-success-bg: #16252a;
+      --message-warning-bg: #25211d;
+      --message-error-bg: #2c1b24;
+    }
+
+    /* El nombre del sitio, con la tipografía de titulares y «Food» en el acento,
+       igual que en la aplicación. */
+    #site-name a {
+      font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+    #site-name .marca-acento { color: var(--accent); }
+  </style>
+{% endblock %}
+
+{% comment %} Los dos bloques que traía el `base_site.html` de Django y que este fichero
+   sustituye: el título de la pestaña y el vaciado de la navegación global. Si no
+   se repiten aquí, se pierden — extender no conserva lo que el original
+   sobrescribía. {% endcomment %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+  {% comment %} El nombre se escribe aquí en vez de usar `{{ site_header }}` porque lleva
+     marcado dentro —«Food» va en el acento— y una cadena de ajustes no puede
+     traer HTML. `site_header` sigue siendo la fuente del título de la pestaña,
+     donde no cabe marcado (`config/urls.py`). {% endcomment %}
+  <div id="site-name">
+    <a href="{% url 'admin:index' %}">Smart<span class="marca-acento">Food</span></a>
+    <span style="color: var(--header-color)"> · Administración</span>
+  </div>
+  {% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

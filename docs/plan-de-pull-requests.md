@@ -9,9 +9,9 @@
 | documentos_fuente | `./sprint-1-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`) |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | tareas cubiertas | 56 de 56 (`TT-01` … `TT-56`) |
-| pull requests | 24 (`PR-01` … `PR-24`) |
+| pull requests | 25 (`PR-01` … `PR-25`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -880,6 +880,38 @@ Va el último **por número, no por fecha**: las tres empiezan el primer día y 
 depende de nada. El PR recoge lo que de ellas queda en el repositorio —el registro de
 riesgos y el material de cierre—; el tablero de `TT-47` vive en su herramienta y aquí solo
 se enlaza.
+
+---
+
+#### `PR-25` — Sistema visual de la interfaz
+
+| | |
+|---|---|
+| Título del PR | `feat(plantillas): adoptar el sistema visual validado en toda la interfaz` |
+| Rama | `feat/DT-23-sistema-visual` |
+| Responsable | Pedro |
+| Historia | — (transversal) |
+| Invariantes | ninguna. `INV-4` sigue en la capa de datos: aquí no se esconde ningún botón |
+| Estado | ☐ Pendiente |
+
+**No cubre ninguna tarea del Sprint Backlog, y por eso está fuera de las 56.** Es una
+decisión del equipo tomada el 2026-09-01 y registrada como `DT-23`: el sistema visual
+—paleta, tipografía, armazones y los dos temas— se adopta entero de un producto en
+producción del mismo dominio en lugar de diseñarse aquí. Se anota en este documento porque
+**es el único sitio donde vive el estado**, y un PR que toca las diez plantillas del
+proyecto no puede quedar sin registrar.
+
+Toca `estilos/fuente.css`, las tres bases nuevas (`base-publica.html`, `base-acceso.html`,
+`base-aplicacion.html`), las diez plantillas, `admin/base_site.html` para `INT-3`, y añade
+dos pruebas que impiden volver atrás: ni un color literal fuera de la hoja, ni una clase de
+la paleta de fábrica de Tailwind —que, borrada la paleta, **no pinta nada y tampoco da
+error**—.
+
+Qué **no** hace: no cambia ninguna vista, ningún servicio, ningún selector ni ninguna
+migración. `manage.py makemigrations --check` no detecta nada, y las 416 pruebas que ya
+existían siguen pasando sin tocarlas —salvo una de `TT-37`, que buscaba «el primer `<svg>`
+de la página» para comprobar el código de barras y ahora lo busca por su `role="img"`,
+porque la página lleva iconos desde este PR.
 
 ---
 

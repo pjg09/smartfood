@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% comment %} Armazón de las pantallas de puerta (TT-56, TT-11, DT-23): entrar y definir la
+   contraseña de la invitación.
+
+   Dos columnas: panel de marca a la izquierda y formulario a la derecha. **El
+   panel solo aparece desde `escritorio`**: en un teléfono ocuparía media
+   pantalla para no decir nada y empujaría el formulario bajo el pliegue, que en
+   la pantalla de entrar es el peor sitio posible.
+
+   El panel NO va `aria-hidden`: lo decorativo son las capas de fondo, no el
+   texto. Ocultar la sección entera dejaría a quien usa lector de pantalla sin lo
+   único que estas pantallas cuentan del producto — y como en móvil está en
+   `display:none`, tampoco se lee dos veces.
+
+   Bloques:
+     titulo_panel  el titular del panel oscuro; ya trae uno por defecto
+     contenido     el formulario
+{% endcomment %}
+
+{% block armazon %}
+  <div class="grid min-h-dvh escritorio:grid-cols-2">
+
+    <section class="superficie-heroe relative hidden overflow-hidden p-12
+                    escritorio:flex escritorio:flex-col escritorio:justify-between">
+      <div aria-hidden="true" class="malla-heroe pointer-events-none absolute inset-0"></div>
+      <div aria-hidden="true"
+           class="aurora aurora-teal pointer-events-none absolute -top-32 -left-24 h-96 w-96 opacity-55"></div>
+      <div aria-hidden="true"
+           class="aurora aurora-agua pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 opacity-45"></div>
+
+      {% comment %} Sobre el marino —que es el mismo en los dos temas— los alias que
+         siguen al tema fallan: `text-texto` en claro ES ese marino. De ahí el
+         logotipo en tono oscuro y las constantes `sobre-oscuro`. {% endcomment %}
+      <div class="relative">{% include "partials/marca.html" with tono="oscuro" tamano="lg" %}</div>
+
+      <div class="relative">
+        <p class="font-display text-4xl leading-tight text-sobre-oscuro">
+          {% block titulo_panel %}
+            La cafetería del colegio,<br><span class="texto-degradado">bajo control</span>
+          {% endblock %}
+        </p>
+        <p class="mt-5 max-w-md text-lg text-sobre-oscuro-suave">
+          Saldo, límite diario y alérgenos bloqueados. En el mismo sitio para la
+          familia y para quien está en la caja.
+        </p>
+
+        {% comment %} Las tres mismas de la portada, y a propósito: quien llega aquí desde
+           el inicio ve continuidad. Las tres son invariantes del sistema
+           (`INV-1`, `INV-5`, `INV-2`), no argumentos de venta. {% endcomment %}
+        <ul class="mt-10 flex flex-col gap-3">
+          <li class="flex items-center gap-3 text-base text-sobre-oscuro-suave">
+            <span class="cristal flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-saldo"></use></svg>
+            </span>
+            Ninguna compra deja el saldo en negativo.
+          </li>
+          <li class="flex items-center gap-3 text-base text-sobre-oscuro-suave">
+            <span class="cristal flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-escudo"></use></svg>
+            </span>
+            Lo que la familia bloquea, la cafetería no lo desbloquea.
+          </li>
+          <li class="flex items-center gap-3 text-base text-sobre-oscuro-suave">
+            <span class="cristal flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+              <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-documento"></use></svg>
+            </span>
+            Cada movimiento queda en el historial y se puede reconstruir.
+          </li>
+        </ul>
+      </div>
+
+      <p class="relative text-sm text-sobre-oscuro-suave">
+        Prototipo académico · Proyecto Aplicado en TIC 1 · UPB · datos ficticios
+      </p>
+    </section>
+
+    <section class="flex flex-col bg-fondo">
+      <div class="flex items-center justify-between p-4 escritorio:p-6">
+        <a href="{% url 'inicio' %}"
+           class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm text-texto-suave
+                  transition-colors hover:text-acento-fuerte">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+          Volver al inicio
+        </a>
+        {% include "partials/selector-de-tema.html" %}
+      </div>
+
+      <div id="contenido" class="flex flex-1 items-center justify-center px-4 pt-4 pb-12 escritorio:px-8">
+        <div class="w-full max-w-sm">
+          {% comment %} En móvil no hay panel de marca, así que el nombre va aquí. Sobre el
+             fondo de la página sí sigue al tema. {% endcomment %}
+          <div class="mb-8 escritorio:hidden">{% include "partials/marca.html" %}</div>
+
+          {% include "partials/mensajes.html" %}
+          {% block contenido %}{% endblock %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}
