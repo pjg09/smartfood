@@ -160,8 +160,10 @@ es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad
 historial del que sale el saldo (`INV-2`). A un estudiante de baja o desactivado no se le
 ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-2`).
 
-`/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno. Si alguno está
-de baja, lo dice. El saldo, el límite diario y las restricciones **son suyos y llegan en los
+`/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno, **el saldo de
+cada uno y sus últimos cinco movimientos** (`HU-07`). El saldo no es un campo guardado: se
+calcula sumando el historial al pedir la página (`INV-2`), y el historial va debajo
+precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice. El saldo, el límite diario y las restricciones **son suyos y llegan en los
 sprints 2 y 3**; hoy la pantalla declara dónde irán y **cuándo**, en vez de enseñar un cero
 —un saldo en cero y un saldo que todavía no existe no son lo mismo—.
 
@@ -198,7 +200,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Ver el saldo en la interfaz del acudiente (`HU-07`), restricciones y límite diario (`HU-09`…`HU-13`),
+Restricciones y límite diario (`HU-09`…`HU-13`),
 identificación y venta en el punto de venta (`HU-15`…`HU-22`), inventario
 (`HU-27`…`HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).
@@ -207,9 +209,9 @@ Del punto de venta existe **la pantalla y su puerta**, no lo que ocurre dentro: 
 `TT-58` son tareas de habilitación y **no cierran ninguna historia**. Saldo, restricciones
 y venta llegan en el Sprint 2, salvo las restricciones, que son del 3.
 
-**Recargar ya está** (`HU-06`), y el saldo **se calcula** desde el historial y se
-comprueba contra él (`HU-08`, `TST-3`). Lo que falta del dinero es enseñárselo al
-acudiente en su panel, que es `HU-07` (`PR-04`).
+**El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
+historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
+es la venta del punto de venta.
 
 Las apps `inventario` y `reportes` **no están creadas**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` existe desde `TT-57` porque la
