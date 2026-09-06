@@ -85,9 +85,9 @@ El punto de venta es una **interfaz nueva** (`INT-2`). No existía nada de ella 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-59` | App `billetera`: modelos de billetera y de movimiento, **sin columna de saldo** (`DT-4`) | Pedro | ☐ |
-| `TT-60` | Servicio de recarga que asienta un movimiento dentro de una transacción | Pedro | ☐ |
-| `TT-61` | Pantalla de recarga en la interfaz del acudiente | Carlos | ☐ |
+| `TT-59` | App `billetera`: modelos de billetera y de movimiento, **sin columna de saldo** (`DT-4`) | Pedro | ☑ |
+| `TT-60` | Servicio de recarga que asienta un movimiento dentro de una transacción | Pedro | ☑ |
+| `TT-61` | Pantalla de recarga en la interfaz del acudiente | Carlos | ☑ |
 
 `TT-59` es la tarea más determinante del sprint. **No existe una columna `saldo`**: el saldo es la suma de los movimientos (`DT-4`), y de ahí sale `INV-2` por construcción. Si aparece una columna que se actualiza, `HU-08` deja de cumplirse y hay que rehacer el modelo.
 

@@ -77,7 +77,13 @@ PERMISOS_POR_ROL = {
 
 FUNCIONES_PENDIENTES_DE_MODELO = {
     Rol.ACUDIENTE: [
-        "Recargar saldo y fijar límite diario",
+        # **«Recargar saldo» ya está construida** (`HU-06`, `TT-60`), y aun así
+        # sigue en esta lista: lo que no tiene es un permiso de Django, porque el
+        # acudiente no entra al admin. `INT-1` es su interfaz (`DT-2`), y quién
+        # puede recargar lo decide `billetera.services` con el `actor` que
+        # recibe. Un permiso aquí no protegería nada y sugeriría un camino por el
+        # admin que no existe.
+        "Recargar saldo (hecha en INT-1, sin permiso de admin) y fijar límite diario",
         "Configurar y retirar restricciones alimentarias",
         "Consultar restricciones de un estudiante",
         "Consultar saldo de un estudiante",

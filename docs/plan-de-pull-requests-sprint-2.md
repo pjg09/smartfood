@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **2** de 37 | **1** de 16 |
-| Pendientes | 35 | 15 |
+| **Finalizadas** | **5** de 37 | **2** de 16 |
+| Pendientes | 32 | 14 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 1 | 14 |
-| Carlos | 1 | 11 |
+| Pedro | 3 | 14 |
+| Carlos | 2 | 11 |
 | Alejandro | 0 | 9 |
 | Naomi | 0 | 3 |
 
@@ -97,7 +97,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
 | `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☑ |
-| `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☐ |
+| `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☑ |
 | `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☐ |
 | `PR-04` | `TT-64` | `HU-07` | ☐ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☐ |
@@ -158,13 +158,13 @@ lleva navegación ni diálogos, y todo es alcanzable con teclado (`DT-16`).
 | Responsables | Pedro y Carlos |
 | Historia | `HU-06` |
 | Invariantes | sienta la base de `INV-2` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-59` | App `billetera`: modelos de billetera y de movimiento, **sin columna de saldo** (`DT-4`) | Pedro | ☐ |
-| `TT-60` | Servicio de recarga que asienta un movimiento dentro de una transacción | Pedro | ☐ |
-| `TT-61` | Pantalla de recarga en la interfaz del acudiente | Carlos | ☐ |
+| `TT-59` | App `billetera`: modelos de billetera y de movimiento, **sin columna de saldo** (`DT-4`) | Pedro | ☑ |
+| `TT-60` | Servicio de recarga que asienta un movimiento dentro de una transacción | Pedro | ☑ |
+| `TT-61` | Pantalla de recarga en la interfaz del acudiente | Carlos | ☑ |
 
 > **El PR más determinante del sprint.** Si `TT-59` introduce una columna `saldo` que se
 > actualiza, `INV-2` deja de cumplirse por construcción y `HU-08` pasa a depender de que

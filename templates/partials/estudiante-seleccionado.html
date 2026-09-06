@@ -69,9 +69,25 @@
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
         </span>
         <h3 class="text-base font-semibold text-texto-suave">Saldo</h3>
+        {% comment %} La cifra no está todavía: consultarla es `HU-07` (`PR-04`). Lo que sí
+           está es recargar, que es `HU-06`. Se enseña lo que se puede hacer, no
+           un cero que se leería como un saldo de cero. {% endcomment %}
         <p class="text-base font-medium text-texto-suave">
-          Billetera individual de {{ seleccionado.nombre }}. Llega en el Sprint 2.
+          Billetera individual de {{ seleccionado.nombre }}. Ver el saldo llega en el Sprint 2.
         </p>
+        {% if seleccionado.puede_operar %}
+          {% comment %} A un estudiante de baja o desactivado no se le recarga (`INVD-2`), así
+             que no se le ofrece. **Esconder el enlace no es lo que lo impide**: el
+             servicio rechaza la recarga entre por donde entre (`DT-11`, `DT-15`).
+             Esto solo evita ofrecer algo que va a fallar. {% endcomment %}
+          <a href="{% url 'recarga' seleccionado.id %}"
+             class="mt-auto inline-flex h-10 w-fit shrink-0 items-center gap-2 rounded-md
+                    bg-primario px-4 text-base font-medium whitespace-nowrap
+                    text-sobre-primario transition-colors hover:bg-primario-fuerte">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+            Recargar
+          </a>
+        {% endif %}
       </article>
 
       <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
