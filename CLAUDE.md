@@ -21,7 +21,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-22`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-2-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-57` … `TT-93`), con responsable |
-| `docs/plan-de-pull-requests.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
+| `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
 | `docs/sprint-1-backlog.md` | El sprint anterior, cerrado. Consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
@@ -203,7 +203,7 @@ automático está desconectado a propósito.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
    está ahí, para.
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
-5. Al terminar, marca la tarea `☑` **en los dos documentos** —`plan-de-pull-requests.md` y
+5. Al terminar, marca la tarea `☑` **en los dos documentos** —`plan-de-pull-requests-sprint-2.md` y
    `sprint-2-backlog.md`— dentro del propio PR, y actualiza los contadores. Deben coincidir.
 6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
    `backlog-historias-de-usuario.md`. **Ojo con `HU-17`: `PR-09` no la cierra** (le faltan

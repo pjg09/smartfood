@@ -14,7 +14,7 @@
 | sprint | 2 de 5 |
 | semanas | 8 – 9 |
 | hito | **Avance 1 · semana 10** (`EVA-3`, 20 % de la nota) |
-| historias | 14 (`HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-17`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19`, `HU-53`) |
+| historias | 14 (`HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-17`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19`, `HU-53`) — **`HU-17` no cierra aquí**: le falta un criterio que depende del Sprint 3, ver `[S4]` y `ANEXO A` |
 | tareas | 37 (`TT-57` … `TT-93`) |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
@@ -27,7 +27,7 @@
 3. **Ninguna tarea introduce alcance nuevo.** Cada una se deriva de una historia de `./backlog-historias-de-usuario.md` o es trabajo de habilitación sin el cual esas historias no pueden construirse.
 4. **La serie `TT-` continúa la del Sprint 1**, que terminó en `TT-56`. No se reinicia: un `TT-nn` identifica una tarea del proyecto, no una tarea de un sprint, y reiniciar la numeración haría ambiguo cualquier `TT-23`.
 5. Los responsables salen de la matriz `[S12]` de `./smartfood.md`. Es la previsión de Sprint Planning (`EVT-1`), no una asignación rígida.
-6. **La columna `Estado` marca el avance.** `☑` es finalizada —integrada en `main`—, `☐` es pendiente. El estado se lleva **también** en `./plan-de-pull-requests.md`, que agrupa estas tareas en Pull Requests; si hay discrepancia, manda ese documento.
+6. **La columna `Estado` marca el avance.** `☑` es finalizada —integrada en `main`—, `☐` es pendiente. El estado se lleva **también** en `./plan-de-pull-requests-sprint-2.md`, que agrupa estas tareas en Pull Requests; si hay discrepancia, manda ese documento.
 7. Los identificadores `[TT-nn]` son estables y citables.
 
 ### [S0.3] Mapa de secciones

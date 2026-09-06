@@ -19,7 +19,7 @@ Ver docs/convenciones-de-git.md
 
 | Campo | Valor |
 |---|---|
-| PR del plan | `PR-nn` de `docs/plan-de-pull-requests.md` |
+| PR del plan | `PR-nn` de `docs/plan-de-pull-requests-sprint-2.md` |
 | Tareas | `TT-nn`, `TT-nn` |
 | Historias | `HU-nn` |
 | Invariantes que sostiene | `INV-n` / `INVD-n` — o «ninguna» |

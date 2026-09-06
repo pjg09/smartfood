@@ -30,10 +30,8 @@
 6. Los identificadores `[TT-nn]` son estables y citables.
 7. **La columna `Estado` marca el avance.** `☑` es finalizada —integrada en `main`—, `☐` es pendiente. El
    plan no cambia: la columna se añade sin reordenar ni modificar ninguna tarea.
-8. El estado se llevaba **también** en el plan de Pull Requests del Sprint 1, que agrupaba
-   estas 56 tareas en 24 PR. **Ese fichero fue reemplazado por el del Sprint 2**; el plan
-   del Sprint 1 está en el historial de git. El estado final —las 56 terminadas— queda
-   aquí, que es el registro que se conserva.
+8. El estado se lleva **también** en `./plan-de-pull-requests-sprint-1.md`, que agrupa estas
+   56 tareas en 25 Pull Requests. **Sprint cerrado**: las 56 terminadas en ambos documentos.
    Pull Requests, porque es donde se marca al integrar. Las convenciones de ramas y commits están en
    `./convenciones-de-git.md` (`TT-01`).
 

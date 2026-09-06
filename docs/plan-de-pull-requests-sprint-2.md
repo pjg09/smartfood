@@ -5,6 +5,7 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-PR-SPRINT2 |
+| plan anterior | `./plan-de-pull-requests-sprint-1.md` — cerrado, documento de archivo |
 | titulo | Agrupación de las 37 tareas del Sprint 2 en Pull Requests, y estado de cada tarea |
 | documentos_fuente | `./sprint-2-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md` |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
@@ -28,9 +29,9 @@ de construcción verificado en su `ANEXO C`, y aquí se respeta carácter por ca
 > plan y no se toca; el tablero de `TT-91` es la vista de la Daily. Si hay discrepancia,
 > manda este documento.
 
-> **El plan del Sprint 1 vivía en este mismo fichero y fue reemplazado.** Sus 24 PR y su
-> estado final están en el historial de git; el resultado —56 de 56 tareas y 18 de 18
-> historias— quedó registrado en `./sprint-1-backlog.md`, que sí se conserva.
+> **Hay un plan por sprint y se conservan todos.** El del Sprint 1 está en
+> `./plan-de-pull-requests-sprint-1.md`, cerrado con sus 25 PR y sus 56 tareas. Este
+> documento no lo sustituye.
 
 ---
 
