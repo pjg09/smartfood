@@ -1,17 +1,18 @@
-# SmartFood — Plan de Pull Requests del Sprint 1
+# SmartFood — Plan de Pull Requests del Sprint 2
 
 ## [S0] Bloque de control del documento
 
 | Campo | Valor |
 |---|---|
-| doc_id | SMARTFOOD-TIC1-PR-SPRINT1 |
-| titulo | Agrupación de las 56 tareas del Sprint 1 en Pull Requests, y estado de cada tarea |
-| documentos_fuente | `./sprint-1-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`) |
+| doc_id | SMARTFOOD-TIC1-PR-SPRINT2 |
+| titulo | Agrupación de las 37 tareas del Sprint 2 en Pull Requests, y estado de cada tarea |
+| documentos_fuente | `./sprint-2-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md` |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
-| tareas cubiertas | 56 de 56 (`TT-01` … `TT-56`) |
-| pull requests | 25 (`PR-01` … `PR-25`) |
+| sprint | 2 de 5 · semanas 8 – 9 · **Avance 1 · semana 10** (`EVA-3`) |
+| tareas cubiertas | 37 de 37 (`TT-57` … `TT-93`) |
+| pull requests | 16 (`PR-01` … `PR-16`) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.0 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -19,13 +20,17 @@
 Este documento responde a una sola pregunta operativa: **¿hasta dónde desarrollo antes de
 parar, abrir un PR y seguir?**
 
-**No reordena ni modifica ninguna tarea.** El orden de `./sprint-1-backlog.md` es el orden
+**No reordena ni modifica ninguna tarea.** El orden de `./sprint-2-backlog.md` es el orden
 de construcción verificado en su `ANEXO C`, y aquí se respeta carácter por carácter. Lo
 único que este documento añade son **cortes**.
 
 > **Este es el único sitio donde vive el estado de las tareas.** El sprint backlog es el
-> plan y no se toca; el tablero de `TT-47` es la vista de la Daily. Si hay discrepancia,
+> plan y no se toca; el tablero de `TT-91` es la vista de la Daily. Si hay discrepancia,
 > manda este documento.
+
+> **El plan del Sprint 1 vivía en este mismo fichero y fue reemplazado.** Sus 24 PR y su
+> estado final están en el historial de git; el resultado —56 de 56 tareas y 18 de 18
+> historias— quedó registrado en `./sprint-1-backlog.md`, que sí se conserva.
 
 ---
 
@@ -36,7 +41,7 @@ sin adelantar tareas.
 
 De ahí sale la única propiedad que importa, y es demostrable:
 
-> El `ANEXO C` verifica que el orden de las 55 tareas planificadas es un orden topológico del grafo de
+> El `ANEXO C` verifica que el orden de las 37 tareas es un orden topológico del grafo de
 > dependencias: **ninguna tarea aparece antes de algo que la bloquea**. Si cada PR es un
 > bloque contiguo de ese orden, entonces toda dependencia de cualquier tarea de `PR-k`
 > está, o en `PR-k`, o en un PR anterior. **Nunca en uno posterior.**
@@ -46,872 +51,442 @@ Consecuencia práctica: **integrar los PR en orden numérico no puede romperse.*
 
 Los cortes se eligieron con tres criterios, en este orden:
 
-1. **Un PR cierra algo demostrable.** `DoD-4` de `./definicion-de-terminado.md` exige demostrar
-   la funcionalidad en el entorno desplegado. Un PR que deja una historia a medias no se
-   puede demostrar.
+1. **Un PR cierra algo demostrable.** Un PR que deja una historia a medias no se puede
+   enseñar en la Sprint Review ni en el Avance 1.
 2. **Un PR se revisa de una sentada.** Entre 1 y 4 tareas. Ninguno pasa de 4.
-3. **Un PR no mezcla asuntos.** El correo no viaja con los buckets aunque sean contiguos.
+3. **Un PR no mezcla asuntos.** La billetera no viaja con el inventario aunque sean
+   contiguos: son dos libros de movimientos independientes.
 
 ---
 
 ## [S2] Cómo se marca una tarea como finalizada
 
-> ⏸ **`DoD-4` está suspendido desde el 2026-08-30** y con él la verificación en el
-> entorno desplegado. Una tarea se marca finalizada con los otros cinco criterios más la
-> verificación local declarada. Ver `[S5]` de `./definicion-de-terminado.md`.
+> ⏸ **`DoD-4` sigue suspendido** y con él la verificación en el entorno desplegado. Una
+> tarea se marca finalizada con los otros cinco criterios más la verificación local
+> declarada. Ver `[S5]` de `./definicion-de-terminado.md`.
+>
+> **Si el entorno se restaura durante este sprint, `DoD-4` vuelve a aplicar.** El Avance 1
+> de la semana 10 es exactamente cuando hará falta: ver la advertencia 4 de `[S6]`.
 
-Una tarea pasa a **☑ Finalizada** cuando su PR está **integrado en `main`**, no cuando el
-código funciona en local. Antes de eso es **☐ Pendiente**.
-
-**El marcado va dentro del propio PR**, en su último commit antes de pedir revisión: se
-editan sus filas de `[S4]`, su fila `Estado`, el contador de `[S3]` y la columna `Estado`
-de `./sprint-1-backlog.md`. Si el PR no se integra, el marcado nunca llega a `main` y no
-hay nada que deshacer. Un PR ya integrado que se olvidó de marcarse se pone al día en el
-PR siguiente.
-
-**El estado vive en dos documentos y deben coincidir**: aquí y en la columna `Estado` de
-`./sprint-1-backlog.md`. Es duplicación deliberada —el sprint backlog es lo que se enseña
-en la Sprint Review— y por eso hay que actualizar los dos a la vez. Si divergen, manda
-este documento.
-
-| Símbolo | Significado |
-|---|---|
-| ☑ | Finalizada — integrada en `main` |
-| ☐ | Pendiente |
-| ◆ | Marca del sprint backlog: se reduce a declarar el modelo en el admin (`DT-2`) |
+1. Se cumplen los criterios de la Definición de Terminado que aplican al PR.
+2. El PR se integra en `main` por revisión cruzada, nunca por `push` directo.
+3. Se marca `☑` **en los dos documentos**: aquí, en `[S3.1]` y en la tabla del PR, y en
+   `./sprint-2-backlog.md`.
+4. Si el PR cierra una historia, se marca también en la tabla `[S4]` de
+   `./backlog-historias-de-usuario.md`.
 
 ---
 
-## [S3] Avance del Sprint 1
+## [S3] Avance del Sprint 2
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **53** de 56 | **23** de 24 |
-| Pendientes | 3 | 1 |
+| **Finalizadas** | **0** de 37 | **0** de 16 |
+| Pendientes | 37 | 16 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 26 | 26 |
-| Carlos | 16 | 16 |
-| Alejandro | 9 | 9 |
-| Naomi | 2 | 5 |
+| Pedro | 0 | 14 |
+| Carlos | 0 | 11 |
+| Alejandro | 0 | 9 |
+| Naomi | 0 | 3 |
 
-El total incluye `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
-habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
-`./decisiones-de-alcance.md`.
-
-### [S3.1] Estado de los 24 Pull Requests
+### [S3.1] Estado de los 16 Pull Requests
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
-| `PR-01` | `TT-01` | Gobernanza del repositorio | ☑ `#1` |
-| `PR-02` | `TT-02`–`TT-03` | Entorno local y esqueleto | ☑ `#2` |
-| `PR-03` | `TT-04` | Despliegue → `ENT-01` | ☑ `#3` |
-| `PR-04` | `TT-05` | Plantilla base | ☑ `#4` |
-| `PR-05` | `TT-06` | Correo | ☑ `#5` |
-| `PR-06` | `TT-07` | Definición de Terminado | ☑ `#6` |
-| `PR-07` | `TT-50`, `TT-55` | Almacenamiento de objetos | ☑ `#7` |
-| `PR-08` | `TT-09`–`TT-12` | `HU-39` | ☑ `#8` |
-| `PR-09` | `TT-13`–`TT-14` | `HU-05` · `INV-6`, `INVD-1` | ☑ `#13` |
-| `PR-10` | `TT-15`–`TT-18` | `HU-40` + `HU-41` · base de `INV-4` | ☑ `#14` |
-| `PR-11` | `TT-19`–`TT-20` | `HU-42` | ☑ `#15` |
-| `PR-12` | `TT-21`–`TT-24` | `HU-01` | ☑ `#16` |
-| `PR-13` | `TT-25`–`TT-27` | `HU-02` | ☑ `#17` |
-| `PR-14` | `TT-28`–`TT-29`, `TT-56` | `HU-03` + `HU-04` · acceso de `USR-2` | ☑ |
-| `PR-15` | `TT-30`–`TT-32` | `HU-14` + `HU-43` · `INV-7` | ☑ |
-| `PR-16` | `TT-33`–`TT-35` | `HU-44` | ☑ |
-| `PR-17` | `TT-36`–`TT-37` | `HU-45` → `ENT-02` · `DT-22` | ☑ |
-| `PR-18` | `TT-38`–`TT-40` | `HU-46` · `INVD-4` | ☑ |
-| `PR-19` | `TT-41`–`TT-42` | `HU-51` · protege `INV-2` | ☑ |
-| `PR-20` | `TT-51`–`TT-52` | `HU-57` | ☑ |
-| `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☑ |
-| `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☑ |
-| `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☑ |
-| `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
+| `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☐ |
+| `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☐ |
+| `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☐ |
+| `PR-04` | `TT-64` | `HU-07` | ☐ |
+| `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☐ |
+| `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
+| `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☐ |
+| `PR-08` | `TT-73` | `HU-16` | ☐ |
+| `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
+| `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
+| `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
+| `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
+| `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☐ |
+| `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
+| `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
+| `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
 
 ---
 
-## [S4] Los 24 Pull Requests
+## [S4] Los 16 Pull Requests
 
-### Habilitación — `PR-01` … `PR-07`
+### Habilitación — `PR-01`
 
-Corresponden a `[S3]` del sprint backlog. Las nueve tareas de habilitación, en su orden.
-Ninguna historia se puede construir antes de que estas siete estén integradas.
+Corresponde a `[S3]` del sprint backlog. Ninguna historia del punto de venta se puede
+construir antes de que esté integrado.
 
----
-
-#### `PR-01` — Gobernanza del repositorio
+#### `PR-01` — Habilitación del punto de venta
 
 | | |
 |---|---|
-| Título del PR | `chore(infra): establecer la gobernanza del repositorio` |
-| Rama | `chore/TT-01-gobernanza-del-repositorio` |
-| Responsable | Naomi |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#1) |
+| Título del PR | `feat(pos): levantar la interfaz del punto de venta y su acceso` |
+| Rama | `feat/TT-57-punto-de-venta` |
+| Responsables | Carlos y Pedro |
+| Historia | ninguna — habilitación |
+| Invariantes | `DT-11`: el control de acceso es de la capa de datos, no del layout |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-01` | Repositorio, estrategia de ramas y convención de commits | Naomi | ☑ |
+| `TT-57` | Layout del punto de venta: pantalla completa, sin navegación, foco permanente y operación por teclado | Carlos | ☐ |
+| `TT-58` | Ruta del punto de venta y su control de acceso: solo el rol cajero | Pedro | ☐ |
 
-Entrega `.gitignore`, `.releaserc.json`, los workflows de release y de validación del
-título del PR, la plantilla de PR y `./convenciones-de-git.md`.
+**Qué habilita y cómo se comprueba:** que un usuario con rol cajero llegue a una pantalla
+del punto de venta, y que cualquier otro rol reciba un 403. `DoD-1` exige declararlo
+porque este PR no cierra ninguna historia.
 
-> **Queda un paso manual fuera del repositorio:** activar la protección de `main` en la
-> configuración de GitHub —prohibir `push` directo, exigir PR y exigir que
-> `Convención de commits` esté en verde—. Sin eso, la convención es una recomendación.
+`INT-2` pide operación rápida: veinte a treinta minutos para toda la demanda. El layout no
+lleva navegación ni diálogos, y todo es alcanzable con teclado (`DT-16`).
 
 ---
 
-#### `PR-02` — Entorno local y esqueleto de la aplicación
+### Historias — `PR-02` … `PR-15`
+
+#### `PR-02` — `HU-06` Recarga de la billetera
 
 | | |
 |---|---|
-| Título del PR | `build(infra): levantar el entorno local y el esqueleto de la aplicación` |
-| Rama | `build/TT-02-entorno-local` |
-| Responsable | Pedro |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#2) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-02` | Entorno local reproducible: `docker compose` con PostgreSQL y MinIO | Pedro | ☑ |
-| `TT-03` | Esqueleto de la aplicación y conexión a la base de datos | Pedro | ☑ |
-
-Van juntas porque por separado no se demuestra nada: un `compose` sin aplicación no se
-prueba, y una aplicación sin base de datos no arranca. Incluye `.env.example`.
-
----
-
-#### `PR-03` — Despliegue en el entorno de pruebas
-
-| | |
-|---|---|
-| Título del PR | `ci(infra): desplegar en el entorno de pruebas` |
-| Rama | `ci/TT-04-despliegue-entorno-de-pruebas` |
-| Responsable | Pedro |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#3) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-04` | Despliegue en entorno de pruebas con base de datos gestionada | Pedro | ☑ |
-
-Solo, porque toca credenciales del PaaS y no se valida leyendo el diff: se valida abriendo
-la URL — **https://web-production-3db23.up.railway.app**. **Habilita `ENT-01` y con él la Definición de Terminado entera**: hasta que este PR
-no esté integrado, ninguna historia puede darse por terminada.
-
----
-
-#### `PR-04` — Plantilla base y hoja de estilos
-
-| | |
-|---|---|
-| Título del PR | `feat(plantillas): añadir plantilla base y layout adaptable a móvil` |
-| Rama | `feat/TT-05-plantilla-base` |
-| Responsable | Carlos |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#4) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-05` | Plantilla base, layout adaptable a móvil y hoja de estilos | Carlos | ☑ |
-
-Habilita `INT-1` e `INT-3`. Tailwind por CLI, sin CDN (`DT-16`). **No depende de `PR-03`**:
-ver `[S5]`.
-
----
-
-#### `PR-05` — Envío de correo
-
-| | |
-|---|---|
-| Título del PR | `feat(correo): configurar el envío de correo` |
-| Rama | `feat/TT-06-envio-de-correo` |
-| Responsable | Pedro |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#5) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-06` | Configuración del envío de correo | Pedro | ☑ |
-
-Habilita `HU-39`, `HU-03` y `HU-41`: las tres invitaciones salen por aquí. Este PR
-registra además `DEC-9`, que surgió al configurarlo: la carga masiva genera las
-invitaciones pero no las entrega.
-
----
-
-#### `PR-06` — Definición de Terminado
-
-| | |
-|---|---|
-| Título del PR | `docs(docs): acordar la Definición de Terminado` |
-| Rama | `docs/TT-07-definicion-de-terminado` |
-| Responsable | Naomi |
-| Historia | — (habilitación) |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#6) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-07` | Redacción y acuerdo de la Definición de Terminado (`COM-3`) | Naomi | ☑ |
-
-PR de una sola tarea documental. Es un `docs`: no publica versión.
-
-Extrae la Definición de Terminado a `./definicion-de-terminado.md` con identificadores
-citables (`DoD-1` … `DoD-6`) y la reescribe con **criterios condicionales**, porque la
-redacción original hablaba de historias y **13 de las 56 tareas del sprint no cuelgan de
-ninguna** — incluidos los cinco PR ya integrados. Eran 12 de 55 hasta que `PR-14` añadió
-`TT-56` (`DEC-12`), que tampoco cuelga de ninguna historia.
-
----
-
-#### `PR-07` — Almacenamiento de objetos
-
-| | |
-|---|---|
-| Título del PR | `feat(almacenamiento): crear los buckets y la canalización de subida` |
-| Rama | `feat/TT-50-almacenamiento-de-objetos` |
-| Responsable | Pedro |
-| Historia | — (habilitación) |
-| Invariantes | ninguna directamente; sostiene `DT-18`, `DT-20` y `DT-21` |
-| Estado | ☑ **Integrado en `main`** (#7) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-50` | Dos buckets —privado y público— con sus políticas y credenciales (`DT-18`) | Pedro | ☑ |
-| `TT-55` | Canalización de subida: validación por contenido, re-codificación y retirada del EXIF (`DT-20`) | Pedro | ☑ |
-
-Los buckets sin canalización de subida no se prueban, y la canalización sin buckets no
-tiene dónde escribir. Este PR registra además **`DT-21`**, que corrige `DT-18`: el
-proveedor no ofrece buckets públicos en ningún plan, así que es **un bucket con dos
-prefijos y ninguno público**. **La base guarda la clave del objeto, nunca el binario.** El PR debe
-demostrar que la URL del bucket privado va firmada y caduca: es una fotografía de un menor
-(`DEC-8`, `ALC-OUT-08`).
-
----
-
-### Historias — `PR-08` … `PR-22`
-
-Corresponden a `[S4]` del sprint backlog, en su orden.
-
----
-
-#### `PR-08` — `HU-39` Alta de la institución educativa por seed
-
-| | |
-|---|---|
-| Título del PR | `feat(cuentas): dar de alta la institución educativa por seed` |
-| Rama | `feat/TT-09-institucion-por-seed` |
+| Título del PR | `feat(billetera): recargar la billetera del estudiante` |
+| Rama | `feat/TT-59-recarga-de-billetera` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-39` |
-| Invariantes | empieza a sostener `INV-6`, `INVD-1` |
-| Estado | ☑ **Integrado en `main`** (#8) |
+| Historia | `HU-06` |
+| Invariantes | sienta la base de `INV-2` |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-09` | Modelo de usuario con rol, y modelo de institución educativa | Pedro | ☑ |
-| `TT-10` | Rutina de seed que crea la institución de referencia y dispara su invitación | Pedro | ☑ |
-| `TT-11` | Pantalla de definición de contraseña a partir del token de invitación | Carlos | ☑ |
-| `TT-12` | Plantilla del correo de invitación | Carlos | ☑ |
+| `TT-59` | App `billetera`: modelos de billetera y de movimiento, **sin columna de saldo** (`DT-4`) | Pedro | ☐ |
+| `TT-60` | Servicio de recarga que asienta un movimiento dentro de una transacción | Pedro | ☐ |
+| `TT-61` | Pantalla de recarga en la interfaz del acudiente | Carlos | ☐ |
 
-Las cuatro cierran la primera historia del sprint y hay que integrarlas juntas: una
-invitación que no se puede aceptar no se demuestra. `TT-11` y `TT-12` los reutilizan
-después `HU-03` y `HU-41` (`DEC-3`).
+> **El PR más determinante del sprint.** Si `TT-59` introduce una columna `saldo` que se
+> actualiza, `INV-2` deja de cumplirse por construcción y `HU-08` pasa a depender de que
+> nadie se equivoque. El saldo **es** la suma de los movimientos. En la revisión, esto es
+> lo primero que hay que mirar.
 
-> Aquí se monta también **el esqueleto** de `TT-08` —el comando de seed y su invocación—,
-> tal como indica `[S4]` del sprint backlog. **No cierra `TT-08`**, que se termina en
-> `PR-23`.
+El pago es **simulado** (`ALC-OUT-01`, `ALC-OUT-02`): ni pasarela ni dinero real.
 
 ---
 
-#### `PR-09` — `HU-05` Autorregistro bloqueado
+#### `PR-03` — `HU-08` Saldo reconstruible desde el historial
 
 | | |
 |---|---|
-| Título del PR | `feat(cuentas): eliminar toda ruta de autorregistro` |
-| Rama | `feat/TT-13-autorregistro-bloqueado` |
+| Título del PR | `feat(billetera): derivar el saldo del historial de movimientos` |
+| Rama | `feat/TT-62-saldo-derivado` |
 | Responsables | Pedro y Alejandro |
-| Historia | `HU-05` |
-| Invariantes | **`INV-6`, `INVD-1`** |
-| Estado | ☑ **Integrado en `main`** (#13) |
+| Historia | `HU-08` |
+| Invariantes | **`INV-2`** · escenario crítico **`TST-3`** |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-13` | Eliminar toda ruta de registro; el usuario se crea sin contraseña utilizable | Pedro | ☑ |
-| `TT-14` | Caso de prueba: intento de autorregistro desde cada una de las tres interfaces | Alejandro | ☑ |
+| `TT-62` | Selector que calcula el saldo como suma del historial | Pedro | ☐ |
+| `TT-63` | Caso de prueba `TST-3`: el saldo mostrado coincide exactamente con la suma del historial | Alejandro | ☐ |
 
-La invariante y su prueba van en el mismo PR: la Definición de Terminado lo exige. Las
-rutas de registro **no existen**, no se ocultan (`DT-10`).
-
-`TT-13` cerró además un agujero que no era evidente: un `Usuario` creado **sin pasar por
-el manager** —el formulario de alta del admin— quedaba con la contraseña vacía, y Django
-considera **usable** una contraseña vacía. Esa cuenta habría reportado tener contraseña
-definida y no se habría podido invitar nunca. Lo impide ahora una restricción de la base.
+`TST-3` es uno de los cuatro escenarios que `ENT-05` exige. La prueba no sobra por ser
+cierta por construcción: es lo que detecta que alguien metió un atajo.
 
 ---
 
-#### `PR-10` — `HU-40` y `HU-41` Cuentas de personal e invitación
+#### `PR-04` — `HU-07` Consulta de saldo por el acudiente
 
 | | |
 |---|---|
-| Título del PR | `feat(cuentas): dar de alta cuentas de personal por invitación` |
-| Rama | `feat/TT-15-cuentas-de-personal` |
-| Responsables | Pedro y Carlos |
-| Historias | `HU-40`, `HU-41` |
-| Invariantes | base de **`INV-4`** |
-| Estado | ☑ **Integrado en `main`** (#14) |
+| Título del PR | `feat(billetera): mostrar el saldo al acudiente` |
+| Rama | `feat/TT-64-saldo-del-acudiente` |
+| Responsables | Carlos |
+| Historia | `HU-07` |
+| Invariantes | ninguna directamente; consume `INV-2` |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-15` | Roles y permisos por modelo según la matriz `[S11]` | Pedro | ☑ |
-| `TT-16` | Servicio de alta de cuenta de personal que dispara la invitación | Pedro | ☑ |
-| `TT-17` ◆ | Vista de gestión de cuentas de personal para la institución | Carlos | ☑ |
-| `TT-18` | Token de invitación de un solo uso y con caducidad | Pedro | ☑ |
+| `TT-64` | Saldo y últimos movimientos en la ficha del estudiante | Carlos | ☐ |
 
-`HU-41` aporta una sola tarea y el resto lo cubren `TT-11` y `TT-12`, ya integrados: no
-merece PR propio. `TT-15` es donde se decide `INV-4` —el cajero no tiene permiso de
-escritura sobre restricciones—, y se decide **en la capa de datos**, no ocultando un botón
-en el Sprint 3 (`DT-11`).
-
-La matriz `[S11]` quedó como **dato** en `cuentas/permisos.py`, no repartida en
-decoradores. La prueba que la sostiene no dice «el cajero no tiene tal permiso» sino
-**«ningún rol tiene un permiso que la matriz no declare»**: así vigila también los modelos
-que aún no existen. `TT-18` resultó ser casi verificación —el generador de tokens de
-Django ya es de un solo uso y caduca solo—, y así está declarado.
+Solo el acudiente ve el saldo como consulta libre. El cajero lo verá **solo al cobrar**
+(`S11`), y eso es `PR-09`.
 
 ---
 
-#### `PR-11` — `HU-42` Desactivación y reactivación de cuentas
+#### `PR-05` — `HU-52` Saldo congelado tras la baja
 
 | | |
 |---|---|
-| Título del PR | `feat(cuentas): desactivar y reactivar cuentas de personal` |
-| Rama | `feat/TT-19-desactivacion-de-cuentas` |
-| Responsables | Pedro y Carlos |
-| Historia | `HU-42` |
-| Invariantes | ninguna |
-| Estado | ☑ **Integrado en `main`** (#15) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-19` | Estado de la cuenta y bloqueo del inicio de sesión si está inactiva | Pedro | ☑ |
-| `TT-20` ◆ | Acciones de desactivar y reactivar en la vista de cuentas | Carlos | ☑ |
-
-Candidato número uno a moverse al Sprint 2 si el sprint desborda: `ANEXO A` del sprint
-backlog. Ninguna historia posterior depende de él.
-
-Los tres criterios de `HU-42` son afirmaciones distintas y se prueban por separado. La
-segunda —«ni **operar**»— es la que se suele dar por supuesta: que alguien no pueda
-**iniciar** sesión no dice nada de la sesión que ya tenía abierta cuando lo desactivaron.
-Y para que la tercera se cumpla, el admin **deja de ofrecer borrado**: si se pudiera
-borrar la cuenta, el historial que la historia exige conservar desaparecería con ella.
-
----
-
-#### `PR-12` — `HU-01` Carga masiva de estudiantes y acudientes
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): cargar estudiantes y acudientes desde un archivo` |
-| Rama | `feat/TT-21-carga-masiva` |
-| Responsables | Pedro, Alejandro y Carlos |
-| Historia | `HU-01` |
-| Invariantes | ninguna directamente; `INV-6` e `INVD-1` en las cuentas que crea |
-| Estado | ☑ **Integrado en `main`** (#16) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-21` | Modelos de estudiante y acudiente, con vínculo de uno a varios (`ALC-IN-04`) | Pedro | ☑ |
-| `TT-22` | Definición del formato del archivo: columnas, tipos y obligatoriedad | Alejandro | ☑ |
-| `TT-23` | Lector del archivo y servicio de carga dentro de una transacción | Pedro | ☑ |
-| `TT-24` | Pantalla de carga con selección de archivo y resultado | Carlos | ☑ |
-
-El PR más cargado del sprint junto con `PR-21`. `TT-22` es análisis y no depende de nada:
-Alejandro puede tenerlo escrito antes de que Pedro llegue a `TT-23`, aunque se integren en
-el mismo PR.
-
----
-
-#### `PR-13` — `HU-02` Validación del archivo antes de escribir
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): validar el archivo completo antes de escribir` |
-| Rama | `feat/TT-25-validacion-todo-o-nada` |
-| Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-02` |
-| Invariantes | ninguna; el «todo o nada» es criterio de aceptación |
-| Estado | ☑ **Integrado en `main`** (#17) |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-25` | Validador que acumula errores por fila y **no escribe nada si hay alguno** | Pedro | ☑ |
-| `TT-26` | Pantalla de reporte de errores de validación | Carlos | ☑ |
-| `TT-27` | Archivos de prueba: uno válido, uno con errores y uno mixto | Alejandro | ☑ |
-
-Se separa de `PR-12` para que cada uno se revise de una sentada, no porque sean
-independientes. El archivo **mixto** de `TT-27` es el que prueba la atomicidad: si escribe
-las filas buenas, el PR no pasa.
-
-El primer criterio de `HU-02` no es «si algo falla se deshace»: es que **la validación
-ocurra antes de escribir**. Deshacer con una transacción y no llegar a escribir son cosas
-distintas, y la historia pide la segunda. El validador **acumula**: un archivo con diez
-erratas se reporta entero, no obliga a subirlo diez veces.
-
----
-
-#### `PR-14` — `HU-03` y `HU-04` Acudientes
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): invitar al acudiente y permitirle elegir estudiante` |
-| Rama | `feat/TT-28-acudientes` |
-| Responsables | Pedro y Carlos |
-| Historias | `HU-03`, `HU-04` |
-| Invariantes | ninguna. Sostiene sin romperlas `INV-6` e `INVD-1` (`TT-56` no es un camino de alta) |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-28` | Disparo de una invitación por acudiente al completarse la carga | Pedro | ☑ |
-| `TT-29` | Consulta de estudiantes a cargo y selector de estudiante en la interfaz del acudiente | Carlos | ☑ |
-| `TT-56` | Pantalla de acceso al sistema, común a los cuatro roles (`DEC-12`) | Pedro | ☑ |
-
-Dos historias de una tarea cada una, contiguas y del mismo asunto: el acudiente entra y ve
-a los suyos. El modelo ya lo resolvió `TT-21`.
-
-> **`TT-29` no se puede terminar sin `TT-56`.** «El acudiente entra» no lo construye ninguna
-> de las 55 tareas planificadas: **ninguna de las 59 historias pide un inicio de sesión**, y
-> el formulario del admin exige `is_staff`, que el acudiente no tiene. Es habilitación no
-> contabilizada, como las de `[S3]` del sprint backlog, y se registra con identificador
-> propio en `DEC-12`. Entra en este PR porque es donde se necesita: la regla de corte de
-> `[S1]` pide que un PR cierre algo demostrable, y sin acceso `HU-04` no se demuestra.
-
-> **`DEC-9` cambia lo que `TT-28` tiene que construir.** La carga **genera** la invitación
-> de cada acudiente —token de un solo uso y con caducidad— pero **no la entrega por
-> correo**: las direcciones cargadas son ficticias (`ALC-OUT-07`) y no corresponden a
-> ningún buzón. No hay que implementar envío masivo ni preocuparse por su latencia.
-> `HU-03` se demuestra tomando el enlace de un acudiente cargado y definiendo la
-> contraseña con él.
->
-> **El enlace se saca con `manage.py invitacion <correo>`, de uno en uno.** No se lista en
-> la pantalla de la carga: es una credencial, y enseñárselos todos a la institución
-> contradiría de hecho `DEC-3`, cuyo valor es que quien crea la cuenta no llega a conocer la
-> clave del titular.
-
----
-
-#### `PR-15` — `HU-14` y `HU-43` Código de tarjeta
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): generar y asignar el código de tarjeta` |
-| Rama | `feat/TT-30-codigo-de-tarjeta` |
+| Título del PR | `feat(billetera): congelar el saldo del estudiante dado de baja` |
+| Rama | `feat/TT-65-saldo-congelado` |
 | Responsables | Pedro y Alejandro |
-| Historias | `HU-14`, `HU-43` |
-| Invariantes | **`INV-7`** |
-| Estado | ☑ **Integrado en `main`** |
+| Historia | `HU-52` |
+| Invariantes | `INVD-2` · protege `INV-2` |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-30` | Generador criptográfico del código, con índice único y reintento ante colisión | Pedro | ☑ |
-| `TT-31` | Caso de prueba: unicidad y no secuencialidad sobre un lote grande de códigos | Alejandro | ☑ |
-| `TT-32` | Asignación del código al dar de alta al estudiante, por carga masiva y por alta individual | Pedro | ☑ |
+| `TT-65` | El estado `baja` impide recargar y comprar, conservando el saldo consultable | Pedro | ☐ |
+| `TT-66` | Caso de prueba: estudiante de baja, saldo visible y sin operaciones posibles | Alejandro | ☐ |
 
-`TT-30` es una función pura, no depende de nada y se presta a escribir la prueba antes que
-la implementación: **el mejor primer commit del sprint**. **Nunca secuencia, nunca derivado
-del identificador del estudiante, nunca UUIDv7** —lleva timestamp y va ordenado
-(`DT-9`, `DT-17`)—: el código opera como credencial de acceso al saldo.
-
-> **Lo que quedó fijado, dentro de lo que `DT-17` dejaba abierto.** Catorce caracteres
-> —el rango era de 12 a 16— sobre un alfabeto de 32 símbolos: dígitos y mayúsculas sin
-> `I`, `L`, `O` ni `U`. Son **70 bits de aleatoriedad**. Mayúsculas y dígitos porque es lo
-> que Code 39 admite sin extensiones, que es el tercer criterio de `HU-43`; sin los cuatro
-> símbolos confundibles porque alguien va a teclear ese código cuando el lector falle.
-
-> **El «alta individual» de `TT-32` es hoy el servicio, no una pantalla.** La vista de
-> administración de estudiantes es `HU-44` y llega en `PR-16`, que es el siguiente. La
-> asignación vive en `personas.services.crear_estudiante`, que es el **único** camino de
-> alta: la carga masiva ya entra por ahí, y `TT-33` tiene que hacer que el admin delegue
-> en él en vez de escribir directamente (`DT-15`). Si `PR-16` crea el estudiante desde el
-> admin sin pasar por el servicio, `HU-43` se rompe en silencio.
+Cierra lo que el Sprint 1 dejó a medias: `HU-51` construyó la baja lógica, pero sin
+billetera no había saldo que congelar. La devolución del dinero queda **fuera del sistema**.
 
 ---
 
-#### `PR-16` — `HU-44` Vista de administración de estudiantes
+#### `PR-06` — `HU-27` Ingreso de mercancía
 
 | | |
 |---|---|
-| Título del PR | `feat(personas): administrar estudiantes desde la institución` |
-| Rama | `feat/TT-33-administracion-de-estudiantes` |
+| Título del PR | `feat(inventario): registrar el ingreso de mercancía por ajuste manual` |
+| Rama | `feat/TT-67-ingreso-de-mercancia` |
+| Responsables | Pedro y Carlos |
+| Historia | `HU-27` |
+| Invariantes | sienta la base de **`INV-3`** y crea la restricción de **`INV-8`** |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-67` | App `inventario`: movimiento como libro, **sin columna de existencias**, con motivo obligatorio por restricción | Pedro | ☐ |
+| `TT-68` | Servicio de ingreso por ajuste manual | Pedro | ☐ |
+| `TT-69` | Registro del ingreso desde la interfaz administrativa, con existencias calculadas | Carlos | ☐ |
+
+Mismo criterio que `PR-02`: las existencias son la suma del historial. La restricción de
+motivo obligatorio se crea aquí aunque `INV-8` lo ejercite `HU-28` en el Sprint 4 —
+**es más barato ponerla con el modelo que añadirla sobre datos ya escritos**.
+
+Inventario sobre **unidades vendibles**: ni insumos, ni recetas, ni costo de producción.
+
+---
+
+#### `PR-07` — `HU-15` Identificación por escaneo
+
+| | |
+|---|---|
+| Título del PR | `feat(pos): identificar al estudiante escaneando su tarjeta` |
+| Rama | `feat/TT-70-identificacion-por-escaneo` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-44` |
-| Invariantes | ninguna. Amplía la matriz `[S11]`, que es donde vive `INV-4` |
-| Estado | ☑ **Integrado en `main`** |
+| Historia | `HU-15` |
+| Invariantes | consume `INV-7`; cierra **`ENT-02`** |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-33` | Servicios de alta individual y de edición de estudiante | Pedro | ☑ |
-| `TT-34` ◆ | Vista de listado, búsqueda, alta individual y edición | Carlos | ☑ |
-| `TT-35` | Recorrido de experiencia de usuario de la vista de administración | Alejandro | ☑ |
+| `TT-70` | Selector de identificación por código de tarjeta, que respeta el estado del estudiante | Pedro | ☐ |
+| `TT-71` | Campo de escaneo con foco permanente que dispara la búsqueda al recibir Enter | Carlos | ☐ |
+| `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas | Alejandro | ☐ |
 
-`TT-34` es la vista sobre la que se apoyan `PR-17`, `PR-19` y `PR-20`. Integrarla pronto
-desbloquea tres PR posteriores.
+El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni SDK.
 
-> **La advertencia que dejó `PR-15` está atendida.** El admin no guarda el estudiante por
-> su cuenta: el alta pasa por `crear_estudiante` y la edición por `editar_estudiante`
-> (`DT-15`). Hay una prueba que matricula desde el admin y comprueba que el estudiante sale
-> con código de tarjeta bien formado, que es la única forma de detectar que la delegación
-> se rompió.
-
-> **El código de tarjeta no se muestra en esta vista, a propósito.** Exponer el código
-> vigente en la ficha es `TT-36` y la historia que lo pide es `HU-45`: adelantarlo aquí
-> dejaría a `PR-17` sin su primera tarea. Queda anotado como `UX-4` en el recorrido.
-
-> **`TT-35` destapó un privilegio de más, y se corrigió aquí.** La cuenta institucional
-> era superusuario desde `TT-10`, así que podía editar los grupos de permisos — que son la
-> matriz `[S11]` con la que `DT-11` sostiene `INV-4`. Se le retiró la bandera y ahora tiene
-> exactamente los nueve permisos que la matriz declara. Eran **tres puertas**: la bandera,
-> los campos `is_superuser`, `groups` y `user_permissions` del formulario de usuario —que
-> permitían devolvérsela— y la casilla `is_active`, que saltaba por encima de las reglas de
-> `desactivar_cuenta`. Razonado como `UX-6` en
-> `./recorrido-de-administracion-de-estudiantes.md`.
->
-> **No es una tarea nueva del sprint**: es un defecto contra `DT-11` y `[S11]`, que ya
-> decían lo que debía ocurrir. Va con migración de datos, porque el seed es idempotente y
-> no vuelve a tocar una institución ya sembrada.
+`TT-72` cierra `ENT-02`, uno de los siete entregables del proyecto, con las tarjetas que
+imprime lo construido en `TT-37`. Es trabajo físico: hay que imprimirlas de verdad.
 
 ---
 
-#### `PR-17` — `HU-45` Consulta del código de tarjeta vigente
+#### `PR-08` — `HU-16` Identificación por documento
 
 | | |
 |---|---|
-| Título del PR | `feat(personas): mostrar e imprimir el código de tarjeta vigente` |
-| Rama | `feat/TT-36-codigo-vigente` |
-| Responsable | Carlos |
-| Historia | `HU-45` |
-| Invariantes | ninguna. Cierra el punto abierto de la simbología con `DT-22` |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-36` | Exposición del código vigente en la ficha del estudiante | Carlos | ☑ |
-| `TT-37` | Vista imprimible del código de barras | Carlos | ☑ |
-
-**Habilita `ENT-02`.** Sin tarjetas impresas no hay prueba de concepto del lector en el
-Sprint 2: no es un adorno, es el insumo físico de la siguiente demostración.
-
-> **Cierra el punto abierto del `ANEXO B` de `./decisiones-tecnicas.md`**, que dejaba sin
-> decidir la simbología y dónde se genera. Queda como `DT-22`: **Code 128** subconjunto B,
-> en el **servidor**, en **SVG** y con medidas en milímetros. Un símbolo rasterizado a la
-> resolución de la pantalla se imprime borroso y deja de escanearse, y esto se imprime.
-
-> **Lo que estas pruebas no pueden hacer es escanear.** No hay lector en el ejecutor, así
-> que la lectura real es de `ENT-02`, en el Sprint 2. Lo que sí se comprueba es lo que
-> fallaría en silencio: el patrón de módulos que se dibuja se lee de vuelta y se verifica
-> que es un mensaje Code 128 válido para ese código, con su suma de control.
-
-> **El código de barras no se almacena en ninguna parte.** Se genera en cada petición desde
-> el campo del estudiante, y eso es lo que sostiene «código **vigente**»: una imagen
-> guardada seguiría siendo correcta después de que `PR-18` reasignara el código, y esa
-> tarjeta impresa ya no abre ningún saldo (`INVD-4`).
-
----
-
-#### `PR-18` — `HU-46` Reasignación del código de tarjeta
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): reasignar el código de tarjeta invalidando el anterior` |
-| Rama | `feat/TT-38-reasignacion-de-codigo` |
-| Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-46` |
-| Invariantes | **`INVD-4`** |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-38` | Servicio de reasignación que invalida el código anterior de forma definitiva | Pedro | ☑ |
-| `TT-39` | Acción de reasignar en la ficha, con confirmación | Carlos | ☑ |
-| `TT-40` | Caso de prueba: el código anterior deja de identificar a nadie | Alejandro | ☑ |
-
-Si el código anterior sigue siendo válido, `HU-47` y `HU-48` del Sprint 2 no protegen nada.
-`TT-40` es la prueba que lo impide y va en este PR, no después.
-
-> **«Inmediata y definitiva» no es un `if`: el código anterior deja de existir.** Es el
-> mismo campo único, y al sobrescribirlo ninguna consulta por el valor viejo encuentra a
-> nadie. Se descartó guardar el historial de códigos con una bandera de cuál está vigente:
-> una bandera se puede olvidar en la siguiente consulta, y `INVD-4` volvería a depender de
-> que todos los caminos de lectura se acuerden de filtrar.
-
-> **Queda un flanco declarado, no cerrado.** El generador podría devolver algún día un
-> código ya retirado y dárselo a otro estudiante: una tarjeta vieja identificaría entonces
-> a otra persona. Es una entre 10^21 por sorteo y está anotado como punto abierto en el
-> `ANEXO B` de `./decisiones-tecnicas.md`, con lo que costaría cerrarlo.
-
-> **La identificación por escaneo es `HU-15`, del Sprint 2.** «No identifica a nadie» se
-> comprueba hoy en la base, que es donde se puede comprobar de verdad; el punto de venta
-> buscará por este mismo campo único, así que la propiedad se conservará por construcción.
-
----
-
-#### `PR-19` — `HU-51` Baja lógica del estudiante retirado
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): dar de baja al estudiante conservando su historial` |
-| Rama | `feat/TT-41-baja-logica` |
-| Responsables | Pedro y Carlos |
-| Historia | `HU-51` |
-| Invariantes | protege **`INV-2`**; deja montada la puerta de `INVD-2` |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-41` | Estado de baja en el estudiante, conservando íntegro su historial | Pedro | ☑ |
-| `TT-42` ◆ | Acción de dar de baja en la ficha del estudiante | Carlos | ☑ |
-
-Baja **lógica**. Un `DELETE` destruiría el historial del que se reconstruye el saldo
-(`INV-2`, `DT-4`). Si el PR contiene un borrado físico, no se integra.
-
-> **La máquina de estados va entera, aunque solo se use un tercio.** `DT-12` pide tres
-> estados y descarta el booleano. `desactivado` existe en el modelo desde ahora porque una
-> máquina de estados se declara entera o no lo es; lo que llega en el Sprint 2 con `HU-47`
-> es el servicio que transita a él.
-
-> **`INVD-2` deja su puerta puesta antes de tener quién la use.** Ni la billetera ni la
-> venta existen todavía, así que `comprobar_que_puede_operar` no la llama nadie: se
-> escribe aquí porque la regla es de `HU-51` y `DEC-7`, y dejarla para el sprint que la
-> necesita es dejarla al descuido de quien escriba la venta. Ya contempla los dos estados.
-
-> **El código de tarjeta no se libera al dar de baja**, y podría parecer que sí. Liberarlo
-> permitiría que otro estudiante lo recibiera, y entonces una tarjeta vieja identificaría a
-> otra persona — lo mismo que `INVD-4` evita al reasignar.
-
----
-
-#### `PR-20` — `HU-57` Fotografía del estudiante
-
-| | |
-|---|---|
-| Título del PR | `feat(personas): cargar la fotografía del estudiante` |
-| Rama | `feat/TT-51-fotografia-del-estudiante` |
-| Responsables | Pedro y Carlos |
-| Historia | `HU-57` |
-| Invariantes | ninguna; se apoya en `DT-18`, `DT-20` y `DT-21` |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-51` | Campo de clave de objeto en el estudiante y servicio de carga y reemplazo de la fotografía | Pedro | ☑ |
-| `TT-52` ◆ | Carga de la fotografía desde la ficha del estudiante | Carlos | ☑ |
-
-Bucket **privado**, URL firmada de caducidad corta. La fotografía **no es obligatoria**: su
-ausencia no puede impedir ninguna operación, y el PR tiene que demostrarlo.
-
-> **«No es obligatoria» se demuestra haciendo, no mirando el campo.** Hay una clase de
-> pruebas que, sin fotografía, matricula, imprime la tarjeta, reasigna el código, da de
-> baja, abre el panel del acudiente y la ficha del admin. Ninguna de esas operaciones la
-> necesita, y la ficha lo dice en vez de dejar un hueco en blanco.
-
-> **El campo no es un `FileField`.** Guarda la clave del objeto, que es lo que `DT-18`
-> pide, y un `FileField` ata el almacenamiento a la definición de la clase: aquí hace falta
-> resolverlo en cada uso, porque los ajustes cambian entre local, entorno desplegado y
-> pruebas.
-
-> **La fotografía no va en la tarjeta impresa.** Que el cajero compruebe que la tarjeta la
-> presenta su dueño es `HU-58`, y ocurre en la pantalla de cobro del Sprint 2, no en el
-> papel.
-
----
-
-#### `PR-21` — `HU-26` Administración del catálogo
-
-| | |
-|---|---|
-| Título del PR | `feat(catalogo): administrar productos, categorías y alérgenos` |
-| Rama | `feat/TT-43-catalogo` |
-| Responsables | Pedro, Alejandro y Carlos |
-| Historia | `HU-26` |
-| Invariantes | **`INV-5`** |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-43` | Modelos de producto, categoría y alérgeno, con **relación** producto–alérgeno | Pedro | ☑ |
-| `TT-44` | Definición de los campos nutricionales que consumirán las reglas de recomendación | Alejandro | ☑ |
-| `TT-45` ◆ | Vista de gestión del catálogo | Carlos | ☑ |
-| `TT-46` | Caso de prueba: el alérgeno se relaciona, no se copia como lista de productos | Alejandro | ☑ |
-
-**El PR más delicado del sprint.** `TT-43` decide si `HU-11` del Sprint 3 se puede
-construir o hay que rehacer el modelo. `INV-5` exige que el bloqueo por alérgeno se aplique
-**sobre la condición**, evaluada en la venta, de modo que cubra productos que aún no
-existen. Si el alérgeno se modela como una lista materializada de productos bloqueados, el
-PR se rechaza aunque las pruebas pasen: `TT-46` existe precisamente para detectarlo.
-
-Revisión obligatoria de los dos desarrolladores, no de uno.
-
-> **`TT-46` ataca la lista materializada por dos lados.** Uno de comportamiento: se
-> consulta un alérgeno, se agrega **después** un producto que lo declara, y la respuesta
-> cambia sola. Otro estructural: no existe en ningún modelo un sitio donde guardar esa
-> lista, y si mañana alguien lo añade, la prueba falla antes de que llegue a la venta.
-
-> **`TT-44` fijó los campos por porción vendible, no por 100 g**, y esa es la decisión de
-> la que más depende el Sprint 4. La venta copia estos valores (`DT-8`) y los reportes los
-> suman: con valores por 100 g cada suma necesitaría además el peso de la porción, y el día
-> que falte, el agregado sale más bajo que el real y parece un dato en vez de un hueco. El
-> razonamiento entero está en `./campos-nutricionales.md`.
-
-> **`INV-4` se comprueba por lo que la cafetería NO escribe, no por que no escriba nada.**
-> El administrador escribe su catálogo —`[S11]` se lo concede— y cualquier permiso suyo
-> fuera de `catalogo.` hace fallar la prueba. Ni él ni el cajero escriben sobre
-> restricciones, saldo ni límite diario, comprobado **por nombre de permiso**, de modo que
-> la prueba ya vigila los modelos que aún no existen.
-
----
-
-#### `PR-22` — `HU-59` Imagen del producto
-
-| | |
-|---|---|
-| Título del PR | `feat(catalogo): cargar la imagen del producto` |
-| Rama | `feat/TT-53-imagen-del-producto` |
-| Responsables | Pedro y Carlos |
-| Historia | `HU-59` |
-| Invariantes | ninguna; se apoya en `DT-20` y `DT-21` |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-53` | Campo de clave de objeto en el producto y servicio de carga de la imagen | Pedro | ☑ |
-| `TT-54` ◆ | Carga de la imagen desde la ficha del producto | Carlos | ☑ |
-
-**Prefijo `publico/`**: la imagen de un producto no es sensible y firmar cincuenta URL
-para pintar la lista del punto de venta es coste sin contrapartida (`DT-18`, `DT-21`).
-«Público» significa **no sensible**, no accesible sin credenciales: no hay buckets
-públicos en el proveedor, así que **la imagen la sirve la aplicación** con caché larga.
-
-> **La ruta lleva la clave, no el identificador del producto**, y de ahí sale que la
-> respuesta se pueda cachear como inmutable durante un mes: al reemplazar la imagen cambia
-> la clave, cambia la URL, y no hay caché que invalidar. Es lo que `INT-2` necesita para no
-> descargar el catálogo entero en cada pintado.
-
-> **La comprobación de la clave no es cosmética.** El almacenamiento antepone el prefijo a
-> lo que se le pida, así que una clave con `..` alcanzaría `privado/`, donde está la
-> fotografía de un menor. Solo se acepta la forma exacta que produce la canalización, y hay
-> prueba de extremo a extremo que lo intenta.
-
----
-
-### Cierre — `PR-23` y `PR-24`
-
----
-
-#### `PR-23` — Generador de datos ficticios
-
-| | |
-|---|---|
-| Título del PR | `feat(seed): completar el generador de datos ficticios con avatares` |
-| Rama | `feat/TT-08-datos-ficticios` |
-| Responsable | Alejandro |
-| Historia | — (transversal) |
-| Invariantes | **`INVD-6`**; `ALC-OUT-07` |
-| Estado | ☑ **Integrado en `main`** |
-
-| Tarea | Descripción | Resp. | Estado |
-|---|---|---|---|
-| `TT-08` | Generador de datos ficticios para pruebas, con avatares (`ALC-OUT-07`, `INVD-6`) | Alejandro | ☑ |
-
-**Es la única tarea del sprint que crece por partes.** Su esqueleto se monta en `PR-08` y
-se amplía a lo largo del sprint; este PR es donde **queda terminada**, cuando ya existen
-los tres bloques que tiene que sembrar:
-
-| Se puede sembrar… | Disponible desde |
-|---|---|
-| Cuentas de usuario e institución | `PR-08` (`TT-09`) |
-| Estudiantes y acudientes, con sus avatares | `PR-12` (`TT-21`), con `PR-07` ya integrado |
-| Catálogo: productos, categorías y alérgenos | `PR-21` (`TT-43`) |
-
-`INVD-6` es una regla de operación: **ninguna fotografía corresponde a una persona real.**
-Los avatares se generan; no se descargan de ningún sitio.
-
-> **La garantía es que no existe el camino, no que se elija bien la fuente.** Las imágenes
-> se dibujan con figuras geométricas, y hay una prueba estructural de que el módulo no sabe
-> hablar por la red. Tampoco se usan servicios de «caras generadas»: son personas sintéticas
-> pero plausibles, y una foto que **parece** una persona real acaba tratándose como tal.
-
-> **El seed siembra también el personal de la cafetería**, y no por completitud: el catálogo
-> lo crea `crear_producto`, que exige un actor con rol de administración porque ahí es donde
-> `[S11]` pone el catálogo. Sin esas cuentas no hay quién lo siembre.
-
-> **Sin invitaciones por correo.** Las direcciones son ficticias y no corresponden a ningún
-> buzón; cada rebote degrada la reputación del remitente (`DEC-9`). El seed asigna
-> contraseña, que es la opción con nombre que `DEC-11` exige de cada servicio de alta —y que
-> `crear_cuenta_de_personal` no tenía hasta este PR—.
-
----
-
-#### `PR-24` — Gestión del Sprint
-
-| | |
-|---|---|
-| Título del PR | `docs(docs): registrar el tablero, los riesgos y el cierre del sprint` |
-| Rama | `docs/TT-47-gestion-del-sprint` |
-| Responsable | Naomi |
-| Historia | — (gestión, `[S5]`) |
+| Título del PR | `feat(pos): buscar al estudiante por documento` |
+| Rama | `feat/TT-73-busqueda-por-documento` |
+| Responsables | Carlos |
+| Historia | `HU-16` |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☐ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-47` | Tablero Kanban con las tareas del sprint y su estado | Naomi | ☐ |
-| `TT-48` | Registro de riesgos del sprint y seguimiento en las Daily | Naomi | ☐ |
-| `TT-49` | Preparación de la Sprint Review y de la Retrospective | Naomi | ☐ |
-
-Va el último **por número, no por fecha**: las tres empiezan el primer día y ninguna
-depende de nada. El PR recoge lo que de ellas queda en el repositorio —el registro de
-riesgos y el material de cierre—; el tablero de `TT-47` vive en su herramienta y aquí solo
-se enlaza.
+| `TT-73` | Búsqueda por documento con el mismo resultado que el escaneo | Carlos | ☐ |
 
 ---
 
-#### `PR-25` — Sistema visual de la interfaz
+#### `PR-09` — `HU-17` Vista de cobro **(parcial)**
 
 | | |
 |---|---|
-| Título del PR | `feat(plantillas): adoptar el sistema visual validado en toda la interfaz` |
-| Rama | `feat/DT-23-sistema-visual` |
-| Responsable | Pedro |
-| Historia | — (transversal) |
-| Invariantes | ninguna. `INV-4` sigue en la capa de datos: aquí no se esconde ningún botón |
-| Estado | ☐ Pendiente |
+| Título del PR | `feat(pos): mostrar el panel del estudiante al cobrar` |
+| Rama | `feat/TT-74-panel-de-cobro` |
+| Responsables | Pedro, Carlos y Alejandro |
+| Historia | `HU-17` — **no la cierra**, ver aviso |
+| Invariantes | `S11`: el cajero ve el saldo solo al cobrar |
+| Estado | ☐ |
 
-**No cubre ninguna tarea del Sprint Backlog, y por eso está fuera de las 56.** Es una
-decisión del equipo tomada el 2026-09-01 y registrada como `DT-23`: el sistema visual
-—paleta, tipografía, armazones y los dos temas— se adopta entero de un producto en
-producción del mismo dominio en lugar de diseñarse aquí. Se anota en este documento porque
-**es el único sitio donde vive el estado**, y un PR que toca las diez plantillas del
-proyecto no puede quedar sin registrar.
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-74` | Selector de la información de cobro: saldo y consumo del día | Pedro | ☐ |
+| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☐ |
+| `TT-76` | Caso de prueba: el cajero ve el saldo solo al cobrar | Alejandro | ☐ |
 
-Toca `estilos/fuente.css`, las tres bases nuevas (`base-publica.html`, `base-acceso.html`,
-`base-aplicacion.html`), las diez plantillas, `admin/base_site.html` para `INT-3`, y añade
-dos pruebas que impiden volver atrás: ni un color literal fuera de la hoja, ni una clase de
-la paleta de fábrica de Tailwind —que, borrada la paleta, **no pinta nada y tampoco da
-error**—.
+> ⚠ **Este PR no cierra `HU-17`.** El tercer criterio de aceptación exige mostrar las
+> **restricciones vigentes**, y las restricciones son `HU-09` … `HU-13`, del **Sprint 3**.
+> El panel se construye aquí con saldo y consumo del día; el bloque de restricciones lo
+> añade `HU-13`, que declara depender de `HU-17`.
+>
+> **No marques `HU-17` como terminada al cerrar el sprint.** `DoD-1` exige que se cumplan
+> *todos* los criterios. Se marca en el Sprint 3.
 
-Qué **no** hace: no cambia ninguna vista, ningún servicio, ningún selector ni ninguna
-migración. `manage.py makemigrations --check` no detecta nada, y las 416 pruebas que ya
-existían siguen pasando sin tocarlas —salvo una de `TT-37`, que buscaba «el primer `<svg>`
-de la página» para comprobar el código de barras y ahora lo busca por su `role="img"`,
-porque la página lleva iconos desde este PR.
+---
+
+#### `PR-10` — `HU-58` Fotografía visible al cobrar
+
+| | |
+|---|---|
+| Título del PR | `feat(pos): mostrar la fotografía del estudiante al cobrar` |
+| Rama | `feat/TT-77-fotografia-al-cobrar` |
+| Responsables | Carlos |
+| Historia | `HU-58` |
+| Invariantes | `DEC-8`; complementa `DEC-5` |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-77` | Fotografía en el panel de cobro, con marcador visible cuando no la tiene | Carlos | ☐ |
+
+Control **preventivo** de suplantación: la desactivación de `HU-47` y `HU-48` solo actúa
+una vez reportada la pérdida; la fotografía actúa en el momento.
+
+---
+
+#### `PR-11` — `HU-54` Medio de pago en toda venta
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): registrar el medio de pago de cada venta` |
+| Rama | `feat/TT-78-medio-de-pago` |
+| Responsables | Pedro y Carlos |
+| Historia | `HU-54` |
+| Invariantes | `DEC-1`; habilita `HU-53` |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-78` | App `ventas`: modelos de venta y línea, con medio de pago y **estudiante opcional** | Pedro | ☐ |
+| `TT-79` | Selección del medio de pago en el punto de venta | Carlos | ☐ |
+
+> **Va antes que la venta a propósito.** El medio de pago es un campo del asiento; añadirlo
+> después obliga a reescribir transacciones ya registradas, que es lo que `INV-2` prohíbe.
+
+El **estudiante opcional** es lo que hace posible `PR-15`: una venta sin estudiante es una
+venta a cliente genérico. La transferencia ocurre fuera del sistema; solo se deja constancia.
+
+---
+
+#### `PR-12` — `HU-21` Descuento simultáneo de saldo y existencias
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): cobrar descontando saldo y existencias en una transacción` |
+| Rama | `feat/TT-80-transaccion-de-venta` |
+| Responsables | Pedro, Carlos y Alejandro |
+| Historia | `HU-21` |
+| Invariantes | **`INV-1`, `INV-2`, `INV-3` a la vez** |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-80` | Servicio de venta: **una** transacción con bloqueo pesimista sobre billetera y productos | Pedro | ☐ |
+| `TT-81` | Carrito y confirmación de la venta, **sin diálogos de confirmación** | Carlos | ☐ |
+| `TT-82` | Caso de prueba de concurrencia: dos ventas simultáneas sobre la misma billetera | Alejandro | ☐ |
+| `TT-83` | Caso de prueba: saldo y existencias se descuentan en la misma operación, o ninguno | Alejandro | ☐ |
+
+> 🔴 **El PR de mayor riesgo del proyecto.** `DT-6` es explícito: se bloquea, **luego** se
+> valida, **luego** se escribe. Validar fuera del bloqueo abre la ventana en la que dos
+> cajeros cobran a la vez, ambos ven saldo suficiente e `INV-1` se rompe. Con 2 a 5 cajeros
+> en una ventana de veinte a treinta minutos, esa concurrencia no es teórica.
+>
+> **Revisión de los dos desarrolladores, no la cruzada de rigor.** Si falla, no falla una
+> historia: falla el prototipo.
+
+`TT-82` existe porque una prueba secuencial no detecta ese fallo.
+
+---
+
+#### `PR-13` — `HU-22` Información nutricional congelada
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): congelar precio e información nutricional en la línea de venta` |
+| Rama | `feat/TT-84-instantanea-nutricional` |
+| Responsables | Pedro y Alejandro |
+| Historia | `HU-22` |
+| Invariantes | `DT-8`, `DT-19` |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-84` | Instantánea del precio y de la información nutricional en la línea de venta | Pedro | ☐ |
+| `TT-85` | Caso de prueba: editar un producto no altera las ventas ya asentadas | Alejandro | ☐ |
+
+No es una desnormalización: «lo que el producto declara hoy» y «lo que declaraba al
+venderse» son hechos distintos. Sostiene los reportes de consumo del Sprint 5.
+
+---
+
+#### `PR-14` — `HU-19` Venta rechazada por saldo insuficiente
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): rechazar la venta cuando el saldo no alcanza` |
+| Rama | `feat/TT-86-rechazo-por-saldo` |
+| Responsables | Pedro y Alejandro |
+| Historia | `HU-19` |
+| Invariantes | **`INV-1`** · escenario crítico **`TST-2`** |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza | Pedro | ☐ |
+| `TT-87` | Caso de prueba `TST-2`: venta rechazada, y saldo nunca negativo | Alejandro | ☐ |
+
+`TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es
+`HU-20`, del Sprint 3.
+
+---
+
+#### `PR-15` — `HU-53` Venta a cliente genérico
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): registrar la venta a un cliente sin vínculo estudiantil` |
+| Rama | `feat/TT-88-venta-generica` |
+| Responsables | Pedro, Carlos y Alejandro |
+| Historia | `HU-53` |
+| Invariantes | `DEC-1`; cierra **`VAC-1`** |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-88` | Venta sin estudiante: descuenta inventario, **no** toca billetera, sin restricciones | Pedro | ☐ |
+| `TT-89` | Modo de cliente genérico en el punto de venta | Carlos | ☐ |
+| `TT-90` | Caso de prueba: descuenta inventario y no altera ninguna billetera | Alejandro | ☐ |
+
+Cierra el hueco más serio que tenía el anteproyecto: `[S5]` declaraba `USR-6` y exigía
+registrar sus ventas, sin ningún `ALC-IN` que lo respaldara.
+
+---
+
+### Gestión — `PR-16`
+
+#### `PR-16` — Gestión del sprint y Avance 1
+
+| | |
+|---|---|
+| Título del PR | `docs(gestion): cerrar el Sprint 2 y preparar el Avance 1` |
+| Rama | `docs/TT-91-gestion-del-sprint-2` |
+| Responsables | Naomi |
+| Historia | ninguna — gestión |
+| Estado | ☐ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-91` | Tablero Kanban del Sprint 2 | Naomi | ☐ |
+| `TT-92` | Registro de riesgos del Sprint 2 | Naomi | ☐ |
+| `TT-93` | Preparación de la Sprint Review, la Retrospective y el **Avance 1** | Naomi | ☐ |
+
+`TT-91` y `TT-92` no esperan al final: el tablero se abre el primer día. Lo que se integra
+al cierre es su resultado.
 
 ---
 
@@ -922,14 +497,13 @@ dependen entre sí y pueden estar abiertos a la vez:
 
 | PR | Puede ir en paralelo con | Porque |
 |---|---|---|
-| `PR-04` (plantilla base, Carlos) | `PR-03` (despliegue, Pedro) | `TT-05` no necesita el entorno desplegado |
-| `PR-06` (Definición de Terminado, Naomi) | cualquiera | `TT-07` no depende de nada |
-| `PR-24` (gestión, Naomi) | cualquiera | `TT-47`, `TT-48` y `TT-49` no dependen de nada |
+| `PR-02` (billetera, Pedro) | `PR-06` (inventario, Pedro) | Dos libros independientes; solo se encuentran en `TT-80` |
+| `PR-06` (inventario) | `PR-07` (identificación) | `TT-67` y `TT-70` no se tocan |
+| `PR-16` (gestión, Naomi) | cualquiera | `TT-91`–`TT-93` no dependen de nada |
 
-Y hay tareas **raíz** —sin dependencias— que se pueden trabajar desde el primer día aunque
-su PR se integre más tarde: `TT-22` (`PR-12`), `TT-30` (`PR-15`), `TT-35` (`PR-16`) y
-`TT-44` (`PR-21`). Cuatro de ellas son de Alejandro, que en este sprint tiene holgura
-(`ANEXO A`).
+Y hay tareas **raíz** —sin dependencias— trabajables desde el primer día aunque su PR se
+integre más tarde: `TT-57`, `TT-58`, `TT-59`, `TT-67` y `TT-70`, más las tres de gestión.
+**Ocho raíces**, frente a las siete del Sprint 1.
 
 **Regla al solapar:** ramifica siempre desde `main`, nunca desde la rama del otro. Si tu PR
 necesita algo del PR de al lado, no es paralelo: espera a que se integre.
@@ -938,24 +512,23 @@ necesita algo del PR de al lado, no es paralelo: espera a que se integre.
 
 ## [S6] Advertencias sobre este plan
 
-1. **24 PR en dos semanas son más de dos al día.** Es lo normal en trunk based
-   development, pero exige que la revisión sea rápida. Un PR que espera dos días revisión
-   convierte la rama corta en rama larga y el plan se cae. Acordad un tiempo máximo de
-   respuesta en la Daily.
-2. **Con dos desarrolladores y revisión cruzada obligatoria, Pedro y Carlos se revisan el
-   uno al otro.** Alejandro y Naomi pueden revisar los PR documentales y los de pruebas,
-   pero no cubren backend. Si Pedro es el único que entiende `PR-21`, la revisión de ese PR
-   es un trámite: por eso se pide revisión de los dos.
-3. **~~`PR-03` bloquea la Definición de Terminado~~ — superado por los hechos.** `PR-03` se
-   integró y el entorno llegó a funcionar, pero **se congeló el 2026-08-30**: el plan
-   gratuito del proveedor no lo sostiene (`[S2]` de `./despliegue.md`). `DoD-4` quedó
-   suspendido y cada PR declara su verificación local. El riesgo que esta advertencia
-   describía —acumular historias «casi hechas» a la espera del despliegue— **ya no
-   aplica**, porque ninguna espera por él. El riesgo nuevo es el contrario: que al
-   restaurarse `DoD-4` haya que volver sobre lo ya cerrado para demostrarlo.
-4. **Si el sprint desborda**, la salida 2 de `ANEXO A` mueve `HU-42`, `HU-46` y `HU-51` al
-   Sprint 2. En este plan eso es sacar `PR-11`, `PR-18` y `PR-19`: quedan 21 PR y 48
-   tareas. Ninguno de los tres bloquea a los demás, y por eso son los candidatos.
-5. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
-   comprobar el `ANEXO C` antes: el orden es un orden topológico verificado, y romperlo
-   introduce un bloqueo que no se ve hasta que alguien está a mitad de la tarea.
+1. **16 PR en dos semanas, frente a los 24 del Sprint 1.** Ritmo más sostenible, pero los
+   PR son más densos: `PR-12` concentra la lógica transaccional entera. No confundir menos
+   PR con menos trabajo.
+2. **`PR-12` no se revisa como los demás.** Sostiene `INV-1`, `INV-2` e `INV-3` a la vez.
+   Pide revisión de los dos desarrolladores y lectura línea a línea del orden
+   bloqueo → validación → escritura.
+3. **`PR-09` no cierra su historia y eso es correcto.** `HU-17` necesita las restricciones
+   del Sprint 3. Al cerrar el sprint quedarán **13 de 14 historias terminadas**, y hay que
+   decirlo así en la Sprint Review en vez de forzar una marca que `DoD-1` no respalda.
+4. **El Avance 1 cae la semana 10, una semana después de cerrar el sprint, y `DoD-4` sigue
+   suspendido.** Si el entorno desplegado no se restaura antes, hay que decidir **cómo** se
+   demuestra el prototipo —y decidirlo en la primera Daily del sprint, no la víspera—.
+   Enseñarlo desde el portátil de alguien es posible, pero es una decisión, no un accidente.
+5. **Si el sprint desborda**, los candidatos a mover al Sprint 3 son `PR-05` (`HU-52`) y
+   `PR-08` (`HU-16`): son los dos únicos `Should` y **ninguna otra historia depende de
+   ellos**. Quedan 14 PR y 34 tareas, sin tocar la ruta de la venta.
+6. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
+   comprobar el `ANEXO C` del sprint backlog antes: el orden es un orden topológico
+   verificado, y romperlo introduce un bloqueo que no se ve hasta que alguien está a mitad
+   de la tarea.

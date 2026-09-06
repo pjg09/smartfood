@@ -15,7 +15,7 @@
 | sprint | 1 de 5 |
 | semanas | 6 – 7 |
 | historias | 18 — las 16 iniciales más `HU-57` y `HU-59`, derivadas de `DEC-8` |
-| tareas | 56 (`TT-01` … `TT-56`) — 55 planificadas más `TT-56`, habilitación detectada al construir `PR-14` (`DEC-12`) |
+| tareas | 56 (`TT-01` … `TT-56`) — 55 planificadas más `TT-56`, habilitación detectada al construir `PR-14` (`DEC-12`). **Las 56 terminadas: sprint cerrado.** |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
 | version | 1.3 |
@@ -30,8 +30,10 @@
 6. Los identificadores `[TT-nn]` son estables y citables.
 7. **La columna `Estado` marca el avance.** `☑` es finalizada —integrada en `main`—, `☐` es pendiente. El
    plan no cambia: la columna se añade sin reordenar ni modificar ninguna tarea.
-8. El estado se lleva **también** en `./plan-de-pull-requests.md`, que agrupa estas 56 tareas en 24 Pull
-   Requests y añade el PR de cada una. Los dos documentos deben coincidir; si divergen, manda el plan de
+8. El estado se llevaba **también** en el plan de Pull Requests del Sprint 1, que agrupaba
+   estas 56 tareas en 24 PR. **Ese fichero fue reemplazado por el del Sprint 2**; el plan
+   del Sprint 1 está en el historial de git. El estado final —las 56 terminadas— queda
+   aquí, que es el registro que se conserva.
    Pull Requests, porque es donde se marca al integrar. Las convenciones de ramas y commits están en
    `./convenciones-de-git.md` (`TT-01`).
 
@@ -298,9 +300,9 @@ No son técnicas, pero forman parte del plan del sprint y las exige el marco de 
 
 | ID | Tarea | Responsable | Origen | Estado |
 |---|---|---|---|---|
-| `TT-47` | Tablero Kanban con las tareas del sprint y su estado | Naomi | `CUR-3` | ☐ |
-| `TT-48` | Registro de riesgos del sprint y seguimiento en las Daily | Naomi | `ENT-04` | ☐ |
-| `TT-49` | Preparación de la Sprint Review y de la Retrospective | Naomi | `EVT-3`, `EVT-4` | ☐ |
+| `TT-47` | Tablero Kanban con las tareas del sprint y su estado | Naomi | `CUR-3` | ☑ |
+| `TT-48` | Registro de riesgos del sprint y seguimiento en las Daily | Naomi | `ENT-04` | ☑ |
+| `TT-49` | Preparación de la Sprint Review y de la Retrospective | Naomi | `EVT-3`, `EVT-4` | ☑ |
 
 ---
 

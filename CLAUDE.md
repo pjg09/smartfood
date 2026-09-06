@@ -8,7 +8,7 @@ Guía de trabajo para Claude Code en este repositorio.
 trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UPB, 202601).
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
-**Estamos en el Sprint 1.**
+**El Sprint 1 está cerrado** —56 de 56 tareas y 18 de 18 historias—. **Estamos en el Sprint 2**, semanas 8 y 9, con el **Avance 1** (`EVA-3`, 20 % de la nota) en la semana 10.
 
 ## Antes de escribir código, lee esto
 
@@ -20,8 +20,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-22`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-1-backlog.md` | **Las 56 tareas del sprint en curso**, con responsable |
-| `docs/plan-de-pull-requests.md` | Las 56 tareas agrupadas en 24 PR, y **el estado de cada una** |
+| `docs/sprint-2-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-57` … `TT-93`), con responsable |
+| `docs/plan-de-pull-requests.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
+| `docs/sprint-1-backlog.md` | El sprint anterior, cerrado. Consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -165,7 +166,7 @@ con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y n
 ## Definición de Terminado
 
 En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
-**Pull Request**, no a la historia, porque 13 de las 56 tareas del sprint no cuelgan de ninguna.
+**Pull Request**, no a la historia, porque cinco de las 37 tareas del sprint no cuelgan de ninguna.
 
 Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (datos ficticios)
 aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se
@@ -194,16 +195,19 @@ automático está desconectado a propósito.
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).
 
-## Al trabajar una tarea del Sprint 1
+## Al trabajar una tarea del Sprint 2
 
-1. Busca la tarea en `docs/sprint-1-backlog.md` (`TT-nn`) y la historia de la que cuelga (`HU-nn`).
+1. Busca la tarea en `docs/sprint-2-backlog.md` (`TT-nn`) y la historia de la que cuelga (`HU-nn`).
 2. Lee los **criterios de aceptación** de esa historia en `docs/backlog-historias-de-usuario.md`.
    Son el contrato: ni menos, ni más.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
    está ahí, para.
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
 5. Al terminar, marca la tarea `☑` **en los dos documentos** —`plan-de-pull-requests.md` y
-   `sprint-1-backlog.md`— dentro del propio PR, y actualiza los contadores. Deben coincidir.
+   `sprint-2-backlog.md`— dentro del propio PR, y actualiza los contadores. Deben coincidir.
+6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
+   `backlog-historias-de-usuario.md`. **Ojo con `HU-17`: `PR-09` no la cierra** (le faltan
+   las restricciones del Sprint 3).
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. `[ANEXO D]` del backlog verifica el grafo de dependencias.

@@ -1005,7 +1005,7 @@ hacia adelante.
 
 ### Sprint 1 · semanas 6–7 — Registro, perfiles, vinculación y catálogo
 
-> **Sprint cerrado.** Las 18 historias están terminadas y sus 53 tareas integradas en `main`, con 418 pruebas en verde. Quedan pendientes `TT-47`, `TT-48` y `TT-49`, las tres de gestión.
+> **Sprint cerrado.** Las 18 historias están terminadas y sus **56 tareas** integradas, con 418 pruebas en verde.
 
 **18 historias.** Al cerrar existe una institución que da de alta personal y estudiantes, cada estudiante tiene su código de tarjeta y su fotografía, cada acudiente su cuenta, y la cafetería su catálogo de productos con sus imágenes.
 
