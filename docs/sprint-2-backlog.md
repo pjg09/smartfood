@@ -97,8 +97,8 @@ El pago de la recarga es **simulado** (`ALC-OUT-01`, `ALC-OUT-02`): no hay pasar
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-62` | Selector que calcula el saldo como suma del historial de movimientos (`INV-2`) | Pedro | ☐ |
-| `TT-63` | Caso de prueba `TST-3`: el saldo mostrado coincide **exactamente** con la suma del historial | Alejandro | ☐ |
+| `TT-62` | Selector que calcula el saldo como suma del historial de movimientos (`INV-2`) | Pedro | ☑ |
+| `TT-63` | Caso de prueba `TST-3`: el saldo mostrado coincide **exactamente** con la suma del historial | Alejandro | ☑ |
 
 `TST-3` es uno de los cuatro escenarios críticos que `ENT-05` exige demostrar. Con `DT-4` se cumple por construcción, pero la prueba tiene que existir igual: es lo que detecta que alguien introdujo un atajo.
 

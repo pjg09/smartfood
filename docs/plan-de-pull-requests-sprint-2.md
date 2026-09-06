@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **5** de 37 | **2** de 16 |
-| Pendientes | 32 | 14 |
+| **Finalizadas** | **7** de 37 | **3** de 16 |
+| Pendientes | 30 | 13 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 3 | 14 |
+| Pedro | 4 | 14 |
 | Carlos | 2 | 11 |
-| Alejandro | 0 | 9 |
+| Alejandro | 1 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -98,7 +98,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 |---|---|---|---|
 | `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☑ |
 | `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☑ |
-| `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☐ |
+| `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☑ |
 | `PR-04` | `TT-64` | `HU-07` | ☐ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☐ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
@@ -184,12 +184,12 @@ El pago es **simulado** (`ALC-OUT-01`, `ALC-OUT-02`): ni pasarela ni dinero real
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-08` |
 | Invariantes | **`INV-2`** · escenario crítico **`TST-3`** |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-62` | Selector que calcula el saldo como suma del historial | Pedro | ☐ |
-| `TT-63` | Caso de prueba `TST-3`: el saldo mostrado coincide exactamente con la suma del historial | Alejandro | ☐ |
+| `TT-62` | Selector que calcula el saldo como suma del historial | Pedro | ☑ |
+| `TT-63` | Caso de prueba `TST-3`: el saldo mostrado coincide exactamente con la suma del historial | Alejandro | ☑ |
 
 `TST-3` es uno de los cuatro escenarios que `ENT-05` exige. La prueba no sobra por ser
 cierta por construcción: es lo que detecta que alguien metió un atajo.
