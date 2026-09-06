@@ -89,8 +89,10 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | Las 56 tareas del sprint en curso, con responsable y estado |
-| [`plan-de-pull-requests.md`](./docs/plan-de-pull-requests.md) | Esas 56 tareas agrupadas en 24 PR, y el estado de cada una |
+| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Las 37 tareas del sprint en curso (`TT-57`…`TT-93`), con responsable y estado |
+| [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Esas 37 tareas agrupadas en 16 PR, y el estado de cada una |
+| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El sprint anterior, cerrado: 56 tareas y 18 historias |
+| [`plan-de-pull-requests-sprint-1.md`](./docs/plan-de-pull-requests-sprint-1.md) | Su plan de PR, cerrado: 25 PR |
 | [`definicion-de-terminado.md`](./docs/definicion-de-terminado.md) | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 
 **Cómo se trabaja**

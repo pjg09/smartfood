@@ -16,11 +16,11 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) |
+| historias | 59 (`HU-01` … `HU-59`) — **18 terminadas** al cierre del Sprint 1, 41 pendientes |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
-| version | 2.2 |
+| version | 2.3 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -31,7 +31,8 @@
 4. Lo que la documentación **no cubre** no se rellena por cuenta propia: se registra en el `ANEXO B` como vacío `[VAC-n]`. Seis funciones que el prototipo necesitará no tienen respaldo documental hoy.
 5. `[S5]` recoge el **calendario de sprints definido por el equipo** en su planeación del Entregable 2. El reparto de historias entre esos sprints no se deriva de la documentación: es planificación, revisable en Sprint Planning (`EVT-1`). Su último apartado registra las dependencias que el calendario no respeta y el ajuste mínimo que las resolvería.
 6. Los identificadores `[HU-nn]`, `[EPI-n]` y `[VAC-n]` son estables y citables. No se renumeran; las adiciones van al final de la serie.
-7. Las **estimaciones se dejan deliberadamente vacías**: son una decisión del equipo en Sprint Planning (`EVT-1`), no algo derivable de la documentación.
+7. **La columna `Estado` de `[S4]` marca el avance.** `☑` es terminada —todas sus tareas integradas en `main` y sus criterios de aceptación verificados una a una (`DoD-1`)—, `☐` es pendiente. Marcarla no altera el texto de la historia ni su orden.
+8. Las **estimaciones se dejan deliberadamente vacías**: son una decisión del equipo en Sprint Planning (`EVT-1`), no algo derivable de la documentación.
 
 ### [S0.3] Mapa de secciones
 
@@ -907,69 +908,69 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 Orden: primero los `Must` que sostienen invariantes o escenarios críticos, después el resto de la ruta de `ENT-01`, después lo demás.
 
-| # | ID | Historia | Épica | Actor | Prioridad |
-|---|---|---|---|---|---|
-| 1 | `HU-01` | Carga masiva de estudiantes y acudientes | EPI-1 | USR-5 | Must |
-| 2 | `HU-02` | Validación del archivo antes de escribir | EPI-1 | USR-5 | Must |
-| 3 | `HU-03` | Invitación por correo y contraseña | EPI-1 | USR-2 | Must |
-| 4 | `HU-05` | Autorregistro bloqueado | EPI-1 | USR-5 | Must |
-| 5 | `HU-04` | Acudiente con varios estudiantes | EPI-1 | USR-2 | Must |
-| 6 | `HU-26` | Administración del catálogo | EPI-7 | USR-4 | Must |
-| 7 | `HU-06` | Recarga de la billetera | EPI-2 | USR-2 | Must |
-| 8 | `HU-08` | Saldo reconstruible desde el historial | EPI-2 | USR-2 | Must |
-| 9 | `HU-07` | Consulta de saldo por el acudiente | EPI-2 | USR-2 | Must |
-| 10 | `HU-09` | Límite diario de gasto | EPI-3 | USR-2 | Must |
-| 11 | `HU-10` | Bloqueo de un producto puntual | EPI-3 | USR-2 | Must |
-| 12 | `HU-11` | Bloqueo por alérgeno | EPI-3 | USR-2 | Must |
-| 13 | `HU-13` | Restricciones no desactivables | EPI-3 | USR-2 | Must |
-| 14 | `HU-14` | Código de tarjeta aleatorio | EPI-4 | USR-1 | Must |
-| 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must |
-| 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must |
-| 17 | Fotografía visible al cobrar | EPI-11 | USR-3 | Must |
-| 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must |
-| 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must |
-| 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must |
-| 21 | `HU-20` | Venta rechazada por límite diario (`TST-2`) | EPI-5 | USR-2 | Must |
-| 22 | `HU-22` | Información nutricional congelada en la venta | EPI-5 | USR-2 | Must |
-| 23 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must |
-| 24 | `HU-28` | Merma con motivo obligatorio | EPI-7 | USR-4 | Must |
-| 25 | `HU-29` | Existencias explicables (`TST-4`) | EPI-7 | USR-4 | Must |
-| 26 | `HU-30` | Historial de consumo | EPI-8 | USR-2 | Must |
-| 27 | `HU-34` | Aviso de carácter orientativo | EPI-8 | USR-2 | Must |
-| 28 | `HU-38` | Consulta de restricciones por los cuatro roles | EPI-8 | USR-3/4/5 | Must |
-| 29 | `HU-39` | Alta de la institución por seed | EPI-9 | USR-5 | Must |
-| 30 | `HU-40` | Alta de cuentas de cajero y administrador | EPI-9 | USR-5 | Must |
-| 31 | `HU-41` | Contraseña por invitación para el personal | EPI-9 | USR-3/4 | Must |
-| 32 | `HU-43` | Código de tarjeta asignado en la carga | EPI-10 | USR-5 | Must |
-| 33 | `HU-44` | Vista de administración de estudiantes | EPI-10 | USR-5 | Must |
-| 34 | Fotografía del estudiante | EPI-10 | USR-5 | Must |
-| 35 | `HU-45` | Consulta del código de tarjeta vigente | EPI-10 | USR-5 | Must |
-| 36 | `HU-46` | Reasignación del código de tarjeta | EPI-10 | USR-5 | Must |
-| 37 | `HU-47` | Desactivación por la institución | EPI-10 | USR-5 | Must |
-| 38 | `HU-48` | Desactivación por el acudiente | EPI-10 | USR-2 | Must |
-| 39 | `HU-49` | Reactivación exclusiva de la institución | EPI-10 | USR-5 | Must |
-| 40 | `HU-50` | Venta rechazada por estudiante desactivado | EPI-10 | USR-2 | Must |
-| 41 | `HU-53` | Venta a cliente genérico | EPI-11 | USR-3 | Must |
-| 42 | `HU-54` | Medio de pago en toda venta | EPI-11 | USR-4 | Must |
-| 43 | `HU-23` | Reserva y pago anticipado | EPI-6 | USR-2 | Should |
-| 44 | `HU-24` | Consulta de reservas pendientes | EPI-6 | USR-3/4 | Should |
-| 45 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should |
-| 46 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should |
-| 47 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should |
-| 48 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should |
-| 49 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should |
-| 50 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should |
-| 51 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should |
-| 52 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should |
-| 53 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should |
-| 54 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should |
-| 55 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should |
-| 56 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should |
-| 57 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should |
-| 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should |
-| 59 | Imagen del producto | EPI-7 | USR-4 | Should |
+| # | ID | Historia | Épica | Actor | Prioridad | Estado |
+|---|---|---|---|---|---|---|
+| 1 | `HU-01` | Carga masiva de estudiantes y acudientes | EPI-1 | USR-5 | Must | ☑ |
+| 2 | `HU-02` | Validación del archivo antes de escribir | EPI-1 | USR-5 | Must | ☑ |
+| 3 | `HU-03` | Invitación por correo y contraseña | EPI-1 | USR-2 | Must | ☑ |
+| 4 | `HU-05` | Autorregistro bloqueado | EPI-1 | USR-5 | Must | ☑ |
+| 5 | `HU-04` | Acudiente con varios estudiantes | EPI-1 | USR-2 | Must | ☑ |
+| 6 | `HU-26` | Administración del catálogo | EPI-7 | USR-4 | Must | ☑ |
+| 7 | `HU-06` | Recarga de la billetera | EPI-2 | USR-2 | Must | ☐ |
+| 8 | `HU-08` | Saldo reconstruible desde el historial | EPI-2 | USR-2 | Must | ☐ |
+| 9 | `HU-07` | Consulta de saldo por el acudiente | EPI-2 | USR-2 | Must | ☐ |
+| 10 | `HU-09` | Límite diario de gasto | EPI-3 | USR-2 | Must | ☐ |
+| 11 | `HU-10` | Bloqueo de un producto puntual | EPI-3 | USR-2 | Must | ☐ |
+| 12 | `HU-11` | Bloqueo por alérgeno | EPI-3 | USR-2 | Must | ☐ |
+| 13 | `HU-13` | Restricciones no desactivables | EPI-3 | USR-2 | Must | ☐ |
+| 14 | `HU-14` | Código de tarjeta aleatorio | EPI-4 | USR-1 | Must | ☑ |
+| 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☐ |
+| 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☐ |
+| 17 | `HU-58` | Fotografía visible al cobrar | EPI-11 | USR-3 | Must | ☐ |
+| 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☐ |
+| 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must | ☐ |
+| 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
+| 21 | `HU-20` | Venta rechazada por límite diario (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
+| 22 | `HU-22` | Información nutricional congelada en la venta | EPI-5 | USR-2 | Must | ☐ |
+| 23 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must | ☐ |
+| 24 | `HU-28` | Merma con motivo obligatorio | EPI-7 | USR-4 | Must | ☐ |
+| 25 | `HU-29` | Existencias explicables (`TST-4`) | EPI-7 | USR-4 | Must | ☐ |
+| 26 | `HU-30` | Historial de consumo | EPI-8 | USR-2 | Must | ☐ |
+| 27 | `HU-34` | Aviso de carácter orientativo | EPI-8 | USR-2 | Must | ☐ |
+| 28 | `HU-38` | Consulta de restricciones por los cuatro roles | EPI-8 | USR-3/4/5 | Must | ☐ |
+| 29 | `HU-39` | Alta de la institución por seed | EPI-9 | USR-5 | Must | ☑ |
+| 30 | `HU-40` | Alta de cuentas de cajero y administrador | EPI-9 | USR-5 | Must | ☑ |
+| 31 | `HU-41` | Contraseña por invitación para el personal | EPI-9 | USR-3/4 | Must | ☑ |
+| 32 | `HU-43` | Código de tarjeta asignado en la carga | EPI-10 | USR-5 | Must | ☑ |
+| 33 | `HU-44` | Vista de administración de estudiantes | EPI-10 | USR-5 | Must | ☑ |
+| 34 | `HU-57` | Fotografía del estudiante | EPI-10 | USR-5 | Must | ☑ |
+| 35 | `HU-45` | Consulta del código de tarjeta vigente | EPI-10 | USR-5 | Must | ☑ |
+| 36 | `HU-46` | Reasignación del código de tarjeta | EPI-10 | USR-5 | Must | ☑ |
+| 37 | `HU-47` | Desactivación por la institución | EPI-10 | USR-5 | Must | ☐ |
+| 38 | `HU-48` | Desactivación por el acudiente | EPI-10 | USR-2 | Must | ☐ |
+| 39 | `HU-49` | Reactivación exclusiva de la institución | EPI-10 | USR-5 | Must | ☐ |
+| 40 | `HU-50` | Venta rechazada por estudiante desactivado | EPI-10 | USR-2 | Must | ☐ |
+| 41 | `HU-53` | Venta a cliente genérico | EPI-11 | USR-3 | Must | ☐ |
+| 42 | `HU-54` | Medio de pago en toda venta | EPI-11 | USR-4 | Must | ☐ |
+| 43 | `HU-23` | Reserva y pago anticipado | EPI-6 | USR-2 | Should | ☐ |
+| 44 | `HU-24` | Consulta de reservas pendientes | EPI-6 | USR-3/4 | Should | ☐ |
+| 45 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should | ☐ |
+| 46 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should | ☐ |
+| 47 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☐ |
+| 48 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
+| 49 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
+| 50 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
+| 51 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should | ☐ |
+| 52 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should | ☐ |
+| 53 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
+| 54 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
+| 55 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
+| 56 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☐ |
+| 57 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
+| 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
+| 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**18 terminadas de 59** al cierre del Sprint 1. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 
@@ -983,7 +984,7 @@ semanas**, de la semana 6 a la 15. Cumple `CUR-1` (sprints de 1 a 2 semanas) y s
 
 | Sprint | Semanas | Objetivo del Sprint | Historias | Hito |
 |---|---|---|---|---|
-| 1 | 6 – 7 | Registro, perfiles, vinculación acudiente–estudiante y catálogo | 18 | — |
+| 1 | 6 – 7 | Registro, perfiles, vinculación acudiente–estudiante y catálogo | 18 | **✔ cerrado** |
 | 2 | 8 – 9 | Billetera digital e identificación por tarjeta en el POS | 14 | **Avance 1 · sem. 10** (`EVA-3`) |
 | 3 | 10 – 11 | Control parental: restricciones, alérgenos, límite de gasto | 12 | — |
 | 4 | 12 – 13 | Inventario trazable y pedidos anticipados | 5 | **Avance 2 · sem. 14** (`EVA-4`) |
@@ -1003,6 +1004,8 @@ empezarse hasta que las suyas estén terminadas. `[ANEXO D]` verifica que no hay
 hacia adelante.
 
 ### Sprint 1 · semanas 6–7 — Registro, perfiles, vinculación y catálogo
+
+> **Sprint cerrado.** Las 18 historias están terminadas y sus **56 tareas** integradas, con 418 pruebas en verde.
 
 **18 historias.** Al cerrar existe una institución que da de alta personal y estudiantes, cada estudiante tiene su código de tarjeta y su fotografía, cada acudiente su cuenta, y la cafetería su catálogo de productos con sus imágenes.
 

@@ -1,10 +1,14 @@
 # SmartFood — Plan de Pull Requests del Sprint 1
 
+> **Sprint cerrado.** Documento de archivo: no se edita. El plan del sprint en curso es
+> `./plan-de-pull-requests-sprint-2.md`.
+
 ## [S0] Bloque de control del documento
 
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-PR-SPRINT1 |
+| estado | **Cerrado** el 2026-09-06. 56 de 56 tareas, 25 de 25 Pull Requests |
 | titulo | Agrupación de las 56 tareas del Sprint 1 en Pull Requests, y estado de cada tarea |
 | documentos_fuente | `./sprint-1-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`) |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
@@ -86,21 +90,21 @@ este documento.
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **53** de 56 | **23** de 24 |
-| Pendientes | 3 | 1 |
+| **Finalizadas** | **56** de 56 | **25** de 25 |
+| Pendientes | 0 | 0 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 26 | 26 |
 | Carlos | 16 | 16 |
 | Alejandro | 9 | 9 |
-| Naomi | 2 | 5 |
+| Naomi | 5 | 5 |
 
 El total incluye `TT-56` —la pantalla de acceso—, que la planeación no contabilizó: es
 habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 `./decisiones-de-alcance.md`.
 
-### [S3.1] Estado de los 24 Pull Requests
+### [S3.1] Estado de los 25 Pull Requests
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
@@ -127,11 +131,12 @@ habilitación, no alcance nuevo, y su razonamiento está en `DEC-12` de
 | `PR-21` | `TT-43`–`TT-46` | `HU-26` · `INV-5` | ☑ |
 | `PR-22` | `TT-53`–`TT-54` | `HU-59` | ☑ |
 | `PR-23` | `TT-08` | Datos ficticios · `INVD-6` | ☑ |
-| `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☐ |
+| `PR-24` | `TT-47`–`TT-49` | Gestión del sprint | ☑ |
+| `PR-25` | — | Sistema visual (`DT-23`), fuera de las 56 tareas | ☑ |
 
 ---
 
-## [S4] Los 24 Pull Requests
+## [S4] Los 25 Pull Requests
 
 ### Habilitación — `PR-01` … `PR-07`
 
@@ -868,13 +873,13 @@ Los avatares se generan; no se descargan de ningún sitio.
 | Responsable | Naomi |
 | Historia | — (gestión, `[S5]`) |
 | Invariantes | ninguna |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-47` | Tablero Kanban con las tareas del sprint y su estado | Naomi | ☐ |
-| `TT-48` | Registro de riesgos del sprint y seguimiento en las Daily | Naomi | ☐ |
-| `TT-49` | Preparación de la Sprint Review y de la Retrospective | Naomi | ☐ |
+| `TT-47` | Tablero Kanban con las tareas del sprint y su estado | Naomi | ☑ |
+| `TT-48` | Registro de riesgos del sprint y seguimiento en las Daily | Naomi | ☑ |
+| `TT-49` | Preparación de la Sprint Review y de la Retrospective | Naomi | ☑ |
 
 Va el último **por número, no por fecha**: las tres empiezan el primer día y ninguna
 depende de nada. El PR recoge lo que de ellas queda en el repositorio —el registro de
@@ -892,7 +897,7 @@ se enlaza.
 | Responsable | Pedro |
 | Historia | — (transversal) |
 | Invariantes | ninguna. `INV-4` sigue en la capa de datos: aquí no se esconde ningún botón |
-| Estado | ☐ Pendiente |
+| Estado | ☑ **Integrado en `main`** (#269) |
 
 **No cubre ninguna tarea del Sprint Backlog, y por eso está fuera de las 56.** Es una
 decisión del equipo tomada el 2026-09-01 y registrada como `DT-23`: el sistema visual
