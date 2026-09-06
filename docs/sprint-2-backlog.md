@@ -70,8 +70,8 @@ El punto de venta es una **interfaz nueva** (`INT-2`). No existía nada de ella 
 
 | ID | Tarea | Responsable | Habilita | Estado |
 |---|---|---|---|---|
-| `TT-57` | Layout del punto de venta: pantalla completa, sin navegación, foco permanente y operación por teclado (`INT-2`, `DT-16`) | Carlos | `HU-15`, `HU-16`, `HU-17` | ☐ |
-| `TT-58` | Ruta del punto de venta y su control de acceso: solo el rol cajero (`S11`, `DT-11`) | Pedro | Todo `[S4]` a partir de `HU-15` | ☐ |
+| `TT-57` | Layout del punto de venta: pantalla completa, sin navegación, foco permanente y operación por teclado (`INT-2`, `DT-16`) | Carlos | `HU-15`, `HU-16`, `HU-17` | ☑ |
+| `TT-58` | Ruta del punto de venta y su control de acceso: solo el rol cajero (`S11`, `DT-11`) | Pedro | Todo `[S4]` a partir de `HU-15` | ☑ |
 
 > **`TT-57` y `TT-58` no cierran ninguna historia**, igual que las nueve de habilitación del Sprint 1. Se declaran aquí para que no queden invisibles en la planeación.
 

@@ -789,6 +789,41 @@
   }
 
   /**
+   * Rejilla del punto de venta: identificación · catálogo · ticket (`TT-57`).
+   *
+   * Una columna lateral de anchura fija no cabe en la escala de `grid-cols-N`,
+   * que solo hace fracciones iguales, y escribirla suelta
+   * (`grid-cols-[20rem_1fr_22rem]`) es el valor arbitrario que esta hoja existe
+   * para evitar. Se le da nombre de intención, igual que a los degradados.
+   *
+   * **Solo desde `escritorio` (1024 px), que es el aparato de `INT-2`.** Por
+   * debajo las tres zonas se apilan y no hay rejilla que definir: el punto de
+   * venta no se opera desde un teléfono.
+   *
+   * Las medidas están calculadas para 1024 px: 320 de identificación + 352 de
+   * ticket + 32 de huecos dejan 320 al catálogo, que es donde el cajero pulsa.
+   * Si alguna de las dos laterales crece, el catálogo es quien paga.
+   */
+  .rejilla-caja {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  /* **El punto de ruptura va DENTRO de la clase, no como `escritorio:` en la
+   * plantilla.** Las variantes de Tailwind solo alcanzan a las utilidades que
+   * genera él: `escritorio:rejilla-caja` no existe, no se compila y **no da
+   * ningún error** — la pantalla simplemente se queda en una columna. Medido a
+   * 1024 px antes de darse cuenta.
+   *
+   * La alternativa sería declararla con `@utility`, pero entonces las tres
+   * medidas quedarían repartidas entre esta hoja y la plantilla. */
+  @media (min-width: 64rem) {
+    .rejilla-caja {
+      grid-template-columns: 20rem 1fr 22rem;
+    }
+  }
+
+  /**
    * La tarjeta física del estudiante (`TT-37`, `HU-45`, `ENT-02`).
    *
    * 85,6 × 54 mm son las medidas de una tarjeta bancaria: es el formato para el

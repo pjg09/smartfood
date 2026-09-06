@@ -59,6 +59,10 @@ APPS_DEL_PROYECTO = [
     "cuentas",
     "personas",
     "catalogo",
+    # Punto de venta (`INT-2`). Nace en `TT-57` y `TT-58` con la pantalla y su
+    # control de acceso; sus modelos llegan en `TT-78` y el servicio de venta en
+    # `TT-80`. Cada app se crea en el sprint que la necesita.
+    "ventas",
 ]
 
 INSTALLED_APPS = APPS_DE_DJANGO + APPS_DE_TERCEROS + APPS_DEL_PROYECTO
