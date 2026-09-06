@@ -18,6 +18,7 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
+from ventas.views import punto_de_venta
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
 # único que necesita es hablar en español y no llamarse «Django» (TT-05).
@@ -90,5 +91,9 @@ urlpatterns = [
         imagen_del_producto,
         name="imagen-del-producto",
     ),
+    # Punto de venta (`TT-57`, `TT-58`, `INT-2`). **Solo el cajero**: `[S11]` no
+    # concede registrar ventas a ningún otro rol, y quien lo intente recibe un
+    # `403` aunque llegue escribiendo la URL (`DT-11`).
+    path("punto-de-venta/", punto_de_venta, name="punto-de-venta"),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

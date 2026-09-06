@@ -165,6 +165,44 @@
     });
   }
 
+  /* --- Foco permanente del punto de venta (`TT-57`) ---------------------
+   *
+   * **La pistola lectora escribe donde esté el foco.** Si un clic en cualquier
+   * parte de la pantalla se lo lleva, el siguiente escaneo se pierde: los
+   * caracteres van al `body` y no aparecen en ninguna parte, sin ningún aviso.
+   * El cajero solo ve que «el lector no funciona», con la fila delante.
+   *
+   * Por eso el foco vuelve solo al campo marcado. Es la decisión ergonómica que
+   * define `INT-2`, y va en el armazón y no en la pantalla de `HU-15`: cualquier
+   * cosa que se añada al punto de venta hereda el comportamiento.
+   *
+   * Se devuelve solo cuando el foco se ha ido a **ninguna parte** —al `body`—.
+   * Robárselo a otro campo o a un botón haría imposible escribir un documento a
+   * mano (`HU-16`) o pulsar nada con el teclado, que es lo contrario de lo que
+   * se busca.
+   */
+  function montarFocoPermanente() {
+    var campo = document.querySelector("[data-foco-permanente]");
+    if (campo === null) return;
+
+    document.addEventListener("focusout", function () {
+      // En el siguiente ciclo: durante `focusout`, el elemento que va a recibir
+      // el foco todavía no lo tiene, y `document.activeElement` sigue siendo el
+      // que lo pierde. Comprobarlo ahora daría siempre el mismo resultado.
+      setTimeout(function () {
+        if (document.activeElement === null || document.activeElement === document.body) {
+          campo.focus();
+        }
+      }, 0);
+    });
+
+    // Escape lo devuelve a mano, esté donde esté: es la vuelta rápida al lector
+    // sin tener que buscar el campo con el ratón.
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape") campo.focus();
+    });
+  }
+
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se
    * vuelve a construir: basta con montarlo una vez. */
   document.addEventListener("DOMContentLoaded", function () {
@@ -172,5 +210,6 @@
     montarBarra();
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
+    montarFocoPermanente();
   });
 })();

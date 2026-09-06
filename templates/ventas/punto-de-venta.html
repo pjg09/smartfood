@@ -1,0 +1,96 @@
+{% extends "base-punto-de-venta.html" %}
+
+{% comment %} TT-57, TT-58. La pantalla del punto de venta (`INT-2`).
+
+   **Es una habilitación: coloca las tres zonas y el foco, y no cobra nada.** Lo
+   que va dentro llega en sus propias historias, y cada hueco dice cuál:
+
+     · identificar por tarjeta o por documento — `HU-15`, `HU-16` (`PR-07`, `PR-08`)
+     · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
+     · catálogo, carrito y cobro           — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
+
+   Los huecos declaran **qué falta y cuándo**, no un cero: en este sistema un
+   saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
+   venta es el peor sitio para confundirlos.
+
+   El campo de identificación sí está, y es del layout y no de `HU-15`: es donde
+   vive el foco permanente, que es la decisión ergonómica que define esta
+   pantalla. **Todavía no busca nada** — `TT-71` le pondrá el disparo con Enter
+   contra el selector de `TT-70`—, y por eso no está dentro de un formulario:
+   un `<form>` sin acción envía a la propia URL y perdería el foco recargando.
+{% endcomment %}
+
+{% block titulo %}Punto de venta · SmartFood{% endblock %}
+
+{% block identificacion %}
+  <div class="flex flex-col gap-2 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+    <label for="identificacion" class="text-base font-medium text-texto">
+      Escanea la tarjeta
+    </label>
+    {% comment %} `autofocus` para el primer pintado y `data-foco-permanente` para todo lo
+       demás: la pistola escribe donde esté el foco, así que si un clic lo lleva a
+       otra parte, `interfaz.js` lo devuelve aquí. {% endcomment %}
+    <input type="text" id="identificacion" name="identificacion"
+           autocomplete="off" autofocus data-foco-permanente
+           placeholder="Código de la tarjeta"
+           class="h-12 w-full rounded-md border border-borde bg-superficie px-3 font-mono
+                  text-lg tracking-widest text-texto transition-colors
+                  placeholder:font-texto placeholder:tracking-normal placeholder:text-texto-suave
+                  hover:border-acento focus:border-acento focus:outline-none">
+    <p class="text-sm text-texto-suave">
+      El lector escribe aquí solo. También se puede teclear el código.
+    </p>
+  </div>
+
+  {% comment %} `grow` y no `flex-1`, más un alto mínimo. `flex-1` es `flex: 1 1 0%`: con
+     base cero, apilada —por debajo de 1024 px— la columna no tiene altura que
+     repartir y el bloque colapsaba, recortando el texto que explica qué va aquí.
+     `grow` conserva la base automática y sigue ocupando el resto en escritorio. {% endcomment %}
+  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
+              border border-dashed border-borde p-6 text-center">
+    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                 text-acento-fuerte">
+      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+    </span>
+    <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
+    <p class="text-sm text-texto-suave">
+      Al escanear su tarjeta aparecerán aquí su nombre, su fotografía, el saldo
+      disponible, lo que lleva gastado hoy y sus restricciones.
+    </p>
+    <p class="text-sm text-texto-suave">
+      Identificar por tarjeta y por documento llega con <strong class="text-texto">HU-15</strong>
+      y <strong class="text-texto">HU-16</strong>; la vista de cobro, con
+      <strong class="text-texto">HU-17</strong>.
+    </p>
+  </div>
+{% endblock %}
+
+{% block catalogo %}
+  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
+              border border-dashed border-borde p-6 text-center">
+    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
+      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+    </span>
+    <p class="text-base font-medium text-texto">Aquí va el catálogo</p>
+    <p class="max-w-sm text-sm text-texto-suave">
+      Los productos con su precio, para añadirlos a la venta con un toque. Llegan
+      con <strong class="text-texto">HU-21</strong>, junto con el descuento
+      simultáneo de saldo y existencias.
+    </p>
+  </div>
+{% endblock %}
+
+{% block ticket %}
+  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
+              border border-dashed border-borde p-6 text-center">
+    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
+      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-saldo"></use></svg>
+    </span>
+    <p class="text-base font-medium text-texto">Aquí va la venta</p>
+    <p class="max-w-sm text-sm text-texto-suave">
+      Las líneas, el total y el medio de pago. Llegan con
+      <strong class="text-texto">HU-54</strong> y <strong class="text-texto">HU-21</strong>.
+      Se confirma sin diálogo: el foco es del lector.
+    </p>
+  </div>
+{% endblock %}

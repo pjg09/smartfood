@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **0** de 37 | **0** de 16 |
-| Pendientes | 37 | 16 |
+| **Finalizadas** | **2** de 37 | **1** de 16 |
+| Pendientes | 35 | 15 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 14 |
-| Carlos | 0 | 11 |
+| Pedro | 1 | 14 |
+| Carlos | 1 | 11 |
 | Alejandro | 0 | 9 |
 | Naomi | 0 | 3 |
 
@@ -96,7 +96,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
-| `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☐ |
+| `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☑ |
 | `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☐ |
 | `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☐ |
 | `PR-04` | `TT-64` | `HU-07` | ☐ |
@@ -131,12 +131,12 @@ construir antes de que esté integrado.
 | Responsables | Carlos y Pedro |
 | Historia | ninguna — habilitación |
 | Invariantes | `DT-11`: el control de acceso es de la capa de datos, no del layout |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-57` | Layout del punto de venta: pantalla completa, sin navegación, foco permanente y operación por teclado | Carlos | ☐ |
-| `TT-58` | Ruta del punto de venta y su control de acceso: solo el rol cajero | Pedro | ☐ |
+| `TT-57` | Layout del punto de venta: pantalla completa, sin navegación, foco permanente y operación por teclado | Carlos | ☑ |
+| `TT-58` | Ruta del punto de venta y su control de acceso: solo el rol cajero | Pedro | ☑ |
 
 **Qué habilita y cómo se comprueba:** que un usuario con rol cajero llegue a una pantalla
 del punto de venta, y que cualquier otro rol reciba un 403. `DoD-1` exige declararlo

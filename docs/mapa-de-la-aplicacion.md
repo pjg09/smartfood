@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`); `./desarrollo.md` |
-| actualizado | 2026-09-01, al cierre del Sprint 1; interfaz revisada con `DT-23` el mismo día |
+| actualizado | 2026-09-01, al cierre del Sprint 1; interfaz revisada con `DT-23` el mismo día; punto de venta habilitado con `TT-57` y `TT-58` |
 | idioma | es-CO |
 | version | 1.1 |
 
@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las once rutas
+## [S2] Las doce rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -54,6 +54,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
+| `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -65,6 +66,7 @@ los mismos colores desde `DT-23`.
 | `/carga/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/catalogo/imagenes/<clave>` | 200 | 200 | 200 | 200 | **200** |
 
 Dos filas piden explicación:
@@ -72,6 +74,9 @@ Dos filas piden explicación:
 - **El acudiente recibe `403` en la tarjeta, también la de su propio hijo.** `HU-45` es de
   `USR-5`: quien produce la tarjeta es el colegio. Si algún día el acudiente tiene que
   verla, será con una historia que lo pida.
+- **La administración de la cafetería recibe `403` en el punto de venta.** No es un
+  olvido: `[S11]` concede «registrar ventas en el punto de venta» al cajero y a nadie
+  más. Quien administra el catálogo no cobra.
 - **La imagen del producto se sirve sin sesión, a propósito** (`DT-21`). «Público» significa
   *no sensible*: es la fotografía de una empanada. Exigir sesión no protegería nada y
   rompería la caché que `INT-2` necesita. La clave no se adivina: la genera el servidor.
@@ -87,10 +92,12 @@ qué pasa al imprimirla.
 | `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
 | `base-acceso.html` | Dos columnas: panel de marca y formulario | `/acceso/`, `/invitacion/…`, `/invitacion/lista/` |
 | `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37` |
+| `base-punto-de-venta.html` | Pantalla completa, sin navegación ni diálogos, con foco permanente | `/punto-de-venta/` |
 | `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |
 
-**El punto de venta (`INT-2`) tendrá el suyo en el Sprint 2**: se opera con teclado y lector,
-y la barra lateral le quita a la rejilla de productos el espacio donde el cajero pulsa.
+**El punto de venta (`INT-2`) ya tiene el suyo** (`TT-57`): se opera con teclado y lector,
+así que no lleva navegación —la barra lateral le quitaría a la rejilla de productos el
+espacio donde el cajero pulsa— ni diálogos, y el foco vuelve solo al campo del lector.
 
 **El tema —claro, oscuro o el del sistema— es una preferencia del navegador de cada
 persona, no de su cuenta.** No se guarda en la base y no viaja entre aparatos. El del admin
@@ -152,8 +159,11 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 ### Cajero (`USR-3`)
 
-**Nada todavía.** Su cuenta existe, entra y se le puede desactivar (`HU-40`, `HU-41`,
-`HU-42`), pero el punto de venta es del Sprint 2.
+`/punto-de-venta/`, y solo él: cualquier otro rol recibe `403` aunque escriba la URL
+(`DT-11`). La pantalla coloca las tres zonas —quién compra, qué compra y cuánto es— y
+el campo donde escribe el lector, que retiene el foco. **Todavía no cobra**:
+identificar al estudiante es `HU-15` y `HU-16`, ver su saldo y sus restricciones es
+`HU-17`, y la venta es `HU-21`. Cada hueco dice de qué historia es.
 
 ---
 
@@ -177,9 +187,16 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Saldo y recargas (`HU-06`…`HU-08`), restricciones y límite diario (`HU-09`…`HU-13`), punto
-de venta (`HU-15`…`HU-22`), inventario (`HU-27`…`HU-29`), reportes y recomendaciones
-(`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`). Ninguno es del Sprint 1.
+Saldo y recargas (`HU-06`…`HU-08`), restricciones y límite diario (`HU-09`…`HU-13`),
+identificación y venta en el punto de venta (`HU-15`…`HU-22`), inventario
+(`HU-27`…`HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
+(`HU-55`, `HU-56`).
 
-Las apps `billetera`, `inventario`, `ventas` y `reportes` **no están creadas**: cada una se
-crea en el sprint que la necesita (`[S3]` de `./decisiones-tecnicas.md`).
+Del punto de venta existe **la pantalla y su puerta**, no lo que ocurre dentro: `TT-57` y
+`TT-58` son tareas de habilitación y **no cierran ninguna historia**. Saldo, restricciones
+y venta llegan en el Sprint 2, salvo las restricciones, que son del 3.
+
+Las apps `billetera`, `inventario` y `reportes` **no están creadas**: cada una se crea en el
+sprint que la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` sí existe desde
+`TT-57`, porque la pantalla necesitaba un sitio donde vivir, pero **está vacía de modelos**:
+los suyos son de `TT-78` y el servicio de venta, de `TT-80`.
