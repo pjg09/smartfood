@@ -198,7 +198,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Consultar el saldo (`HU-07`, `HU-08`), restricciones y límite diario (`HU-09`…`HU-13`),
+Ver el saldo en la interfaz del acudiente (`HU-07`), restricciones y límite diario (`HU-09`…`HU-13`),
 identificación y venta en el punto de venta (`HU-15`…`HU-22`), inventario
 (`HU-27`…`HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).
@@ -207,8 +207,9 @@ Del punto de venta existe **la pantalla y su puerta**, no lo que ocurre dentro: 
 `TT-58` son tareas de habilitación y **no cierran ninguna historia**. Saldo, restricciones
 y venta llegan en el Sprint 2, salvo las restricciones, que son del 3.
 
-**Recargar ya está** (`HU-06`); lo que falta del dinero es verlo: `HU-07` muestra el saldo
-al acudiente y `HU-08` lo prueba contra el historial.
+**Recargar ya está** (`HU-06`), y el saldo **se calcula** desde el historial y se
+comprueba contra él (`HU-08`, `TST-3`). Lo que falta del dinero es enseñárselo al
+acudiente en su panel, que es `HU-07` (`PR-04`).
 
 Las apps `inventario` y `reportes` **no están creadas**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` existe desde `TT-57` porque la

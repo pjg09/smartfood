@@ -22,10 +22,39 @@ def saldo_de(estudiante):
     cero. Son el mismo hecho contado de dos maneras: la fila nace en la primera
     recarga (ver `billetera.models.Billetera`).
 
-    La lectura completa de `HU-08` y su prueba `TST-3` son de `PR-03` (`TT-62`,
-    `TT-63`); esto es lo que el servicio de recarga necesita para no adelantarlas.
+    **No autoriza a nadie, y es a propósito.** Un selector no sabe quién
+    pregunta: quien llama decide si puede. En `INT-1` eso lo hace
+    `estudiante_a_cargo`, que solo alcanza a los estudiantes propios (`DT-11`);
+    en el punto de venta lo hará la identificación de `HU-15`. Meter aquí una
+    comprobación de rol obligaría a pasar el actor a cada lectura interna —el
+    servicio de venta consulta el saldo para decidir si alcanza (`INV-1`), y ahí
+    no hay ningún acudiente— y acabaría en un `actor=None` que salta la regla.
     """
     total = MovimientoBilletera.objects.filter(billetera__estudiante=estudiante).aggregate(
         total=Sum("monto")
     )["total"]
     return total if total is not None else Decimal("0.00")
+
+
+def historial_de(estudiante, limite=None):
+    """Los movimientos de la billetera, del más reciente al más antiguo.
+
+    **Es la otra mitad de `HU-08`**: `INV-2` no dice solo que el saldo salga de
+    una suma, dice que se pueda **reconstruir**, y reconstruir exige poder leer
+    los sumandos. Un saldo correcto que nadie puede desglosar no es trazabilidad,
+    es el mismo número que había que creer, con otro origen.
+
+    `limite` recorta para las pantallas que enseñan «los últimos movimientos»
+    (`TT-64`, `PR-04`). **Sin él se devuelve el historial entero**, que es lo que
+    `TST-3` compara contra el saldo: una comparación sobre una página del
+    historial no probaría nada.
+
+    Devuelve un `QuerySet` sin evaluar. El orden lo fija el modelo —`-creado_en`—
+    y se repite aquí de forma explícita: quien lea esta función no tiene por qué
+    ir al `Meta` a averiguar en qué orden llega un extracto.
+    """
+    movimientos = MovimientoBilletera.objects.filter(
+        billetera__estudiante=estudiante
+    ).order_by("-creado_en")
+
+    return movimientos[:limite] if limite is not None else movimientos

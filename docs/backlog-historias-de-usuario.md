@@ -16,7 +16,7 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) — **19 terminadas**, 40 pendientes; 18 al cierre del Sprint 1 y `HU-06` en el Sprint 2 |
+| historias | 59 (`HU-01` … `HU-59`) — **20 terminadas**, 39 pendientes; 18 al cierre del Sprint 1, más `HU-06` y `HU-08` en el Sprint 2 |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
@@ -917,7 +917,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 5 | `HU-04` | Acudiente con varios estudiantes | EPI-1 | USR-2 | Must | ☑ |
 | 6 | `HU-26` | Administración del catálogo | EPI-7 | USR-4 | Must | ☑ |
 | 7 | `HU-06` | Recarga de la billetera | EPI-2 | USR-2 | Must | ☑ |
-| 8 | `HU-08` | Saldo reconstruible desde el historial | EPI-2 | USR-2 | Must | ☐ |
+| 8 | `HU-08` | Saldo reconstruible desde el historial | EPI-2 | USR-2 | Must | ☑ |
 | 9 | `HU-07` | Consulta de saldo por el acudiente | EPI-2 | USR-2 | Must | ☐ |
 | 10 | `HU-09` | Límite diario de gasto | EPI-3 | USR-2 | Must | ☐ |
 | 11 | `HU-10` | Bloqueo de un producto puntual | EPI-3 | USR-2 | Must | ☐ |
@@ -970,7 +970,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**19 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, que cierra `PR-02` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**20 terminadas de 59**: las 18 del Sprint 1 más `HU-06` y `HU-08`, que cierran `PR-02` y `PR-03` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 
