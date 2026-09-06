@@ -1,0 +1,103 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} TT-61. Pantalla de recarga de la billetera (`HU-06`, `INT-1`).
+
+   **El pago es simulado y la pantalla lo dice.** `ALC-OUT-01` y `ALC-OUT-02`
+   excluyen la pasarela y el dinero real: no hay campos de tarjeta ni de cuenta,
+   y no se recoge ningún dato de pago. Decirlo aquí no es un descargo legal, es
+   evitar que alguien crea que acaba de mover dinero de verdad.
+
+   Lo que sí es real es el movimiento: queda asentado en el historial (tercer
+   criterio de `HU-06`) y desde ese momento forma parte del saldo, que es
+   exactamente su suma (`INV-2`).
+
+   **No muestra el saldo.** Consultarlo es `HU-07` y llega en `PR-04`: esta
+   pantalla recarga, y enseñar aquí una cifra que otra historia todavía no
+   sostiene sería adelantarla a medias.
+{% endcomment %}
+
+{% block titulo %}Recargar · {{ estudiante.nombre }} · SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-lg flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">
+        Recargar la billetera
+      </h1>
+      <p class="text-base font-medium text-texto-suave">
+        De <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong>. La
+        billetera es suya: lo que recargues aquí no lo puede gastar nadie más.
+      </p>
+    </header>
+
+    <form method="post" class="flex flex-col gap-4 rounded-md border border-borde
+                               bg-superficie p-4 shadow-sm">
+      {% csrf_token %}
+
+      {% comment %} Los errores del servicio —`INVD-2`, el monto fuera de rango— llegan como
+         errores del formulario y no de un campo: no siempre son culpa de lo que se
+         escribió. `role="alert"` para que un lector de pantalla los anuncie. {% endcomment %}
+      {% if form.non_field_errors %}
+        <div role="alert"
+             class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+          <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div class="text-sm text-error-fuerte">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="flex flex-col gap-1">
+        <label for="{{ form.monto.id_for_label }}" class="text-base font-medium text-texto">
+          {{ form.monto.label }}
+        </label>
+        <div class="relative">
+          <span aria-hidden="true"
+                class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                       font-display text-lg text-texto-suave">$</span>
+          <input type="number" name="{{ form.monto.html_name }}" id="{{ form.monto.id_for_label }}"
+                 step="0.01" min="0.01" max="{{ form.monto.field.max_value }}"
+                 inputmode="decimal" required autofocus
+                 value="{{ form.monto.value|default_if_none:'' }}"
+                 class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                        text-lg tabular-nums text-texto transition-colors
+                        hover:border-acento focus:border-acento focus:outline-none
+                        {% if form.monto.errors %}border-error{% else %}border-borde{% endif %}">
+        </div>
+        {% if form.monto.errors %}
+          <p class="text-sm font-medium text-error-fuerte">{{ form.monto.errors|join:" " }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit"
+              class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2
+                     rounded-md bg-primario px-6 text-lg font-medium whitespace-nowrap
+                     text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+        Recargar
+      </button>
+    </form>
+
+    {% comment %} Va en `aviso` y no en `error`: no ha fallado nada. El ámbar dice «esto no
+       es lo que parece», que es justo lo que hay que entender antes de pulsar. {% endcomment %}
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <div class="flex flex-col gap-1 text-sm text-aviso-fuerte">
+        <p class="text-base font-semibold">Este pago es simulado</p>
+        <p>
+          No hay pasarela ni dinero real, y no se te piden datos de tarjeta ni de
+          cuenta. El movimiento sí queda registrado en el historial de la billetera,
+          que es lo que este prototipo demuestra.
+        </p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

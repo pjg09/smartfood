@@ -10,6 +10,7 @@ from django.contrib.auth import views as vistas_de_auth
 from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 
+from billetera.views import recarga
 from catalogo.views import imagen_del_producto
 from config.salud import salud
 from personas.views import (
@@ -74,6 +75,14 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/",
         estudiante_seleccionado,
         name="estudiante-seleccionado",
+    ),
+    # Recarga de la billetera (`TT-61`, `HU-06`). Cuelga de la ruta del
+    # estudiante porque **la billetera es individual por estudiante**, no de la
+    # cuenta del acudiente: recargar sin decir a quién no significa nada.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/recargar/",
+        recarga,
+        name="recarga",
     ),
     # Vista imprimible de la tarjeta (`TT-37`, `HU-45`). Es de la institución
     # (`USR-5`), no del acudiente: quien produce la tarjeta es el colegio.
