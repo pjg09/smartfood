@@ -1,15 +1,22 @@
-{% comment %} TT-29. Fragmento del estudiante elegido (`HU-04`).
+{% load dinero %}
+{% comment %} TT-29, TT-64. Fragmento del estudiante elegido (`HU-04`, `HU-07`).
 
    Fragmento, no página: lo devuelve `estudiante_seleccionado` a cada clic del
    selector, y lo incluye la página al pintarse por primera vez (`DT-16`).
 
    **Todo lo que hay aquí es de un estudiante, no del acudiente.** Es el segundo
    criterio de `HU-04`: el saldo, el límite diario y las restricciones son por
-   estudiante. Los tres llegan en sprints posteriores —billetera en el Sprint 2
-   (`HU-06`, `HU-09`), restricciones en el 3 (`HU-10`, `HU-11`)— y se declaran
-   aquí para que el sitio al que pertenecen quede fijado desde ahora. Las tres
-   tarjetas dicen **qué falta y cuándo**, no una cifra inventada: un cero en el
-   saldo se lee como un saldo de cero.
+   estudiante.
+
+   El saldo ya está (`HU-07`): es **la suma de sus movimientos**, calculada al
+   pedir la página, no un número guardado (`INV-2`). Debajo van los últimos, que
+   es lo que convierte la cifra en algo comprobable — segundo criterio de
+   `HU-07`: el saldo mostrado corresponde exactamente al historial, y aquí se
+   puede ver.
+
+   El límite diario y las restricciones llegan en el Sprint 3 (`HU-09` … `HU-11`)
+   y sus tarjetas dicen **qué falta y cuándo**, no una cifra inventada: un cero
+   en el límite se leería como un límite de cero.
 {% endcomment %}
 
 {% if seleccionado %}
@@ -51,7 +58,9 @@
           <svg class="mt-0.5 h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
           <span>
             <strong class="font-semibold">De baja</strong> desde el
-            {{ seleccionado.dado_de_baja_en|date:"j \d\e F \d\e Y" }}. Su saldo queda
+            {{ seleccionado.dado_de_baja_en|date:"j" }} de
+            {{ seleccionado.dado_de_baja_en|date:"F"|lower }} de
+            {{ seleccionado.dado_de_baja_en|date:"Y" }}. Su saldo queda
             congelado y se puede consultar, pero no se puede recargar ni comprar con él.
           </span>
         </p>
@@ -69,11 +78,15 @@
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
         </span>
         <h3 class="text-base font-semibold text-texto-suave">Saldo</h3>
-        {% comment %} La cifra no está todavía: consultarla es `HU-07` (`PR-04`). Lo que sí
-           está es recargar, que es `HU-06`. Se enseña lo que se puede hacer, no
-           un cero que se leería como un saldo de cero. {% endcomment %}
+        {% comment %} `tabular-nums`: las cifras se alinean por columnas y no bailan al
+           cambiar de estudiante en el selector. En dinero importa. {% endcomment %}
+        <p class="font-display text-2xl tabular-nums text-texto">{{ saldo|dinero }}</p>
         <p class="text-base font-medium text-texto-suave">
-          Billetera individual de {{ seleccionado.nombre }}. Ver el saldo llega en el Sprint 2.
+          {% if seleccionado.esta_de_baja %}
+            Congelado desde la baja: se consulta, pero no se recarga ni se gasta.
+          {% else %}
+            Es la suma de sus movimientos, no una cifra aparte.
+          {% endif %}
         </p>
         {% if seleccionado.puede_operar %}
           {% comment %} A un estudiante de baja o desactivado no se le recarga (`INVD-2`), así
@@ -113,6 +126,58 @@
           Alérgenos y productos bloqueados de {{ seleccionado.nombre }}. Llegan en el Sprint 3.
         </p>
       </article>
+    </section>
+
+    {% comment %} `TT-64`, `HU-07` segundo criterio. Los últimos movimientos, que es lo que
+       hace comprobable la cifra de arriba: el saldo **es** su suma (`INV-2`), y
+       aquí se ve de dónde sale.
+
+       Son cinco y no el extracto entero: la historia es «saber si necesita una
+       recarga», no auditar la cuenta. {% endcomment %}
+    <section aria-labelledby="movimientos" class="flex flex-col gap-3">
+      <h2 id="movimientos" class="text-lg text-texto">Últimos movimientos</h2>
+
+      {% if movimientos %}
+        <ul class="flex flex-col divide-y divide-borde rounded-md border border-borde
+                   bg-superficie shadow-sm">
+          {% for movimiento in movimientos %}
+            <li class="flex items-center justify-between gap-4 p-4">
+              <div class="flex min-w-0 items-center gap-3">
+                {% comment %} El icono distingue lo que entra de lo que sale sin depender del
+                   color: quien no distingue rojo y verde lee la flecha y el signo. {% endcomment %}
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md
+                             {% if movimiento.monto > 0 %}bg-exito-suave text-exito-fuerte
+                             {% else %}bg-superficie-hover text-texto-suave{% endif %}">
+                  <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+                </span>
+                <div class="flex min-w-0 flex-col">
+                  <span class="truncate text-base font-medium text-texto">
+                    {{ movimiento.get_tipo_display }}
+                  </span>
+                  {% comment %} El mes se pasa a minúscula aparte: Django lo devuelve
+                     capitalizado —«Septiembre»— y en español va en minúscula dentro
+                     de una fecha. No hay filtro que baje solo la inicial, así que se
+                     compone en tres trozos. {% endcomment %}
+                  <span class="text-sm text-texto-suave">
+                    {{ movimiento.creado_en|date:"j" }} de
+                    {{ movimiento.creado_en|date:"F"|lower }} de
+                    {{ movimiento.creado_en|date:"Y, H:i" }}
+                  </span>
+                </div>
+              </div>
+              <span class="shrink-0 font-display text-lg tabular-nums
+                           {% if movimiento.monto > 0 %}text-exito-fuerte{% else %}text-texto{% endif %}">
+                {{ movimiento.monto|dinero }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="rounded-md border border-dashed border-borde p-6 text-center text-base
+                  font-medium text-texto-suave" role="status">
+          Todavía no hay movimientos. En cuanto recargues, aparecerán aquí.
+        </p>
+      {% endif %}
     </section>
   </div>
 {% endif %}

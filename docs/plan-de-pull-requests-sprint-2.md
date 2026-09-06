@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **7** de 37 | **3** de 16 |
-| Pendientes | 30 | 13 |
+| **Finalizadas** | **8** de 37 | **4** de 16 |
+| Pendientes | 29 | 12 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 4 | 14 |
-| Carlos | 2 | 11 |
+| Carlos | 3 | 11 |
 | Alejandro | 1 | 9 |
 | Naomi | 0 | 3 |
 
@@ -99,7 +99,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-01` | `TT-57`–`TT-58` | Habilitación del punto de venta (`INT-2`) | ☑ |
 | `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☑ |
 | `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☑ |
-| `PR-04` | `TT-64` | `HU-07` | ☐ |
+| `PR-04` | `TT-64` | `HU-07` | ☑ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☐ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☐ |
@@ -205,11 +205,11 @@ cierta por construcción: es lo que detecta que alguien metió un atajo.
 | Responsables | Carlos |
 | Historia | `HU-07` |
 | Invariantes | ninguna directamente; consume `INV-2` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-64` | Saldo y últimos movimientos en la ficha del estudiante | Carlos | ☐ |
+| `TT-64` | Saldo y últimos movimientos en la ficha del estudiante | Carlos | ☑ |
 
 Solo el acudiente ve el saldo como consulta libre. El cajero lo verá **solo al cobrar**
 (`S11`), y eso es `PR-09`.

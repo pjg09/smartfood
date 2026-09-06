@@ -13,6 +13,7 @@ from django.http import Http404
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
+from billetera.selectors import historial_de, saldo_de
 from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
 from personas.models import Estudiante, Institucion
@@ -75,6 +76,38 @@ def carga_de_estudiantes(request):
     return render(request, "personas/carga-de-estudiantes.html", contexto)
 
 
+# Cuántos movimientos se enseñan bajo el saldo (`TT-64`, `HU-07`).
+#
+# Cinco, y no «el historial»: lo que la historia pide es saber **si hace falta
+# recargar**, y para eso basta con ver lo último que pasó. Un extracto completo
+# en la misma pantalla empuja el resto del panel fuera de la vista en un
+# teléfono, que es desde donde entra el acudiente (`INT-1`).
+ULTIMOS_MOVIMIENTOS = 5
+
+
+def _contexto_del_estudiante(estudiante):
+    """Lo que la ficha de un estudiante necesita, venga de la página o del fragmento.
+
+    **La misma función para los dos caminos**, a propósito: la página y el
+    fragmento HTMX pintan la misma plantilla (`DT-16`), y armar el contexto dos
+    veces es cómo acaban enseñando cosas distintas.
+
+    El saldo lo calcula `billetera`, sumando el historial (`INV-2`). Aquí es
+    donde se juntan los dos dominios, y es el sitio correcto: **una vista
+    compone**. La dependencia entre modelos sigue yendo en un solo sentido —
+    `billetera` conoce a `personas` y no al revés.
+    """
+    return {
+        "seleccionado": estudiante,
+        "saldo": saldo_de(estudiante) if estudiante is not None else None,
+        "movimientos": (
+            historial_de(estudiante, limite=ULTIMOS_MOVIMIENTOS)
+            if estudiante is not None
+            else []
+        ),
+    }
+
+
 @login_required
 @require_http_methods(["GET"])
 def panel_del_acudiente(request):
@@ -96,7 +129,7 @@ def panel_del_acudiente(request):
     return render(
         request,
         "personas/mis-estudiantes.html",
-        {"estudiantes": estudiantes, "seleccionado": seleccionado},
+        {"estudiantes": estudiantes, **_contexto_del_estudiante(seleccionado)},
     )
 
 
@@ -122,7 +155,7 @@ def estudiante_seleccionado(request, estudiante_id):
     return render(
         request,
         "partials/estudiante-seleccionado.html",
-        {"seleccionado": estudiante},
+        _contexto_del_estudiante(estudiante),
     )
 
 

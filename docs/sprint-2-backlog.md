@@ -106,7 +106,7 @@ El pago de la recarga es **simulado** (`ALC-OUT-01`, `ALC-OUT-02`): no hay pasar
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-64` | Saldo y últimos movimientos en la ficha del estudiante, en la interfaz del acudiente | Carlos | ☐ |
+| `TT-64` | Saldo y últimos movimientos en la ficha del estudiante, en la interfaz del acudiente | Carlos | ☑ |
 
 Solo el acudiente ve el saldo como consulta libre. El cajero lo ve **solo al cobrar** (`S11`), que es `HU-17`.
 
