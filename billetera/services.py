@@ -56,6 +56,56 @@ def _comprobar_que_es_su_acudiente(actor, estudiante):
         )
 
 
+# Los tipos que **operan** sobre la billetera, es decir, los que exigen que el
+# estudiante esté en condiciones de hacerlo (`INVD-2`).
+#
+# La devolución no está, y es una decisión, no un olvido: devolver es corregir un
+# movimiento anterior, no operar. Un estudiante que se retiró del colegio con una
+# venta mal cobrada tiene derecho a que se le corrija, y bloquear la corrección
+# dejaría su historial diciendo algo que no pasó — justo lo que `INV-2` existe
+# para evitar. `HU-52` prohíbe **comprar y recargar** sobre el saldo congelado, y
+# eso es exactamente lo que aquí se prohíbe.
+TIPOS_QUE_OPERAN = frozenset({TipoDeMovimiento.RECARGA, TipoDeMovimiento.VENTA})
+
+
+@transaction.atomic
+def asentar(*, estudiante, tipo, monto):
+    """**El único sitio por el que se escribe en el libro** (`TT-65`, `HU-52`).
+
+    Devuelve el `MovimientoBilletera` creado.
+
+    Existe para que «el saldo congelado no admite compras ni recargas» sea cierto
+    **antes de que exista la venta**. `INVD-2` ya estaba escrita y `recargar` ya
+    la llamaba, pero eso solo protege a los servicios que se acuerden de llamarla:
+    el de venta se escribe en `TT-80`, dos semanas después, y una regla que
+    depende de la memoria de quien escriba el siguiente servicio no es una regla.
+
+    Con esto, cualquier movimiento nuevo —la venta de `HU-21`, la devolución, lo
+    que venga— pasa por aquí y la comprobación ocurra o no se escriba nada.
+
+    La billetera se crea si no existía: es la primera operación del estudiante.
+    `get_or_create` dentro de la transacción evita la carrera entre dos
+    operaciones simultáneas, y el `OneToOneField` la cierra del todo.
+
+    **No comprueba quién es el actor**, y no es un descuido: cada operación tiene
+    su propia regla de quién puede —recargar es del acudiente (`HU-06`), cobrar
+    es del cajero (`[S11]`)— y son los servicios de arriba los que la aplican.
+    Meter aquí un `actor` obligaría a inventar uno en la venta, donde quien opera
+    es el cajero sobre la billetera de un tercero.
+    """
+    if tipo in TIPOS_QUE_OPERAN:
+        # `INVD-2`: ni desactivado ni de baja se compra ni se recarga. La puerta
+        # es única y vive en `personas` desde el Sprint 1, precisamente para que
+        # el primer servicio que moviera dinero no tuviera que reconstruirla.
+        comprobar_que_puede_operar(estudiante)
+
+    billetera, _ = Billetera.objects.get_or_create(estudiante=estudiante)
+
+    return MovimientoBilletera.objects.create(
+        billetera=billetera, tipo=tipo, monto=monto
+    )
+
+
 @transaction.atomic
 def recargar(*, actor, estudiante, monto):
     """Asienta una recarga en la billetera del estudiante (`TT-60`, `HU-06`).
@@ -79,11 +129,6 @@ def recargar(*, actor, estudiante, monto):
     """
     _comprobar_que_es_su_acudiente(actor, estudiante)
 
-    # `INVD-2`: ni desactivado ni de baja se compra **ni se recarga**. La puerta
-    # es única y vive en `personas` desde el Sprint 1, precisamente para que el
-    # primer servicio que mueva dinero no tuviera que reconstruir la regla.
-    comprobar_que_puede_operar(estudiante)
-
     monto = Decimal(monto)
     if monto <= 0:
         raise ValidationError("Una recarga suma: el monto tiene que ser mayor que cero.")
@@ -96,10 +141,7 @@ def recargar(*, actor, estudiante, monto):
     if monto != monto.quantize(Decimal("0.01")):
         raise ValidationError("El monto admite como mucho dos decimales.")
 
-    billetera, _ = Billetera.objects.get_or_create(estudiante=estudiante)
-
-    return MovimientoBilletera.objects.create(
-        billetera=billetera,
-        tipo=TipoDeMovimiento.RECARGA,
-        monto=monto,
-    )
+    # `INVD-2` y `HU-52` los comprueba el asentador, que es por donde pasan todos
+    # los movimientos: aquí no se repite para que no haya dos sitios que puedan
+    # discrepar sobre cuándo una billetera está congelada.
+    return asentar(estudiante=estudiante, tipo=TipoDeMovimiento.RECARGA, monto=monto)
