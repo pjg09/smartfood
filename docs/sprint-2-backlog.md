@@ -147,7 +147,7 @@ El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-73` | Búsqueda por documento en el punto de venta, con el mismo resultado que el escaneo | Carlos | ☐ |
+| `TT-73` | Búsqueda por documento en el punto de venta, con el mismo resultado que el escaneo | Carlos | ☑ |
 
 ### `[HU-17]` Vista de cobro con saldo, consumo y restricciones
 

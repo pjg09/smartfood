@@ -56,7 +56,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
-| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante escaneado | **Solo cajero** | `TT-71` |
+| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -186,11 +186,14 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 (`DT-11`). La pantalla coloca las tres zonas —quién compra, qué compra y cuánto es— y
 el campo donde escribe el lector, que retiene el foco.
 
-**Escanear ya funciona** (`HU-15`): el lector teclea el código, envía Enter y aparece el
-estudiante con su documento. Un estudiante de baja o desactivado **se identifica igual**,
+**Identificar ya funciona, por las dos vías.** El lector teclea el código y envía Enter
+(`HU-15`), y quien no trae la tarjeta se busca por su documento (`HU-16`): **las dos
+piden a la misma ruta y devuelven el mismo fragmento**, así que no pueden acabar en
+resultados distintos. Un estudiante de baja o desactivado **se identifica igual**,
 avisando de que no se le puede vender: decir «esa tarjeta no es de nadie» sería mentir y
-dejaría al cajero repitiendo el escaneo. **Todavía no cobra**: buscar por documento es
-`HU-16`, el saldo y las restricciones son `HU-17`, y la venta es `HU-21`.
+dejaría al cajero repitiendo el escaneo.
+
+**Todavía no cobra**: el saldo y las restricciones son `HU-17`, y la venta es `HU-21`.
 
 ---
 

@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **15** de 37 | **6** de 16 |
-| Pendientes | 22 | 10 |
+| **Finalizadas** | **16** de 37 | **7** de 16 |
+| Pendientes | 21 | 9 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 8 | 14 |
-| Carlos | 5 | 11 |
+| Carlos | 6 | 11 |
 | Alejandro | 2 | 9 |
 | Naomi | 0 | 3 |
 
@@ -103,7 +103,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☑ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ◐ software sí; falta `TT-72` |
-| `PR-08` | `TT-73` | `HU-16` | ☐ |
+| `PR-08` | `TT-73` | `HU-16` | ☑ |
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
@@ -303,11 +303,11 @@ imprime lo construido en `TT-37`. Es trabajo físico: hay que imprimirlas de ver
 | Responsables | Carlos |
 | Historia | `HU-16` |
 | Invariantes | ninguna |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-73` | Búsqueda por documento con el mismo resultado que el escaneo | Carlos | ☐ |
+| `TT-73` | Búsqueda por documento con el mismo resultado que el escaneo | Carlos | ☑ |
 
 ---
 

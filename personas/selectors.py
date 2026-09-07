@@ -111,3 +111,49 @@ def identificar_por_codigo_de_tarjeta(codigo):
         raise Estudiante.DoesNotExist("Ese código no tiene la forma de un código de tarjeta.")
 
     return Estudiante.objects.select_related("acudiente").get(codigo_tarjeta=normalizado)
+
+
+def identificar_por_documento(documento):
+    """El estudiante que trae su documento, sin tarjeta (`TT-73`, `HU-16`).
+
+    Devuelve el `Estudiante`, o lanza `Estudiante.DoesNotExist`.
+
+    **La alternativa al escaneo, con el mismo resultado.** Es el primer criterio
+    de `HU-16`, y por eso esta función devuelve exactamente lo mismo que
+    `identificar_por_codigo_de_tarjeta`: la misma fila, con el mismo criterio
+    sobre el estado. Quien llega sin tarjeta no puede acabar en una venta
+    distinta de la de quien la trae — el segundo criterio de la historia dice que
+    las restricciones, el saldo y el límite se aplican igual.
+
+    **Coincidencia exacta, no parcial.** Buscar «100» y recibir una lista de
+    treinta menores con su nombre y su documento sería un listado de datos
+    personales servido a quien está en la caja, y `[S11]` no le da al cajero el
+    padrón: le da identificar a quien tiene delante. Quien trae su documento lo
+    trae entero.
+
+    **Se busca dos veces, y hace falta.** Primero tal cual se escribió; si no hay
+    nadie, otra vez sin los separadores que la gente pone al copiar un número
+    largo de una cédula —puntos, espacios, guiones—. El orden importa: filtrar
+    primero rompería un documento que los lleve de verdad, y el campo admite
+    texto, no solo dígitos (`./formato-de-carga.md`): una cédula de extranjería
+    tiene letras.
+
+    La segunda consulta solo ocurre cuando la primera no encontró a nadie, que en
+    la caja es el caso raro.
+    """
+    tal_cual = (documento or "").strip()
+    if not tal_cual:
+        raise Estudiante.DoesNotExist("Un documento vacío no identifica a nadie.")
+
+    estudiantes = Estudiante.objects.select_related("acudiente")
+    try:
+        return estudiantes.get(documento=tal_cual)
+    except Estudiante.DoesNotExist:
+        pass
+
+    sin_separadores = tal_cual.replace(".", "").replace(" ", "").replace("-", "")
+    if sin_separadores == tal_cual:
+        # No había nada que quitar: repetir la consulta daría lo mismo.
+        raise Estudiante.DoesNotExist("Ningún estudiante con ese documento.")
+
+    return estudiantes.get(documento=sin_separadores)
