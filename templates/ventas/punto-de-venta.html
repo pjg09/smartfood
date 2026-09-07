@@ -1,6 +1,6 @@
 {% extends "base-punto-de-venta.html" %}
 
-{% comment %} TT-57, TT-58. La pantalla del punto de venta (`INT-2`).
+{% comment %} TT-57, TT-58, TT-71. La pantalla del punto de venta (`INT-2`).
 
    **Es una habilitación: coloca las tres zonas y el foco, y no cobra nada.** Lo
    que va dentro llega en sus propias historias, y cada hueco dice cuál:
@@ -13,11 +13,10 @@
    saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
    venta es el peor sitio para confundirlos.
 
-   El campo de identificación sí está, y es del layout y no de `HU-15`: es donde
-   vive el foco permanente, que es la decisión ergonómica que define esta
-   pantalla. **Todavía no busca nada** — `TT-71` le pondrá el disparo con Enter
-   contra el selector de `TT-70`—, y por eso no está dentro de un formulario:
-   un `<form>` sin acción envía a la propia URL y perdería el foco recargando.
+   El campo de identificación **ya busca** (`TT-71`): el lector teclea el código y
+   envía Enter, y eso pide el fragmento contra el selector de `TT-70`. No está
+   dentro de un `<form>` a propósito — uno sin acción envía a la propia URL y
+   perdería el foco recargando, que es lo contrario de lo que el POS necesita.
 {% endcomment %}
 
 {% block titulo %}Punto de venta · SmartFood{% endblock %}
@@ -29,39 +28,60 @@
     </label>
     {% comment %} `autofocus` para el primer pintado y `data-foco-permanente` para todo lo
        demás: la pistola escribe donde esté el foco, así que si un clic lo lleva a
-       otra parte, `interfaz.js` lo devuelve aquí. {% endcomment %}
+       otra parte, `interfaz.js` lo devuelve aquí.
+
+       **El lector es un teclado**: teclea el código y envía Enter. No hay driver
+       ni SDK, y por eso el disparo es `keyup[key=='Enter']` y no un botón — el
+       cajero no pulsa nada entre tarjeta y tarjeta.
+
+       `hx-vals` manda el valor como `codigo`: así el parámetro de la URL no
+       depende de cómo se llame el control en la plantilla.
+
+       Al terminar, `interfaz.js` vacía el campo y le devuelve el foco, para que
+       la siguiente tarjeta escriba sobre un campo limpio sin que nadie borre. {% endcomment %}
     <input type="text" id="identificacion" name="identificacion"
            autocomplete="off" autofocus data-foco-permanente
            placeholder="Código de la tarjeta"
+           hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
+           hx-trigger="keyup[key=='Enter']"
+           hx-vals="js:{codigo: document.getElementById('identificacion').value}"
+           hx-target="#estudiante-identificado"
+           hx-swap="innerHTML"
+           hx-indicator="#buscando-estudiante"
            class="h-12 w-full rounded-md border border-borde bg-superficie px-3 font-mono
                   text-lg tracking-widest text-texto transition-colors
                   placeholder:font-texto placeholder:tracking-normal placeholder:text-texto-suave
                   hover:border-acento focus:border-acento focus:outline-none">
-    <p class="text-sm text-texto-suave">
-      El lector escribe aquí solo. También se puede teclear el código.
+    <p class="flex items-center justify-between gap-2 text-sm text-texto-suave">
+      <span>El lector escribe aquí solo. También se puede teclear y pulsar Enter.</span>
+      <span id="buscando-estudiante" class="htmx-indicator shrink-0">Buscando…</span>
     </p>
   </div>
 
+  {% comment %} Aquí aterriza el fragmento de `TT-71`. Empieza con el hueco de siempre y lo
+     reemplaza el primer escaneo; a partir de ahí, cada Enter sustituye lo que
+     hubiera. {% endcomment %}
   {% comment %} `grow` y no `flex-1`, más un alto mínimo. `flex-1` es `flex: 1 1 0%`: con
      base cero, apilada —por debajo de 1024 px— la columna no tiene altura que
-     repartir y el bloque colapsaba, recortando el texto que explica qué va aquí.
-     `grow` conserva la base automática y sigue ocupando el resto en escritorio. {% endcomment %}
-  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
-              border border-dashed border-borde p-6 text-center">
-    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
-                 text-acento-fuerte">
-      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
-    </span>
-    <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
-    <p class="text-sm text-texto-suave">
-      Al escanear su tarjeta aparecerán aquí su nombre, su fotografía, el saldo
-      disponible, lo que lleva gastado hoy y sus restricciones.
-    </p>
-    <p class="text-sm text-texto-suave">
-      Identificar por tarjeta y por documento llega con <strong class="text-texto">HU-15</strong>
-      y <strong class="text-texto">HU-16</strong>; la vista de cobro, con
-      <strong class="text-texto">HU-17</strong>.
-    </p>
+     repartir y el bloque colapsa, recortando el texto. `grow` conserva la base
+     automática y sigue ocupando el resto en escritorio. {% endcomment %}
+  <div id="estudiante-identificado" class="flex grow flex-col">
+    <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                   text-acento-fuerte">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
+      <p class="text-sm text-texto-suave">
+        Pasa una tarjeta por el lector y aparecerán aquí su nombre y su documento.
+      </p>
+      <p class="text-sm text-texto-suave">
+        El saldo, lo que lleva gastado hoy y sus restricciones llegan con
+        <strong class="text-texto">HU-17</strong>; buscar por documento, con
+        <strong class="text-texto">HU-16</strong>.
+      </p>
+    </div>
   </div>
 {% endblock %}
 

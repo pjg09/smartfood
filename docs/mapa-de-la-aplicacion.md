@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las trece rutas
+## [S2] Las catorce rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -56,6 +56,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
+| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante escaneado | **Solo cajero** | `TT-71` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -69,6 +70,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/recargar/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/catalogo/imagenes/<clave>` | 200 | 200 | 200 | 200 | **200** |
 
 Dos filas piden explicación:
@@ -182,9 +184,13 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 `/punto-de-venta/`, y solo él: cualquier otro rol recibe `403` aunque escriba la URL
 (`DT-11`). La pantalla coloca las tres zonas —quién compra, qué compra y cuánto es— y
-el campo donde escribe el lector, que retiene el foco. **Todavía no cobra**:
-identificar al estudiante es `HU-15` y `HU-16`, ver su saldo y sus restricciones es
-`HU-17`, y la venta es `HU-21`. Cada hueco dice de qué historia es.
+el campo donde escribe el lector, que retiene el foco.
+
+**Escanear ya funciona** (`HU-15`): el lector teclea el código, envía Enter y aparece el
+estudiante con su documento. Un estudiante de baja o desactivado **se identifica igual**,
+avisando de que no se le puede vender: decir «esa tarjeta no es de nadie» sería mentir y
+dejaría al cajero repitiendo el escaneo. **Todavía no cobra**: buscar por documento es
+`HU-16`, el saldo y las restricciones son `HU-17`, y la venta es `HU-21`.
 
 ---
 

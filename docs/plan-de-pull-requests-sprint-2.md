@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **13** de 37 | **6** de 16 |
-| Pendientes | 24 | 10 |
+| **Finalizadas** | **15** de 37 | **6** de 16 |
+| Pendientes | 22 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 7 | 14 |
-| Carlos | 4 | 11 |
+| Pedro | 8 | 14 |
+| Carlos | 5 | 11 |
 | Alejandro | 2 | 9 |
 | Naomi | 0 | 3 |
 
@@ -102,7 +102,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-04` | `TT-64` | `HU-07` | ☑ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☑ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
-| `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☐ |
+| `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ◐ software sí; falta `TT-72` |
 | `PR-08` | `TT-73` | `HU-16` | ☐ |
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
@@ -271,18 +271,26 @@ Inventario sobre **unidades vendibles**: ni insumos, ni recetas, ni costo de pro
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-15` |
 | Invariantes | consume `INV-7`; cierra **`ENT-02`** |
-| Estado | ☐ |
+| Estado | ◐ **Parcial**: `TT-70` y `TT-71` integrados; falta `TT-72` |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-70` | Selector de identificación por código de tarjeta, que respeta el estado del estudiante | Pedro | ☐ |
-| `TT-71` | Campo de escaneo con foco permanente que dispara la búsqueda al recibir Enter | Carlos | ☐ |
+| `TT-70` | Selector de identificación por código de tarjeta, que respeta el estado del estudiante | Pedro | ☑ |
+| `TT-71` | Campo de escaneo con foco permanente que dispara la búsqueda al recibir Enter | Carlos | ☑ |
 | `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas | Alejandro | ☐ |
 
 El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni SDK.
 
 `TT-72` cierra `ENT-02`, uno de los siete entregables del proyecto, con las tarjetas que
 imprime lo construido en `TT-37`. Es trabajo físico: hay que imprimirlas de verdad.
+
+> **`PR-07` se integra con `TT-72` pendiente, y `HU-15` no se cierra con él.** El software
+> está construido y probado —el escaneo identifica, normaliza y respeta el estado—, pero el
+> tercer criterio de la historia es *validar a escala reducida con tarjetas físicas*, y eso
+> exige una impresora y un lector. `DoD-1` no admite dar por terminada una historia cuyo
+> criterio no se ha comprobado. El guion de la ejecución está en
+> `./prueba-de-concepto-del-lector.md`; al ejecutarlo se marca `TT-72`, se cierra `HU-15` y
+> este PR pasa a ☑.
 
 ---
 

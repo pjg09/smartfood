@@ -78,7 +78,10 @@ class ElPuntoDeVentaNoAdelantaNingunaHistoriaTest(TestCase):
         self.cuerpo = self.client.get(reverse("punto-de-venta")).content.decode()
 
     def test_declara_las_historias_que_llenaran_cada_hueco(self):
-        for historia in ["HU-15", "HU-16", "HU-17", "HU-21"]:
+        """`HU-15` ya no está en la lista, y por la mejor razón: **está
+        construida** (`TT-70`, `TT-71`). El campo escanea de verdad, así que su
+        hueco dejó de ser un hueco. Lo que queda por llenar es lo de abajo."""
+        for historia in ["HU-16", "HU-17", "HU-21"]:
             with self.subTest(historia=historia):
                 self.assertIn(historia, self.cuerpo)
 

@@ -201,6 +201,20 @@
     document.addEventListener("keydown", function (evento) {
       if (evento.key === "Escape") campo.focus();
     });
+
+    /* Tras cada búsqueda, el campo se vacía y recupera el foco (`TT-71`).
+     *
+     * **Sin esto, la segunda tarjeta se concatena con la primera**: el lector
+     * escribe donde está el foco y no borra nada, así que el campo acabaría con
+     * veintiocho caracteres y ningún código válido. El cajero tendría que
+     * seleccionar y borrar entre estudiante y estudiante, con la fila delante.
+     *
+     * Se vacía al terminar la petición y no al dispararla: si fallara la red, lo
+     * que se escaneó sigue a la vista para poder reintentarlo o teclearlo. */
+    campo.addEventListener("htmx:afterRequest", function () {
+      campo.value = "";
+      campo.focus();
+    });
   }
 
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se
