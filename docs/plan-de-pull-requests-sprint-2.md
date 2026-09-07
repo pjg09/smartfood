@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **8** de 37 | **4** de 16 |
-| Pendientes | 29 | 12 |
+| **Finalizadas** | **10** de 37 | **5** de 16 |
+| Pendientes | 27 | 11 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 4 | 14 |
+| Pedro | 5 | 14 |
 | Carlos | 3 | 11 |
-| Alejandro | 1 | 9 |
+| Alejandro | 2 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -100,7 +100,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-02` | `TT-59`–`TT-61` | `HU-06` · base de `INV-2` | ☑ |
 | `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☑ |
 | `PR-04` | `TT-64` | `HU-07` | ☑ |
-| `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☐ |
+| `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☑ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☐ |
 | `PR-08` | `TT-73` | `HU-16` | ☐ |
@@ -225,12 +225,12 @@ Solo el acudiente ve el saldo como consulta libre. El cajero lo verá **solo al 
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-52` |
 | Invariantes | `INVD-2` · protege `INV-2` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-65` | El estado `baja` impide recargar y comprar, conservando el saldo consultable | Pedro | ☐ |
-| `TT-66` | Caso de prueba: estudiante de baja, saldo visible y sin operaciones posibles | Alejandro | ☐ |
+| `TT-65` | El estado `baja` impide recargar y comprar, conservando el saldo consultable | Pedro | ☑ |
+| `TT-66` | Caso de prueba: estudiante de baja, saldo visible y sin operaciones posibles | Alejandro | ☑ |
 
 Cierra lo que el Sprint 1 dejó a medias: `HU-51` construyó la baja lógica, pero sin
 billetera no había saldo que congelar. La devolución del dinero queda **fuera del sistema**.

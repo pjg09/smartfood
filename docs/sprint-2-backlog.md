@@ -114,8 +114,8 @@ Solo el acudiente ve el saldo como consulta libre. El cajero lo ve **solo al cob
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-65` | El estado `baja` impide recargar y comprar, y conserva el saldo consultable (`INVD-2`) | Pedro | ☐ |
-| `TT-66` | Caso de prueba: estudiante de baja, saldo visible y sin operaciones posibles | Alejandro | ☐ |
+| `TT-65` | El estado `baja` impide recargar y comprar, y conserva el saldo consultable (`INVD-2`) | Pedro | ☑ |
+| `TT-66` | Caso de prueba: estudiante de baja, saldo visible y sin operaciones posibles | Alejandro | ☑ |
 
 Cierra la historia que el Sprint 1 dejó a medias: `HU-51` construyó la baja lógica, pero sin billetera no había saldo que congelar. La devolución del dinero queda **fuera del sistema**.
 

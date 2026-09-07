@@ -16,7 +16,7 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) — **21 terminadas**, 38 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07` y `HU-08` en el Sprint 2 |
+| historias | 59 (`HU-01` … `HU-59`) — **22 terminadas**, 37 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08` y `HU-52` en el Sprint 2 |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
@@ -965,12 +965,12 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 53 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
 | 54 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
 | 55 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
-| 56 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☐ |
+| 56 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☑ |
 | 57 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
 | 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**21 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08` y `HU-07`, que cierran `PR-02`, `PR-03` y `PR-04` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**22 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07` y `HU-52`, que cierran `PR-02` … `PR-05` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 

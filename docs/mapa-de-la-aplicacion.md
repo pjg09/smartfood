@@ -163,7 +163,7 @@ ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-
 `/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno, **el saldo de
 cada uno y sus últimos cinco movimientos** (`HU-07`). El saldo no es un campo guardado: se
 calcula sumando el historial al pedir la página (`INV-2`), y el historial va debajo
-precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice. El saldo, el límite diario y las restricciones **son suyos y llegan en los
+precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). El saldo, el límite diario y las restricciones **son suyos y llegan en los
 sprints 2 y 3**; hoy la pantalla declara dónde irán y **cuándo**, en vez de enseñar un cero
 —un saldo en cero y un saldo que todavía no existe no son lo mismo—.
 

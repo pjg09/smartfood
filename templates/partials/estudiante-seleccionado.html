@@ -56,12 +56,26 @@
            class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-3
                   text-sm text-aviso-fuerte tablet:max-w-sm">
           <svg class="mt-0.5 h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
-          <span>
-            <strong class="font-semibold">De baja</strong> desde el
-            {{ seleccionado.dado_de_baja_en|date:"j" }} de
-            {{ seleccionado.dado_de_baja_en|date:"F"|lower }} de
-            {{ seleccionado.dado_de_baja_en|date:"Y" }}. Su saldo queda
-            congelado y se puede consultar, pero no se puede recargar ni comprar con él.
+          <span class="flex flex-col gap-1">
+            <span>
+              <strong class="font-semibold">De baja</strong> desde el
+              {{ seleccionado.dado_de_baja_en|date:"j" }} de
+              {{ seleccionado.dado_de_baja_en|date:"F"|lower }} de
+              {{ seleccionado.dado_de_baja_en|date:"Y" }}. Su saldo queda
+              congelado y se puede consultar, pero no se puede recargar ni comprar con él.
+            </span>
+            {% comment %} Tercer criterio de `HU-52`, y hay que decirlo aquí: **la devolución
+               del dinero queda fuera del sistema** (`ALC-OUT-01`, `ALC-OUT-02`). El
+               prototipo no mueve dinero real, así que no puede devolverlo. Callarlo
+               dejaría a la familia esperando un reintegro que esta pantalla no va a
+               hacer nunca; decirlo convierte el saldo congelado en lo que de verdad
+               es: **la constancia de que ese dinero existió**, que es justo lo que la
+               historia pide. {% endcomment %}
+            <span>
+              La devolución del dinero no se hace desde aquí: este saldo queda como
+              constancia de lo que quedaba. Para reclamarlo, habla con la institución
+              educativa.
+            </span>
           </span>
         </p>
       {% endif %}
