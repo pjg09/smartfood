@@ -215,6 +215,20 @@
       campo.value = "";
       campo.focus();
     });
+
+    /* Lo mismo para la búsqueda por documento (`TT-73`): al terminar, ese campo
+     * se vacía y **el foco vuelve al del lector**, no se queda donde estaba.
+     *
+     * Es la diferencia entre las dos vías: al documento se llega a propósito, una
+     * vez, porque alguien olvidó la tarjeta; al lector se vuelve siempre. Si el
+     * foco se quedara en el documento, la siguiente tarjeta escaneada acabaría
+     * escrita ahí y buscaría un documento que no existe. */
+    document.querySelectorAll("[data-vuelve-al-lector]").forEach(function (otro) {
+      otro.addEventListener("htmx:afterRequest", function () {
+        otro.value = "";
+        campo.focus();
+      });
+    });
   }
 
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se

@@ -1,11 +1,11 @@
 {% extends "base-punto-de-venta.html" %}
 
-{% comment %} TT-57, TT-58, TT-71. La pantalla del punto de venta (`INT-2`).
+{% comment %} TT-57, TT-58, TT-71, TT-73. La pantalla del punto de venta (`INT-2`).
 
    **Es una habilitación: coloca las tres zonas y el foco, y no cobra nada.** Lo
    que va dentro llega en sus propias historias, y cada hueco dice cuál:
 
-     · identificar por tarjeta o por documento — `HU-15`, `HU-16` (`PR-07`, `PR-08`)
+     · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
      · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
      · catálogo, carrito y cobro           — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
 
@@ -56,6 +56,38 @@
       <span>El lector escribe aquí solo. También se puede teclear y pulsar Enter.</span>
       <span id="buscando-estudiante" class="htmx-indicator shrink-0">Buscando…</span>
     </p>
+
+    {% comment %} `TT-73`, `HU-16`. La alternativa para quien no trae la tarjeta.
+
+       Va **debajo y más pequeño**, no al lado: la vía normal es el lector, y dos
+       campos del mismo peso harían dudar cuál usar con la fila delante. Pero está
+       a la vista y no escondido en un desplegable — cuando hace falta, hace falta
+       ya.
+
+       **Sin `data-foco-permanente`**: el foco es del lector. Al terminar la
+       búsqueda vuelve solo allí, así que el cajero teclea un documento, ve al
+       estudiante y sigue escaneando sin tocar nada.
+
+       Pide a la MISMA ruta que el escaneo, con otro parámetro: el resultado tiene
+       que ser el mismo (`HU-16`, primer criterio). {% endcomment %}
+    <div class="flex flex-col gap-1 border-t border-borde pt-3">
+      <label for="documento" class="text-sm font-medium text-texto-suave">
+        ¿Sin tarjeta? Busca por documento
+      </label>
+      <input type="text" id="documento" name="documento"
+             autocomplete="off" inputmode="numeric" data-vuelve-al-lector
+             placeholder="Documento del estudiante"
+             hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
+             hx-trigger="keyup[key=='Enter']"
+             hx-vals="js:{documento: document.getElementById('documento').value}"
+             hx-target="#estudiante-identificado"
+             hx-swap="innerHTML"
+             hx-indicator="#buscando-estudiante"
+             class="h-10 w-full rounded-md border border-borde bg-superficie px-3 font-mono
+                    text-base tabular-nums text-texto transition-colors
+                    placeholder:font-texto placeholder:text-texto-suave
+                    hover:border-acento focus:border-acento focus:outline-none">
+    </div>
   </div>
 
   {% comment %} Aquí aterriza el fragmento de `TT-71`. Empieza con el hueco de siempre y lo

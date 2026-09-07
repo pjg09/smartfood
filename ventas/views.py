@@ -13,7 +13,10 @@ from django.views.decorators.http import require_http_methods
 
 from cuentas.models import Rol
 from personas.models import Estudiante
-from personas.selectors import identificar_por_codigo_de_tarjeta
+from personas.selectors import (
+    identificar_por_codigo_de_tarjeta,
+    identificar_por_documento,
+)
 
 
 def _solo_el_cajero(usuario):
@@ -67,6 +70,14 @@ def identificacion(request):
     rutas. Quien escanea no sabe de antemano cuál va a ser, y partirlo obligaría
     al campo a decidir a dónde pedir antes de saber qué hay.
 
+    **Y las dos vías de entrada también son la misma ruta** (`TT-73`, `HU-16`).
+    Con `codigo` viene del lector; con `documento`, de quien no trae la tarjeta.
+    Eso no contradice `DT-16` —que prohíbe un endpoint que devuelva a veces una
+    cosa y a veces otra—: aquí lo que cambia es por dónde se preguntó, no lo que
+    se responde. Es literalmente el primer criterio de `HU-16`, «la búsqueda por
+    documento es una alternativa al escaneo, **con el mismo resultado**»: con dos
+    vistas, ese «mismo» dependería de que nadie las dejara divergir.
+
     `HU-17` trae el saldo, el consumo del día y las restricciones (`PR-09`); aquí
     solo se identifica. Lo que sí se dice desde ahora es **si el estudiante puede
     comprar**: identificar a alguien de baja y callarlo dejaría al cajero
@@ -74,14 +85,20 @@ def identificacion(request):
     """
     _solo_el_cajero(request.user)
 
-    codigo = request.GET.get("codigo", "")
+    codigo = request.GET.get("codigo", "").strip()
+    documento = request.GET.get("documento", "").strip()
+
+    estudiante = None
     try:
-        estudiante = identificar_por_codigo_de_tarjeta(codigo)
+        if documento:
+            estudiante = identificar_por_documento(documento)
+        elif codigo:
+            estudiante = identificar_por_codigo_de_tarjeta(codigo)
     except Estudiante.DoesNotExist:
         estudiante = None
 
     return render(
         request,
         "ventas/partials/estudiante-identificado.html",
-        {"estudiante": estudiante, "codigo": codigo.strip()},
+        {"estudiante": estudiante, "codigo": codigo, "documento": documento},
     )

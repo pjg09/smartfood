@@ -1,10 +1,13 @@
-{% comment %} TT-71. El resultado de escanear una tarjeta (`HU-15`).
+{% comment %} TT-71, TT-73. El estudiante identificado (`HU-15`, `HU-16`).
 
    Fragmento, no página (`DT-16`): lo devuelve `identificacion` a cada Enter del
    lector y reemplaza solo la zona del estudiante.
 
    **Los dos resultados viven en el mismo fragmento** —lo encontró o no—, porque
-   quien escanea no sabe de antemano cuál va a ser.
+   quien escanea no sabe de antemano cuál va a ser. Y las dos vías —tarjeta y
+   documento— llegan también aquí: es el primer criterio de `HU-16`, «la búsqueda
+   por documento es una alternativa al escaneo, **con el mismo resultado**». Con
+   dos plantillas, ese «mismo» duraría hasta el primer ajuste de una de ellas.
 
    Lo que NO hay aquí: saldo, consumo del día ni restricciones. Son `HU-17`
    (`PR-09`), y el cajero ve el saldo **solo al cobrar** (`[S11]`), no por haber
@@ -45,6 +48,22 @@
       </p>
     {% endif %}
   </div>
+{% elif documento %}
+  {% comment %} Un documento que no es de nadie. Dice qué hacer ahora, no solo que no
+     encontró: puede estar mal copiado, o el estudiante puede no estar matriculado
+     todavía —y eso lo arregla la institución, no la caja—. {% endcomment %}
+  <div class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4"
+       role="alert">
+    <svg class="mt-0.5 h-5 w-5 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    <div class="flex flex-col gap-1 text-sm text-error-fuerte">
+      <p class="text-base font-semibold">Ningún estudiante con ese documento</p>
+      <p>
+        Se buscó <span class="font-mono break-all">{{ documento }}</span>. Compruébalo
+        con el estudiante; si es correcto, puede que aún no esté matriculado, y eso lo
+        resuelve la institución educativa.
+      </p>
+    </div>
+  </div>
 {% elif codigo %}
   {% comment %} Un código que no es de nadie. **No se dice «no existe» a secas**: en una
      fila de veinte minutos, lo que el cajero necesita saber es qué hacer ahora, y
@@ -59,7 +78,7 @@
       <p class="text-base font-semibold">Esa tarjeta no es de nadie</p>
       <p>
         Se leyó <span class="font-mono break-all">{{ codigo }}</span>. Vuelve a pasarla;
-        si sigue igual, tecléalo a mano — la tarjeta puede estar gastada.
+        si sigue igual, busca por documento — la tarjeta puede estar gastada.
       </p>
     </div>
   </div>
