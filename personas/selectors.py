@@ -8,6 +8,7 @@ devuelven objetos del ORM o datos, nunca respuestas HTTP.
 from django.core.exceptions import PermissionDenied
 
 from cuentas.models import Rol
+from personas.codigo import ALFABETO, LONGITUD
 from personas.models import Estudiante
 
 
@@ -67,3 +68,46 @@ def estudiante_para_la_institucion(*, actor, estudiante_id):
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
 
     return Estudiante.objects.select_related("acudiente").get(pk=estudiante_id)
+
+
+def identificar_por_codigo_de_tarjeta(codigo):
+    """El estudiante de una tarjeta escaneada (`TT-70`, `HU-15`).
+
+    Devuelve el `Estudiante`, o lanza `Estudiante.DoesNotExist` si ese código no
+    es de nadie.
+
+    ── DEVUELVE TAMBIÉN AL QUE NO PUEDE COMPRAR, Y ESA ES LA DECISIÓN ───────
+    Un estudiante de baja o desactivado (`INVD-2`) **se identifica igual**. La
+    tentación es filtrarlo aquí y ahorrarse el caso, pero entonces el cajero ve
+    «esa tarjeta no es de nadie», que es mentira: la tarjeta es correcta y el
+    estudiante existe: lo que pasa es que no puede comprar.
+
+    Con la fila delante, el punto de venta puede decir **por qué** —«se dio de
+    baja el 3 de septiembre»— y la familia enterarse de algo que quizá no sabía.
+    Sin ella, el cajero repite el escaneo tres veces y acaba mandando al
+    estudiante a secretaría sin saber qué decirle.
+
+    Quien impide la venta es `comprobar_que_puede_operar`, dentro de la
+    transacción y con el bloqueo puesto (`DT-6`). **Identificar no es autorizar.**
+    ─────────────────────────────────────────────────────────────────────────
+
+    El código se normaliza antes de buscar: el lector es un teclado y puede
+    añadir espacios o un salto de línea, y quien lo teclea a mano cuando el lector
+    falla escribe en minúscula. Un código correcto que no encuentra a nadie por un
+    espacio es el peor fallo posible en una fila de veinte minutos.
+
+    **No autoriza a nadie**: como el resto de los selectores, no sabe quién
+    pregunta. Que solo el cajero llegue aquí lo decide la vista del punto de venta
+    (`TT-58`, `[S11]`).
+    """
+    normalizado = (codigo or "").strip().upper()
+
+    # Se corta antes de consultar cuando la forma ni siquiera es la de un código
+    # (`DT-9`, `INV-7`): un campo vacío, un pegote de cualquier cosa o el
+    # resultado de un lector mal configurado. La base tiene la misma regla en una
+    # `CheckConstraint`, así que ninguna fila puede tener otra forma y la consulta
+    # sería un viaje seguro a cero resultados.
+    if len(normalizado) != LONGITUD or any(c not in ALFABETO for c in normalizado):
+        raise Estudiante.DoesNotExist("Ese código no tiene la forma de un código de tarjeta.")
+
+    return Estudiante.objects.select_related("acudiente").get(codigo_tarjeta=normalizado)

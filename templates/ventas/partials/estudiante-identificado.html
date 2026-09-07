@@ -1,0 +1,66 @@
+{% comment %} TT-71. El resultado de escanear una tarjeta (`HU-15`).
+
+   Fragmento, no página (`DT-16`): lo devuelve `identificacion` a cada Enter del
+   lector y reemplaza solo la zona del estudiante.
+
+   **Los dos resultados viven en el mismo fragmento** —lo encontró o no—, porque
+   quien escanea no sabe de antemano cuál va a ser.
+
+   Lo que NO hay aquí: saldo, consumo del día ni restricciones. Son `HU-17`
+   (`PR-09`), y el cajero ve el saldo **solo al cobrar** (`[S11]`), no por haber
+   pasado una tarjeta por el lector. La fotografía es `HU-58` (`PR-10`).
+{% endcomment %}
+
+{% if estudiante %}
+  <div class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm"
+       role="status">
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-texto-suave">Estudiante identificado</span>
+      <h2 class="font-display text-xl text-texto">{{ estudiante.nombre }}</h2>
+      <p class="text-base text-texto-suave">
+        Documento <span class="font-mono tabular-nums">{{ estudiante.documento }}</span>
+      </p>
+    </div>
+
+    {% comment %} `INVD-2`. Se identifica igual —la tarjeta es correcta y el estudiante
+       existe—, pero no puede comprar, y el cajero tiene que saberlo **antes** de
+       montar una venta que va a fallar al cobrar. Va en `aviso` y no en `error`:
+       no ha fallado nada, es un estado. {% endcomment %}
+    {% if not estudiante.puede_operar %}
+      <p class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-3
+                text-sm text-aviso-fuerte">
+        <svg class="mt-0.5 h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        <span>
+          {% if estudiante.esta_de_baja %}
+            <strong class="font-semibold">De baja</strong> desde el
+            {{ estudiante.dado_de_baja_en|date:"j" }} de
+            {{ estudiante.dado_de_baja_en|date:"F"|lower }} de
+            {{ estudiante.dado_de_baja_en|date:"Y" }}: se retiró del colegio.
+          {% else %}
+            <strong class="font-semibold">Desactivado</strong>, normalmente porque
+            perdió la tarjeta.
+          {% endif %}
+          No se le puede vender. Su saldo sigue ahí y lo ve su acudiente.
+        </span>
+      </p>
+    {% endif %}
+  </div>
+{% elif codigo %}
+  {% comment %} Un código que no es de nadie. **No se dice «no existe» a secas**: en una
+     fila de veinte minutos, lo que el cajero necesita saber es qué hacer ahora, y
+     lo que hay que hacer es teclearlo o buscar por documento (`HU-16`).
+
+     Se enseña el código leído: casi siempre el problema es que el lector cortó un
+     carácter o que la tarjeta está gastada, y verlo lo dice de un vistazo. {% endcomment %}
+  <div class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4"
+       role="alert">
+    <svg class="mt-0.5 h-5 w-5 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    <div class="flex flex-col gap-1 text-sm text-error-fuerte">
+      <p class="text-base font-semibold">Esa tarjeta no es de nadie</p>
+      <p>
+        Se leyó <span class="font-mono break-all">{{ codigo }}</span>. Vuelve a pasarla;
+        si sigue igual, tecléalo a mano — la tarjeta puede estar gastada.
+      </p>
+    </div>
+  </div>
+{% endif %}

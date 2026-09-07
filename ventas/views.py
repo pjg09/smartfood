@@ -12,6 +12,21 @@ from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
 from cuentas.models import Rol
+from personas.models import Estudiante
+from personas.selectors import identificar_por_codigo_de_tarjeta
+
+
+def _solo_el_cajero(usuario):
+    """`[S11]`: registrar ventas es de `USR-3` y de nadie más.
+
+    Se escribe una vez y la usan las dos vistas del punto de venta: con la
+    comprobación repetida, la segunda que se añada se olvidará.
+    """
+    if usuario.rol != Rol.CAJERO:
+        raise PermissionDenied(
+            "El punto de venta es exclusivo del rol cajero: [S11] no concede "
+            "registrar ventas a ningún otro rol."
+        )
 
 
 @login_required
@@ -34,10 +49,39 @@ def punto_de_venta(request):
     `HU-21`. Esta vista habilita las tres —el sitio donde ocurren— y por eso no
     cierra ninguna historia.
     """
-    if request.user.rol != Rol.CAJERO:
-        raise PermissionDenied(
-            "El punto de venta es exclusivo del rol cajero: [S11] no concede "
-            "registrar ventas a ningún otro rol."
-        )
+    _solo_el_cajero(request.user)
 
     return render(request, "ventas/punto-de-venta.html")
+
+
+@login_required
+@require_http_methods(["GET"])
+def identificacion(request):
+    """El estudiante de la tarjeta escaneada (`TT-71`, `HU-15`).
+
+    **Devuelve un fragmento, nunca una página** (`DT-16`): lo pide el campo de
+    escaneo del punto de venta cada vez que el lector envía Enter, y lo que cambia
+    es una zona de la pantalla, no la pantalla.
+
+    Los dos resultados —lo encontró o no— son el **mismo fragmento**, no dos
+    rutas. Quien escanea no sabe de antemano cuál va a ser, y partirlo obligaría
+    al campo a decidir a dónde pedir antes de saber qué hay.
+
+    `HU-17` trae el saldo, el consumo del día y las restricciones (`PR-09`); aquí
+    solo se identifica. Lo que sí se dice desde ahora es **si el estudiante puede
+    comprar**: identificar a alguien de baja y callarlo dejaría al cajero
+    montando una venta que va a fallar al final (`INVD-2`).
+    """
+    _solo_el_cajero(request.user)
+
+    codigo = request.GET.get("codigo", "")
+    try:
+        estudiante = identificar_por_codigo_de_tarjeta(codigo)
+    except Estudiante.DoesNotExist:
+        estudiante = None
+
+    return render(
+        request,
+        "ventas/partials/estudiante-identificado.html",
+        {"estudiante": estudiante, "codigo": codigo.strip()},
+    )

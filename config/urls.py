@@ -19,7 +19,7 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
-from ventas.views import punto_de_venta
+from ventas.views import identificacion, punto_de_venta
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
 # único que necesita es hablar en español y no llamarse «Django» (TT-05).
@@ -104,5 +104,13 @@ urlpatterns = [
     # concede registrar ventas a ningún otro rol, y quien lo intente recibe un
     # `403` aunque llegue escribiendo la URL (`DT-11`).
     path("punto-de-venta/", punto_de_venta, name="punto-de-venta"),
+    # El fragmento HTMX que devuelve al estudiante escaneado (`TT-71`, `HU-15`).
+    # Es una ruta aparte y no la misma vista mirando una cabecera: **una vista
+    # HTMX devuelve un fragmento, nunca una página** (`DT-16`).
+    path(
+        "punto-de-venta/identificacion/",
+        identificacion,
+        name="identificacion-en-el-punto-de-venta",
+    ),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]
