@@ -123,6 +123,7 @@ coincidir porque dejaría media pantalla en cada tema.
 | `catalogo.producto` | 403 | **200** | 403 | 302 |
 | `catalogo.categoria` | 403 | **200** | 403 | 302 |
 | `catalogo.alergeno` | 403 | **200** | 403 | 302 |
+| `inventario.movimientoinventario` | 403 | **200** | 403 | 302 |
 | `auth.group` | **403** | 403 | 403 | 302 |
 
 Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Tres lecturas que
@@ -152,6 +153,13 @@ desactivarlo, reactivarlo y reenviarle la invitación.
 En el admin: productos con precio, categoría, ocho campos nutricionales por porción
 (`./campos-nutricionales.md`), alérgenos declarados e imagen; categorías; alérgenos.
 Acciones de retirar y devolver al catálogo. **Nada se borra**: retirar es un estado.
+
+Desde `HU-27`, también el **inventario**: el listado de productos trae una columna de
+existencias —calculada sumando el historial, no guardada (`INV-3`)— y *Movimientos de
+inventario* registra el ingreso de mercancía por ajuste manual. Ese libro **se lee y se
+le añaden asientos, pero no se edita ni se borra**: un asiento corregido a posteriori
+deja unas existencias que ya no explican lo que pasó. Un error se corrige con otro
+movimiento.
 
 ### Acudiente (`USR-2`)
 
@@ -201,9 +209,9 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 ## [S6] Lo que todavía no existe
 
 Restricciones y límite diario (`HU-09`…`HU-13`),
-identificación y venta en el punto de venta (`HU-15`…`HU-22`), inventario
-(`HU-27`…`HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
-(`HU-55`, `HU-56`).
+identificación y venta en el punto de venta (`HU-15`…`HU-22`), el descuento y las
+alertas de inventario (`HU-28`, `HU-29`), reportes y recomendaciones
+(`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
 Del punto de venta existe **la pantalla y su puerta**, no lo que ocurre dentro: `TT-57` y
 `TT-58` son tareas de habilitación y **no cierran ninguna historia**. Saldo, restricciones
@@ -213,8 +221,8 @@ y venta llegan en el Sprint 2, salvo las restricciones, que son del 3.
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
 es la venta del punto de venta.
 
-Las apps `inventario` y `reportes` **no están creadas**: cada una se crea en el sprint que
+La app `reportes` **no está creada**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` existe desde `TT-57` porque la
 pantalla necesitaba un sitio donde vivir, pero **está vacía de modelos**: los suyos son de
-`TT-78` y el servicio de venta, de `TT-80`. `billetera` sí tiene los suyos desde `TT-59`,
-y **ninguno es una columna `saldo`**.
+`TT-78` y el servicio de venta, de `TT-80`. `billetera` e `inventario` sí tienen los suyos
+—desde `TT-59` y `TT-67`—, y **ninguno es una columna `saldo` ni `existencias`**.

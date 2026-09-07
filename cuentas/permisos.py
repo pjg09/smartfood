@@ -59,6 +59,12 @@ PERMISOS_POR_ROL = {
         "catalogo.categoria": ["add", "view", "change"],
         "catalogo.alergeno": ["add", "view", "change"],
         "catalogo.productoalergeno": ["add", "view", "change", "delete"],
+        # `HU-27`, `TT-69`. **Sin `change` ni `delete`, y no es una omisión.**
+        # Un asiento del libro corregido a posteriori deja unas existencias que
+        # ya no explican lo que pasó, y `INV-3` dice justo lo contrario. Un error
+        # se corrige con otro movimiento —una merma con su motivo (`INV-8`)—,
+        # que es como se corrige un libro.
+        "inventario.movimientoinventario": ["add", "view"],
     },
     # `USR-3`. «Registrar ventas» y «Consultar restricciones» —consultar, no
     # modificar: ahí está `INV-4`—. Ningún modelo suyo existe todavía.
@@ -95,7 +101,6 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         "Consultar saldo de un estudiante (solo al cobrar)",
     ],
     Rol.ADMINISTRADOR: [
-        "Gestionar el inventario",
         "Consultar restricciones de un estudiante",
         "Consultar reportes de ventas e inventario",
     ],

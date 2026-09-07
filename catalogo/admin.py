@@ -28,6 +28,7 @@ from catalogo.services import (
 )
 from config.imagenes import ImagenInvalida
 from cuentas.models import Rol
+from inventario.admin import ExistenciasEnElCatalogo
 
 # Los campos nutricionales, en el orden del etiquetado (`TT-44`).
 CAMPOS_NUTRICIONALES = [
@@ -175,9 +176,14 @@ class AlergenoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
 
 
 @admin.register(Producto)
-class ProductoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
+class ProductoAdmin(
+    SoloLaAdministracionDeLaCafeteria, ExistenciasEnElCatalogo, admin.ModelAdmin
+):
+    # `existencias` llega del mixin de `inventario` (`TT-69`): es la suma de los
+    # movimientos del producto, calculada al pintar el listado y en una sola
+    # consulta. **No hay ninguna columna que la guarde** (`INV-3`, `DT-5`).
     list_display = [
-        "nombre", "categoria", "precio", "tiene_imagen",
+        "nombre", "categoria", "precio", "existencias", "tiene_imagen",
         "alergenos_del_producto", "activo",
     ]
     list_filter = ["categoria", "activo", "alergenos"]

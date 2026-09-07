@@ -123,9 +123,9 @@ Cierra la historia que el Sprint 1 dejó a medias: `HU-51` construyó la baja l�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-67` | App `inventario`: modelo de movimiento como libro, **sin columna de existencias**, con motivo obligatorio por restricción de base de datos (`DT-5`, `INV-8`) | Pedro | ☐ |
-| `TT-68` | Servicio de ingreso de mercancía por ajuste manual | Pedro | ☐ |
-| `TT-69` | Registro del ingreso desde la interfaz administrativa, con las existencias calculadas | Carlos | ☐ |
+| `TT-67` | App `inventario`: modelo de movimiento como libro, **sin columna de existencias**, con motivo obligatorio por restricción de base de datos (`DT-5`, `INV-8`) | Pedro | ☑ |
+| `TT-68` | Servicio de ingreso de mercancía por ajuste manual | Pedro | ☑ |
+| `TT-69` | Registro del ingreso desde la interfaz administrativa, con las existencias calculadas | Carlos | ☑ |
 
 Mismo criterio que `TT-59`: las existencias son la suma del historial (`DT-5`), no una columna. La restricción de motivo obligatorio se crea aquí aunque `INV-8` lo ejercite `HU-28`, en el Sprint 4: **es más barato ponerla con el modelo que añadirla sobre datos ya escritos**.
 

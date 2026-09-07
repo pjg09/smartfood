@@ -76,7 +76,12 @@ class MatrizDePermisosTest(TestCase):
         escrituras = self._escrituras_de(Rol.ADMINISTRADOR)
 
         self.assertNotEqual(escrituras, set(), "el catálogo es suyo (HU-26)")
-        ajenas = {p for p in escrituras if not p.startswith("catalogo.")}
+        # **Su dominio son dos apps, no una.** `[S11]` le concede «gestionar
+        # catálogo, precios **e inventario**», y desde `HU-27` el inventario
+        # tiene modelo (`TT-67`). Lo que sigue prohibido es todo lo demás:
+        # personas, cuentas y la billetera del acudiente.
+        suyas = ("catalogo.", "inventario.")
+        ajenas = {p for p in escrituras if not p.startswith(suyas)}
         self.assertEqual(
             ajenas, set(),
             "la administración de la cafetería escribió fuera de su dominio",
