@@ -16,7 +16,7 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) — **22 terminadas**, 37 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08` y `HU-52` en el Sprint 2 |
+| historias | 59 (`HU-01` … `HU-59`) — **23 terminadas**, 36 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08`, `HU-27` y `HU-52` en el Sprint 2 |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
@@ -932,7 +932,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
 | 21 | `HU-20` | Venta rechazada por límite diario (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
 | 22 | `HU-22` | Información nutricional congelada en la venta | EPI-5 | USR-2 | Must | ☐ |
-| 23 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must | ☐ |
+| 23 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must | ☑ |
 | 24 | `HU-28` | Merma con motivo obligatorio | EPI-7 | USR-4 | Must | ☐ |
 | 25 | `HU-29` | Existencias explicables (`TST-4`) | EPI-7 | USR-4 | Must | ☐ |
 | 26 | `HU-30` | Historial de consumo | EPI-8 | USR-2 | Must | ☐ |
@@ -970,7 +970,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**22 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07` y `HU-52`, que cierran `PR-02` … `PR-05` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**23 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52` y `HU-27`, que cierran `PR-02` … `PR-06` del Sprint 2. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 

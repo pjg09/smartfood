@@ -267,6 +267,7 @@ la clave, así que cambia la URL y no hay nada que invalidar.
 | Añadir dependencia | `uv add nombre-del-paquete` |
 | Probar el correo | `uv run python manage.py sendtestemail tu@correo.com` |
 | **Sacar un enlace de invitación** | `uv run python manage.py invitacion correo@example.com` |
+| **Aplicar la matriz de permisos** | `uv run python manage.py sincronizar_permisos` |
 
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
@@ -333,3 +334,4 @@ editado sin su migración no da error hasta que otra persona levanta el proyecto
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |
 | `NoSuchBucket` al subir una imagen | `docker compose down -v` borró el bucket; vuelve a levantar |
 | El admin dice que no existe la tabla | Falta `migrate` |
+| El admin da 403 sobre un modelo nuevo | La matriz `[S11]` cambió y falta `sincronizar_permisos` |

@@ -62,6 +62,9 @@ APPS_DEL_PROYECTO = [
     # Billetera del estudiante (`TT-59`, `HU-06`). Libro de movimientos **sin
     # columna de saldo**: el saldo es su suma (`DT-4`, `INV-2`).
     "billetera",
+    # Inventario (`TT-67`, `HU-27`). Libro de movimientos **sin columna de
+    # existencias**: las existencias son su suma (`DT-5`, `INV-3`).
+    "inventario",
     # Punto de venta (`INT-2`). Nace en `TT-57` y `TT-58` con la pantalla y su
     # control de acceso; sus modelos llegan en `TT-78` y el servicio de venta en
     # `TT-80`. Cada app se crea en el sprint que la necesita.

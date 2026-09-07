@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **10** de 37 | **5** de 16 |
-| Pendientes | 27 | 11 |
+| **Finalizadas** | **13** de 37 | **6** de 16 |
+| Pendientes | 24 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 5 | 14 |
-| Carlos | 3 | 11 |
+| Pedro | 7 | 14 |
+| Carlos | 4 | 11 |
 | Alejandro | 2 | 9 |
 | Naomi | 0 | 3 |
 
@@ -246,13 +246,13 @@ billetera no había saldo que congelar. La devolución del dinero queda **fuera 
 | Responsables | Pedro y Carlos |
 | Historia | `HU-27` |
 | Invariantes | sienta la base de **`INV-3`** y crea la restricción de **`INV-8`** |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-67` | App `inventario`: movimiento como libro, **sin columna de existencias**, con motivo obligatorio por restricción | Pedro | ☐ |
-| `TT-68` | Servicio de ingreso por ajuste manual | Pedro | ☐ |
-| `TT-69` | Registro del ingreso desde la interfaz administrativa, con existencias calculadas | Carlos | ☐ |
+| `TT-67` | App `inventario`: movimiento como libro, **sin columna de existencias**, con motivo obligatorio por restricción | Pedro | ☑ |
+| `TT-68` | Servicio de ingreso por ajuste manual | Pedro | ☑ |
+| `TT-69` | Registro del ingreso desde la interfaz administrativa, con existencias calculadas | Carlos | ☑ |
 
 Mismo criterio que `PR-02`: las existencias son la suma del historial. La restricción de
 motivo obligatorio se crea aquí aunque `INV-8` lo ejercite `HU-28` en el Sprint 4 —

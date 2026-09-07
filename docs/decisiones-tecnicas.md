@@ -360,9 +360,19 @@ Diecisiete entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres
 | `Alergeno` | nombre | `DT-7` |
 | `Producto` | nombre, precio, categoría, campos nutricionales, imagen_clave | `ALC-IN-15`, `HU-59` |
 | `ProductoAlergeno` | producto, alérgeno | `DT-7`, `INV-5` |
-| `MovimientoInventario` | producto, tipo (`ingreso`/`venta`/`merma`), cantidad, **motivo**, venta, creado_en | `DT-5`, `INV-3`, `INV-8` |
+
+### Inventario
+
+| Entidad | Campos clave | Sostiene |
+|---|---|---|
+| `MovimientoInventario` | producto, tipo (`ingreso`/`venta`/`merma`), cantidad **con signo**, **motivo**, venta, creado_en | `DT-5`, `INV-3`, `INV-8` |
 
 **Sin columna `existencias`.** Existencias = suma de movimientos.
+
+Vive en la app `inventario` y no en `catalogo`, aunque cuelgue de un producto: es un
+dominio propio —`DT-15` da una app por dominio— y la venta escribirá en él sin tocar el
+catálogo. El motivo es obligatorio en la merma, que es **la disminución manual** de
+`INV-8`; la venta no lo exige porque su motivo es la venta misma.
 
 ### Control parental
 

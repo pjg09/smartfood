@@ -181,7 +181,12 @@ class ElCatalogoNoConfiguraBloqueosTest(BaseDeCatalogo):
         from cuentas.permisos import PERMISOS_POR_ROL
 
         for etiqueta in PERMISOS_POR_ROL[Rol.ADMINISTRADOR]:
-            self.assertTrue(etiqueta.startswith("catalogo."), etiqueta)
+            # Su dominio son `catalogo` e `inventario` (`[S11]`, `HU-27`). Lo
+            # que esta prueba vigila no es cuántas apps son, sino que ninguna
+            # de ellas sea una restricción alimentaria.
+            self.assertTrue(
+                etiqueta.startswith(("catalogo.", "inventario.")), etiqueta
+            )
             self.assertNotIn("restriccion", etiqueta)
 
 
