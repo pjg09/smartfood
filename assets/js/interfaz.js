@@ -290,9 +290,53 @@
     });
   }
 
+  /* --- Atajos de importe de la recarga -----------------------------------
+   *
+   * Los cuatro botones de `TT-61` **solo escriben en el campo**. No son un
+   * segundo control que el servidor lea: lo que se envía es siempre el
+   * `<input type="number">`, y por eso los botones son `type="button"` y no
+   * radios. Con radios habría dos fuentes del mismo dato compitiendo por decir
+   * cuánto se recarga, y la validación del servicio (`DT-15`) mira una sola.
+   *
+   * El marcado va en los dos sentidos: al pulsar un atajo se marca, y al
+   * teclear a mano se desmarca el que ya no coincide. Un botón que sigue
+   * pulsado mientras el campo dice otra cosa miente sobre lo que se va a enviar.
+   */
+  function montarMontosSugeridos() {
+    var formulario = document.querySelector("[data-montos-sugeridos]");
+    if (formulario === null) return;
+
+    var campo = formulario.querySelector('input[type="number"]');
+    var atajos = formulario.querySelectorAll("[data-monto]");
+    if (campo === null || atajos.length === 0) return;
+
+    function marcar() {
+      atajos.forEach(function (atajo) {
+        // `Number` en los dos lados: el campo devuelve texto, y "25000" y
+        // "25000.00" son el mismo importe escrito de dos maneras.
+        var coincide =
+          campo.value !== "" &&
+          Number(campo.value) === Number(atajo.getAttribute("data-monto"));
+        atajo.setAttribute("aria-pressed", coincide ? "true" : "false");
+      });
+    }
+
+    atajos.forEach(function (atajo) {
+      atajo.addEventListener("click", function () {
+        campo.value = atajo.getAttribute("data-monto");
+        marcar();
+        campo.focus();
+      });
+    });
+
+    campo.addEventListener("input", marcar);
+    marcar();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
+    montarMontosSugeridos();
     montarBarra();
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
