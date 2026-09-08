@@ -338,15 +338,18 @@ suspendido— no hace falta abrir el navegador a mano: se renderiza la pantalla 
 de pruebas y se fotografía con Chrome sin interfaz.
 
 ```bash
-# 1. Renderizar con `django.test.Client` y guardar el HTML, reescribiendo las
+# 1. Recompilar la hoja y publicarla, en este orden y con `--force`:
+uv run python manage.py tailwind build --force
+uv run python manage.py collectstatic --noinput
+# 2. Renderizar con `django.test.Client` y guardar el HTML, reescribiendo las
 #    rutas de `/static/` a `file:///…/staticfiles/`.
-# 2. Fotografiar:
+# 3. Fotografiar:
 google-chrome --headless --disable-gpu --hide-scrollbars \
   --allow-file-access-from-files --window-size=1024,600 \
   --virtual-time-budget=3000 --screenshot=pantalla.png "file://$PWD/pantalla.html"
 ```
 
-**Dos detalles sin los cuales la captura miente**, y los dos costaron una ronda de
+**Tres detalles sin los cuales la captura miente**, y los tres costaron una ronda de
 diagnóstico:
 
 - **`--allow-file-access-from-files`.** Sin él, el navegador no carga el JavaScript que vive
@@ -356,8 +359,15 @@ diagnóstico:
 - **Desactivar transiciones y animaciones**, inyectando
   `*{transition:none!important;animation:none!important}` en el `<head>`.
   `--virtual-time-budget` congela el reloj, así que toda transición se fotografía en su
-  **estado inicial**: un elemento que cambia de color al cargar sale del color viejo. Es el
-  más engañoso de los dos, porque la captura sale bien formada y con el valor equivocado.
+  **estado inicial**: un elemento que cambia de color al cargar sale del color viejo. Es
+  engañoso porque la captura sale bien formada y con el valor equivocado.
+- **`tailwind build --force` y después `collectstatic`.** Son dos pasos y cada uno falla en
+  silencio por su cuenta. Sin `--force`, el comando compara la fecha de `estilos/fuente.css`
+  con la de la hoja compilada y responde «up to date»: cierto para la hoja fuente y falso
+  para lo que importa, porque las clases salen de las **plantillas** y ésas no las mira. Y
+  sin `collectstatic`, la reescritura de rutas del paso 2 apunta a `staticfiles/` —no a
+  `assets/`—, así que se fotografía la hoja anterior. En los dos casos la captura sale
+  perfecta y enseña el diseño de antes.
 
 Para una pantalla con sesión basta `force_login` en el cliente. Y para un estado que no se
 puede dejar en la base —dar de baja a un estudiante es irreversible por diseño (`DEC-7`)— se

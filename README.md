@@ -112,6 +112,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`despliegue.md`](./docs/despliegue.md) | Estado del entorno desplegado, sus restricciones y sus trampas |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
+| [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
 | [`prueba-de-concepto-del-lector.md`](./docs/prueba-de-concepto-del-lector.md) | Guion de la validación con tarjetas impresas y lector físico (`ENT-02`) |
 
