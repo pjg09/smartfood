@@ -24,7 +24,7 @@ y con un anónimo, contra el entorno local sembrado. No hay ninguno supuesto.
 
 ## [S1] Por dónde se entra
 
-**`/acceso/` es la puerta de los cuatro roles** (`TT-56`, `DEC-12`). Es la única por la que
+**`/login/` es la puerta de los cuatro roles** (`TT-56`, `DEC-12`). Es la única por la que
 puede entrar el acudiente: `/admin/login/` exige `is_staff` y lo rechaza siempre, porque
 `INT-1` no es el admin (`DT-2`).
 
@@ -46,7 +46,7 @@ los mismos colores desde `DT-23`.
 | Ruta | Qué es | Quién | Tarea |
 |---|---|---|---|
 | `/` | Portada; reparte según el rol de quien mira | Todos | `TT-05` |
-| `/acceso/` | Entrar. Redirige si ya hay sesión | Todos | `TT-56` |
+| `/login/` | Entrar. Redirige si ya hay sesión | Todos | `TT-56` |
 | `/salir/` | Cerrar sesión. **Solo POST**: un `GET` responde `405` | Todos | `TT-56` |
 | `/invitacion/<uid>/<token>/` | Definir la contraseña propia desde la invitación | Quien tenga el enlace | `TT-11` |
 | `/invitacion/lista/` | Confirmación de que quedó definida | — | `TT-11` |
@@ -98,7 +98,7 @@ qué pasa al imprimirla.
 | Armazón | Qué pinta | Pantallas |
 |---|---|---|
 | `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
-| `base-acceso.html` | Dos columnas: panel de marca y formulario | `/acceso/`, `/invitacion/…`, `/invitacion/lista/` |
+| `base-acceso.html` | Dos columnas: panel de marca y formulario | `/login/`, `/invitacion/…`, `/invitacion/lista/` |
 | `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37` |
 | `base-punto-de-venta.html` | Pantalla completa, sin diálogos, con foco permanente y una **columna de iconos que no se despliega** | `/punto-de-venta/` |
 | `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |
@@ -209,17 +209,17 @@ dejaría al cajero repitiendo el escaneo.
 
 El orden en que se enseña lo construido. Cada paso se comprobó de extremo a extremo.
 
-1. **`/acceso/` como institución** → `/carga/`, subir un CSV con dos filas del mismo
+1. **`/login/` como institución** → `/carga/`, subir un CSV con dos filas del mismo
    acudiente. `HU-01`, `HU-02`.
 2. **`manage.py invitacion <correo del acudiente>`** → abrir el enlace, definir la
    contraseña. `HU-03`. **Tiene que ser un acudiente cargado por la pantalla**: a los que
    siembra `--estudiantes` se les asigna contraseña y el comando los rechaza (`DEC-11`).
-3. **`/acceso/` con ese acudiente** → `/mis-estudiantes/`, con su selector. `HU-04`.
+3. **`/login/` con ese acudiente** → `/mis-estudiantes/`, con su selector. `HU-04`.
 4. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
 5. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
 6. **Dar de baja**: no borra nada y el acudiente lo ve en su panel. `HU-51`.
-7. **`/acceso/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+7. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
 
 ---
 

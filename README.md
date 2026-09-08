@@ -62,7 +62,7 @@ la institución, y los listados salen vacíos. Con él quedan sembrados el perso
 cafetería, doce estudiantes con sus acudientes y avatares, y el catálogo con imágenes.
 Todo ficticio (`ALC-OUT-07`) y se puede volver a ejecutar sin duplicar nada.
 
-En `http://localhost:8000`. **Se entra por `/acceso/`**, que es la puerta de los cuatro
+En `http://localhost:8000`. **Se entra por `/login/`**, que es la puerta de los cuatro
 roles; el admin de `/admin/` acepta a la institución y al personal de la cafetería, pero
 nunca al acudiente. Empieza con `institucion@example.com` y la contraseña de arriba.
 

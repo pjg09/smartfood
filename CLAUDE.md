@@ -166,7 +166,7 @@ uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026
   --estudiantes 12
 ```
 
-Se entra por `/acceso/`, que es la puerta de los cuatro roles. Las credenciales locales y el
+Se entra por `/login/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
 Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al

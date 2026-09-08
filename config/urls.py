@@ -36,8 +36,14 @@ urlpatterns = [
     #
     # Existe porque `/admin/login/` exige `is_staff` y el acudiente no lo es
     # (`INT-1` no es el admin): sin esta ruta, `USR-2` no tiene por dónde entrar.
+    # La ruta es `/login/` y el nombre sigue siendo `acceso`, y esa asimetría es
+    # deliberada: la URL la lee quien usa el sistema y es la convención que
+    # espera de un producto web; el nombre lo lee quien programa, y ahí manda la
+    # convención en español del repositorio. Cambiar el nombre habría tocado
+    # `LOGIN_URL`, doce `{% url %}` y once pruebas sin que nadie viera nada
+    # distinto en pantalla.
     path(
-        "acceso/",
+        "login/",
         vistas_de_auth.LoginView.as_view(
             template_name="cuentas/acceso.html",
             redirect_authenticated_user=True,

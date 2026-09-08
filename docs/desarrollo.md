@@ -64,13 +64,13 @@ Después, repetir desde `docker compose up -d`.
 
 | | |
 |---|---|
-| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/acceso/ |
+| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/login/ |
 | Usuario | `institucion@example.com` |
 | Contraseña | `smartfood-local-2026` |
 | Rol | `institucion` (`USR-5`), con acceso a la administración |
 
 **Hay dos puertas y no son intercambiables** (`TT-56`, `DEC-12`). `/admin/login/` exige
-`is_staff` y solo sirve a la institución y al personal de la cafetería. `/acceso/` es la
+`is_staff` y solo sirve a la institución y al personal de la cafetería. `/login/` es la
 pantalla común a los cuatro roles y es **la única por la que entra el acudiente**, que no
 accede a la administración porque `INT-1` no es el admin (`DT-2`).
 
@@ -166,7 +166,7 @@ uv run python manage.py invitacion marta.ruiz@example.com
 ```
 
 Imprime la URL de `/invitacion/…`. Se abre en el navegador, se define la contraseña y se
-entra por `/acceso/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
+entra por `/login/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
 contraseña de esa cuenta. Por eso se saca de uno en uno desde la terminal y no se lista en
 ninguna pantalla (`DEC-3`).
 
@@ -185,7 +185,7 @@ with open("estudiantes.csv", "rb") as f:
     ))
 ```
 
-Después, `/acceso/` con el correo del acudiente y esa contraseña lleva a
+Después, `/login/` con el correo del acudiente y esa contraseña lleva a
 `/mis-estudiantes/` (`TT-29`, `HU-04`).
 
 ### [S2.5] Imprimir la tarjeta de un estudiante
