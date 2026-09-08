@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 24 (`DT-1` … `DT-24`) |
+| decisiones | 25 (`DT-1` … `DT-25`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-24`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-25`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -343,6 +343,33 @@ Ninguna función escribe un `MovimientoBilletera` ni un `MovimientoInventario` p
 **Esto no sustituye a las restricciones de la base.** El signo y el motivo los impone además una `CheckConstraint` (`DT-15`, segunda regla): `asentar()` comprueba antes para dar un mensaje que se entienda, no para reemplazarla. Si algún día alguien escribe un movimiento con el ORM directamente, la base sigue diciendo que no.
 
 **Descartado: señales de Django (`post_save`) para la comprobación.** Funcionaría y sería invisible, que es el problema — una regla que se dispara desde un fichero que nadie está leyendo es imposible de seguir cuando falla. La función con nombre se ve en la traza y se lee desde el servicio que la llama.
+
+---
+
+#### `[DT-25]` La adopción del sistema visual se completa pantalla por pantalla, no solo en los tokens
+
+**Razón:** decisión del equipo, tomada el 2026-09-08. **Corrige el alcance de `DT-23`, no su contenido**: aquella decidió *qué* sistema visual se adopta y trajo la paleta, la tipografía y los tres armazones; esta declara que adoptarlo incluye también las **composiciones** —cómo se arma una pantalla con esas piezas— y no solo los valores.
+
+**Qué obligó a declararlo.** Con los tokens puestos, cada pantalla nueva seguía inventando su propia disposición: una lista donde la referencia usa tabla, un botón sólido donde usa un enlace, un campo de archivo desnudo donde usa una zona de arrastre. El resultado eran ocho pantallas con la misma paleta y ocho gramáticas distintas, que es exactamente el problema que `DT-23` vino a evitar, un escalón más arriba.
+
+**Las composiciones que quedan fijadas.** Son las que ya usan dos o más pantallas, no un catálogo por si acaso:
+
+| Composición | Dónde | Cómo es |
+|---|---|---|
+| Tarjeta de resumen | panel del acudiente, portada | Franja de serie arriba, icono en pastilla, rótulo, cifra en `font-display`, texto de apoyo y **enlace de acento** pegado abajo con `mt-auto` |
+| Tabla de datos | movimientos del acudiente | Cabecera tintada con icono por columna, filas alternas, importe a la derecha. **Fichas por debajo de `tablet`** |
+| Encabezado de sección | portada | Antetítulo en versalitas y acento, título en `font-display`, entradilla, todo centrado |
+| Pastilla de sesión | barra de la aplicación y del punto de venta | Nombre y rol con borde, **nunca el correo** |
+| Grupo de modos | punto de venta, selector de tema | Botones con `aria-pressed`, icono sobre etiqueta cuando la columna es estrecha |
+| Bloque punteado | huecos y estados vacíos | Borde discontinuo, icono en pastilla, qué falta y qué historia lo trae |
+
+**Un hueco no se dibuja como una acción apagada.** Un botón deshabilitado promete que un día hará algo, no dice cuándo ni de qué depende, y en la caja invita a pulsarlo esperando que reaccione. El bloque punteado con el identificador de la historia dice las dos cosas. `ventas/tests_acceso.py` lo vigila.
+
+**Lo que se copia de la referencia se copia; lo que afirmaría algo falso, no.** La pantalla de recarga es el caso: se adopta su distribución de dos columnas y sus atajos de importe, y se descartan su línea de costo de servicio —aquí no hay pasarela (`ALC-OUT-01`), y un «Servicio $0» sugiere que algún día la habrá— y su total vivo recalculado en el navegador, que exigiría un segundo formateador de dinero y rompería la regla de `TT-64`. Copiar una forma no puede traerse una afirmación que en este sistema no es cierta.
+
+**El formato del dinero pasa a `$25.000`, sin espacio, con la divisa opcional detrás.** El espacio no salía de ninguna decisión y dejaba el símbolo suelto en una columna alineada a la derecha. `{{ saldo|dinero:"COP" }}` añade el código, y **solo se usa en las cifras grandes**: repetirlo en quince filas de una tabla donde todo son pesos es ruido.
+
+**Consecuencia sobre `DT-16`.** Sigue vigente. Lo que `DT-25` añade es que los armazones son cuatro y no tres —`base-punto-de-venta.html` ya existe— y que el del punto de venta lleva una columna de iconos que **no se despliega**: no es la barra de `INT-1` con otro estado, es lo que esa barra es allí.
 
 ---
 

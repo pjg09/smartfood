@@ -18,7 +18,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-23`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-25`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-2-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-57` … `TT-93`), con responsable |
 | `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
@@ -90,11 +90,18 @@ Tres reglas (`DT-15`):
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`.
 
-Diseño (`DT-23`): el sistema visual —paleta, tipografía, armazones— se adopta entero de un
-producto en producción del mismo dominio, no se inventa aquí. **`estilos/fuente.css` es el
-único fichero con colores literales**; en las plantillas se usan alias de intención
-(`bg-superficie`, `text-texto`, `border-borde`, `text-error-fuerte`). Tres armazones cuelgan de
-`base.html`: `base-publica.html`, `base-acceso.html` y `base-aplicacion.html`.
+Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
+composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
+inventa aquí. **`estilos/fuente.css` es el único fichero con colores literales**; en las
+plantillas se usan alias de intención (`bg-superficie`, `text-texto`, `border-borde`,
+`text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
+`base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
+
+Antes de inventar una pantalla, mira cómo la resuelven las que ya existen: la tarjeta de
+resumen (franja, icono, cifra y **enlace** de acento abajo, no botón), la tabla con cabecera
+tintada que baja a fichas en móvil, el encabezado centrado con antetítulo, la pastilla de
+sesión con nombre y rol, el grupo de botones con `aria-pressed` y el bloque punteado de los
+huecos. **Un hueco nunca es un botón deshabilitado**: dice qué falta y qué historia lo trae.
 
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
@@ -114,7 +121,10 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
 - **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
-  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve».
+  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
+  a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
+  la de la hoja y contesta «up to date», que es cierto para la fuente y falso para lo que
+  importa —las clases salen de las plantillas, y ésas no las mira—.
 - **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
   no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
   `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
@@ -125,6 +135,16 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 - **Las variantes de Tailwind no alcanzan a las clases de `@layer components`.**
   `escritorio:rejilla-caja` no se compila **y no da ningún error**: la pantalla se queda en
   una columna. El punto de ruptura va dentro de la propia clase, en `estilos/fuente.css`.
+  Si el efecto sí depende de un estado —el botón de cristal de la cabecera pública sobre el
+  héroe—, la salida es la contraria: escribirlo con utilidades que Tailwind pueda variar.
+- **Un elemento nunca es su propio contenedor de consulta.** `@container` marca al
+  ANCESTRO, así que ponerlo en la misma caja que la rejilla deja las `@container (...)` de
+  `fuente.css` sin nada contra qué medirse: no fallan, y la pantalla se queda en una
+  columna. Va en el envoltorio (`base-punto-de-venta.html`).
+- **El dinero se escribe en un solo sitio**, `billetera/templatetags/dinero.py`: `$25.000`,
+  sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
+  JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
+  misma pantalla enseña dos monedas.
 - **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
   van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
   modelo nuevo y nada indica por qué.

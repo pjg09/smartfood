@@ -272,6 +272,13 @@ la clave, así que cambia la URL y no hay nada que invalidar.
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
 
+**Si compilas a mano, usa `tailwind build --force`.** Sin la opción, el comando compara la
+fecha de `estilos/fuente.css` con la de la hoja compilada y responde «All 1 stylesheet(s)
+are up to date» — que es cierto para la hoja fuente y falso para lo que importa: las clases
+salen de las PLANTILLAS, y ésas no se miran. El síntoma es desconcertante porque la
+compilación dice que fue bien: la clase nueva simplemente no está, y el elemento se queda
+sin estilo sin ningún error. `watch` no tiene el problema.
+
 **Los colores y las medidas viven en `estilos/fuente.css`, y sólo ahí** (`DT-23`). En una
 plantilla se usa el alias de intención —`bg-superficie`, `text-texto`, `border-borde`— nunca un
 hexadecimal ni la paleta de fábrica de Tailwind, que está borrada: `bg-slate-500` **no pinta
@@ -370,6 +377,8 @@ programa.
 | `connection refused` al puerto 5432 | `docker compose up -d` no está levantado |
 | `the database system is starting up` | PostgreSQL despertando; reintenta en unos segundos |
 | Una clase de Tailwind no se aplica | Falta `tailwind build` o `tailwind watch` |
+| `tailwind build` dice «up to date» y la clase sigue sin estar | Solo mira la fecha de `fuente.css`, no la de las plantillas: usa `--force` |
+| Una consulta de contenedor no se aplica y la rejilla queda en una columna | `@container` está en el MISMO elemento que la rejilla; va en el envoltorio |
 | Una clase de color no pinta nada, y no hay error | Es de la paleta de fábrica, que está borrada: usa un alias (`DT-23`) |
 | El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |

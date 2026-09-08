@@ -13,7 +13,7 @@
 | tareas cubiertas | 37 de 37 (`TT-57` … `TT-93`) |
 | pull requests | 16 (`PR-01` … `PR-16`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -112,6 +112,24 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
 | `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
 | `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
+
+### [S3.2] Pull Requests fuera del plan
+
+Los dieciséis de arriba salen del sprint backlog y **no se tocan**. Aquí se anota lo que
+entró a `main` sin corresponder a ninguna tarea: sin esta lista, el documento que dice ser
+el único sitio donde vive el estado estaría afirmando que en `main` no hay nada más.
+
+Un PR de esta lista **no cierra ninguna historia y no mueve los contadores** de `[S3]`: si
+lo hiciera, sería una tarea y le tocaría estar arriba.
+
+| PR | Qué hizo | Por qué no es una tarea | Estado |
+|---|---|---|---|
+| `PR-X1` | Completar la adopción del sistema visual en todas las pantallas construidas (`DT-25`) | `DT-23` es del Sprint 1 y no dejó tarea abierta; esto es trabajo sobre lo ya entregado, no alcance nuevo | ☑ |
+
+`PR-X1` toca las ocho pantallas existentes y la hoja de estilos, pero **ninguna regla de
+negocio**: los servicios, los selectores y las invariantes quedan como estaban. Lo que sí
+cambia de comportamiento visible está declarado en `DT-25` —el formato del dinero y las
+pestañas del punto de venta— y lo cubren las pruebas de `billetera` y `ventas`.
 
 ---
 
