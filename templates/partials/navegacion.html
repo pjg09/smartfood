@@ -1,4 +1,5 @@
-{% comment %} La lista de secciones del rol (DT-23). La pinta `menu_de_navegacion`.
+{% comment %} La lista de secciones del rol (DT-23). La pintan `menu_de_navegacion` y
+   `menu_del_punto_de_venta`.
 
    Vive sobre el panel oscuro de la barra, así que usa los tokens `nav-*` y no
    los de superficie: `text-texto` en tema claro es el marino y aquí
@@ -12,25 +13,39 @@
    extremo verde); las medidas están en `estilos/fuente.css`.
 
    Qué es cada cosa:
-     entradas     las secciones del rol, ya filtradas
-     ruta_actual  el `view_name` de la petición, para marcar la activa
-     colapsable   si las etiquetas se esconden al colapsar la barra
+     entradas           las secciones del rol, ya filtradas
+     ruta_actual        el `view_name` de la petición, para marcar la activa
+     colapsable         si las etiquetas se esconden al colapsar la barra
+     siempre_colapsada  solo iconos, sin alternancia posible (el punto de venta)
+
+   `colapsable` y `siempre_colapsada` no son lo mismo y son excluyentes. El
+   primero dice «esta barra se puede colapsar, y cuando lo esté esconde las
+   etiquetas»; el segundo, «esta barra ES una columna de iconos y no hay nada que
+   alternar». En el cajón de móvil los dos son falsos: allí las etiquetas se ven
+   siempre, porque una columna de iconos sueltos en un teléfono no se entiende.
 {% endcomment %}
 <nav aria-label="Secciones" class="flex h-full flex-col gap-1 py-6">
   {% for entrada in entradas %}
     <a href="{% url entrada.ruta %}"
-       {% if colapsable %}title="{{ entrada.etiqueta }}"{% endif %}
+       {% if colapsable or siempre_colapsada %}title="{{ entrada.etiqueta }}"{% endif %}
        {% if entrada.ruta == ruta_actual %}aria-current="page"{% endif %}
-       class="relative flex h-14 items-center overflow-hidden rounded-lg mx-4 px-6
-              transition-all duration-300
-              {% if colapsable %}colapsada:mx-2 colapsada:justify-center colapsada:px-3{% endif %}
+       class="relative flex h-14 items-center overflow-hidden rounded-lg transition-all duration-300
+              {% if siempre_colapsada %}
+                mx-2 justify-center px-3
+              {% else %}
+                mx-4 px-6
+                {% if colapsable %}colapsada:mx-2 colapsada:justify-center colapsada:px-3{% endif %}
+              {% endif %}
               {% if entrada.ruta == ruta_actual %}
                 bg-linear-135 from-nav-activo to-nav-activo-fin font-semibold
                 text-sobre-nav-activo shadow-md
               {% else %}
-                font-medium text-nav-texto hover:translate-x-1 hover:bg-nav-hover
+                font-medium text-nav-texto hover:bg-nav-hover
+                {% if not siempre_colapsada %}hover:translate-x-1{% endif %}
               {% endif %}">
-      {% if entrada.ruta == ruta_actual %}
+      {% comment %} La pestaña clara del borde izquierdo solo tiene sentido con la etiqueta
+         al lado: en una columna de iconos centrados queda como una raya suelta. {% endcomment %}
+      {% if entrada.ruta == ruta_actual and not siempre_colapsada %}
         <span aria-hidden="true"
               class="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-sobre-nav-activo
                      {% if colapsable %}colapsada:hidden{% endif %}"></span>
@@ -38,9 +53,11 @@
       <span class="flex w-6 shrink-0 items-center justify-center">
         <svg class="h-5 w-5" aria-hidden="true"><use href="#{{ entrada.icono }}"></use></svg>
       </span>
-      <span class="ml-4 flex-1 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
-        {{ entrada.etiqueta }}
-      </span>
+      {% if not siempre_colapsada %}
+        <span class="ml-4 flex-1 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
+          {{ entrada.etiqueta }}
+        </span>
+      {% endif %}
     </a>
   {% endfor %}
 
@@ -52,21 +69,28 @@
      no se disparan porque un acelerador del navegador precargue un enlace.
   {% endcomment %}
   <form method="post" action="{% url 'salir' %}"
-        class="mt-auto mx-4 {% if colapsable %}colapsada:mx-2{% endif %}">
+        class="mt-auto {% if siempre_colapsada %}mx-2{% else %}mx-4{% if colapsable %} colapsada:mx-2{% endif %}{% endif %}">
     {% csrf_token %}
     {% comment %} El margen va en el formulario y no en el botón: con `w-full` y `mx-4`
        a la vez, el botón mide el ancho de la barra MÁS los márgenes y se sale. {% endcomment %}
     <button type="submit"
-            {% if colapsable %}title="Cerrar sesión"{% endif %}
+            {% if colapsable or siempre_colapsada %}title="Cerrar sesión"{% endif %}
             class="flex h-14 w-full items-center rounded-lg border-t border-nav-hover pt-1
-                   px-6 font-medium text-nav-texto transition-colors hover:bg-nav-hover
-                   {% if colapsable %}colapsada:justify-center colapsada:px-3{% endif %}">
+                   font-medium text-nav-texto transition-colors hover:bg-nav-hover
+                   {% if siempre_colapsada %}
+                     justify-center px-3
+                   {% else %}
+                     px-6
+                     {% if colapsable %}colapsada:justify-center colapsada:px-3{% endif %}
+                   {% endif %}">
       <span class="flex w-6 shrink-0 items-center justify-center">
         <svg class="h-5 w-5" aria-hidden="true"><use href="#i-salir"></use></svg>
       </span>
-      <span class="ml-4 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
-        Cerrar sesión
-      </span>
+      {% if not siempre_colapsada %}
+        <span class="ml-4 whitespace-nowrap {% if colapsable %}colapsada:hidden{% endif %}">
+          Cerrar sesión
+        </span>
+      {% endif %}
     </button>
   </form>
 </nav>
