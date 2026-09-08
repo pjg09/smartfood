@@ -367,7 +367,11 @@ Ninguna función escribe un `MovimientoBilletera` ni un `MovimientoInventario` p
 
 **Lo que se copia de la referencia se copia; lo que afirmaría algo falso, no.** La pantalla de recarga es el caso: se adopta su distribución de dos columnas y sus atajos de importe, y se descartan su línea de costo de servicio —aquí no hay pasarela (`ALC-OUT-01`), y un «Servicio $0» sugiere que algún día la habrá— y su total vivo recalculado en el navegador, que exigiría un segundo formateador de dinero y rompería la regla de `TT-64`. Copiar una forma no puede traerse una afirmación que en este sistema no es cierta.
 
+**El separador de los títulos de pestaña es una barra vertical.** `Entrar | SmartFood`, no `Entrar · SmartFood`. El punto medio se sigue usando dentro del texto —donde separa ideas de una misma frase—, pero en el título compite con el nombre del producto y en una pestaña estrecha, truncado, deja «Entrar ·» sin decir de qué. La barra es lo que usa el admin de Django, así que las dos mitades del sistema titulan igual.
+
 **El formato del dinero pasa a `$25.000`, sin espacio, con la divisa opcional detrás.** El espacio no salía de ninguna decisión y dejaba el símbolo suelto en una columna alineada a la derecha. `{{ saldo|dinero:"COP" }}` añade el código, y **solo se usa en las cifras grandes**: repetirlo en quince filas de una tabla donde todo son pesos es ruido.
+
+**La ruta de acceso pasa a ser `/login/`.** Es una URL que la gente lee y teclea, y `login` es la palabra que espera de un producto web; el resto de las rutas siguen en español porque nombran cosas del dominio (`/carga/`, `/mis-estudiantes/`, `/punto-de-venta/`). **El nombre interno sigue siendo `acceso`**, que es lo que leen `LOGIN_URL`, doce `{% url %}` y once pruebas: ahí manda la convención del repositorio, y renombrarlo no habría cambiado nada en pantalla. `DEC-12` conserva `/acceso/` porque un registro de decisión no se reescribe; la ruta vigente es la de aquí.
 
 **Consecuencia sobre `DT-16`.** Sigue vigente. Lo que `DT-25` añade es que los armazones son cuatro y no tres —`base-punto-de-venta.html` ya existe— y que el del punto de venta lleva una columna de iconos que **no se despliega**: no es la barra de `INT-1` con otro estado, es lo que esa barra es allí.
 
