@@ -18,11 +18,12 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-22`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-23`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-2-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-57` … `TT-93`), con responsable |
 | `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
 | `docs/sprint-1-backlog.md` | El sprint anterior, cerrado. Consulta histórica |
+| `docs/plan-de-pull-requests-sprint-1.md` | El plan del sprint anterior, cerrado. Documento de archivo |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -30,6 +31,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
+| `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.** Ocho
@@ -65,8 +67,9 @@ está mal entendida o de que falta una decisión.
 **Django + PostgreSQL + HTMX + Tailwind.** Monolito, un repositorio, un despliegue. UUIDv7 como
 clave primaria en todas las tablas (generado en la aplicación), **excepto el código de tarjeta**.
 
-Una app por dominio: `cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas`,
-`reportes`. Dentro de cada una:
+Una app por dominio, **y cada una se crea en el sprint que la necesita**: hoy existen
+`cuentas`, `personas`, `catalogo`, `billetera`, `inventario` y `ventas`; `reportes` no.
+Dentro de cada una:
 
 | Archivo | Responsabilidad |
 |---|---|
@@ -119,6 +122,12 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 - **El rojo y el ámbar significan algo**: saldo insuficiente o alérgeno bloqueado (`INV-1`,
   `INV-5`) y límite a punto de agotarse. Para adornar hay cinco colores de serie sin
   significado; gastar los de estado en decoración les quita fuerza donde hacen falta.
+- **Las variantes de Tailwind no alcanzan a las clases de `@layer components`.**
+  `escritorio:rejilla-caja` no se compila **y no da ningún error**: la pantalla se queda en
+  una columna. El punto de ruptura va dentro de la propia clase, en `estilos/fuente.css`.
+- **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
+  van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
+  modelo nuevo y nada indica por qué.
 
 ## Cómo ejecutar
 
@@ -140,17 +149,24 @@ uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026
 Se entra por `/acceso/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
+Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al
+arrancar, falla al abrir la pantalla que la usa.
+
 Antes de cada PR, los tres tienen que pasar:
 
 ```bash
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run   # DoD-3, el que más se olvida
-uv run python manage.py test
+uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huérfana lo cuelga
 ```
 
 Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
 `transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
 `self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
+
+**Una prueba que entra al admin crea la cuenta por el camino real**:
+`sincronizar_grupos_y_permisos()` y `crear_cuenta(..., accede_a_administracion=True)`. Poner
+`is_staff` a mano deja una cuenta que entra pero no tiene ningún permiso, y todo responde `403`.
 
 Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
 con `django.test.Client`. Hace falta añadir el host que usa el cliente:
@@ -158,6 +174,12 @@ con `django.test.Client`. Hace falta añadir el host que usa el cliente:
 ```bash
 DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py shell -c '…'
 ```
+
+**Para mirar una pantalla de verdad** sin navegador manual: renderízala con
+`django.test.Client`, guarda el HTML con las rutas de `/static/` reescritas a `file://` y
+dispara `google-chrome --headless --screenshot`. Dos detalles o la captura miente:
+`--allow-file-access-from-files` —si no, el JS no corre— y desactivar transiciones y
+animaciones, que el reloj virtual congela en su estado inicial.
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
