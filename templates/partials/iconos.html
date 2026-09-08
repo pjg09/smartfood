@@ -105,6 +105,107 @@
     <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
   </symbol>
 
+  {% comment %} ---------------------------------------------------------------------
+     Selector de tema. Tres, porque el selector tiene tres estados y el tercero
+     —«el del sistema»— es el que trae por defecto: sin él, quien tiene el
+     teléfono en oscuro entra a una pantalla clara y tiene que elegir a mano lo
+     que ya había elegido en su aparato.
+     --------------------------------------------------------------------- {% endcomment %}
+  <symbol id="i-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>
+  </symbol>
+
+  <symbol id="i-luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>
+  </symbol>
+
+  <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+  </symbol>
+
+  {% comment %} Revelar la contraseña en la pantalla de acceso (`TT-56`). Dos iconos y no
+     uno tachado por CSS: el ojo cerrado es un trazo distinto, no el mismo con una
+     raya encima. {% endcomment %}
+  <symbol id="i-ojo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+
+  <symbol id="i-ojo-cerrado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.7 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a18.5 18.5 0 0 1-2.2 3.2"/><path d="M6.6 6.6A18.6 18.6 0 0 0 2 12s3.6 7 10 7a10.7 10.7 0 0 0 5.4-1.4"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="m2 2 20 20"/>
+  </symbol>
+
+  {% comment %} Punto de venta (`INT-2`). El lector físico es un escáner de código de
+     barras, y ese es el símbolo que el cajero reconoce: `i-tarjeta` es la
+     credencial del estudiante, que es otra cosa. {% endcomment %}
+  <symbol id="i-escaner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 8v8"/><path d="M12 8v8"/><path d="M16 8v8"/>
+  </symbol>
+
+  <symbol id="i-buscar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+  </symbol>
+
+  <symbol id="i-identificacion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M6 16c0-1.7 1.3-3 3-3s3 1.3 3 3"/><path d="M15 9h4"/><path d="M15 13h4"/>
+  </symbol>
+
+  <symbol id="i-recibo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 2v20l3-2 3 2 3-2 3 2 3-2V2l-3 2-3-2-3 2-3-2z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h4"/>
+  </symbol>
+
+  {% comment %} Cabeceras de tabla y tarjetas de la portada. {% endcomment %}
+  <symbol id="i-calendario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/>
+  </symbol>
+
+  <symbol id="i-etiqueta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><path d="M7.5 7.5h.01"/>
+  </symbol>
+
+  <symbol id="i-tendencia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>
+  </symbol>
+
+  <symbol id="i-grafica" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M13 17V8"/><path d="M18 17v-8"/>
+  </symbol>
+
+  <symbol id="i-fuego" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2c1.5 3.5-1 5-1 7a3 3 0 0 0 6 0c0-.7-.2-1.3-.5-1.9C18.7 9 20 11.4 20 14a8 8 0 0 1-16 0c0-4 3-6.5 4.5-9C10 3.5 11.3 2.7 12 2z"/>
+  </symbol>
+
+  <symbol id="i-manzana" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 8c-1.5-1.5-4.5-2-6 0-2 2.5-1 8 1.5 11 1.5 1.8 3 1.2 4.5.6 1.5.6 3 1.2 4.5-.6 2.5-3 3.5-8.5 1.5-11-1.5-2-4.5-1.5-6 0z"/><path d="M12 8V5"/><path d="M12 5c2 0 3-1.5 3-3-2 0-3 1.3-3 3z"/>
+  </symbol>
+
+  <symbol id="i-corazon-pulso" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.4 5.6a5.4 5.4 0 0 0-7.6 0L12 6.4l-.8-.8a5.4 5.4 0 1 0-7.6 7.6l.8.8L12 21.2l7.6-7.2.8-.8a5.4 5.4 0 0 0 0-7.6z"/><path d="M3.5 12h4l1.5-3 2 6 1.5-3h4"/>
+  </symbol>
+
+  <symbol id="i-movil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 18h.01"/>
+  </symbol>
+
+  <symbol id="i-reloj" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+  </symbol>
+
+  <symbol id="i-chispa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 3 12 8.5 17.5 10.5 12 12.5 10 18 8 12.5 2.5 10.5 8 8.5z"/><path d="M18 3v4"/><path d="M20 5h-4"/><path d="M18 17v4"/><path d="M20 19h-4"/>
+  </symbol>
+
+  <symbol id="i-apreton" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m11 17 2 2a1.4 1.4 0 0 0 2-2"/><path d="m14 15 2.5 2.5a1.4 1.4 0 0 0 2-2L15 12"/><path d="M17 13.5 19 15.5a1.4 1.4 0 0 0 2-2l-4-4-2-4H9L7 7"/><path d="M3 10.5 5.5 8 9 11l2-2-3-3"/><path d="M2 14h3"/><path d="M19 8h3"/>
+  </symbol>
+
+  <symbol id="i-colegio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2 3 7v14h18V7z"/><path d="M3 21h18"/><path d="M9 21v-5h6v5"/><circle cx="12" cy="11" r="1.5"/>
+  </symbol>
+
+  <symbol id="i-inventario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>
+  </symbol>
+
   <symbol id="i-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
   </symbol>

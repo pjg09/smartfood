@@ -41,6 +41,9 @@
 @source "../cuentas";
 @source "../personas";
 @source "../catalogo";
+@source "../billetera";
+@source "../inventario";
+@source "../ventas";
 
 /* ==========================================================================
  * VARIANTE `colapsada:`
@@ -570,6 +573,21 @@
   --breakpoint-tablet: 48rem;
   --breakpoint-escritorio: 64rem;
   --breakpoint-amplio: 80rem;
+
+  /* --- Anchos de CONTENEDOR (consultas de contenedor) ---
+   *
+   * Los de arriba miran la VENTANA; éste mira el ancho del ELEMENTO, y hace
+   * falta donde el espacio real no lo dice la ventana. La rejilla de productos
+   * del punto de venta vive entre la columna del estudiante (20 rem) y la del
+   * ticket (22 rem): en la tablet de `INT-2` le quedan ~320 px y en un monitor
+   * ~1200. Con `escritorio:` a secas, la misma regla daría una tarjeta de 155 px
+   * en el aparato para el que se diseñó y de 285 en el monitor.
+   *
+   * Tailwind deriva de aquí la variante `@tarjeta:`. Por debajo de este ancho,
+   * precio y calorías se apilan: con dos columnas cada una baja de 108 px y
+   * «$12.000 COP» parte en dos renglones — un importe partido se lee mal y
+   * desalinea el pie de toda la fila de tarjetas. */
+  --container-tarjeta: 16rem;
 }
 
 /* ==========================================================================
@@ -751,11 +769,76 @@
       radial-gradient(80% 100% at 100% 100%, rgb(91 173 164 / 0.2) 0%, transparent 65%);
   }
 
-  /** Pastilla translúcida sobre un bloque oscuro: iconos y chips del héroe. */
+  /**
+   * Cristal: los paneles y las pastillas que flotan sobre un bloque oscuro.
+   *
+   * Es un blanco translúcido y no un color propio, para que se tiña con lo que
+   * tenga detrás. La sombra larga y muy difuminada es lo que lo despega del
+   * marino: sin ella el panel del héroe se lee como un recorte pegado encima.
+   */
   .cristal {
-    background-color: rgb(255 255 255 / 0.1);
-    border: 1px solid rgb(255 255 255 / 0.16);
-    backdrop-filter: blur(8px);
+    background-color: rgb(255 255 255 / 0.07);
+    border: 1px solid rgb(255 255 255 / 0.14);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.65);
+  }
+
+  /** Variante más tenue, para las filas DENTRO de un panel de cristal. Sin
+   * sombra ni desenfoque propios: los hereda del panel que las contiene, y
+   * apilar dos desenfoques cuesta pintado sin verse. */
+  .cristal-tenue {
+    background-color: rgb(255 255 255 / 0.05);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  /**
+   * Halo bajo el botón principal del héroe: lo levanta del fondo oscuro.
+   *
+   * El botón es CLARO y no teal, y esto va con esa decisión: sobre el marino el
+   * teal con texto blanco se queda en 3,79 de contraste y no llega a AA. Un
+   * sólido claro sobre bloque oscuro es el punto de mayor contraste de la
+   * página, que es donde debe estar la acción.
+   */
+  .brillo-accion {
+    box-shadow: 0 18px 40px -16px rgb(244 247 250 / 0.55);
+  }
+
+  /** Halo teal, para el elemento activo de una tarjeta sobre fondo oscuro. */
+  .brillo-acento {
+    box-shadow: 0 18px 40px -18px rgb(39 143 162 / 0.75);
+  }
+
+  /**
+   * Fundido del héroe hacia el fondo de la página.
+   *
+   * Usa `--t-fondo` —y no la paleta cruda como el resto de este bloque— porque
+   * este borde SÍ tiene que seguir al tema: es la costura entre el bloque fijo y
+   * el resto del documento, y en tema oscuro tiene que fundir hacia el oscuro.
+   */
+  .fundido-al-fondo {
+    background-image: linear-gradient(to bottom, transparent 0%, var(--t-fondo) 100%);
+  }
+
+  /**
+   * Lámina: el bloque que ocupa el sitio de una fotografía mientras no la haya.
+   *
+   * No es un marcador gris. En la portada de un producto, un rectángulo vacío
+   * con una inicial dentro parece un fallo de carga, y eso es peor que no tener
+   * imagen. Esto se lee como decoración intencionada. Y aquí el hueco va a
+   * existir mientras dure el prototipo: `INVD-6` prohíbe fotografías de personas
+   * reales, así que no hay banco de imágenes del que tirar.
+   */
+  .lamina {
+    background-color: #16304f;
+    background-image:
+      radial-gradient(90% 120% at 15% 0%, rgb(39 143 162 / 0.55) 0%, transparent 66%),
+      radial-gradient(70% 110% at 100% 100%, rgb(91 173 164 / 0.3) 0%, transparent 62%);
+  }
+
+  /** Chips que flotan alrededor del panel del héroe. */
+  .flota {
+    animation: flotar 7s ease-in-out infinite;
+    will-change: transform;
   }
 
   /** Filete superior de una tarjeta destacada. */
@@ -860,6 +943,21 @@
   }
   to {
     translate: 2.5rem 1.5rem;
+  }
+}
+
+/* Los chips que rodean el panel del héroe. Recorrido corto —menos de un
+ * centímetro— y lento: un chip que se mueve mucho parece que se está cayendo.
+ *
+ * No hace falta apagarlo aquí para `prefers-reduced-motion`: el bloque de
+ * `@layer base` ya anula la duración de CUALQUIER animación del proyecto. */
+@keyframes flotar {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.6rem;
   }
 }
 
