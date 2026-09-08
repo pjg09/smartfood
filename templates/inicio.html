@@ -1,60 +1,92 @@
 {% extends "base-publica.html" %}
 
-{% comment %} Portada. Existe para que `TT-05` sea demostrable: sin algo que extienda la
-   base, la plantilla base no se puede verificar.
+{% comment %} Portada (TT-05, DT-23).
 
-   Es a donde se llega tras entrar por `/acceso/` (`TT-56`), y desde aquí cada rol
-   va a lo suyo. No la sustituye ninguna otra pantalla: `TT-11` es la de definir
-   contraseña desde la invitación, que es otra cosa.
+   Sigue la estructura de la referencia visual, sección por sección: héroe con
+   panel de ejemplo, roles, servicios, garantías, visión, beneficios, cómo se
+   entra y cierre. **El armazón es el suyo; el contenido es de SmartFood**, y
+   cada afirmación sale de un identificador del alcance vigente —`[S9.1]` de
+   `smartfood.md` más `[S1]` de `decisiones-de-alcance.md`— o de una invariante.
+   Ninguna se inventa para rellenar un hueco de la maqueta.
 
-   **Lo que cuenta es lo que el sistema hace, no lo que hará.** Las tres promesas
-   del héroe son invariantes vigentes (`INV-1`, `INV-4`, `INV-2`), no una lista
-   de intenciones: el saldo negativo es imposible, las restricciones no las
-   levanta la cafetería y el saldo se reconstruye desde el historial.
+   **Lo que cuenta es lo que el sistema hace, no lo que hará.** Las tres
+   garantías son invariantes vigentes (`INV-1`, `INV-4` con `INV-5`, `INV-2` con
+   `INV-3`), no una lista de intenciones: el saldo negativo es imposible, las
+   restricciones no las levanta la cafetería y el saldo se reconstruye desde el
+   historial.
+
+   **No hay ningún «comenzar ahora».** Aquí no existe ruta de registro y no es
+   que falte (`INV-6`, `INVD-1`, `DT-10`): las dos acciones de la página llevan a
+   entrar y a leer cómo se consigue una cuenta. Una portada que ofrece darse de
+   alta en un sistema que maneja datos de menores estaría mintiendo sobre lo
+   primero que hay que entender de él.
+
+   El panel del héroe es **una maqueta**, y lo dice dentro con su propia
+   etiqueta: sus cifras no salen de la base de datos. Los datos son ficticios,
+   como todos los de este repositorio (`ALC-OUT-07`, `ALC-OUT-08`).
 {% endcomment %}
 
-{% block titulo %}SmartFood · Cafetería escolar{% endblock %}
+{% block titulo %}SmartFood · Cafetería escolar con control parental{% endblock %}
 
 {% comment %} Debajo hay héroe marino: la cabecera puede nacer transparente. {% endcomment %}
 {% block sobre_heroe %}si{% endblock %}
 
 {% block contenido %}
-  {% comment %} ---------------------------------------------------------------- Héroe {% endcomment %}
-  <section class="superficie-heroe relative overflow-hidden">
+
+  {% comment %} ==================================================================== HÉROE
+
+     Dos columnas desde `escritorio`: el argumento a la izquierda y la maqueta a
+     la derecha. En móvil la maqueta baja debajo del texto y ocupa el ancho.
+
+     `isolate` crea un contexto de apilamiento propio: sin él, las auroras —que
+     llevan `filter`— se cuelan por encima de la cabecera fija al desplazarse.
+  {% endcomment %}
+  <section class="superficie-heroe relative isolate overflow-hidden px-4 pt-28 pb-20
+                  escritorio:px-8 escritorio:pt-40 escritorio:pb-32">
+    {% comment %} Capas decorativas. Todas `aria-hidden`: no aportan nada a quien no las
+       ve, y una malla anunciada por un lector de pantalla es ruido. {% endcomment %}
     <div aria-hidden="true" class="malla-heroe pointer-events-none absolute inset-0"></div>
     <div aria-hidden="true"
-         class="aurora aurora-teal pointer-events-none absolute -top-40 -left-32 h-96 w-96 opacity-55"></div>
+         class="aurora aurora-teal pointer-events-none absolute -top-40 -left-32 h-96 w-96 opacity-60"></div>
     <div aria-hidden="true"
-         class="aurora aurora-agua pointer-events-none absolute -right-40 bottom-0 h-96 w-96 opacity-45"></div>
+         class="aurora aurora-agua pointer-events-none absolute -right-40 -bottom-24 h-96 w-96 opacity-50"></div>
 
-    <div class="relative mx-auto flex max-w-6xl flex-col gap-8 px-4 pt-32 pb-20 escritorio:px-8 escritorio:pt-40 escritorio:pb-28">
-      <div class="flex flex-col gap-6">
-        <span class="cristal inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-sm text-sobre-oscuro-suave">
+    <div class="relative mx-auto grid max-w-6xl gap-14 escritorio:grid-cols-2
+                escritorio:items-center escritorio:gap-16">
+
+      <div>
+        <span class="cristal inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5
+                     text-sm text-sobre-oscuro-suave">
           <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-escudo"></use></svg>
           Prototipo académico · datos ficticios
         </span>
 
         {% comment %} El degradado solo va en la palabra destacada: en un párrafo entero el
-           texto recortado pierde legibilidad. {% endcomment %}
-        <h1 class="max-w-3xl font-display text-4xl leading-tight text-sobre-oscuro escritorio:text-6xl">
+           texto recortado pierde legibilidad, y en Windows con ClearType se ve
+           sucio. {% endcomment %}
+        <h1 class="mt-6 font-display text-4xl leading-tight tracking-tight text-sobre-oscuro
+                   tablet:text-5xl amplio:text-6xl">
           La cafetería del colegio,<br><span class="texto-degradado">bajo control</span>
         </h1>
 
-        <p class="max-w-xl text-lg text-sobre-oscuro-suave">
-          Saldo, límite diario y alérgenos bloqueados, en el mismo sitio para la
-          familia y para quien está en la caja. Sin efectivo en el bolsillo de un
-          menor y con cada movimiento registrado.
+        <p class="mt-4 font-display text-xl text-acento-claro">Cada compra queda explicada.</p>
+
+        <p class="mt-5 max-w-xl text-lg text-sobre-oscuro-suave">
+          Una billetera por estudiante, el control parental aplicado en el momento
+          de la venta y un historial del que se pueden reconstruir tanto el saldo
+          como las existencias.
         </p>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="mt-9 flex flex-col gap-3 tablet:flex-row">
           {% if user.is_authenticated %}
-            {% comment %} Con sesión abierta, la portada no vuelve a ofrecer «entrar»: lleva
-               a donde esa persona trabaja. {% endcomment %}
+            {% comment %} Con sesión abierta, la portada no vuelve a ofrecer «entrar»: lleva a
+               donde esa persona trabaja. {% endcomment %}
             {% if user.es_acudiente %}
               <a href="{% url 'mis-estudiantes' %}"
-                 class="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
-                        bg-accion-clara px-6 text-lg font-medium whitespace-nowrap
-                        text-sobre-accion-clara transition-opacity hover:opacity-90">
+                 class="brillo-accion group inline-flex h-12 items-center justify-center gap-2
+                        rounded-md bg-accion-clara px-6 text-lg font-medium
+                        text-sobre-accion-clara transition-transform duration-200
+                        hover:-translate-y-0.5">
                 <svg class="h-5 w-5" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
                 Mis estudiantes
               </a>
@@ -63,192 +95,690 @@
               {% comment %} `INT-3` es el admin de Django (`DT-2`): el personal y la
                  institución operan desde allí, no desde plantillas propias. {% endcomment %}
               <a href="{% url 'admin:index' %}"
-                 class="cristal inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
-                        px-6 text-lg font-medium whitespace-nowrap text-sobre-oscuro
-                        transition-colors hover:bg-sobre-oscuro/15">
+                 class="inline-flex h-12 items-center justify-center gap-2 rounded-md
+                        border border-sobre-oscuro/25 px-6 text-lg font-medium
+                        text-sobre-oscuro transition-colors hover:bg-sobre-oscuro/10">
                 <svg class="h-5 w-5" aria-hidden="true"><use href="#i-ajustes"></use></svg>
                 Administración
               </a>
             {% endif %}
           {% else %}
+            {% comment %} La acción principal es CLARA, no teal: sobre este fondo el teal con
+               texto blanco se queda en 3,79 de contraste y no llega a AA. Y un
+               sólido claro sobre bloque oscuro es el punto de mayor contraste de
+               la página, que es justo donde debe estar la acción. {% endcomment %}
             <a href="{% url 'acceso' %}"
-               class="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
-                      bg-accion-clara px-6 text-lg font-medium whitespace-nowrap
-                      text-sobre-accion-clara transition-opacity hover:opacity-90">
-              <svg class="h-5 w-5" aria-hidden="true"><use href="#i-candado"></use></svg>
+               class="brillo-accion group inline-flex h-12 items-center justify-center gap-2
+                      rounded-md bg-accion-clara px-6 text-lg font-medium
+                      text-sobre-accion-clara transition-transform duration-200
+                      hover:-translate-y-0.5">
               Entrar
+              <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                   aria-hidden="true"><use href="#i-flecha"></use></svg>
             </a>
             <a href="#acceso"
-               class="cristal inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full
-                      px-6 text-lg font-medium whitespace-nowrap text-sobre-oscuro
-                      transition-colors hover:bg-sobre-oscuro/15">
+               class="inline-flex h-12 items-center justify-center rounded-md
+                      border border-sobre-oscuro/25 px-6 text-lg font-medium
+                      text-sobre-oscuro transition-colors hover:bg-sobre-oscuro/10">
               Cómo se consigue una cuenta
             </a>
           {% endif %}
         </div>
+
+        {% comment %} Capacidades del sistema, no cifras de tracción: las tres se pueden
+           demostrar abriendo la aplicación. {% endcomment %}
+        <ul class="mt-10 flex flex-wrap gap-x-6 gap-y-3">
+          <li class="flex items-center gap-2 text-sm text-sobre-oscuro-suave">
+            <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+            Tarjeta con código de barras
+          </li>
+          <li class="flex items-center gap-2 text-sm text-sobre-oscuro-suave">
+            <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+            Cero efectivo en el colegio
+          </li>
+          <li class="flex items-center gap-2 text-sm text-sobre-oscuro-suave">
+            <svg class="h-4 w-4 text-acento-claro" aria-hidden="true"><use href="#i-escudo"></use></svg>
+            Datos tratados bajo la Ley 1581
+          </li>
+        </ul>
       </div>
 
-      {% comment %} Las tres promesas. Son invariantes, y por eso están aquí y no en una
-         lista de funcionalidades: no dependen de que nadie se acuerde de
-         cumplirlas. {% endcomment %}
-      <ul class="mt-6 grid gap-4 tablet:grid-cols-3">
-        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
-          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
-            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+      {% comment %} ---------------------------------------------------- Panel de ejemplo
+
+         Es una MAQUETA y lo dice con su propia etiqueta: enseña la forma de la
+         pantalla del acudiente sin fingir que hay una sesión abierta. Sus cifras
+         no salen de la base de datos y sus nombres son inventados
+         (`ALC-OUT-07`).
+
+         Va todo en constantes `sobre-oscuro` y `acento-claro`: el marino del
+         héroe es el mismo en los dos temas, así que los alias que siguen al tema
+         dejarían el texto invisible en uno de ellos.
+      {% endcomment %}
+      <div class="relative">
+        <div class="cristal rounded-xl p-5 escritorio:p-6">
+          <div class="flex items-center gap-3">
+            <span aria-hidden="true"
+                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full
+                         bg-accion-clara font-display text-lg text-sobre-accion-clara">M</span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-display text-base text-sobre-oscuro">Mariana G.</p>
+              <p class="text-sm text-sobre-oscuro-suave">Séptimo B</p>
+            </div>
+            <span class="cristal-tenue rounded-full px-3 py-1 text-xs text-sobre-oscuro-suave">
+              Vista de ejemplo
+            </span>
+          </div>
+
+          <div class="mt-6">
+            <p class="text-sm text-sobre-oscuro-suave">Saldo disponible</p>
+            <p class="mt-1 font-display text-4xl tabular-nums text-sobre-oscuro">$45.200 COP</p>
+          </div>
+
+          <div class="mt-5">
+            <div class="flex items-baseline justify-between gap-2 text-sm">
+              <span class="text-sobre-oscuro-suave">Límite diario</span>
+              <span class="tabular-nums text-sobre-oscuro">$6.500 de $12.000</span>
+            </div>
+            {% comment %} El valor va también en `aria-valuenow`: una barra de progreso que
+               solo se entiende por su ancho no existe para un lector de
+               pantalla. {% endcomment %}
+            <div role="progressbar" aria-valuenow="54" aria-valuemin="0" aria-valuemax="100"
+                 aria-label="Consumo del límite diario"
+                 class="mt-2 h-2 w-full overflow-hidden rounded-full bg-sobre-oscuro/15">
+              <span class="block h-full w-[54%] rounded-full bg-acento-claro"></span>
+            </div>
+          </div>
+
+          <ul class="mt-6 flex flex-col gap-2">
+            <li class="cristal-tenue flex items-center gap-3 rounded-md px-3 py-2.5">
+              <span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-acento-claro"></span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-sobre-oscuro">Ensalada de frutas</p>
+                <p class="truncate text-xs text-sobre-oscuro-suave">Hoy, 10:15</p>
+              </div>
+              <span class="shrink-0 text-sm tabular-nums text-sobre-oscuro">$6.500</span>
+            </li>
+            <li class="cristal-tenue flex items-center gap-3 rounded-md px-3 py-2.5">
+              <span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-acento-claro"></span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-sobre-oscuro">Sándwich integral</p>
+                <p class="truncate text-xs text-sobre-oscuro-suave">Ayer, 10:04</p>
+              </div>
+              <span class="shrink-0 text-sm tabular-nums text-sobre-oscuro">$8.000</span>
+            </li>
+            {% comment %} La línea bloqueada es la que explica el producto de un vistazo: se
+               ve la compra que NO se hizo y por qué (`INV-5`). El rojo aquí
+               significa restricción real, que es lo único para lo que este
+               sistema lo gasta. {% endcomment %}
+            <li class="cristal-tenue flex items-center gap-3 rounded-md px-3 py-2.5">
+              <svg class="h-4 w-4 shrink-0 text-error-claro" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-sobre-oscuro">Barra de maní</p>
+                <p class="truncate text-xs text-sobre-oscuro-suave">Bloqueado por alérgeno</p>
+              </div>
+              <span class="shrink-0 text-sm tabular-nums text-error-claro line-through">$4.500</span>
+            </li>
+          </ul>
+        </div>
+
+        {% comment %} Los chips solo aparecen desde `escritorio`, donde hay margen para que
+           no se monten sobre el panel. Y solo en las esquinas: a media altura
+           caerían sobre el saldo o sobre el límite, que es lo que el panel viene
+           a enseñar. {% endcomment %}
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0 hidden escritorio:block">
+          <span class="flota cristal absolute -top-5 -left-10 flex items-center gap-2
+                       rounded-full px-4 py-2 text-sm text-sobre-oscuro">
+            <svg class="h-4 w-4 text-acento-claro"><use href="#i-reloj"></use></svg>
+            Cobro en segundos
           </span>
-          <h2 class="text-lg font-semibold text-sobre-oscuro">Nunca en negativo</h2>
-          <p class="text-base text-sobre-oscuro-suave">
-            Si no alcanza el saldo, la venta no se hace. No hay fiado ni sobregiro.
-          </p>
-        </li>
-        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
-          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
-            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+          <span class="flota cristal absolute -right-9 -bottom-5 flex items-center gap-2
+                       rounded-full px-4 py-2 text-sm text-sobre-oscuro"
+                style="animation-delay: -2.3s">
+            <svg class="h-4 w-4 text-acento-claro"><use href="#i-escudo"></use></svg>
+            Alérgeno bloqueado
           </span>
-          <h2 class="text-lg font-semibold text-sobre-oscuro">Lo que bloquea la familia, queda bloqueado</h2>
-          <p class="text-base text-sobre-oscuro-suave">
-            La cafetería no puede levantar una restricción de alérgenos ni un límite.
-          </p>
-        </li>
-        <li class="cristal flex flex-col gap-2 rounded-xl p-5">
-          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-sobre-oscuro/10 text-acento-claro">
-            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-documento"></use></svg>
-          </span>
-          <h2 class="text-lg font-semibold text-sobre-oscuro">Todo se puede reconstruir</h2>
-          <p class="text-base text-sobre-oscuro-suave">
-            El saldo es la suma de sus movimientos. No hay una cifra suelta que
-            pueda discrepar del historial.
-          </p>
-        </li>
-      </ul>
+        </div>
+      </div>
+    </div>
+
+    {% comment %} Costura entre el bloque fijo y el fondo de la página. Corta a propósito:
+       con 96 px el degradado sobre el marino se ve como una niebla gris a lo
+       ancho de la pantalla, no como una transición. {% endcomment %}
+    <div aria-hidden="true"
+         class="fundido-al-fondo pointer-events-none absolute inset-x-0 bottom-0 h-12"></div>
+  </section>
+
+  {% comment %} ==================================================================== ROLES {% endcomment %}
+  <section id="roles" class="bg-fondo px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-roles">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-12 flex flex-col items-center text-center">
+        <p class="text-sm font-semibold tracking-widest text-acento-fuerte uppercase">
+          Una plataforma, cuatro puntos de vista
+        </p>
+        <h2 id="tit-roles" class="mt-3 font-display text-3xl tracking-tight text-texto escritorio:text-4xl">
+          Diseñado para todo el colegio
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg text-texto-suave">
+          Cuatro roles con sesión. El estudiante no tiene cuenta: se identifica con
+          el código de su tarjeta en la caja, que es otra cosa distinta.
+        </p>
+      </div>
+
+      {% comment %} La lámina ocupa el sitio de una fotografía que no va a existir:
+         `INVD-6` prohíbe fotografías de personas reales en este repositorio, así
+         que no hay banco de imágenes del que tirar. Un rectángulo gris con una
+         inicial parecería un fallo de carga; esto se lee como decoración
+         intencionada. {% endcomment %}
+      <div class="grid gap-6 tablet:grid-cols-2 escritorio:grid-cols-4">
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Acudiente">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-personas"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-2 font-display text-xl text-texto">Acudiente</h3>
+            <p class="text-base font-medium text-texto-suave">
+              Recarga la billetera de sus estudiantes, consulta en qué se gasta,
+              fija el límite diario y bloquea alérgenos. Entra desde el teléfono.
+            </p>
+          </div>
+        </article>
+
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Cajero">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-escaner"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-2 font-display text-xl text-texto">Cajero</h3>
+            <p class="text-base font-medium text-texto-suave">
+              Cobra con el lector de código de barras, sin tocar la pantalla entre
+              venta y venta. El sistema le dice qué no puede vender y por qué.
+            </p>
+          </div>
+        </article>
+
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Administración de la cafetería">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-ajustes"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-2 font-display text-xl text-texto">Administración de la cafetería</h3>
+            <p class="text-base font-medium text-texto-suave">
+              Catálogo, precios, información nutricional, alérgenos declarados e
+              ingreso de mercancía al inventario.
+            </p>
+          </div>
+        </article>
+
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Institución educativa">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-colegio"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-2 font-display text-xl text-texto">Institución educativa</h3>
+            <p class="text-base font-medium text-texto-suave">
+              Carga el padrón, vincula cada estudiante con su acudiente y produce
+              las tarjetas. Ninguna cuenta nace fuera de aquí.
+            </p>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
-  {% comment %} ------------------------------------------------------- Quién usa qué {% endcomment %}
-  <section id="roles" class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-20 escritorio:px-8">
-    <div class="flex flex-col gap-3">
-      <h2 class="font-display text-3xl tracking-tight text-texto">Quién usa qué</h2>
-      <p class="max-w-2xl text-lg text-texto-suave">
-        Cuatro roles con sesión. El estudiante no tiene cuenta: se identifica con
-        el código de su tarjeta en la caja, que es otra cosa distinta.
-      </p>
-    </div>
-
-    <div class="grid gap-4 tablet:grid-cols-2 escritorio:grid-cols-4">
-      {% comment %} La franja superior de cada tarjeta usa las series decorativas y no
-         `error`, `aviso` ni `exito`: esos tres significan alérgeno bloqueado,
-         límite a punto de agotarse y movimiento correcto. Gastarlos en adorno
-         les quita fuerza donde hacen falta. {% endcomment %}
-      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm transition-all duration-300
-                      hover:-translate-y-1 hover:shadow-lg">
-        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-1 to-serie-1/50"></span>
-        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-1/10 text-serie-1">
-          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-personas"></use></svg>
-        </span>
-        <h3 class="text-base font-semibold text-texto-suave">Acudiente</h3>
-        <p class="text-base font-medium text-texto">
-          Consulta el saldo y el consumo de sus estudiantes, fija el límite diario
-          y bloquea alérgenos. Entra desde el teléfono.
+  {% comment %} ================================================================ SERVICIOS {% endcomment %}
+  <section id="servicios" class="bg-superficie px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-servicios">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-12 flex flex-col items-center text-center">
+        <p class="text-sm font-semibold tracking-widest text-acento-fuerte uppercase">Servicios</p>
+        <h2 id="tit-servicios" class="mt-3 font-display text-3xl tracking-tight text-texto escritorio:text-4xl">
+          Qué hace el sistema
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg text-texto-suave">
+          Seis piezas, todas dentro del alcance acordado. Lo que queda fuera
+          —dinero real, pasarela de pago, app nativa— está declarado y no se
+          insinúa aquí.
         </p>
-      </article>
+      </div>
 
-      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm transition-all duration-300
-                      hover:-translate-y-1 hover:shadow-lg">
-        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-3 to-serie-3/50"></span>
-        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-3/10 text-serie-3">
-          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
-        </span>
-        <h3 class="text-base font-semibold text-texto-suave">Cajero</h3>
-        <p class="text-base font-medium text-texto">
-          Cobra con el lector de código de barras. El sistema le dice qué no puede
-          vender y por qué.
-        </p>
-      </article>
+      <div class="grid gap-6 tablet:grid-cols-2 escritorio:grid-cols-3">
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-saldo"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Billetera por estudiante</h3>
+          <p class="text-base font-medium text-texto-suave">
+            El acudiente recarga y ese saldo solo lo gasta ese estudiante. No hay
+            una bolsa común de la que tiren varios hermanos.
+          </p>
+        </article>
 
-      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm transition-all duration-300
-                      hover:-translate-y-1 hover:shadow-lg">
-        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-4 to-serie-4/50"></span>
-        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-4/10 text-serie-4">
-          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-ajustes"></use></svg>
-        </span>
-        <h3 class="text-base font-semibold text-texto-suave">Administración de la cafetería</h3>
-        <p class="text-base font-medium text-texto">
-          Catálogo, precios, información nutricional, alérgenos declarados e
-          inventario.
-        </p>
-      </article>
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-escudo"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Control parental</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Límite diario de gasto, bloqueo de un producto concreto y bloqueo por
+            alérgeno. El de alérgeno se aplica sobre la condición, así que también
+            cubre lo que la cafetería añada después.
+          </p>
+        </article>
 
-      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm transition-all duration-300
-                      hover:-translate-y-1 hover:shadow-lg">
-        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-5 to-serie-5/50"></span>
-        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-5/10 text-serie-5">
-          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
-        </span>
-        <h3 class="text-base font-semibold text-texto-suave">Institución educativa</h3>
-        <p class="text-base font-medium text-texto">
-          Carga el padrón, vincula cada estudiante con su acudiente y produce las
-          tarjetas.
-        </p>
-      </article>
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-manzana"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Información nutricional</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Cada producto declara sus calorías, sus macronutrientes y sus
+            alérgenos, y la venta guarda esa declaración tal como estaba ese día.
+          </p>
+        </article>
+
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Identificación por tarjeta</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Una tarjeta física con código de barras y un lector en la caja. El
+            código lo genera el sistema al azar: opera como credencial del saldo,
+            así que no puede deducirse de otro.
+          </p>
+        </article>
+
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-inventario"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Catálogo e inventario</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Existencias sobre unidades vendibles, que suben por ingreso de
+            mercancía y bajan por venta o por merma. Toda disminución manual lleva
+            un motivo escrito.
+          </p>
+        </article>
+
+        <article class="group h-full rounded-xl border border-borde bg-fondo p-6 transition duration-300
+                        hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-acento-suave
+                      transition-colors duration-300 group-hover:bg-acento">
+            <svg class="h-6 w-6 text-acento-fuerte transition-colors duration-300 group-hover:text-sobre-primario"
+                 aria-hidden="true"><use href="#i-grafica"></use></svg>
+          </div>
+          <h3 class="mb-2 font-display text-lg text-texto">Reportes de consumo</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Qué comió, cuánto costó y qué llevaba. Con recomendaciones de reglas
+            fijas, declaradas como orientativas: no son una valoración médica ni
+            nutricional.
+          </p>
+        </article>
+      </div>
     </div>
   </section>
 
-  {% comment %} -------------------------------------------------------- Cómo se entra {% endcomment %}
-  <section id="acceso" class="border-t border-borde bg-superficie">
-    <div class="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-20 escritorio:px-8">
-      <div class="flex flex-col gap-3">
-        <h2 class="font-display text-3xl tracking-tight text-texto">Cómo se entra</h2>
-        <p class="max-w-2xl text-lg text-texto-suave">
+  {% comment %} ================================================================ GARANTÍAS
+
+     Las tres invariantes que más condicionan el código. Van con la forma de las
+     «funciones numeradas» de la referencia porque es la que mejor las sirve: son
+     tres, se leen en orden y cada una es una regla, no una funcionalidad.
+  {% endcomment %}
+  <section id="garantias" class="bg-fondo px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-garantias">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-12 flex flex-col items-center text-center">
+        <p class="text-sm font-semibold tracking-widest text-acento-fuerte uppercase">Garantías</p>
+        <h2 id="tit-garantias" class="mt-3 font-display text-3xl tracking-tight text-texto escritorio:text-4xl">
+          Tres reglas que el sistema no puede romper
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg text-texto-suave">
+          No son promesas de la interfaz. Están sostenidas en la capa de datos, así
+          que se cumplen entre por donde entre la escritura: la caja, el panel de
+          administración o un comando.
+        </p>
+      </div>
+
+      <div class="grid gap-6 tablet:grid-cols-3">
+        <article class="relative h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        p-8 shadow-sm transition duration-300 hover:-translate-y-1
+                        hover:border-acento hover:shadow-lg">
+          <div aria-hidden="true" class="filete-acento absolute inset-x-0 top-0 h-px"></div>
+          {% comment %} El número es decorativo: el orden ya lo da la lista, y leer «cero
+             uno» antes de cada título es ruido. {% endcomment %}
+          <span aria-hidden="true" class="font-display text-5xl tabular-nums text-borde select-none">01</span>
+          <svg class="mt-4 h-7 w-7 text-acento" aria-hidden="true"><use href="#i-saldo"></use></svg>
+          <h3 class="mt-4 mb-2 font-display text-xl text-texto">Nunca en negativo</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Si no alcanza el saldo, la venta no se hace. No hay fiado ni sobregiro,
+            y la comprobación ocurre dentro del bloqueo de la billetera: dos cajas
+            cobrando a la vez no pueden colarse por la rendija.
+          </p>
+        </article>
+
+        <article class="relative h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        p-8 shadow-sm transition duration-300 hover:-translate-y-1
+                        hover:border-acento hover:shadow-lg">
+          <div aria-hidden="true" class="filete-acento absolute inset-x-0 top-0 h-px"></div>
+          <span aria-hidden="true" class="font-display text-5xl tabular-nums text-borde select-none">02</span>
+          <svg class="mt-4 h-7 w-7 text-acento" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+          <h3 class="mt-4 mb-2 font-display text-xl text-texto">Lo que bloquea la familia, queda bloqueado</h3>
+          <p class="text-base font-medium text-texto-suave">
+            La cafetería no puede levantar una restricción de alérgenos ni un
+            límite. No se sostiene escondiendo botones: el permiso está en la capa
+            de datos, así que da igual por dónde se intente.
+          </p>
+        </article>
+
+        <article class="relative h-full overflow-hidden rounded-xl border border-borde bg-superficie
+                        p-8 shadow-sm transition duration-300 hover:-translate-y-1
+                        hover:border-acento hover:shadow-lg">
+          <div aria-hidden="true" class="filete-acento absolute inset-x-0 top-0 h-px"></div>
+          <span aria-hidden="true" class="font-display text-5xl tabular-nums text-borde select-none">03</span>
+          <svg class="mt-4 h-7 w-7 text-acento" aria-hidden="true"><use href="#i-documento"></use></svg>
+          <h3 class="mt-4 mb-2 font-display text-xl text-texto">Todo se puede reconstruir</h3>
+          <p class="text-base font-medium text-texto-suave">
+            No existe una columna con el saldo ni otra con las existencias: las dos
+            cifras son la suma de su historial. Por construcción, lo que se ve en
+            pantalla no puede discrepar de lo que pasó.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {% comment %} =================================================================== VISIÓN {% endcomment %}
+  <section id="vision" class="bg-superficie px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-vision">
+    <div class="mx-auto max-w-6xl">
+      {% comment %} Bloque oscuro fijo en los dos temas: dentro van las constantes
+         `sobre-oscuro`, no los alias que siguen al tema. {% endcomment %}
+      <div class="panel-marino relative overflow-hidden rounded-xl px-6 py-14
+                  escritorio:px-16 escritorio:py-20">
+        <div aria-hidden="true"
+             class="aurora aurora-teal pointer-events-none absolute -top-32 -right-24 h-96 w-96 opacity-40"></div>
+
+        <div class="relative">
+          <div class="mb-12 flex flex-col items-center text-center">
+            <p class="text-sm font-semibold tracking-widest text-acento-claro uppercase">Visión</p>
+            <h2 id="tit-vision" class="mt-3 font-display text-3xl tracking-tight text-sobre-oscuro escritorio:text-4xl">
+              Nuestra visión
+            </h2>
+          </div>
+
+          <div class="mx-auto flex max-w-3xl flex-col gap-5">
+            <p class="text-lg leading-relaxed text-sobre-oscuro">
+              SmartFood sustituye el manejo de efectivo en la cafetería escolar por
+              una cuenta digital por estudiante: el acudiente controla el saldo, el
+              límite de gasto y las restricciones alimentarias de su hijo, y la
+              cafetería opera el punto de venta y el inventario con trazabilidad
+              verificable.
+            </p>
+            <p class="text-base leading-relaxed text-sobre-oscuro-suave">
+              Hoy ese circuito está roto por los dos extremos. La familia entrega
+              dinero suelto y se entera de en qué se gastó, si acaso, por lo que le
+              cuenta su hijo; la cafetería anota a mano y no puede explicar sus
+              existencias; y una alergia declarada al colegio no llega a la caja en
+              el momento en que hay que aplicarla. Cada uno de esos huecos es un
+              punto donde se pierde información que alguien necesitaba.
+            </p>
+            <p class="text-base leading-relaxed text-sobre-oscuro-suave">
+              La respuesta no es una pantalla más bonita sobre el mismo proceso. Es
+              que el saldo, las existencias y las restricciones dejen de ser cifras
+              que alguien mantiene al día y pasen a deducirse del historial, donde
+              no pueden mentir. Este prototipo se construye para demostrar
+              exactamente eso, con datos ficticios y sin mover dinero real.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% comment %} =============================================================== BENEFICIOS {% endcomment %}
+  <section id="beneficios" class="bg-fondo px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-beneficios">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-12 flex flex-col items-center text-center">
+        <p class="text-sm font-semibold tracking-widest text-acento-fuerte uppercase">Beneficios</p>
+        <h2 id="tit-beneficios" class="mt-3 font-display text-3xl tracking-tight text-texto escritorio:text-4xl">
+          Beneficios para todos
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg text-texto-suave">
+          Lo que cambia para cada persona que toca la cafetería.
+        </p>
+      </div>
+
+      <div class="grid gap-6 tablet:grid-cols-3">
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Para las familias">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-apreton"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-4 font-display text-xl text-texto">Para las familias</h3>
+            <ul class="flex flex-col gap-3">
+              {% comment %} Los vistos van en teal y no en verde: el verde de este sistema es
+                 `exito` y significa «la operación salió bien». Estas marcas son
+                 viñetas, no confirman nada. {% endcomment %}
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Su hijo deja de llevar efectivo al colegio.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Ven en qué se gastó cada peso, sin preguntar.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Una alergia declarada se aplica sola en la caja.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Para los estudiantes">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-4 font-display text-xl text-texto">Para los estudiantes</h3>
+            <ul class="flex flex-col gap-3">
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Compran pasando la tarjeta, sin contar monedas.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  La fila del descanso avanza más rápido.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  No se les pierde ni se les quita el dinero.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="h-full overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm
+                        transition duration-300 hover:-translate-y-1 hover:border-acento hover:shadow-lg">
+          <div class="lamina relative flex aspect-video w-full items-center justify-center overflow-hidden"
+               role="img" aria-label="Para el colegio y la cafetería">
+            <div aria-hidden="true" class="malla-heroe absolute inset-0"></div>
+            <svg class="relative h-11 w-11 text-sobre-oscuro opacity-90" aria-hidden="true"><use href="#i-grafica"></use></svg>
+          </div>
+          <div class="p-6">
+            <h3 class="mb-4 font-display text-xl text-texto">Para el colegio y la cafetería</h3>
+            <ul class="flex flex-col gap-3">
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Las existencias se explican desde su historial.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  Cada venta queda con el precio y los datos de ese día.
+                </span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-acento-suave">
+                  <svg class="h-3 w-3 text-acento-fuerte"><use href="#i-visto"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto-suave">
+                  El padrón lo controla la institución, no la cafetería.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {% comment %} ============================================================ CÓMO SE ENTRA {% endcomment %}
+  <section id="acceso" class="bg-superficie px-4 py-20 escritorio:px-8 escritorio:py-28"
+           aria-labelledby="tit-acceso">
+    <div class="mx-auto max-w-6xl">
+      <div class="mb-12 flex flex-col items-center text-center">
+        <p class="text-sm font-semibold tracking-widest text-acento-fuerte uppercase">Acceso</p>
+        <h2 id="tit-acceso" class="mt-3 font-display text-3xl tracking-tight text-texto escritorio:text-4xl">
+          Cómo se entra
+        </h2>
+        <p class="mt-4 max-w-2xl text-lg text-texto-suave">
           <strong class="font-semibold text-texto">Aquí no hay registro</strong>, y no
           es que falte: no existe ninguna ruta para crear una cuenta por cuenta
-          propia. Un sistema que maneja datos de menores no se abre a quien pase por
-          delante.
+          propia. Un sistema que maneja datos de menores no se abre a quien pase
+          por delante.
         </p>
       </div>
 
-      <ol class="grid gap-4 tablet:grid-cols-3">
-        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
-          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+      <ol class="grid gap-6 tablet:grid-cols-3">
+        <li class="flex h-full flex-col gap-3 rounded-xl border border-borde bg-fondo p-6">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-acento-suave
                        font-display text-lg text-acento-fuerte">1</span>
-          <h3 class="text-lg font-semibold text-texto">La institución da de alta</h3>
-          <p class="text-base text-texto-suave">
-            Carga el padrón de estudiantes y sus acudientes, o da de alta al personal
-            de la cafetería.
+          <h3 class="font-display text-lg text-texto">La institución da de alta</h3>
+          <p class="text-base font-medium text-texto-suave">
+            Carga el padrón de estudiantes y sus acudientes, o da de alta al
+            personal de la cafetería. El archivo se valida entero antes de escribir
+            nada: si una fila falla, no se carga ninguna.
           </p>
         </li>
-        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
-          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+        <li class="flex h-full flex-col gap-3 rounded-xl border border-borde bg-fondo p-6">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-acento-suave
                        font-display text-lg text-acento-fuerte">2</span>
-          <h3 class="text-lg font-semibold text-texto">Llega una invitación</h3>
-          <p class="text-base text-texto-suave">
+          <h3 class="font-display text-lg text-texto">Llega una invitación</h3>
+          <p class="text-base font-medium text-texto-suave">
             Un correo con un enlace que caduca y deja de valer en cuanto se usa.
-            Quien crea la cuenta nunca conoce la contraseña.
+            Quien crea la cuenta nunca conoce la contraseña de nadie.
           </p>
         </li>
-        <li class="flex flex-col gap-3 rounded-md border border-borde bg-fondo p-5">
-          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-acento-suave
+        <li class="flex h-full flex-col gap-3 rounded-xl border border-borde bg-fondo p-6">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-acento-suave
                        font-display text-lg text-acento-fuerte">3</span>
-          <h3 class="text-lg font-semibold text-texto">Cada quien define la suya</h3>
-          <p class="text-base text-texto-suave">
+          <h3 class="font-display text-lg text-texto">Cada quien define la suya</h3>
+          <p class="text-base font-medium text-texto-suave">
             Desde ese enlace, y ya se entra por la misma puerta que los otros tres
-            roles.
+            roles. No hay una entrada distinta por rol.
           </p>
         </li>
       </ol>
+    </div>
+  </section>
 
-      {% if not user.is_authenticated %}
-        <a href="{% url 'acceso' %}"
-           class="inline-flex h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-full
-                  bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
-                  transition-colors hover:bg-primario-fuerte">
-          Ya tengo cuenta
-          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
-        </a>
-      {% endif %}
+  {% comment %} =================================================================== CIERRE {% endcomment %}
+  <section class="bg-fondo px-4 pb-20 escritorio:px-8 escritorio:pb-28" aria-labelledby="tit-cierre">
+    <div class="mx-auto max-w-6xl">
+      <div class="panel-marino relative overflow-hidden rounded-xl px-6 py-14 text-center escritorio:px-16">
+        <div aria-hidden="true"
+             class="aurora aurora-agua pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 opacity-40"></div>
+
+        <div class="relative mx-auto max-w-2xl">
+          <h2 id="tit-cierre" class="font-display text-3xl tracking-tight text-sobre-oscuro escritorio:text-4xl">
+            La cafetería del colegio, en una sola pantalla
+          </h2>
+          <p class="mt-4 text-lg text-sobre-oscuro-suave">
+            Entra con el correo con el que te dieron de alta. Si todavía no tienes
+            cuenta, quien la crea es la institución educativa.
+          </p>
+          <div class="mt-8 flex flex-col justify-center gap-3 tablet:flex-row">
+            <a href="{% url 'acceso' %}"
+               class="brillo-accion inline-flex h-12 items-center justify-center rounded-md
+                      bg-accion-clara px-6 text-lg font-medium text-sobre-accion-clara
+                      transition-transform duration-200 hover:-translate-y-0.5">
+              Entrar
+            </a>
+            <a href="#acceso"
+               class="inline-flex h-12 items-center justify-center rounded-md
+                      border border-sobre-oscuro/25 px-6 text-lg font-medium text-sobre-oscuro
+                      transition-colors hover:bg-sobre-oscuro/10">
+              Cómo se consigue una cuenta
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 {% endblock %}
