@@ -101,7 +101,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-03` | `TT-62`–`TT-63` | `HU-08` · `INV-2`, `TST-3` | ☑ |
 | `PR-04` | `TT-64` | `HU-07` | ☑ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☑ |
-| `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☐ |
+| `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☑ |
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ◐ software sí; falta `TT-72` |
 | `PR-08` | `TT-73` | `HU-16` | ☑ |
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
