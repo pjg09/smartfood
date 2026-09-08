@@ -1,0 +1,30 @@
+{% comment %} El grupo de tres botones del selector de tema. Lo dibuja, y nada más.
+
+   **Solo lo incluye `partials/selector-de-tema.html`**, que es quien decide las
+   clases según dónde va a vivir el grupo. Están separados para que este marcado
+   se escriba una vez en lugar de tres: con una copia por tono, un ajuste al alto
+   o al radio se queda a medias en dos de ellos y nadie lo nota hasta que las
+   tres barras se parecen solo de lejos.
+
+   Qué recibe:
+     caja   las clases del contenedor (borde y fondo)
+     boton  las clases de cada botón, incluidas las de `aria-pressed`
+
+   El orden es claro · oscuro · sistema, y no al revés: los dos primeros son la
+   elección explícita y el tercero es «devuélvemelo a como estaba».
+{% endcomment %}
+<div data-selector-de-tema role="group" aria-label="Tema de la interfaz"
+     class="inline-flex shrink-0 rounded-md border p-1 transition-colors {{ caja }}">
+  <button type="button" data-tema="claro" aria-label="Tema claro" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors {{ boton }}">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-sol"></use></svg>
+  </button>
+  <button type="button" data-tema="oscuro" aria-label="Tema oscuro" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors {{ boton }}">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-luna"></use></svg>
+  </button>
+  <button type="button" data-tema="sistema" aria-label="Seguir al sistema" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors {{ boton }}">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-monitor"></use></svg>
+  </button>
+</div>

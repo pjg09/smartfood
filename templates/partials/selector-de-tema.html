@@ -1,4 +1,4 @@
-{% comment %} Selector de tema (DT-23).
+{% comment %} Selector de tema (DT-23, DT-25).
 
    Tres estados y no dos: claro, oscuro y **el del sistema**, que es el que trae
    por defecto. Sin el tercero, quien tiene el teléfono en oscuro entra a una
@@ -12,55 +12,45 @@
    —`role="group"` con el `aria-label` del conjunto y `aria-pressed` en cada
    botón— y ninguno queda escondido detrás de un despliegue.
 
+   **Está siempre a la vista.** En la portada llegó a esconderse mientras se
+   estaba arriba del todo, y era un error: el sitio donde más falta hace poder
+   probar el tema es la primera pantalla que alguien ve, y allí era justo donde
+   no estaba.
+
    Cuál está elegido lo marca `interfaz.js` al montar, no el servidor: la
    preferencia vive en el navegador de cada persona, no en su cuenta. Hasta que
    ese script corra, los tres botones se ven igual — que es correcto, porque
    ninguno es «el de por defecto» sin saber qué hay guardado.
 
-   Parámetro:
-     tono   `oscuro` cuando va dentro del cajón o de la barra lateral, que son
-            paneles oscuros en LOS DOS temas: ahí `bg-superficie` es blanca en
-            tema claro y el grupo se vería como un parche.
+   Este fichero **solo elige las clases**; el marcado está en
+   `partials/grupo-de-tema.html`.
+
+   Parámetro `tono`, tres valores:
+
+     (sin tono)  sobre el fondo de la página. Sigue al tema.
+     `oscuro`    dentro del cajón o de la barra lateral, que son paneles oscuros
+                 en LOS DOS temas: ahí `bg-superficie` es blanca en tema claro y
+                 el grupo se vería como un parche.
+     `publico`   en la cabecera de la portada, que **cambia de fondo al
+                 desplazarse**: transparente sobre el héroe marino y opaca al
+                 bajar.
 {% endcomment %}
-<div data-selector-de-tema role="group" aria-label="Tema de la interfaz"
-     class="inline-flex shrink-0 rounded-md border p-1
-            {% if tono == 'oscuro' %}
-              border-nav-hover bg-nav-hover
-            {% else %}
-              border-borde bg-superficie
-            {% endif %}">
-  {% comment %} El orden es claro · oscuro · sistema, y no al revés: los dos primeros son
-     la elección explícita y el tercero es «devuélvemelo a como estaba». {% endcomment %}
-  <button type="button" data-tema="claro" aria-label="Tema claro" aria-pressed="false"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
-                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
-                 {% if tono == 'oscuro' %}
-                   text-nav-texto hover:bg-nav-fondo
-                 {% else %}
-                   text-texto-suave hover:bg-superficie-hover
-                 {% endif %}">
-    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-sol"></use></svg>
-  </button>
+{% if tono == 'oscuro' %}
+  {% comment %} Sobre panel oscuro fijo. {% endcomment %}
+  {% include "partials/grupo-de-tema.html" with caja="border-nav-hover bg-nav-hover" boton="text-nav-texto hover:bg-nav-fondo aria-pressed:bg-primario aria-pressed:text-sobre-primario" only %}
 
-  <button type="button" data-tema="oscuro" aria-label="Tema oscuro" aria-pressed="false"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
-                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
-                 {% if tono == 'oscuro' %}
-                   text-nav-texto hover:bg-nav-fondo
-                 {% else %}
-                   text-texto-suave hover:bg-superficie-hover
-                 {% endif %}">
-    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-luna"></use></svg>
-  </button>
+{% elif tono == 'publico' %}
+  {% comment %} El único tono que depende de un ESTADO, y por eso se escribe con
+     utilidades que Tailwind pueda variar y no con la clase `.cristal`: las
+     variantes no alcanzan a `@layer components`, no dan ningún error y el grupo
+     se quedaría sin fondo sobre el héroe.
 
-  <button type="button" data-tema="sistema" aria-label="Seguir al sistema" aria-pressed="false"
-          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
-                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
-                 {% if tono == 'oscuro' %}
-                   text-nav-texto hover:bg-nav-fondo
-                 {% else %}
-                   text-texto-suave hover:bg-superficie-hover
-                 {% endif %}">
-    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-monitor"></use></svg>
-  </button>
-</div>
+     Sobre el héroe, el botón pulsado **no puede ir en primario**: el primario en
+     tema claro es el mismo marino del fondo y el botón desaparecería. Va en
+     `accion-clara`, que es la constante pensada para actuar sobre bloque oscuro
+     en los dos temas. {% endcomment %}
+  {% include "partials/grupo-de-tema.html" with caja="border-borde bg-superficie group-data-[arriba=si]:border-sobre-oscuro/25 group-data-[arriba=si]:bg-sobre-oscuro/10 group-data-[arriba=si]:backdrop-blur" boton="text-texto-suave hover:bg-superficie-hover aria-pressed:bg-primario aria-pressed:text-sobre-primario group-data-[arriba=si]:text-sobre-oscuro-suave group-data-[arriba=si]:hover:bg-sobre-oscuro/15 group-data-[arriba=si]:aria-pressed:bg-accion-clara group-data-[arriba=si]:aria-pressed:text-sobre-accion-clara" only %}
+
+{% else %}
+  {% include "partials/grupo-de-tema.html" with caja="border-borde bg-superficie" boton="text-texto-suave hover:bg-superficie-hover aria-pressed:bg-primario aria-pressed:text-sobre-primario" only %}
+{% endif %}
