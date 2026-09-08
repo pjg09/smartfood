@@ -28,6 +28,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
+| `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
@@ -97,11 +98,10 @@ plantillas se usan alias de intención (`bg-superficie`, `text-texto`, `border-b
 `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-Antes de inventar una pantalla, mira cómo la resuelven las que ya existen: la tarjeta de
-resumen (franja, icono, cifra y **enlace** de acento abajo, no botón), la tabla con cabecera
-tintada que baja a fichas en móvil, el encabezado centrado con antetítulo, la pastilla de
-sesión con nombre y rol, el grupo de botones con `aria-pressed` y el bloque punteado de los
-huecos. **Un hueco nunca es un botón deshabilitado**: dice qué falta y qué historia lo trae.
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué seis
+composiciones existen y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
+una tarjeta de resumen es un **enlace** de acento abajo, no un botón sólido; y **un hueco
+nunca es un botón deshabilitado** — dice qué falta y qué historia lo trae.
 
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
