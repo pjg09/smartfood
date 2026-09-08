@@ -68,11 +68,9 @@
 
       {% block barra %}{% endblock %}
 
-      {% comment %} Quién tiene la sesión abierta. Se oculta antes que nada al estrechar:
-         un correo largo se come la barra entera. {% endcomment %}
-      <span class="hidden max-w-56 truncate text-sm text-texto-suave escritorio:inline">
-        {{ user.email }}
-      </span>
+      {% comment %} Quién tiene la sesión abierta: nombre y rol, no el correo. El motivo
+         está en el propio fragmento. {% endcomment %}
+      {% include "partials/ficha-de-sesion.html" %}
 
       <div class="hidden tablet:block">{% include "partials/selector-de-tema.html" %}</div>
 

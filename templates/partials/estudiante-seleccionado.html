@@ -86,7 +86,8 @@
        insuficiente o alérgeno bloqueado (`INV-1`, `INV-5`). {% endcomment %}
     <section aria-label="Resumen de {{ seleccionado.nombre }}" class="grid gap-3 tablet:grid-cols-3">
       <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm">
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
         <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-1 to-serie-1/50"></span>
         <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-1/10 text-serie-1">
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
@@ -94,7 +95,7 @@
         <h3 class="text-base font-semibold text-texto-suave">Saldo</h3>
         {% comment %} `tabular-nums`: las cifras se alinean por columnas y no bailan al
            cambiar de estudiante en el selector. En dinero importa. {% endcomment %}
-        <p class="font-display text-2xl tabular-nums text-texto">{{ saldo|dinero }}</p>
+        <p class="font-display text-2xl tabular-nums text-texto">{{ saldo|dinero:"COP" }}</p>
         <p class="text-base font-medium text-texto-suave">
           {% if seleccionado.esta_de_baja %}
             Congelado desde la baja: se consulta, pero no se recarga ni se gasta.
@@ -107,18 +108,21 @@
              que no se le ofrece. **Esconder el enlace no es lo que lo impide**: el
              servicio rechaza la recarga entre por donde entre (`DT-11`, `DT-15`).
              Esto solo evita ofrecer algo que va a fallar. {% endcomment %}
+          {% comment %} Un enlace de acento y no un botón sólido. En una fila de tarjetas de
+             resumen, un botón relleno es la pieza más pesada de la pantalla y se
+             lleva la mirada por delante de la cifra, que es lo que se viene a
+             mirar. `mt-auto` lo pega abajo para que las tres tarjetas terminen
+             a la misma altura aunque su texto mida distinto. {% endcomment %}
           <a href="{% url 'recarga' seleccionado.id %}"
-             class="mt-auto inline-flex h-10 w-fit shrink-0 items-center gap-2 rounded-md
-                    bg-primario px-4 text-base font-medium whitespace-nowrap
-                    text-sobre-primario transition-colors hover:bg-primario-fuerte">
-            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+             class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
             Recargar
           </a>
         {% endif %}
       </article>
 
       <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm">
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
         <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-3 to-serie-3/50"></span>
         <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-3/10 text-serie-3">
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-limite"></use></svg>
@@ -130,7 +134,8 @@
       </article>
 
       <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
-                      bg-superficie p-4 shadow-sm">
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
         <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-5 to-serie-5/50"></span>
         <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-5/10 text-serie-5">
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-restriccion"></use></svg>
@@ -152,40 +157,102 @@
       <h2 id="movimientos" class="text-lg text-texto">Últimos movimientos</h2>
 
       {% if movimientos %}
-        <ul class="flex flex-col divide-y divide-borde rounded-md border border-borde
-                   bg-superficie shadow-sm">
+        {% comment %} Móvil: una ficha por movimiento, en tres franjas con jerarquía. Arriba
+           la fecha y el importe, que es lo que se busca de un vistazo; abajo, en
+           fondo hundido y separado por una línea, de qué movimiento se trata. Una
+           tabla no se reflujar a 390 px sin volverse ilegible. {% endcomment %}
+        <ul class="flex flex-col gap-3 tablet:hidden">
           {% for movimiento in movimientos %}
-            <li class="flex items-center justify-between gap-4 p-4">
-              <div class="flex min-w-0 items-center gap-3">
-                {% comment %} El icono distingue lo que entra de lo que sale sin depender del
-                   color: quien no distingue rojo y verde lee la flecha y el signo. {% endcomment %}
-                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md
-                             {% if movimiento.monto > 0 %}bg-exito-suave text-exito-fuerte
-                             {% else %}bg-superficie-hover text-texto-suave{% endif %}">
-                  <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+            <li class="overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
+              <div class="flex items-center justify-between gap-3 px-4 py-3">
+                <span class="flex items-center gap-1.5 text-sm text-texto-suave">
+                  <svg class="h-3.5 w-3.5" aria-hidden="true"><use href="#i-calendario"></use></svg>
+                  {{ movimiento.creado_en|date:"j" }} de
+                  {{ movimiento.creado_en|date:"F"|lower }} de
+                  {{ movimiento.creado_en|date:"Y, H:i" }}
                 </span>
-                <div class="flex min-w-0 flex-col">
-                  <span class="truncate text-base font-medium text-texto">
-                    {{ movimiento.get_tipo_display }}
+                <span class="shrink-0 font-display text-xl font-semibold tabular-nums
+                             {% if movimiento.monto > 0 %}text-exito-fuerte{% else %}text-serie-1{% endif %}">
+                  {{ movimiento.monto|dinero }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2 border-t border-borde bg-superficie-hover px-4 py-2">
+                {% comment %} El icono distingue lo que entra de lo que sale sin depender del
+                   color: quien no distingue rojo y verde lee el signo del importe
+                   y el fondo del icono. {% endcomment %}
+                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md
+                             {% if movimiento.monto > 0 %}bg-exito-suave text-exito-fuerte
+                             {% else %}bg-superficie text-texto-suave{% endif %}">
+                  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+                </span>
+                <span class="text-base font-medium text-texto">{{ movimiento.get_tipo_display }}</span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% comment %} Tablet en adelante: tabla. La cabecera va con fondo tintado en vez de
+           una línea más gruesa, y cada rótulo lleva su icono delante — el icono
+           SIEMPRE antes del texto, también en la columna alineada a la derecha,
+           porque invertirlo deja el icono descolgado del rótulo. {% endcomment %}
+        <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+          <table class="tabla-datos">
+            <thead>
+              <tr class="border-b border-borde bg-primario-suave">
+                <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-texto-suave" aria-hidden="true"><use href="#i-calendario"></use></svg>
+                    Fecha
                   </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-etiqueta"></use></svg>
+                    Movimiento
+                  </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-right text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-saldo"></use></svg>
+                    Monto
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for movimiento in movimientos %}
+                <tr class="border-b border-borde transition-colors last:border-b-0
+                           even:bg-superficie-hover hover:bg-primario-suave">
                   {% comment %} El mes se pasa a minúscula aparte: Django lo devuelve
                      capitalizado —«Septiembre»— y en español va en minúscula dentro
                      de una fecha. No hay filtro que baje solo la inicial, así que se
                      compone en tres trozos. {% endcomment %}
-                  <span class="text-sm text-texto-suave">
+                  <td class="px-4 py-3 text-base whitespace-nowrap text-texto-suave">
                     {{ movimiento.creado_en|date:"j" }} de
                     {{ movimiento.creado_en|date:"F"|lower }} de
                     {{ movimiento.creado_en|date:"Y, H:i" }}
-                  </span>
-                </div>
-              </div>
-              <span class="shrink-0 font-display text-lg tabular-nums
-                           {% if movimiento.monto > 0 %}text-exito-fuerte{% else %}text-texto{% endif %}">
-                {{ movimiento.monto|dinero }}
-              </span>
-            </li>
-          {% endfor %}
-        </ul>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-2">
+                      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md
+                                   {% if movimiento.monto > 0 %}bg-exito-suave text-exito-fuerte
+                                   {% else %}bg-superficie-hover text-texto-suave{% endif %}">
+                        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+                      </span>
+                      <span class="text-base font-medium text-texto">{{ movimiento.get_tipo_display }}</span>
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <span class="font-display text-base font-semibold tabular-nums
+                                 {% if movimiento.monto > 0 %}text-exito-fuerte{% else %}text-serie-1{% endif %}">
+                      {{ movimiento.monto|dinero }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% else %}
         <p class="rounded-md border border-dashed border-borde p-6 text-center text-base
                   font-medium text-texto-suave" role="status">

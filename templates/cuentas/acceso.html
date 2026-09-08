@@ -4,9 +4,16 @@
 
    No es un camino de alta: aquí solo entra quien ya tiene cuenta y ya definió su
    contraseña con la invitación (`TT-11`). `INV-6` e `INVD-1` siguen enteras y no
-   hay enlace a ningún registro, porque no existe (`DT-10`). {% endcomment %}
+   hay enlace a ningún registro, porque no existe (`DT-10`).
 
-{% block titulo %}Entrar · SmartFood{% endblock %}
+   **Tampoco hay «olvidé mi contraseña»**, y es la única pieza de la referencia
+   visual que falta aquí a propósito: la ruta de recuperación no está construida
+   (`config/urls.py` solo publica la confirmación de la invitación), y un enlace
+   a una pantalla que responde 404 es peor que no ofrecerlo. Cuando exista, va
+   justo debajo del botón.
+{% endcomment %}
+
+{% block titulo %}Entrar | SmartFood{% endblock %}
 
 {% block contenido %}
   <h1 class="font-display text-3xl tracking-tight text-texto">Entra a tu cuenta</h1>
@@ -48,6 +55,7 @@
         <input type="email" name="{{ form.username.html_name }}"
                id="{{ form.username.id_for_label }}"
                autocomplete="username" autofocus required
+               placeholder="tu@correo.com"
                class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
                       transition-colors placeholder:text-texto-suave hover:border-acento
                       focus:border-acento focus:outline-none
@@ -59,15 +67,26 @@
       <label for="{{ form.password.id_for_label }}" class="text-base font-medium text-texto">
         Contraseña
       </label>
-      <div class="relative">
+      {% comment %} `data-revelar-contrasena` marca la caja; el botón de dentro lo atiende
+         `interfaz.js`. El botón lleva `tabindex="-1"` a propósito: quien navega
+         con teclado va del correo a la contraseña y de ahí a «Entrar», y una
+         parada intermedia para ver lo que acaba de escribir sobra. Con el ratón
+         sigue estando. {% endcomment %}
+      <div class="relative" data-revelar-contrasena>
         <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
              aria-hidden="true"><use href="#i-candado"></use></svg>
         <input type="password" name="{{ form.password.html_name }}"
                id="{{ form.password.id_for_label }}"
                autocomplete="current-password" required
-               class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+               class="h-11 w-full rounded-md border bg-superficie pr-11 pl-10 text-base text-texto
                       transition-colors hover:border-acento focus:border-acento focus:outline-none
                       {% if form.errors %}border-error{% else %}border-borde{% endif %}">
+        <button type="button" tabindex="-1" aria-label="Mostrar la contraseña"
+                class="absolute top-1/2 right-1 flex h-9 w-9 -translate-y-1/2 items-center
+                       justify-center rounded-sm text-texto-suave transition-colors
+                       hover:bg-superficie-hover hover:text-texto">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-ojo"></use></svg>
+        </button>
       </div>
     </div>
 
@@ -79,8 +98,21 @@
     </button>
   </form>
 
-  <p class="mt-8 border-t border-borde pt-4 text-sm text-texto-suave">
+  <p class="mt-6 text-center text-sm text-texto-suave">
     Las cuentas no se crean desde aquí. La institución da de alta a cada persona y
     le envía una invitación con la que define su contraseña.
+  </p>
+
+  {% comment %} No es letra pequeña de relleno. `ALC-OUT-08` es una obligación legal —Ley
+     1581 de 2012 sobre datos de menores— y decirlo en la puerta es parte de
+     sostenerla: quien entra aquí a cargar un padrón tiene que haberlo leído
+     antes, no después. {% endcomment %}
+  <p class="mt-8 flex items-start gap-2 border-t border-borde pt-4 text-sm text-texto-suave">
+    <svg class="mt-0.5 h-4 w-4 shrink-0 text-acento-fuerte" aria-hidden="true"><use href="#i-escudo"></use></svg>
+    <span>
+      Los datos de los estudiantes se tratan conforme a la Ley 1581 de 2012.
+      En este prototipo, además, <strong class="font-semibold text-texto">todos son
+      ficticios</strong>.
+    </span>
   </p>
 {% endblock %}

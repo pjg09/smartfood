@@ -8,7 +8,7 @@
    de botones HTMX que reemplazan el panel de abajo; cada uno pide su fragmento,
    no la página entera (`DT-16`). {% endcomment %}
 
-{% block titulo %}Mis estudiantes · SmartFood{% endblock %}
+{% block titulo %}Mis estudiantes | SmartFood{% endblock %}
 
 {% block contenido %}
   <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -18,23 +18,26 @@
          estudiante se elige abajo y su nombre ya sale en el selector: repetirlo
          aquí confunde sobre a quién se le está hablando. {% endcomment %}
       <h1 class="font-display text-2xl text-texto escritorio:text-3xl">
-        Hola{% if user.nombre %}, {{ user.nombre|nombre_de_pila }}{% endif %}
+        {% saludo %}{% if user.nombre %}, {{ user.nombre|nombre_de_pila }}{% endif %}
       </h1>
-      <p class="text-base font-medium text-texto-suave">
-        {% if estudiantes %}
-          {% if estudiantes|length == 1 %}
-            Tienes un estudiante a tu cargo.
-          {% else %}
-            Tienes {{ estudiantes|length }} estudiantes a tu cargo, en esta misma cuenta.
-          {% endif %}
-        {% else %}
-          Tu cuenta funciona; lo que falta es que te vinculen un estudiante.
-        {% endif %}
+      {% comment %} La fecha larga. Dos detalles del castellano que Django no acierta solo:
+
+         · El DÍA llega en minúscula («martes») y la inicial de la frase se pone
+           con `first-letter:uppercase`, no partiendo la cadena en JavaScript ni
+           en el servidor — con acentos, cortar por el primer carácter se rompe.
+         · El MES llega capitalizado («Septiembre») y dentro de una fecha va en
+           minúscula. Se guarda en una variable para poder pasarlo por `lower`:
+           a la salida de `{% templatetag openblock %} now {% templatetag closeblock %}` no se le puede aplicar un filtro
+           directamente. {% endcomment %}
+      {% now "F" as mes %}
+      <p class="text-base font-medium text-texto-suave first-letter:uppercase">
+        {% now "l, j" %} de {{ mes|lower }}
       </p>
     </header>
 
     {% if estudiantes %}
-      {% comment %} El selector. Con un solo estudiante no aporta nada y no se dibuja.
+      {% comment %} El selector. Con un solo estudiante no aporta nada y no se dibuja: el
+         rótulo que lo encabeza tampoco, porque no encabezaría nada.
 
          Marcar cuál está elegido es cosa del navegador y no del servidor: el
          fragmento que devuelve HTMX es el detalle, no el selector (`DT-16`), así
@@ -42,6 +45,10 @@
          puede ver a qué estudiante lo decide el selector de datos, que responde
          404 para uno que no esté a cargo. {% endcomment %}
       {% if estudiantes|length > 1 %}
+        <div class="flex flex-col gap-2">
+        <p class="text-base font-medium text-texto-suave">
+          Tienes {{ estudiantes|length }} estudiantes a tu cargo, en esta misma cuenta.
+        </p>
         <div data-selector-estudiante role="group" aria-label="Elegir estudiante"
              class="flex flex-wrap gap-2">
           {% for estudiante in estudiantes %}
@@ -64,6 +71,7 @@
           <span id="cargando-estudiante" class="htmx-indicator self-center text-sm text-texto-suave">
             Cargando…
           </span>
+        </div>
         </div>
       {% endif %}
 

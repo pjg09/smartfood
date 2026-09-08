@@ -1,25 +1,30 @@
 {% extends "base-aplicacion.html" %}
+{% load dinero %}
 
 {% comment %} TT-61. Pantalla de recarga de la billetera (`HU-06`, `INT-1`).
 
-   **El pago es simulado y la pantalla lo dice.** `ALC-OUT-01` y `ALC-OUT-02`
-   excluyen la pasarela y el dinero real: no hay campos de tarjeta ni de cuenta,
-   y no se recoge ningún dato de pago. Decirlo aquí no es un descargo legal, es
-   evitar que alguien crea que acaba de mover dinero de verdad.
+   **El pago es simulado y la pantalla lo dice, arriba del todo.** `ALC-OUT-01` y
+   `ALC-OUT-02` excluyen la pasarela y el dinero real: no hay campos de tarjeta ni
+   de cuenta, y no se recoge ningún dato de pago. Decirlo aquí no es un descargo
+   legal, es evitar que alguien crea que acaba de mover dinero de verdad. Va en
+   `aviso` y no en `error`: no ha fallado nada, el ámbar dice «esto no es lo que
+   parece», que es justo lo que hay que entender antes de pulsar.
 
    Lo que sí es real es el movimiento: queda asentado en el historial (tercer
    criterio de `HU-06`) y desde ese momento forma parte del saldo, que es
    exactamente su suma (`INV-2`).
 
-   **No muestra el saldo.** Consultarlo es `HU-07` y llega en `PR-04`: esta
-   pantalla recarga, y enseñar aquí una cifra que otra historia todavía no
-   sostiene sería adelantarla a medias.
+   Dos columnas desde `escritorio`, como la referencia (`DT-23`): a la izquierda
+   cuánto se recarga y a la derecha lo que ya se recargó. La segunda columna
+   responde a «¿no acabo de recargar?», que es la pregunta que evita la recarga
+   repetida; no es el extracto —ese está en el panel— y por eso son las últimas y
+   no todas.
 {% endcomment %}
 
-{% block titulo %}Recargar · {{ estudiante.nombre }} · SmartFood{% endblock %}
+{% block titulo %}Recargar | {{ estudiante.nombre }} | SmartFood{% endblock %}
 
 {% block contenido %}
-  <div class="mx-auto flex w-full max-w-lg flex-col gap-6">
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
 
     <header class="flex flex-col gap-1">
       <a href="{% url 'mis-estudiantes' %}"
@@ -28,76 +33,172 @@
         <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
         Mis estudiantes
       </a>
-      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">
-        Recargar la billetera
-      </h1>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Recargar saldo</h1>
       <p class="text-base font-medium text-texto-suave">
-        De <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong>. La
-        billetera es suya: lo que recargues aquí no lo puede gastar nadie más.
+        El dinero queda disponible al instante para que
+        <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong> compre en la
+        cafetería. La billetera es suya: lo que recargues aquí no lo gasta nadie más.
       </p>
     </header>
 
-    <form method="post" class="flex flex-col gap-4 rounded-md border border-borde
-                               bg-superficie p-4 shadow-sm">
-      {% csrf_token %}
-
-      {% comment %} Los errores del servicio —`INVD-2`, el monto fuera de rango— llegan como
-         errores del formulario y no de un campo: no siempre son culpa de lo que se
-         escribió. `role="alert"` para que un lector de pantalla los anuncie. {% endcomment %}
-      {% if form.non_field_errors %}
-        <div role="alert"
-             class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
-          <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
-          <div class="text-sm text-error-fuerte">
-            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-          </div>
-        </div>
-      {% endif %}
-
-      <div class="flex flex-col gap-1">
-        <label for="{{ form.monto.id_for_label }}" class="text-base font-medium text-texto">
-          {{ form.monto.label }}
-        </label>
-        <div class="relative">
-          <span aria-hidden="true"
-                class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
-                       font-display text-lg text-texto-suave">$</span>
-          <input type="number" name="{{ form.monto.html_name }}" id="{{ form.monto.id_for_label }}"
-                 step="0.01" min="0.01" max="{{ form.monto.field.max_value }}"
-                 inputmode="decimal" required autofocus
-                 value="{{ form.monto.value|default_if_none:'' }}"
-                 class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
-                        text-lg tabular-nums text-texto transition-colors
-                        hover:border-acento focus:border-acento focus:outline-none
-                        {% if form.monto.errors %}border-error{% else %}border-borde{% endif %}">
-        </div>
-        {% if form.monto.errors %}
-          <p class="text-sm font-medium text-error-fuerte">{{ form.monto.errors|join:" " }}</p>
-        {% endif %}
-      </div>
-
-      <button type="submit"
-              class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2
-                     rounded-md bg-primario px-6 text-lg font-medium whitespace-nowrap
-                     text-sobre-primario transition-colors hover:bg-primario-fuerte">
-        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
-        Recargar
-      </button>
-    </form>
-
-    {% comment %} Va en `aviso` y no en `error`: no ha fallado nada. El ámbar dice «esto no
-       es lo que parece», que es justo lo que hay que entender antes de pulsar. {% endcomment %}
     <div role="note"
          class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
-      <svg class="mt-0.5 h-5 w-5 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
-      <div class="flex flex-col gap-1 text-sm text-aviso-fuerte">
-        <p class="text-base font-semibold">Este pago es simulado</p>
-        <p>
-          No hay pasarela ni dinero real, y no se te piden datos de tarjeta ni de
-          cuenta. El movimiento sí queda registrado en el historial de la billetera,
-          que es lo que este prototipo demuestra.
-        </p>
-      </div>
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <p class="text-sm text-aviso-fuerte">
+        <strong class="font-semibold">Este pago es simulado.</strong> No hay pasarela ni
+        dinero real, y no se te piden datos de tarjeta ni de cuenta. El movimiento sí
+        queda registrado en el historial de la billetera, que es lo que este prototipo
+        demuestra.
+      </p>
+    </div>
+
+    {% comment %} `escritorio:grid-cols-3` con el formulario ocupando dos: la columna de las
+       recargas anteriores es de apoyo y no necesita la mitad de la pantalla. Por
+       debajo de 1024 px se apilan y el formulario queda primero, que es a lo que
+       se viene. {% endcomment %}
+    <div class="grid gap-6 escritorio:grid-cols-3 escritorio:items-start">
+
+      <form method="post" data-montos-sugeridos
+            class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4
+                   shadow-sm escritorio:col-span-2">
+        {% csrf_token %}
+
+        <h2 class="text-lg font-semibold text-texto">Cuánto quieres recargar</h2>
+
+        {% comment %} Los errores del servicio —`INVD-2`, el monto fuera de rango— llegan como
+           errores del formulario y no de un campo: no siempre son culpa de lo que se
+           escribió. `role="alert"` para que un lector de pantalla los anuncie. {% endcomment %}
+        {% if form.non_field_errors %}
+          <div role="alert"
+               class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+            <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+            <div class="text-sm text-error-fuerte">
+              {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% comment %} Atajos, no opciones: escriben el importe en el campo de abajo y ya
+           está. Por eso son `type="button"` y no radios — no son un segundo
+           control que el servidor tenga que leer, y con radios habría dos fuentes
+           del mismo dato compitiendo por decir cuánto se recarga.
+
+           `aria-pressed` lo mueve `interfaz.js` según lo que haya escrito en el
+           campo, incluso si se teclea a mano: así el atajo pulsado siempre
+           coincide con el importe real. {% endcomment %}
+        <div role="group" aria-label="Importes sugeridos"
+             class="grid grid-cols-2 gap-3 tablet:grid-cols-4">
+          {% for monto in montos_sugeridos %}
+            <button type="button" data-monto="{{ monto|stringformat:'d' }}" aria-pressed="false"
+                    class="inline-flex h-12 items-center justify-center rounded-md border
+                           text-base font-medium whitespace-nowrap transition-colors
+                           border-borde bg-superficie text-texto hover:border-acento
+                           aria-pressed:border-transparente aria-pressed:bg-primario
+                           aria-pressed:text-sobre-primario">
+              {{ monto|dinero:"COP" }}
+            </button>
+          {% endfor %}
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="{{ form.monto.id_for_label }}" class="text-base font-medium text-texto">
+            U otro monto
+          </label>
+          <div class="relative">
+            <span aria-hidden="true"
+                  class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                         font-display text-lg text-texto-suave">$</span>
+            <input type="number" name="{{ form.monto.html_name }}" id="{{ form.monto.id_for_label }}"
+                   step="0.01" min="0.01" max="{{ form.monto.field.max_value }}"
+                   inputmode="decimal" required autofocus
+                   value="{{ form.monto.value|default_if_none:'' }}"
+                   class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                          text-lg tabular-nums text-texto transition-colors
+                          hover:border-acento focus:border-acento focus:outline-none
+                          {% if form.monto.errors %}border-error{% else %}border-borde{% endif %}">
+          </div>
+          {% if form.monto.errors %}
+            <p class="text-sm font-medium text-error-fuerte">{{ form.monto.errors|join:" " }}</p>
+          {% else %}
+            {% comment %} El rango se enseña antes de enviar, pero **la regla vive en el
+               servicio**: esto es una comodidad, no la validación (`DT-15`). {% endcomment %}
+            <p class="text-sm text-texto-suave">
+              Entre $0,01 y {{ form.monto.field.max_value|dinero:"COP" }}.
+            </p>
+          {% endif %}
+        </div>
+
+        {% comment %} El desglose de la referencia, con una línea menos: allí hay un costo de
+           servicio porque hay una pasarela que lo cobra. Aquí no hay pasarela
+           (`ALC-OUT-01`), así que **no se inventa una comisión de cero** —una
+           línea «Servicio $0» sugiere que algún día habrá una— y lo que se dice
+           es de dónde se parte y a dónde se llega. {% endcomment %}
+        <dl class="flex flex-col gap-2 border-t border-borde pt-4">
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base font-medium text-texto-suave">Saldo actual</dt>
+            <dd class="font-display text-base font-semibold tabular-nums text-texto">
+              {{ saldo|dinero:"COP" }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base font-medium text-texto-suave">Después de esta recarga</dt>
+            {% comment %} **No se calcula en el navegador**, y eso es a propósito. La
+               referencia enseña ahí un total vivo que se actualiza al teclear;
+               hacerlo aquí exige un segundo formateador de dinero en JavaScript,
+               y `billetera/templatetags/dinero.py` existe justamente para que la
+               misma cifra no salga de dos sitios distintos. Con dos, el día que
+               cambie el formato uno de los dos se queda atrás y la misma pantalla
+               enseña dos monedas.
+
+               Lo que se dice en su lugar es lo que sí se sabe sin calcular nada:
+               que el saldo sube en lo que se recargue. El saldo definitivo lo fija
+               el servicio al asentar el movimiento y se ve al volver al panel. {% endcomment %}
+            <dd class="text-base font-medium text-texto-suave">
+              El saldo sube en lo que recargues
+            </dd>
+          </div>
+        </dl>
+
+        <button type="submit"
+                class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2
+                       rounded-md bg-primario px-6 text-lg font-medium whitespace-nowrap
+                       text-sobre-primario transition-colors hover:bg-primario-fuerte">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-saldo"></use></svg>
+          Recargar
+        </button>
+      </form>
+
+      <aside aria-labelledby="tus-recargas"
+             class="flex flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+        <h2 id="tus-recargas" class="text-lg font-semibold text-texto">Tus recargas</h2>
+
+        {% if recargas %}
+          <ul class="flex flex-col divide-y divide-borde">
+            {% for movimiento in recargas %}
+              <li class="flex items-baseline justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <span class="min-w-0 text-sm text-texto-suave">
+                  {{ movimiento.creado_en|date:"j" }} de
+                  {{ movimiento.creado_en|date:"F"|lower }} de
+                  {{ movimiento.creado_en|date:"Y, H:i" }}
+                </span>
+                <span class="shrink-0 font-display text-base font-semibold tabular-nums
+                             {% if movimiento.monto > 0 %}text-exito-fuerte{% else %}text-texto{% endif %}">
+                  {{ movimiento.monto|dinero }}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+          <a href="{% url 'mis-estudiantes' %}"
+             class="text-base font-semibold text-acento-fuerte hover:underline">
+            Ver el historial completo
+          </a>
+        {% else %}
+          <p class="rounded-md border border-dashed border-borde p-6 text-center text-base
+                    font-medium text-texto-suave" role="status">
+            Todavía no has recargado nada. Esta será la primera.
+          </p>
+        {% endif %}
+      </aside>
     </div>
   </div>
 {% endblock %}

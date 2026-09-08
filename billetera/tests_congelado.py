@@ -78,7 +78,7 @@ class ElSaldoQuedaCongeladoYConsultableTest(TestCase):
 
         cuerpo = self.client.get(reverse("mis-estudiantes")).content.decode()
 
-        self.assertIn("$ 18.500,75", cuerpo)
+        self.assertIn("$18.500,75", cuerpo)
         self.assertIn("De baja", cuerpo)
 
     def test_el_panel_dice_que_esta_congelado(self):

@@ -41,6 +41,9 @@
 @source "../cuentas";
 @source "../personas";
 @source "../catalogo";
+@source "../billetera";
+@source "../inventario";
+@source "../ventas";
 
 /* ==========================================================================
  * VARIANTE `colapsada:`
@@ -570,6 +573,21 @@
   --breakpoint-tablet: 48rem;
   --breakpoint-escritorio: 64rem;
   --breakpoint-amplio: 80rem;
+
+  /* --- Anchos de CONTENEDOR (consultas de contenedor) ---
+   *
+   * Los de arriba miran la VENTANA; éste mira el ancho del ELEMENTO, y hace
+   * falta donde el espacio real no lo dice la ventana. La rejilla de productos
+   * del punto de venta vive entre la columna del estudiante (20 rem) y la del
+   * ticket (22 rem): en la tablet de `INT-2` le quedan ~320 px y en un monitor
+   * ~1200. Con `escritorio:` a secas, la misma regla daría una tarjeta de 155 px
+   * en el aparato para el que se diseñó y de 285 en el monitor.
+   *
+   * Tailwind deriva de aquí la variante `@tarjeta:`. Por debajo de este ancho,
+   * precio y calorías se apilan: con dos columnas cada una baja de 108 px y
+   * «$12.000 COP» parte en dos renglones — un importe partido se lee mal y
+   * desalinea el pie de toda la fila de tarjetas. */
+  --container-tarjeta: 16rem;
 }
 
 /* ==========================================================================
@@ -751,11 +769,76 @@
       radial-gradient(80% 100% at 100% 100%, rgb(91 173 164 / 0.2) 0%, transparent 65%);
   }
 
-  /** Pastilla translúcida sobre un bloque oscuro: iconos y chips del héroe. */
+  /**
+   * Cristal: los paneles y las pastillas que flotan sobre un bloque oscuro.
+   *
+   * Es un blanco translúcido y no un color propio, para que se tiña con lo que
+   * tenga detrás. La sombra larga y muy difuminada es lo que lo despega del
+   * marino: sin ella el panel del héroe se lee como un recorte pegado encima.
+   */
   .cristal {
-    background-color: rgb(255 255 255 / 0.1);
-    border: 1px solid rgb(255 255 255 / 0.16);
-    backdrop-filter: blur(8px);
+    background-color: rgb(255 255 255 / 0.07);
+    border: 1px solid rgb(255 255 255 / 0.14);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.65);
+  }
+
+  /** Variante más tenue, para las filas DENTRO de un panel de cristal. Sin
+   * sombra ni desenfoque propios: los hereda del panel que las contiene, y
+   * apilar dos desenfoques cuesta pintado sin verse. */
+  .cristal-tenue {
+    background-color: rgb(255 255 255 / 0.05);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  /**
+   * Halo bajo el botón principal del héroe: lo levanta del fondo oscuro.
+   *
+   * El botón es CLARO y no teal, y esto va con esa decisión: sobre el marino el
+   * teal con texto blanco se queda en 3,79 de contraste y no llega a AA. Un
+   * sólido claro sobre bloque oscuro es el punto de mayor contraste de la
+   * página, que es donde debe estar la acción.
+   */
+  .brillo-accion {
+    box-shadow: 0 18px 40px -16px rgb(244 247 250 / 0.55);
+  }
+
+  /** Halo teal, para el elemento activo de una tarjeta sobre fondo oscuro. */
+  .brillo-acento {
+    box-shadow: 0 18px 40px -18px rgb(39 143 162 / 0.75);
+  }
+
+  /**
+   * Fundido del héroe hacia el fondo de la página.
+   *
+   * Usa `--t-fondo` —y no la paleta cruda como el resto de este bloque— porque
+   * este borde SÍ tiene que seguir al tema: es la costura entre el bloque fijo y
+   * el resto del documento, y en tema oscuro tiene que fundir hacia el oscuro.
+   */
+  .fundido-al-fondo {
+    background-image: linear-gradient(to bottom, transparent 0%, var(--t-fondo) 100%);
+  }
+
+  /**
+   * Lámina: el bloque que ocupa el sitio de una fotografía mientras no la haya.
+   *
+   * No es un marcador gris. En la portada de un producto, un rectángulo vacío
+   * con una inicial dentro parece un fallo de carga, y eso es peor que no tener
+   * imagen. Esto se lee como decoración intencionada. Y aquí el hueco va a
+   * existir mientras dure el prototipo: `INVD-6` prohíbe fotografías de personas
+   * reales, así que no hay banco de imágenes del que tirar.
+   */
+  .lamina {
+    background-color: #16304f;
+    background-image:
+      radial-gradient(90% 120% at 15% 0%, rgb(39 143 162 / 0.55) 0%, transparent 66%),
+      radial-gradient(70% 110% at 100% 100%, rgb(91 173 164 / 0.3) 0%, transparent 62%);
+  }
+
+  /** Chips que flotan alrededor del panel del héroe. */
+  .flota {
+    animation: flotar 7s ease-in-out infinite;
+    will-change: transform;
   }
 
   /** Filete superior de una tarjeta destacada. */
@@ -796,30 +879,64 @@
    * (`grid-cols-[20rem_1fr_22rem]`) es el valor arbitrario que esta hoja existe
    * para evitar. Se le da nombre de intención, igual que a los degradados.
    *
-   * **Solo desde `escritorio` (1024 px), que es el aparato de `INT-2`.** Por
-   * debajo las tres zonas se apilan y no hay rejilla que definir: el punto de
-   * venta no se opera desde un teléfono.
+   * ### Mide su CONTENEDOR, no la ventana, y eso no es un refinamiento
    *
-   * Las medidas están calculadas para 1024 px: 320 de identificación + 352 de
-   * ticket + 32 de huecos dejan 320 al catálogo, que es donde el cajero pulsa.
-   * Si alguna de las dos laterales crece, el catálogo es quien paga.
+   * Estaba en `@media (min-width: 64rem)` con tres anchos fijos calculados para
+   * los 992 px que dejaba la pantalla cuando el punto de venta no tenía barra
+   * lateral. Al ganarla, el hueco real pasó a ser `ventana − 112` (los 80 px de
+   * la columna más sus dos márgenes de 16), y la cuenta dejó de salir: en la
+   * tablet de 1024 × 600 de `INT-2`, `20rem + 22rem + 2rem` de huecos se comen
+   * 704 de los 896 disponibles y **al catálogo le quedan 192 px**, que es donde
+   * el cajero pulsa.
+   *
+   * La media query no puede saberlo porque mide la ventana y la rejilla vive en
+   * lo que sobra. Con `@container` el presupuesto se compara contra el espacio
+   * que hay de verdad, así que da igual el zoom, el aparato y lo que ocupe el
+   * cromo mañana.
+   *
+   * **Cada umbral incluye los DOS huecos de `gap-4`**, que son 2rem más. Es el
+   * error fácil: unas columnas que suman 44rem piden 46 con los huecos, y la
+   * rejilla se sale de su contenedor justo en el escalón que venía a arreglar el
+   * problema.
+   *
+   *   44rem = 12 + 16 + 14 (42) + 2 de huecos
+   *   52rem = 16 + 16 + 18 (50) + 2
+   *   60rem = 20 + 16 + 22 (58) + 2
+   *
+   * **La pista central nunca baja de 16rem**, ni en el escalón apretado: es la
+   * zona de trabajo, y lo que encoge son las dos laterales, que son texto y
+   * botones. Por debajo de todos los umbrales las tres zonas se apilan, que es
+   * lo correcto en un teléfono — el punto de venta no se opera desde ahí.
    */
   .rejilla-caja {
     display: grid;
     grid-template-columns: 1fr;
   }
 
-  /* **El punto de ruptura va DENTRO de la clase, no como `escritorio:` en la
+  /* **Los puntos de ruptura van DENTRO de la clase, no como `escritorio:` en la
    * plantilla.** Las variantes de Tailwind solo alcanzan a las utilidades que
    * genera él: `escritorio:rejilla-caja` no existe, no se compila y **no da
-   * ningún error** — la pantalla simplemente se queda en una columna. Medido a
-   * 1024 px antes de darse cuenta.
-   *
-   * La alternativa sería declararla con `@utility`, pero entonces las tres
-   * medidas quedarían repartidas entre esta hoja y la plantilla. */
-  @media (min-width: 64rem) {
+   * ningún error** — la pantalla simplemente se queda en una columna. */
+  @container (width >= 44rem) {
+    /* El escalón apretado: entra en el hueco de un portátil con zoom, donde
+       antes la rejilla pedía más de lo que había y el ticket se pintaba fuera. */
     .rejilla-caja {
-      grid-template-columns: 20rem 1fr 22rem;
+      grid-template-columns: 12rem minmax(16rem, 1fr) 14rem;
+    }
+  }
+
+  @container (width >= 52rem) {
+    /* El de la tablet de `INT-2`: a 1024 px de ventana el contenedor mide 56rem,
+       así que es este el que se aplica y al catálogo le quedan 320 px. */
+    .rejilla-caja {
+      grid-template-columns: 16rem minmax(16rem, 1fr) 18rem;
+    }
+  }
+
+  @container (width >= 60rem) {
+    /* Los anchos cómodos, para un monitor. */
+    .rejilla-caja {
+      grid-template-columns: 20rem minmax(16rem, 1fr) 22rem;
     }
   }
 
@@ -860,6 +977,21 @@
   }
   to {
     translate: 2.5rem 1.5rem;
+  }
+}
+
+/* Los chips que rodean el panel del héroe. Recorrido corto —menos de un
+ * centímetro— y lento: un chip que se mueve mucho parece que se está cayendo.
+ *
+ * No hace falta apagarlo aquí para `prefers-reduced-motion`: el bloque de
+ * `@layer base` ya anula la duración de CUALQUIER animación del proyecto. */
+@keyframes flotar {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.6rem;
   }
 }
 

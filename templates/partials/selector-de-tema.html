@@ -1,31 +1,56 @@
-{% comment %} Selector de tema (DT-23).
+{% comment %} Selector de tema (DT-23, DT-25).
 
    Tres estados y no dos: claro, oscuro y **el del sistema**, que es el que trae
    por defecto. Sin el tercero, quien tiene el teléfono en oscuro entra a una
    pantalla clara y tiene que elegir a mano lo que ya había elegido en su
    aparato.
 
-   Es un `<select>` y no tres botones: son tres opciones excluyentes de una sola
-   cosa, que es exactamente lo que un `select` anuncia a un lector de pantalla, y
-   ocupa el ancho de un control en la barra en vez del de tres.
+   Es un **grupo de tres botones de icono**, no un desplegable. Las tres opciones
+   se ven a la vez y se cambia con un toque, que es lo que se hace con un tema:
+   se prueba. Un `<select>` obliga a abrir, leer tres líneas y elegir para algo
+   que se decide mirando la pantalla. Los tres estados se anuncian igual de bien
+   —`role="group"` con el `aria-label` del conjunto y `aria-pressed` en cada
+   botón— y ninguno queda escondido detrás de un despliegue.
 
-   El valor lo pone `interfaz.js` al montar, no el servidor: la preferencia vive
-   en el navegador de cada persona, no en su cuenta. {% endcomment %}
-<label class="flex items-center gap-2">
-  <span class="sr-only">Tema</span>
-  {% comment %} `tono="oscuro"` cuando va dentro del cajón o de la barra lateral, que son
-     paneles oscuros en LOS DOS temas: ahí `bg-superficie` es blanca en tema claro
-     y el control se ve como un parche. {% endcomment %}
-  <select data-selector-de-tema
-          class="h-9 rounded-md border px-2 text-sm transition-colors
-                 focus:border-acento focus:outline-none
-                 {% if tono == 'oscuro' %}
-                   w-full border-nav-hover bg-nav-hover text-nav-texto hover:border-acento-claro
-                 {% else %}
-                   border-borde bg-superficie text-texto-suave hover:border-acento
-                 {% endif %}">
-    <option value="sistema">Tema del sistema</option>
-    <option value="claro">Tema claro</option>
-    <option value="oscuro">Tema oscuro</option>
-  </select>
-</label>
+   **Está siempre a la vista.** En la portada llegó a esconderse mientras se
+   estaba arriba del todo, y era un error: el sitio donde más falta hace poder
+   probar el tema es la primera pantalla que alguien ve, y allí era justo donde
+   no estaba.
+
+   Cuál está elegido lo marca `interfaz.js` al montar, no el servidor: la
+   preferencia vive en el navegador de cada persona, no en su cuenta. Hasta que
+   ese script corra, los tres botones se ven igual — que es correcto, porque
+   ninguno es «el de por defecto» sin saber qué hay guardado.
+
+   Este fichero **solo elige las clases**; el marcado está en
+   `partials/grupo-de-tema.html`.
+
+   Parámetro `tono`, tres valores:
+
+     (sin tono)  sobre el fondo de la página. Sigue al tema.
+     `oscuro`    dentro del cajón o de la barra lateral, que son paneles oscuros
+                 en LOS DOS temas: ahí `bg-superficie` es blanca en tema claro y
+                 el grupo se vería como un parche.
+     `publico`   en la cabecera de la portada, que **cambia de fondo al
+                 desplazarse**: transparente sobre el héroe marino y opaca al
+                 bajar.
+{% endcomment %}
+{% if tono == 'oscuro' %}
+  {% comment %} Sobre panel oscuro fijo. {% endcomment %}
+  {% include "partials/grupo-de-tema.html" with caja="border-nav-hover bg-nav-hover" boton="text-nav-texto hover:bg-nav-fondo aria-pressed:bg-primario aria-pressed:text-sobre-primario" only %}
+
+{% elif tono == 'publico' %}
+  {% comment %} El único tono que depende de un ESTADO, y por eso se escribe con
+     utilidades que Tailwind pueda variar y no con la clase `.cristal`: las
+     variantes no alcanzan a `@layer components`, no dan ningún error y el grupo
+     se quedaría sin fondo sobre el héroe.
+
+     Sobre el héroe, el botón pulsado **no puede ir en primario**: el primario en
+     tema claro es el mismo marino del fondo y el botón desaparecería. Va en
+     `accion-clara`, que es la constante pensada para actuar sobre bloque oscuro
+     en los dos temas. {% endcomment %}
+  {% include "partials/grupo-de-tema.html" with caja="border-borde bg-superficie group-data-[arriba=si]:border-sobre-oscuro/25 group-data-[arriba=si]:bg-sobre-oscuro/10 group-data-[arriba=si]:backdrop-blur" boton="text-texto-suave hover:bg-superficie-hover aria-pressed:bg-primario aria-pressed:text-sobre-primario group-data-[arriba=si]:text-sobre-oscuro-suave group-data-[arriba=si]:hover:bg-sobre-oscuro/15 group-data-[arriba=si]:aria-pressed:bg-accion-clara group-data-[arriba=si]:aria-pressed:text-sobre-accion-clara" only %}
+
+{% else %}
+  {% include "partials/grupo-de-tema.html" with caja="border-borde bg-superficie" boton="text-texto-suave hover:bg-superficie-hover aria-pressed:bg-primario aria-pressed:text-sobre-primario" only %}
+{% endif %}

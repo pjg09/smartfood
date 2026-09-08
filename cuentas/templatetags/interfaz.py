@@ -14,6 +14,7 @@ copias la segunda se queda atrás al primer ajuste.
 from dataclasses import dataclass
 
 from django import template
+from django.utils import timezone
 
 from cuentas.models import Rol
 
@@ -42,6 +43,11 @@ INICIO = Entrada("inicio", "Inicio", "i-inicio")
 # trabajo, no un enlace secundario.
 ADMINISTRACION = Entrada("admin:index", "Administración", "i-ajustes")
 
+# `USR-3` cobra en el punto de venta (`INT-2`). El icono es un escáner y no la
+# tarjeta: la tarjeta es la credencial del estudiante, y lo que el cajero
+# reconoce de su pantalla es el lector.
+PUNTO_DE_VENTA = Entrada("punto-de-venta", "Punto de venta", "i-escaner")
+
 MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
     Rol.ACUDIENTE: (INICIO, Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes")),
@@ -51,12 +57,41 @@ MENU_POR_ROL = {
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
         ADMINISTRACION,
     ),
-    # `USR-4` administra el catálogo. `USR-3` todavía no tiene pantalla propia:
-    # el punto de venta es del Sprint 2 (`HU-15`), y hasta entonces su menú es
-    # corto a propósito en vez de llevar a sitios donde recibiría un 403.
+    # `USR-4` administra el catálogo desde `INT-3`.
     Rol.ADMINISTRADOR: (INICIO, ADMINISTRACION),
-    Rol.CAJERO: (INICIO, ADMINISTRACION),
+    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, ADMINISTRACION),
 }
+
+# La barra del punto de venta. **Es una lista aparte y hoy tiene una sola
+# entrada**, que es exactamente lo que el Sprint 2 construyó: entregas, cierre
+# de caja y cocina no existen todavía y no se dibujan huecos por adelantado.
+#
+# Va separada de `MENU_POR_ROL[Rol.CAJERO]` porque son dos sitios distintos: en
+# la barra de la aplicación el cajero necesita poder salir del punto de venta, y
+# en el punto de venta necesita justo lo contrario — `INT-2` pide atender toda
+# la demanda del descanso en veinte minutos, y un menú ahí solo son sitios a los
+# que llegar por error con cola delante.
+MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA,)
+
+
+@register.simple_tag
+def saludo():
+    """«Buenos días», «Buenas tardes» o «Buenas noches», según la hora.
+
+    Usa `timezone.localtime`, no `datetime.now`: el proyecto corre con
+    `USE_TZ`, así que la hora sin convertir es UTC y a las 20:00 de Colombia
+    saludaría con «Buenos días».
+
+    Los cortes son las 12 y las 19. No hay una regla universal para el segundo
+    —según a quién se pregunte son las 19, las 20 o el anochecer— y lo que
+    importa aquí es que no diga «buenas tardes» a las once de la noche.
+    """
+    hora = timezone.localtime().hour
+    if hora < 12:
+        return "Buenos días"
+    if hora < 19:
+        return "Buenas tardes"
+    return "Buenas noches"
 
 
 @register.filter
@@ -93,4 +128,28 @@ def menu_de_navegacion(context, colapsable=True):
         "entradas": entradas,
         "ruta_actual": getattr(coincidencia, "view_name", None),
         "colapsable": colapsable,
+    }
+
+
+@register.inclusion_tag("partials/navegacion.html", takes_context=True)
+def menu_del_punto_de_venta(context):
+    """La barra de iconos del punto de venta (`INT-2`).
+
+    **Siempre colapsada**: la pantalla corre en 1024 x 600 y los 280 px del menú
+    desplegado se los quita a la zona donde el cajero pulsa. No es un estado que
+    se pueda alternar, así que tampoco se recuerda ni tiene botón.
+
+    Pinta la misma plantilla que la barra de la aplicación, con la misma entrada
+    activa y el mismo botón de salir. Con dos plantillas, la segunda se quedaría
+    atrás al primer ajuste — que es el motivo por el que `menu_de_navegacion`
+    existe.
+    """
+    peticion = context.get("request")
+    coincidencia = getattr(peticion, "resolver_match", None)
+
+    return {
+        "entradas": MENU_DEL_PUNTO_DE_VENTA,
+        "ruta_actual": getattr(coincidencia, "view_name", None),
+        "colapsable": False,
+        "siempre_colapsada": True,
     }

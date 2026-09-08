@@ -309,11 +309,19 @@ class ElSelectorDeEstudianteTest(BaseDeCarga):
         self.assertNotContains(respuesta, "Julián Ospina Vélez")
 
     def test_con_un_solo_estudiante_no_se_dibuja_el_selector(self):
+        """Se busca el marcador del selector, no un `role="group"` cualquiera.
+
+        La comprobación miraba `role="group"` a secas, y eso dejó de identificar
+        a este selector en cuanto el armazón estrenó otro grupo —el selector de
+        tema, que son tres botones y también lo lleva—. El atributo es correcto
+        en los dos sitios; lo que no vale es usarlo como si fuera exclusivo de
+        esta pantalla.
+        """
         self.client.force_login(self.andres)
         respuesta = self.client.get(reverse("mis-estudiantes"))
 
         self.assertContains(respuesta, "Julián Ospina Vélez")
-        self.assertNotContains(respuesta, 'role="group"')
+        self.assertNotContains(respuesta, "data-selector-estudiante")
 
     def test_el_selector_devuelve_un_fragmento_y_no_una_pagina(self):
         """`DT-16`: una vista HTMX devuelve un fragmento, nunca una página."""

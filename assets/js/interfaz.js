@@ -41,13 +41,40 @@
     return valor === "claro" || valor === "oscuro" ? valor : "sistema";
   }
 
+  /* El selector es un GRUPO de tres botones, y hay más de uno por documento: el
+   * armazón de la aplicación pinta el de la barra superior y el del cajón de
+   * móvil, y los dos tienen que reflejar la misma elección. De ahí
+   * `querySelectorAll` y la función que repinta TODOS a la vez — con
+   * `querySelector` el segundo grupo se quedaba sin marcar y parecía que el tema
+   * no se había aplicado.
+   *
+   * Cuál está pulsado se marca aquí y no en la plantilla porque la preferencia
+   * vive en el navegador, no en la cuenta: el servidor no sabe cuál es. */
   function montarSelectorDeTema() {
-    var selector = document.querySelector("[data-selector-de-tema]");
-    if (selector === null) return;
+    var grupos = document.querySelectorAll("[data-selector-de-tema]");
+    if (grupos.length === 0) return;
 
-    selector.value = temaGuardado();
-    selector.addEventListener("change", function () {
-      aplicarTema(selector.value);
+    function marcar(elegido) {
+      grupos.forEach(function (grupo) {
+        grupo.querySelectorAll("[data-tema]").forEach(function (boton) {
+          boton.setAttribute(
+            "aria-pressed",
+            boton.getAttribute("data-tema") === elegido ? "true" : "false"
+          );
+        });
+      });
+    }
+
+    marcar(temaGuardado());
+
+    grupos.forEach(function (grupo) {
+      grupo.addEventListener("click", function (evento) {
+        var boton = evento.target.closest("[data-tema]");
+        if (boton === null || !grupo.contains(boton)) return;
+        var elegido = boton.getAttribute("data-tema");
+        aplicarTema(elegido);
+        marcar(elegido);
+      });
     });
   }
 
@@ -181,9 +208,31 @@
    * mano (`HU-16`) o pulsar nada con el teclado, que es lo contrario de lo que
    * se busca.
    */
+  /* Los dos campos del punto de venta, y **cuál manda ahora**.
+   *
+   * Desde que los modos son pestañas (`TT-71`, `TT-73`), «el campo del lector»
+   * ya no es siempre el mismo elemento: en la pestaña de documento, el campo
+   * visible es el otro. Devolver el foco al de la tarjeta cuando está escondido
+   * no hace nada —`focus()` sobre un elemento con `hidden` se ignora en
+   * silencio— y el cajero se queda escribiendo en ninguna parte.
+   *
+   * `offsetParent` es `null` para un elemento que no se pinta, y es la forma
+   * barata de preguntar «¿se ve?» sin leer estilos calculados. */
+  function campoActivoDelPunto() {
+    var campos = document.querySelectorAll("[data-foco-permanente], [data-vuelve-al-lector]");
+    for (var i = 0; i < campos.length; i += 1) {
+      if (campos[i].offsetParent !== null) return campos[i];
+    }
+    return null;
+  }
+
   function montarFocoPermanente() {
-    var campo = document.querySelector("[data-foco-permanente]");
-    if (campo === null) return;
+    if (document.querySelector("[data-foco-permanente]") === null) return;
+
+    function devolverElFoco() {
+      var campo = campoActivoDelPunto();
+      if (campo !== null) campo.focus();
+    }
 
     document.addEventListener("focusout", function () {
       // En el siguiente ciclo: durante `focusout`, el elemento que va a recibir
@@ -191,15 +240,15 @@
       // que lo pierde. Comprobarlo ahora daría siempre el mismo resultado.
       setTimeout(function () {
         if (document.activeElement === null || document.activeElement === document.body) {
-          campo.focus();
+          devolverElFoco();
         }
       }, 0);
     });
 
-    // Escape lo devuelve a mano, esté donde esté: es la vuelta rápida al lector
-    // sin tener que buscar el campo con el ratón.
+    // Escape lo devuelve a mano, esté donde esté: es la vuelta rápida al campo
+    // activo sin tener que buscarlo con el ratón.
     document.addEventListener("keydown", function (evento) {
-      if (evento.key === "Escape") campo.focus();
+      if (evento.key === "Escape") devolverElFoco();
     });
 
     /* Tras cada búsqueda, el campo se vacía y recupera el foco (`TT-71`).
@@ -210,34 +259,209 @@
      * seleccionar y borrar entre estudiante y estudiante, con la fila delante.
      *
      * Se vacía al terminar la petición y no al dispararla: si fallara la red, lo
-     * que se escaneó sigue a la vista para poder reintentarlo o teclearlo. */
-    campo.addEventListener("htmx:afterRequest", function () {
-      campo.value = "";
-      campo.focus();
-    });
-
-    /* Lo mismo para la búsqueda por documento (`TT-73`): al terminar, ese campo
-     * se vacía y **el foco vuelve al del lector**, no se queda donde estaba.
+     * que se escaneó sigue a la vista para poder reintentarlo o teclearlo.
      *
-     * Es la diferencia entre las dos vías: al documento se llega a propósito, una
-     * vez, porque alguien olvidó la tarjeta; al lector se vuelve siempre. Si el
-     * foco se quedara en el documento, la siguiente tarjeta escaneada acabaría
-     * escrita ahí y buscaría un documento que no existe. */
-    document.querySelectorAll("[data-vuelve-al-lector]").forEach(function (otro) {
-      otro.addEventListener("htmx:afterRequest", function () {
-        otro.value = "";
-        campo.focus();
+     * Vale para las DOS vías, y el foco vuelve al campo del modo activo. En la
+     * pestaña de tarjeta eso es el lector, que es donde tiene que estar; en la
+     * de documento, el propio campo de documento, porque quien está buscando a
+     * mano suele buscar a más de uno seguido. */
+    document.querySelectorAll("[data-foco-permanente], [data-vuelve-al-lector]").forEach(
+      function (campo) {
+        campo.addEventListener("htmx:afterRequest", function () {
+          campo.value = "";
+          devolverElFoco();
+        });
+      }
+    );
+  }
+
+  /* --- Modos de búsqueda del punto de venta -------------------------------
+   *
+   * `HU-15` y `HU-16` son dos vías al mismo resultado, y aquí son dos pestañas.
+   * **Los dos campos existen siempre en el documento**: la pestaña enseña uno y
+   * esconde el otro, no los crea. Eso es lo que mantiene una sola ruta para las
+   * dos —el primer criterio de `HU-16`— sin que nadie tenga que mantenerlo así.
+   *
+   * Se esconde con el ATRIBUTO `hidden` y no con una clase: sin JavaScript, el
+   * panel de documento nace oculto y la pantalla sigue sirviendo para lo que se
+   * usa el 95 % de las veces, que es escanear.
+   *
+   * Al cambiar de modo se enfoca el campo que acaba de aparecer. Sin eso, el
+   * cajero pulsa «Documento» y tiene que pulsar otra vez dentro del campo — dos
+   * gestos con la fila delante, para algo que solo tiene un sitio donde escribir.
+   */
+  function montarModosDeBusqueda() {
+    var caja = document.querySelector("[data-modos-de-busqueda]");
+    if (caja === null) return;
+
+    var botones = caja.querySelectorAll("[data-modo]");
+    var paneles = caja.querySelectorAll("[data-panel]");
+    if (botones.length === 0 || paneles.length === 0) return;
+
+    caja.addEventListener("click", function (evento) {
+      var boton = evento.target.closest("[data-modo]");
+      if (boton === null || !caja.contains(boton)) return;
+
+      var elegido = boton.getAttribute("data-modo");
+
+      botones.forEach(function (otro) {
+        otro.setAttribute(
+          "aria-pressed",
+          otro.getAttribute("data-modo") === elegido ? "true" : "false"
+        );
       });
+
+      paneles.forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-panel") !== elegido;
+      });
+
+      var campo = caja.querySelector('[data-panel="' + elegido + '"] input');
+      if (campo !== null) campo.focus();
     });
   }
 
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se
    * vuelve a construir: basta con montarlo una vez. */
+  /* --- Revelar la contraseña ---------------------------------------------
+   *
+   * El campo de `TT-56`. Cambia el `type` entre `password` y `text`, el icono y
+   * la etiqueta del botón; nada más. La contraseña no se copia a ninguna parte
+   * ni se guarda: sigue siendo el valor del mismo `<input>`.
+   *
+   * Se atiende por delegación desde la caja marcada y no colgando un oyente del
+   * botón: así el mismo código vale si mañana hay dos campos de contraseña en
+   * la misma pantalla —definir la de la invitación son dos— sin tener que
+   * acordarse de montarlo otra vez.
+   */
+  function montarRevelarContrasena() {
+    document.querySelectorAll("[data-revelar-contrasena]").forEach(function (caja) {
+      var campo = caja.querySelector("input");
+      var boton = caja.querySelector("button");
+      var icono = boton === null ? null : boton.querySelector("use");
+      if (campo === null || boton === null || icono === null) return;
+
+      boton.addEventListener("click", function () {
+        var oculta = campo.type === "password";
+        campo.type = oculta ? "text" : "password";
+        icono.setAttribute("href", oculta ? "#i-ojo-cerrado" : "#i-ojo");
+        boton.setAttribute(
+          "aria-label",
+          oculta ? "Ocultar la contraseña" : "Mostrar la contraseña"
+        );
+      });
+    });
+  }
+
+  /* --- Atajos de importe de la recarga -----------------------------------
+   *
+   * Los cuatro botones de `TT-61` **solo escriben en el campo**. No son un
+   * segundo control que el servidor lea: lo que se envía es siempre el
+   * `<input type="number">`, y por eso los botones son `type="button"` y no
+   * radios. Con radios habría dos fuentes del mismo dato compitiendo por decir
+   * cuánto se recarga, y la validación del servicio (`DT-15`) mira una sola.
+   *
+   * El marcado va en los dos sentidos: al pulsar un atajo se marca, y al
+   * teclear a mano se desmarca el que ya no coincide. Un botón que sigue
+   * pulsado mientras el campo dice otra cosa miente sobre lo que se va a enviar.
+   */
+  function montarMontosSugeridos() {
+    var formulario = document.querySelector("[data-montos-sugeridos]");
+    if (formulario === null) return;
+
+    var campo = formulario.querySelector('input[type="number"]');
+    var atajos = formulario.querySelectorAll("[data-monto]");
+    if (campo === null || atajos.length === 0) return;
+
+    function marcar() {
+      atajos.forEach(function (atajo) {
+        // `Number` en los dos lados: el campo devuelve texto, y "25000" y
+        // "25000.00" son el mismo importe escrito de dos maneras.
+        var coincide =
+          campo.value !== "" &&
+          Number(campo.value) === Number(atajo.getAttribute("data-monto"));
+        atajo.setAttribute("aria-pressed", coincide ? "true" : "false");
+      });
+    }
+
+    atajos.forEach(function (atajo) {
+      atajo.addEventListener("click", function () {
+        campo.value = atajo.getAttribute("data-monto");
+        marcar();
+        campo.focus();
+      });
+    });
+
+    campo.addEventListener("input", marcar);
+    marcar();
+  }
+
+  /* --- Zona de arrastre de la carga de estudiantes -----------------------
+   *
+   * `TT-24`. Todo lo que hay aquí es un extra: el control que envía el archivo
+   * sigue siendo el `<input type="file">`, y la zona es un `<label>` suyo, así
+   * que **sin JavaScript pulsarla abre igual el diálogo de siempre**. Lo que
+   * añade este bloque es poder soltar el archivo encima y ver cuál se eligió.
+   *
+   * `preventDefault` en `dragover` no es opcional y no es evidente: sin él, el
+   * navegador aplica su comportamiento por defecto —abrir el archivo en la
+   * pestaña, tirando la página y el formulario a medio llenar— y el `drop`
+   * nunca llega a dispararse.
+   */
+  function montarZonaDeArchivo() {
+    var zona = document.querySelector("[data-zona-de-archivo]");
+    if (zona === null) return;
+
+    var campo = zona.querySelector('input[type="file"]');
+    var etiqueta = zona.querySelector("label");
+    var nombre = zona.querySelector("[data-nombre-del-archivo]");
+    if (campo === null || etiqueta === null || nombre === null) return;
+
+    var ayuda = nombre.textContent;
+
+    function resaltar(activo) {
+      etiqueta.setAttribute("data-arrastrando", activo ? "si" : "no");
+    }
+
+    function mostrarNombre() {
+      var elegido = campo.files.length > 0 ? campo.files[0].name : null;
+      nombre.textContent = elegido === null ? ayuda : elegido;
+    }
+
+    campo.addEventListener("change", mostrarNombre);
+
+    ["dragenter", "dragover"].forEach(function (evento) {
+      etiqueta.addEventListener(evento, function (e) {
+        e.preventDefault();
+        resaltar(true);
+      });
+    });
+
+    ["dragleave", "dragend"].forEach(function (evento) {
+      etiqueta.addEventListener(evento, function () {
+        resaltar(false);
+      });
+    });
+
+    etiqueta.addEventListener("drop", function (e) {
+      e.preventDefault();
+      resaltar(false);
+      if (e.dataTransfer === null || e.dataTransfer.files.length === 0) return;
+      // Se asigna la lista entera y no el fichero suelto: `files` solo admite un
+      // `FileList`, y construir uno a mano no está soportado en todos lados.
+      campo.files = e.dataTransfer.files;
+      mostrarNombre();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
+    montarRevelarContrasena();
+    montarMontosSugeridos();
+    montarZonaDeArchivo();
     montarBarra();
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
     montarFocoPermanente();
+    montarModosDeBusqueda();
   });
 })();

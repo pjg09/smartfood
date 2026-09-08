@@ -64,13 +64,13 @@ Después, repetir desde `docker compose up -d`.
 
 | | |
 |---|---|
-| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/acceso/ |
+| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/login/ |
 | Usuario | `institucion@example.com` |
 | Contraseña | `smartfood-local-2026` |
 | Rol | `institucion` (`USR-5`), con acceso a la administración |
 
 **Hay dos puertas y no son intercambiables** (`TT-56`, `DEC-12`). `/admin/login/` exige
-`is_staff` y solo sirve a la institución y al personal de la cafetería. `/acceso/` es la
+`is_staff` y solo sirve a la institución y al personal de la cafetería. `/login/` es la
 pantalla común a los cuatro roles y es **la única por la que entra el acudiente**, que no
 accede a la administración porque `INT-1` no es el admin (`DT-2`).
 
@@ -166,7 +166,7 @@ uv run python manage.py invitacion marta.ruiz@example.com
 ```
 
 Imprime la URL de `/invitacion/…`. Se abre en el navegador, se define la contraseña y se
-entra por `/acceso/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
+entra por `/login/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
 contraseña de esa cuenta. Por eso se saca de uno en uno desde la terminal y no se lista en
 ninguna pantalla (`DEC-3`).
 
@@ -185,7 +185,7 @@ with open("estudiantes.csv", "rb") as f:
     ))
 ```
 
-Después, `/acceso/` con el correo del acudiente y esa contraseña lleva a
+Después, `/login/` con el correo del acudiente y esa contraseña lleva a
 `/mis-estudiantes/` (`TT-29`, `HU-04`).
 
 ### [S2.5] Imprimir la tarjeta de un estudiante
@@ -271,6 +271,13 @@ la clave, así que cambia la URL y no hay nada que invalidar.
 
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
+
+**Si compilas a mano, usa `tailwind build --force`.** Sin la opción, el comando compara la
+fecha de `estilos/fuente.css` con la de la hoja compilada y responde «All 1 stylesheet(s)
+are up to date» — que es cierto para la hoja fuente y falso para lo que importa: las clases
+salen de las PLANTILLAS, y ésas no se miran. El síntoma es desconcertante porque la
+compilación dice que fue bien: la clase nueva simplemente no está, y el elemento se queda
+sin estilo sin ningún error. `watch` no tiene el problema.
 
 **Los colores y las medidas viven en `estilos/fuente.css`, y sólo ahí** (`DT-23`). En una
 plantilla se usa el alias de intención —`bg-superficie`, `text-texto`, `border-borde`— nunca un
@@ -370,6 +377,8 @@ programa.
 | `connection refused` al puerto 5432 | `docker compose up -d` no está levantado |
 | `the database system is starting up` | PostgreSQL despertando; reintenta en unos segundos |
 | Una clase de Tailwind no se aplica | Falta `tailwind build` o `tailwind watch` |
+| `tailwind build` dice «up to date» y la clase sigue sin estar | Solo mira la fecha de `fuente.css`, no la de las plantillas: usa `--force` |
+| Una consulta de contenedor no se aplica y la rejilla queda en una columna | `@container` está en el MISMO elemento que la rejilla; va en el envoltorio |
 | Una clase de color no pinta nada, y no hay error | Es de la paleta de fábrica, que está borrada: usa un alias (`DT-23`) |
 | El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |

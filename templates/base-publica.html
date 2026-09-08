@@ -23,8 +23,18 @@
                  border-b border-borde bg-superficie/90 backdrop-blur
                  data-[arriba=si]:border-transparente data-[arriba=si]:bg-transparente
                  data-[arriba=si]:backdrop-blur-none">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 p-4 escritorio:px-8">
-      <a href="{% url 'inicio' %}" aria-label="SmartFood, ir al inicio">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 p-4 escritorio:gap-4 escritorio:px-8">
+      {% comment %} El selector de tema abre la fila, pegado al borde izquierdo —con el
+         relleno de la cabecera, no contra el canto—. Va aquí y no con los enlaces
+         de la derecha por dos motivos: allí competía con el botón de entrar, que
+         es la única acción de esta pantalla, y en móvil los dos juntos no caben.
+
+         En `tono="publico"` porque esta cabecera cambia de fondo al desplazarse:
+         es transparente sobre el héroe y opaca al bajar, y el grupo tiene que
+         verse en los dos estados. {% endcomment %}
+      {% include "partials/selector-de-tema.html" with tono="publico" %}
+
+      <a href="{% url 'inicio' %}" aria-label="SmartFood, ir al inicio" class="mr-auto">
         {% comment %} Arriba del todo el logotipo va sobre el héroe, que es marino en los
            DOS temas: ahí tiene que ser el de tinta clara o desaparece. Se pintan
            los dos y se enseña uno — es un puñado de bytes y evita depender de
@@ -35,31 +45,59 @@
         </span>
       </a>
 
+      {% comment %} Los enlaces de sección se esconden por debajo de `escritorio` y no de
+         `tablet`: son cuatro y a 768 px se montaban con el botón de entrar. En
+         móvil no hay menú desplegable a propósito — la portada es una sola
+         página y se recorre desplazándose, así que un cajón para saltar a
+         cuatro anclas es cromo que no resuelve nada. {% endcomment %}
       <nav aria-label="Secciones" class="flex items-center gap-2 tablet:gap-6">
         <a href="#roles"
-           class="hidden text-sm font-medium transition-colors tablet:inline
+           class="hidden text-sm font-medium transition-colors escritorio:inline
                   text-texto hover:text-acento-fuerte
                   group-data-[arriba=si]:text-sobre-oscuro
-                  group-data-[arriba=si]:hover:opacity-70">Quién usa qué</a>
+                  group-data-[arriba=si]:hover:opacity-70">Roles</a>
+        <a href="#servicios"
+           class="hidden text-sm font-medium transition-colors escritorio:inline
+                  text-texto hover:text-acento-fuerte
+                  group-data-[arriba=si]:text-sobre-oscuro
+                  group-data-[arriba=si]:hover:opacity-70">Qué hace</a>
+        <a href="#garantias"
+           class="hidden text-sm font-medium transition-colors escritorio:inline
+                  text-texto hover:text-acento-fuerte
+                  group-data-[arriba=si]:text-sobre-oscuro
+                  group-data-[arriba=si]:hover:opacity-70">Garantías</a>
+        <a href="#vision"
+           class="hidden text-sm font-medium transition-colors escritorio:inline
+                  text-texto hover:text-acento-fuerte
+                  group-data-[arriba=si]:text-sobre-oscuro
+                  group-data-[arriba=si]:hover:opacity-70">Visión</a>
         <a href="#acceso"
-           class="hidden text-sm font-medium transition-colors tablet:inline
+           class="hidden text-sm font-medium transition-colors escritorio:inline
                   text-texto hover:text-acento-fuerte
                   group-data-[arriba=si]:text-sobre-oscuro
                   group-data-[arriba=si]:hover:opacity-70">Cómo se entra</a>
 
-        <div class="group-data-[arriba=si]:hidden">
-          {% include "partials/selector-de-tema.html" %}
-        </div>
-
         {% comment %} Arriba del todo, el acceso es de cristal: un botón sólido competiría
            con el del héroe, que está tres centímetros más abajo. Al bajar, el
-           héroe ya no está y pasa a ser el primario sólido. {% endcomment %}
+           héroe ya no está y pasa a ser el primario sólido.
+
+           **El cristal se escribe aquí con utilidades y no con la clase
+           `.cristal`.** Esa clase vive en `@layer components`, y las variantes de
+           Tailwind —`group-data-[…]:`— solo alcanzan a las utilidades que genera
+           él: `group-data-[arriba=si]:cristal` no se compila **y no da ningún
+           error**, así que el botón se quedaba sin fondo sobre el héroe. Es la
+           misma trampa que documenta `estilos/fuente.css` para
+           `escritorio:rejilla-caja`, y aquí la salida es la contraria: como el
+           efecto SÍ tiene que depender de un estado, se escribe con piezas que
+           Tailwind pueda variar. {% endcomment %}
         {% if user.is_authenticated %}
           <a href="{% url 'inicio' %}"
              class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
                     transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
-                    group-data-[arriba=si]:cristal group-data-[arriba=si]:bg-transparente
-                    group-data-[arriba=si]:text-sobre-oscuro">
+                    group-data-[arriba=si]:border group-data-[arriba=si]:border-sobre-oscuro/25
+                    group-data-[arriba=si]:bg-sobre-oscuro/10 group-data-[arriba=si]:backdrop-blur
+                    group-data-[arriba=si]:text-sobre-oscuro
+                    group-data-[arriba=si]:hover:bg-sobre-oscuro/20">
             <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
             Ir a mi panel
           </a>
@@ -67,8 +105,10 @@
           <a href="{% url 'acceso' %}"
              class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
                     transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
-                    group-data-[arriba=si]:cristal group-data-[arriba=si]:bg-transparente
-                    group-data-[arriba=si]:text-sobre-oscuro">
+                    group-data-[arriba=si]:border group-data-[arriba=si]:border-sobre-oscuro/25
+                    group-data-[arriba=si]:bg-sobre-oscuro/10 group-data-[arriba=si]:backdrop-blur
+                    group-data-[arriba=si]:text-sobre-oscuro
+                    group-data-[arriba=si]:hover:bg-sobre-oscuro/20">
             <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
             Entrar
           </a>

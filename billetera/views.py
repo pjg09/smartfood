@@ -19,10 +19,24 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
+from billetera.selectors import historial_de, saldo_de
 from billetera.services import MONTO_MAXIMO, recargar
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from personas.services import EstudianteNoOperativo
+
+
+# Los atajos de importe de la pantalla de recarga. **Son una comodidad de la
+# interfaz, no una regla**: el rango que de verdad manda es el del servicio
+# (`0,01` … `MONTO_MAXIMO`), y estos cuatro solo evitan teclear las cifras más
+# habituales. Si el máximo cambia, esto no hay que tocarlo mientras siga
+# quedando por debajo.
+MONTOS_SUGERIDOS = (Decimal("10000"), Decimal("25000"), Decimal("50000"), Decimal("100000"))
+
+# Cuántas recargas anteriores se enseñan al lado del formulario. Son las últimas,
+# no el extracto: la pregunta que responden es «¿no acabo de recargar?», no
+# auditar la cuenta — para eso está el historial completo del panel.
+RECARGAS_VISIBLES = 6
 
 
 class RecargaForm(forms.Form):
@@ -86,8 +100,19 @@ def recarga(request, estudiante_id):
             )
             return redirect("mis-estudiantes")
 
+    # El saldo y las últimas recargas son lectura del mismo historial que ya
+    # sostiene `HU-07`: no hay consulta nueva ni columna nueva, es la suma de los
+    # movimientos (`INV-2`) y sus últimos asientos. Se traen aquí para que la
+    # pantalla pueda decir de cuánto se parte y qué se recargó antes, que es lo
+    # que evita la recarga repetida por no acordarse de la anterior.
     return render(
         request,
         "billetera/recarga.html",
-        {"estudiante": estudiante, "form": formulario},
+        {
+            "estudiante": estudiante,
+            "form": formulario,
+            "saldo": saldo_de(estudiante),
+            "recargas": historial_de(estudiante, limite=RECARGAS_VISIBLES),
+            "montos_sugeridos": MONTOS_SUGERIDOS,
+        },
     )
