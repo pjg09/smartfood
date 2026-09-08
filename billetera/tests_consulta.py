@@ -56,7 +56,7 @@ class ElAcudienteVeElSaldoTest(TestCase):
 
         cuerpo = self.client.get(reverse("mis-estudiantes")).content.decode()
 
-        self.assertIn("$ 25.000", cuerpo)
+        self.assertIn("$25.000", cuerpo)
 
     def test_cada_hijo_tiene_el_suyo(self):
         """Primer criterio. Con una sola billetera compartida esto fallaría."""
@@ -70,10 +70,10 @@ class ElAcudienteVeElSaldoTest(TestCase):
             reverse("estudiante-seleccionado", args=[self.otro_hijo.id])
         ).content.decode()
 
-        self.assertIn("$ 25.000", del_hijo)
-        self.assertNotIn("$ 7.000", del_hijo)
-        self.assertIn("$ 7.000", del_otro)
-        self.assertNotIn("$ 25.000", del_otro)
+        self.assertIn("$25.000", del_hijo)
+        self.assertNotIn("$7.000", del_hijo)
+        self.assertIn("$7.000", del_otro)
+        self.assertNotIn("$25.000", del_otro)
 
     def test_lo_que_se_ve_es_la_suma_del_historial(self):
         """Segundo criterio, comprobado contra el HTML servido.
@@ -88,12 +88,12 @@ class ElAcudienteVeElSaldoTest(TestCase):
 
         self.assertEqual(saldo_de(self.hijo), Decimal("17500.75"))
         self.assertIn(dinero(saldo_de(self.hijo)), cuerpo)
-        self.assertIn("$ 17.500,75", cuerpo)
+        self.assertIn("$17.500,75", cuerpo)
 
     def test_sin_movimientos_ensena_cero_y_lo_dice(self):
         cuerpo = self.client.get(reverse("mis-estudiantes")).content.decode()
 
-        self.assertIn("$ 0", cuerpo)
+        self.assertIn("$0", cuerpo)
         self.assertIn("Todavía no hay movimientos", cuerpo)
 
     def test_no_ve_el_saldo_de_un_estudiante_ajeno(self):
@@ -124,7 +124,7 @@ class LosUltimosMovimientosExplicanElSaldoTest(TestCase):
 
         self.assertIn("Últimos movimientos", cuerpo)
         self.assertIn("Recarga", cuerpo)
-        self.assertIn("$ 12.000", cuerpo)
+        self.assertIn("$12.000", cuerpo)
 
     def test_solo_los_ultimos_cinco(self):
         """El extracto completo empujaría el resto del panel fuera de un teléfono."""
@@ -134,9 +134,9 @@ class LosUltimosMovimientosExplicanElSaldoTest(TestCase):
         cuerpo = self.client.get(reverse("mis-estudiantes")).content.decode()
 
         # Las cinco más recientes son de 7.000 a 3.000; las dos primeras no salen.
-        for visible in ["$ 7.000", "$ 6.000", "$ 5.000", "$ 4.000", "$ 3.000"]:
+        for visible in ["$7.000", "$6.000", "$5.000", "$4.000", "$3.000"]:
             self.assertIn(visible, cuerpo)
-        for oculto in ["$ 2.000", "$ 1.000"]:
+        for oculto in ["$2.000", "$1.000"]:
             self.assertNotIn(oculto, cuerpo)
 
     def test_el_fragmento_htmx_trae_lo_mismo_que_la_pagina(self):
@@ -151,7 +151,7 @@ class LosUltimosMovimientosExplicanElSaldoTest(TestCase):
             reverse("estudiante-seleccionado", args=[self.hijo.id])
         ).content.decode()
 
-        self.assertIn("$ 4.500", fragmento)
+        self.assertIn("$4.500", fragmento)
         self.assertIn("Últimos movimientos", fragmento)
 
 
@@ -159,17 +159,28 @@ class ElFormatoDelDineroTest(TestCase):
     """Un solo sitio decide cómo se escribe una cifra (`TT-64`)."""
 
     def test_formato_colombiano(self):
-        self.assertEqual(dinero(Decimal("25000")), "$ 25.000")
-        self.assertEqual(dinero(Decimal("1234567.89")), "$ 1.234.567,89")
+        self.assertEqual(dinero(Decimal("25000")), "$25.000")
+        self.assertEqual(dinero(Decimal("1234567.89")), "$1.234.567,89")
 
     def test_los_centavos_solo_si_los_hay(self):
         """Arrastrar dos ceros en cada importe hace más difícil comparar cifras."""
-        self.assertEqual(dinero(Decimal("3500.00")), "$ 3.500")
-        self.assertEqual(dinero(Decimal("3500.50")), "$ 3.500,50")
+        self.assertEqual(dinero(Decimal("3500.00")), "$3.500")
+        self.assertEqual(dinero(Decimal("3500.50")), "$3.500,50")
 
     def test_el_signo_va_delante_del_simbolo(self):
-        """«-$ 500» se lee de un vistazo; «$ -500» hace dudar."""
-        self.assertEqual(dinero(Decimal("-500")), "-$ 500")
+        """«-$500» se lee de un vistazo; «$-500» hace dudar."""
+        self.assertEqual(dinero(Decimal("-500")), "-$500")
 
     def test_sin_saldo_es_cero_y_no_un_hueco(self):
-        self.assertEqual(dinero(None), "$ 0")
+        self.assertEqual(dinero(None), "$0")
+
+    def test_la_divisa_es_opcional_y_va_detras(self):
+        """`DT-23`: la divisa solo acompaña a las cifras grandes.
+
+        En una columna de tabla donde todo son pesos, repetir «COP» en cada fila
+        es ruido y ensancha el importe sin decir nada nuevo. Por eso el filtro no
+        la pone solo: hay que pedirla.
+        """
+        self.assertEqual(dinero(Decimal("25000"), "COP"), "$25.000 COP")
+        self.assertEqual(dinero(Decimal("-500"), "COP"), "-$500 COP")
+        self.assertEqual(dinero(None, "COP"), "$0 COP")
