@@ -21,6 +21,41 @@
       </p>
     </header>
 
+    {% comment %} Los tres pasos, como en la referencia (`DT-23`). Van arriba y siempre,
+       también cuando ya hay un resultado debajo: quien vuelve a esta pantalla a
+       corregir un archivo necesita acordarse de la regla, no solo del error.
+
+       **Son tres y no cuatro.** La referencia parte la carga en comprobar y
+       confirmar; aquí es una sola operación porque la carga es todo o nada por
+       construcción (`HU-02`): si una fila falla no se escribe ninguna, así que
+       no hace falta un paso previo que lo compruebe. {% endcomment %}
+    <ol class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+      <li class="flex items-start gap-3">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+                     bg-acento-suave font-display text-sm text-acento-fuerte">1</span>
+        <span class="text-base font-medium text-texto">
+          Prepara el archivo con las cinco columnas del formato. Las tienes abajo, en
+          «Columnas del archivo».
+        </span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+                     bg-acento-suave font-display text-sm text-acento-fuerte">2</span>
+        <span class="text-base font-medium text-texto">
+          Súbelo. Se revisa entero <strong class="font-semibold">antes</strong> de escribir
+          nada: si una fila falla, no se carga ninguna.
+        </span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+                     bg-acento-suave font-display text-sm text-acento-fuerte">3</span>
+        <span class="text-base font-medium text-texto">
+          Si sale limpio, quedan matriculados todos y cada acudiente recibe su
+          invitación para definir la contraseña.
+        </span>
+      </li>
+    </ol>
+
     {% if error %}
       {% comment %} El archivo que ni siquiera se puede leer como CSV. {% endcomment %}
       <div role="alert"
@@ -120,21 +155,51 @@
         </div>
       {% endif %}
 
+      {% comment %} La zona de arrastre, como en la referencia (`DT-23`).
+
+         **El `<input type="file">` sigue ahí, y es lo único que envía el
+         archivo**: lo que se ve es un `<label>` que lo cubre. Se esconde con
+         `sr-only` y no con `hidden` ni `display:none` — un campo así no recibe
+         foco y desaparece de la navegación por teclado, así que la pantalla se
+         volvería inoperable sin ratón. Con `sr-only` sigue enfocable, y el
+         `peer-focus-visible` de abajo dibuja el anillo sobre la zona.
+
+         Arrastrar es un extra que añade `interfaz.js`; sin JavaScript, pulsar la
+         zona abre el diálogo de siempre porque es un `<label>`. El botón de
+         «examinar» que dibuja el navegador desaparece de la vista, que es lo que
+         se quería: no mira una sola clase nuestra —mira `color-scheme`— y era la
+         pieza que no encajaba con el resto. {% endcomment %}
       <div class="flex flex-col gap-1">
-        <label for="{{ form.archivo.id_for_label }}" class="text-base font-medium text-texto">
-          {{ form.archivo.label }}
-        </label>
-        {% comment %} El botón de «examinar» lo dibuja el NAVEGADOR, y no mira una sola clase
-           nuestra: mira `color-scheme`, que fija la hoja de estilos según el
-           tema. Lo que sí se puede tocar es el botón interno con `file:`. {% endcomment %}
-        <input type="file" name="{{ form.archivo.html_name }}" id="{{ form.archivo.id_for_label }}"
-               accept=".csv,text/csv" required
-               class="w-full rounded-md border border-borde bg-superficie px-3 py-2.5 text-base
-                      text-texto transition-colors hover:border-acento focus:border-acento
-                      focus:outline-none file:mr-3 file:rounded-sm file:border-0
-                      file:bg-primario-suave file:px-3 file:py-1 file:text-sm
-                      file:font-medium file:text-acento-fuerte">
-        <p class="text-sm text-texto-suave">{{ form.archivo.help_text }}</p>
+        <span class="text-base font-medium text-texto">{{ form.archivo.label }}</span>
+
+        <div data-zona-de-archivo>
+          <input type="file" name="{{ form.archivo.html_name }}" id="{{ form.archivo.id_for_label }}"
+                 accept=".csv,text/csv" required class="peer sr-only">
+          <label for="{{ form.archivo.id_for_label }}"
+                 class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md
+                        border-2 border-dashed border-borde px-6 py-10 text-center
+                        transition-colors hover:border-acento hover:bg-superficie-hover
+                        peer-focus-visible:border-acento peer-focus-visible:bg-superficie-hover
+                        data-[arrastrando=si]:border-acento data-[arrastrando=si]:bg-acento-suave">
+            <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                         text-acento-fuerte">
+              <svg class="h-6 w-6" aria-hidden="true"><use href="#i-documento"></use></svg>
+            </span>
+            <span class="text-base font-semibold text-texto">
+              Arrastra aquí el archivo, o
+            </span>
+            <span class="inline-flex h-10 items-center justify-center rounded-md border
+                         border-borde bg-superficie px-4 text-base font-medium text-texto">
+              Elegir archivo
+            </span>
+            {% comment %} Aquí aterriza el nombre del archivo elegido. Sin esto, tras elegir
+               uno la pantalla se queda exactamente igual y no hay forma de saber
+               si se cogió el que era. {% endcomment %}
+            <span data-nombre-del-archivo class="text-sm text-texto-suave">
+              {{ form.archivo.help_text }}
+            </span>
+          </label>
+        </div>
       </div>
 
       <button type="submit"

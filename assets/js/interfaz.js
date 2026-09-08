@@ -333,10 +333,69 @@
     marcar();
   }
 
+  /* --- Zona de arrastre de la carga de estudiantes -----------------------
+   *
+   * `TT-24`. Todo lo que hay aquí es un extra: el control que envía el archivo
+   * sigue siendo el `<input type="file">`, y la zona es un `<label>` suyo, así
+   * que **sin JavaScript pulsarla abre igual el diálogo de siempre**. Lo que
+   * añade este bloque es poder soltar el archivo encima y ver cuál se eligió.
+   *
+   * `preventDefault` en `dragover` no es opcional y no es evidente: sin él, el
+   * navegador aplica su comportamiento por defecto —abrir el archivo en la
+   * pestaña, tirando la página y el formulario a medio llenar— y el `drop`
+   * nunca llega a dispararse.
+   */
+  function montarZonaDeArchivo() {
+    var zona = document.querySelector("[data-zona-de-archivo]");
+    if (zona === null) return;
+
+    var campo = zona.querySelector('input[type="file"]');
+    var etiqueta = zona.querySelector("label");
+    var nombre = zona.querySelector("[data-nombre-del-archivo]");
+    if (campo === null || etiqueta === null || nombre === null) return;
+
+    var ayuda = nombre.textContent;
+
+    function resaltar(activo) {
+      etiqueta.setAttribute("data-arrastrando", activo ? "si" : "no");
+    }
+
+    function mostrarNombre() {
+      var elegido = campo.files.length > 0 ? campo.files[0].name : null;
+      nombre.textContent = elegido === null ? ayuda : elegido;
+    }
+
+    campo.addEventListener("change", mostrarNombre);
+
+    ["dragenter", "dragover"].forEach(function (evento) {
+      etiqueta.addEventListener(evento, function (e) {
+        e.preventDefault();
+        resaltar(true);
+      });
+    });
+
+    ["dragleave", "dragend"].forEach(function (evento) {
+      etiqueta.addEventListener(evento, function () {
+        resaltar(false);
+      });
+    });
+
+    etiqueta.addEventListener("drop", function (e) {
+      e.preventDefault();
+      resaltar(false);
+      if (e.dataTransfer === null || e.dataTransfer.files.length === 0) return;
+      // Se asigna la lista entera y no el fichero suelto: `files` solo admite un
+      // `FileList`, y construir uno a mano no está soportado en todos lados.
+      campo.files = e.dataTransfer.files;
+      mostrarNombre();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
     montarMontosSugeridos();
+    montarZonaDeArchivo();
     montarBarra();
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
