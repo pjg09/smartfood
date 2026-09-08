@@ -38,14 +38,25 @@
           <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">
             {{ campo.label }}
           </label>
-          <div class="relative">
+          {% comment %} Los DOS campos llevan su propio botón de revelar: aquí se está
+             escribiendo una contraseña nueva y comprobando que las dos coinciden,
+             que es donde más falta hace poder mirar lo que se tecleó.
+             `interfaz.js` los monta por delegación, así que dos en la misma
+             pantalla no necesitan nada extra. {% endcomment %}
+          <div class="relative" data-revelar-contrasena>
             <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
                  aria-hidden="true"><use href="#i-candado"></use></svg>
             <input type="password" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
                    autocomplete="new-password" required
-                   class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+                   class="h-11 w-full rounded-md border bg-superficie pr-11 pl-10 text-base text-texto
                           transition-colors hover:border-acento focus:border-acento focus:outline-none
                           {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+            <button type="button" tabindex="-1" aria-label="Mostrar la contraseña"
+                    class="absolute top-1/2 right-1 flex h-9 w-9 -translate-y-1/2 items-center
+                           justify-center rounded-sm text-texto-suave transition-colors
+                           hover:bg-superficie-hover hover:text-texto">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-ojo"></use></svg>
+            </button>
           </div>
           {% if campo.help_text %}
             {% comment %} Las reglas de contraseña de Django llegan como lista HTML. Van al

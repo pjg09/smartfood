@@ -260,8 +260,39 @@
 
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se
    * vuelve a construir: basta con montarlo una vez. */
+  /* --- Revelar la contraseña ---------------------------------------------
+   *
+   * El campo de `TT-56`. Cambia el `type` entre `password` y `text`, el icono y
+   * la etiqueta del botón; nada más. La contraseña no se copia a ninguna parte
+   * ni se guarda: sigue siendo el valor del mismo `<input>`.
+   *
+   * Se atiende por delegación desde la caja marcada y no colgando un oyente del
+   * botón: así el mismo código vale si mañana hay dos campos de contraseña en
+   * la misma pantalla —definir la de la invitación son dos— sin tener que
+   * acordarse de montarlo otra vez.
+   */
+  function montarRevelarContrasena() {
+    document.querySelectorAll("[data-revelar-contrasena]").forEach(function (caja) {
+      var campo = caja.querySelector("input");
+      var boton = caja.querySelector("button");
+      var icono = boton === null ? null : boton.querySelector("use");
+      if (campo === null || boton === null || icono === null) return;
+
+      boton.addEventListener("click", function () {
+        var oculta = campo.type === "password";
+        campo.type = oculta ? "text" : "password";
+        icono.setAttribute("href", oculta ? "#i-ojo-cerrado" : "#i-ojo");
+        boton.setAttribute(
+          "aria-label",
+          oculta ? "Ocultar la contraseña" : "Mostrar la contraseña"
+        );
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
+    montarRevelarContrasena();
     montarBarra();
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
