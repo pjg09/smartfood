@@ -41,13 +41,40 @@
     return valor === "claro" || valor === "oscuro" ? valor : "sistema";
   }
 
+  /* El selector es un GRUPO de tres botones, y hay más de uno por documento: el
+   * armazón de la aplicación pinta el de la barra superior y el del cajón de
+   * móvil, y los dos tienen que reflejar la misma elección. De ahí
+   * `querySelectorAll` y la función que repinta TODOS a la vez — con
+   * `querySelector` el segundo grupo se quedaba sin marcar y parecía que el tema
+   * no se había aplicado.
+   *
+   * Cuál está pulsado se marca aquí y no en la plantilla porque la preferencia
+   * vive en el navegador, no en la cuenta: el servidor no sabe cuál es. */
   function montarSelectorDeTema() {
-    var selector = document.querySelector("[data-selector-de-tema]");
-    if (selector === null) return;
+    var grupos = document.querySelectorAll("[data-selector-de-tema]");
+    if (grupos.length === 0) return;
 
-    selector.value = temaGuardado();
-    selector.addEventListener("change", function () {
-      aplicarTema(selector.value);
+    function marcar(elegido) {
+      grupos.forEach(function (grupo) {
+        grupo.querySelectorAll("[data-tema]").forEach(function (boton) {
+          boton.setAttribute(
+            "aria-pressed",
+            boton.getAttribute("data-tema") === elegido ? "true" : "false"
+          );
+        });
+      });
+    }
+
+    marcar(temaGuardado());
+
+    grupos.forEach(function (grupo) {
+      grupo.addEventListener("click", function (evento) {
+        var boton = evento.target.closest("[data-tema]");
+        if (boton === null || !grupo.contains(boton)) return;
+        var elegido = boton.getAttribute("data-tema");
+        aplicarTema(elegido);
+        marcar(elegido);
+      });
     });
   }
 

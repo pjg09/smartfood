@@ -5,27 +5,62 @@
    pantalla clara y tiene que elegir a mano lo que ya había elegido en su
    aparato.
 
-   Es un `<select>` y no tres botones: son tres opciones excluyentes de una sola
-   cosa, que es exactamente lo que un `select` anuncia a un lector de pantalla, y
-   ocupa el ancho de un control en la barra en vez del de tres.
+   Es un **grupo de tres botones de icono**, no un desplegable. Las tres opciones
+   se ven a la vez y se cambia con un toque, que es lo que se hace con un tema:
+   se prueba. Un `<select>` obliga a abrir, leer tres líneas y elegir para algo
+   que se decide mirando la pantalla. Los tres estados se anuncian igual de bien
+   —`role="group"` con el `aria-label` del conjunto y `aria-pressed` en cada
+   botón— y ninguno queda escondido detrás de un despliegue.
 
-   El valor lo pone `interfaz.js` al montar, no el servidor: la preferencia vive
-   en el navegador de cada persona, no en su cuenta. {% endcomment %}
-<label class="flex items-center gap-2">
-  <span class="sr-only">Tema</span>
-  {% comment %} `tono="oscuro"` cuando va dentro del cajón o de la barra lateral, que son
-     paneles oscuros en LOS DOS temas: ahí `bg-superficie` es blanca en tema claro
-     y el control se ve como un parche. {% endcomment %}
-  <select data-selector-de-tema
-          class="h-9 rounded-md border px-2 text-sm transition-colors
-                 focus:border-acento focus:outline-none
+   Cuál está elegido lo marca `interfaz.js` al montar, no el servidor: la
+   preferencia vive en el navegador de cada persona, no en su cuenta. Hasta que
+   ese script corra, los tres botones se ven igual — que es correcto, porque
+   ninguno es «el de por defecto» sin saber qué hay guardado.
+
+   Parámetro:
+     tono   `oscuro` cuando va dentro del cajón o de la barra lateral, que son
+            paneles oscuros en LOS DOS temas: ahí `bg-superficie` es blanca en
+            tema claro y el grupo se vería como un parche.
+{% endcomment %}
+<div data-selector-de-tema role="group" aria-label="Tema de la interfaz"
+     class="inline-flex shrink-0 rounded-md border p-1
+            {% if tono == 'oscuro' %}
+              border-nav-hover bg-nav-hover
+            {% else %}
+              border-borde bg-superficie
+            {% endif %}">
+  {% comment %} El orden es claro · oscuro · sistema, y no al revés: los dos primeros son
+     la elección explícita y el tercero es «devuélvemelo a como estaba». {% endcomment %}
+  <button type="button" data-tema="claro" aria-label="Tema claro" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
+                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
                  {% if tono == 'oscuro' %}
-                   w-full border-nav-hover bg-nav-hover text-nav-texto hover:border-acento-claro
+                   text-nav-texto hover:bg-nav-fondo
                  {% else %}
-                   border-borde bg-superficie text-texto-suave hover:border-acento
+                   text-texto-suave hover:bg-superficie-hover
                  {% endif %}">
-    <option value="sistema">Tema del sistema</option>
-    <option value="claro">Tema claro</option>
-    <option value="oscuro">Tema oscuro</option>
-  </select>
-</label>
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-sol"></use></svg>
+  </button>
+
+  <button type="button" data-tema="oscuro" aria-label="Tema oscuro" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
+                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
+                 {% if tono == 'oscuro' %}
+                   text-nav-texto hover:bg-nav-fondo
+                 {% else %}
+                   text-texto-suave hover:bg-superficie-hover
+                 {% endif %}">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-luna"></use></svg>
+  </button>
+
+  <button type="button" data-tema="sistema" aria-label="Seguir al sistema" aria-pressed="false"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors
+                 aria-pressed:bg-primario aria-pressed:text-sobre-primario
+                 {% if tono == 'oscuro' %}
+                   text-nav-texto hover:bg-nav-fondo
+                 {% else %}
+                   text-texto-suave hover:bg-superficie-hover
+                 {% endif %}">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-monitor"></use></svg>
+  </button>
+</div>
