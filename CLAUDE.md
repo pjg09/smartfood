@@ -120,6 +120,10 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   modelo, no el formulario.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+- **`{% now "F" %}` devuelve el mes capitalizado** («Septiembre»), y dentro de una fecha en
+  español va en minúscula. No se le puede aplicar un filtro directamente: `{% now "F" as mes %}`
+  y luego `{{ mes|lower }}`. La inicial de la frase se pone con `first-letter:uppercase`, nunca
+  cortando la cadena — con acentos se rompe.
 - **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
   Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
   a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
@@ -169,6 +173,9 @@ uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026
 Se entra por `/login/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
+Para mirarla a mano: `uv run python manage.py runserver` en <http://127.0.0.1:8000> y
+**`tailwind watch` en otra terminal**, o cada cambio de plantilla se verá con la hoja vieja.
+
 Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al
 arrancar, falla al abrir la pantalla que la usa.
 
@@ -180,6 +187,14 @@ uv run python manage.py makemigrations --check --dry-run   # DoD-3, el que más 
 uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huérfana lo cuelga
 ```
 
+**Son la única red.** La CI solo valida el título del PR y publica la versión al integrar:
+ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
+—ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
+
+La suite completa son 533 pruebas y **tarda unos dos minutos**: por encima del tiempo de
+espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
+le dio tiempo — dale margen o corre solo la app que tocaste.
+
 Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
 `transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
 `self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
@@ -187,6 +202,11 @@ Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo dife
 **Una prueba que entra al admin crea la cuenta por el camino real**:
 `sincronizar_grupos_y_permisos()` y `crear_cuenta(..., accede_a_administracion=True)`. Poner
 `is_staff` a mano deja una cuenta que entra pero no tiene ningún permiso, y todo responde `403`.
+
+**Una prueba sobre una página entera busca un `data-*` propio, no un atributo genérico.**
+`assertNotContains(r, 'role="group"')` para decir «no se dibuja el selector de estudiante» se
+rompe el día que el armazón estrena otro grupo — y se rompió. Busca
+`data-selector-estudiante`, que sí es exclusivo de esa pantalla.
 
 Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
 con `django.test.Client`. Hace falta añadir el host que usa el cliente:
@@ -197,9 +217,11 @@ DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py sh
 
 **Para mirar una pantalla de verdad** sin navegador manual: renderízala con
 `django.test.Client`, guarda el HTML con las rutas de `/static/` reescritas a `file://` y
-dispara `google-chrome --headless --screenshot`. Dos detalles o la captura miente:
+dispara `google-chrome --headless --screenshot`. Tres detalles o la captura miente:
 `--allow-file-access-from-files` —si no, el JS no corre— y desactivar transiciones y
-animaciones, que el reloj virtual congela en su estado inicial.
+animaciones, que el reloj virtual congela en su estado inicial. Y **`collectstatic` después de
+`tailwind build --force`**: el HTML apunta a `/static/`, que se reescribe a `staticfiles/` —no
+a `assets/`—, así que sin ese paso se fotografía la hoja anterior.
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
@@ -231,6 +253,9 @@ automático está desconectado a propósito.
 - **Trunk based development**: `main` protegida, ramas cortas, todo entra por PR con squash merge.
   Commits en Conventional Commits —`tipo(ámbito): resumen` en español, cuerpo con `Refs:`—, porque
   son los que disparan el versionado. El detalle está en `docs/convenciones-de-git.md`.
+- **`assets/js/interfaz.js` y `cuentas/templatetags/interfaz.py` son compartidos**: acumulan una
+  pieza por pantalla. Al commitear por temáticas, `git add -A` los mete enteros y mezcla dos
+  temas en un commit. Ahí se pone el fichero a mano.
 - **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
   instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
 - **Datos ficticios siempre** (`ALC-OUT-07`). Ningún dato real de ningún estudiante entra en este
