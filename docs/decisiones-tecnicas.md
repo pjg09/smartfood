@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` el 2026-09-01 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 23 (`DT-1` … `DT-23`) |
+| decisiones | 24 (`DT-1` … `DT-24`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-23`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-24`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -326,6 +326,24 @@ El esquema está en 3NF. Conviene notar que **`DT-4` y `DT-5` son consecuencia d
 
 **Consecuencia sobre `DT-16`.** Sigue vigente y sin cambios: una vista HTMX devuelve un fragmento, nunca una página. Lo que `DT-23` añade es que hay **tres armazones** —`base-publica.html`, `base-acceso.html` y `base-aplicacion.html`— colgando de una base común, y que `INT-2` tendrá el suyo en el Sprint 2.
 
+#### `[DT-24]` Los dos libros de movimientos tienen un único punto de asiento
+
+**Obliga:** `INV-2`, `INV-3` e `INVD-2`, y la forma en que `DT-4` y `DT-5` las sostienen.
+
+`DT-4` y `DT-5` dicen que el saldo y las existencias **son** la suma de su historial. Eso hace ciertas `INV-2` e `INV-3` por construcción, pero deja abierta la otra mitad del problema: **quién puede escribir en esos libros y qué comprueba antes**.
+
+Ninguna función escribe un `MovimientoBilletera` ni un `MovimientoInventario` por su cuenta. Las dos apps exponen una función `asentar()` y **todo movimiento pasa por ella**: la recarga de `HU-06`, el ingreso de `HU-27`, la venta de `HU-21` y lo que venga después.
+
+**El problema que resuelve no es la duplicación, es el olvido.** `INVD-2` —ni desactivado ni de baja se compra ni se recarga— estaba escrita desde el Sprint 1, y `recargar` la llamaba. Pero eso solo protege a los servicios que se acuerden de llamarla, y el servicio de venta (`TT-80`) se escribe dos semanas después, por otra persona y en otra app. Una regla que depende de la memoria de quien escriba el siguiente servicio no es una regla: es una costumbre.
+
+**Qué comprueba `asentar()` y qué no.** Comprueba lo que es igual venga de donde venga: la forma del movimiento —signo según tipo, cantidad distinta de cero, motivo obligatorio en la merma (`INV-8`)— y, en la billetera, que el estudiante esté en condiciones de operar (`INVD-2`). **No comprueba quién es el actor**, y eso es deliberado: cada operación tiene su propia regla de quién puede —recargar es del acudiente (`HU-06`), cobrar es del cajero (`[S11]`), ingresar mercancía es de la administración (`HU-27`)— y la aplican los servicios de arriba. Meter un `actor` en `asentar()` obligaría a inventar uno en la venta, donde quien opera es el cajero sobre la billetera de un tercero.
+
+**La devolución no opera, corrige.** En la billetera, `TIPOS_QUE_OPERAN` deja fuera la devolución: un estudiante que se retiró del colegio con una venta mal cobrada tiene derecho a que se le corrija, y bloquear esa corrección dejaría su historial diciendo algo que no pasó — justo lo que `INV-2` existe para evitar. `HU-52` prohíbe **comprar y recargar** sobre el saldo congelado; no, corregir.
+
+**Esto no sustituye a las restricciones de la base.** El signo y el motivo los impone además una `CheckConstraint` (`DT-15`, segunda regla): `asentar()` comprueba antes para dar un mensaje que se entienda, no para reemplazarla. Si algún día alguien escribe un movimiento con el ORM directamente, la base sigue diciendo que no.
+
+**Descartado: señales de Django (`post_save`) para la comprobación.** Funcionaría y sería invisible, que es el problema — una regla que se dispara desde un fichero que nadie está leyendo es imposible de seguir cuando falla. La función con nombre se ve en la traza y se lee desde el servicio que la llama.
+
 ---
 
 ## [S2] Modelo de datos núcleo
@@ -348,7 +366,7 @@ Diecisiete entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres
 | Entidad | Campos clave | Sostiene |
 |---|---|---|
 | `Billetera` | estudiante (uno a uno) | `ALC-IN-06` |
-| `MovimientoBilletera` | billetera, tipo (`recarga`/`venta`/`devolucion`), monto, venta, creado_en | `DT-4`, `INV-2` |
+| `MovimientoBilletera` | billetera, tipo (`recarga`/`venta`/`devolucion`), monto **con signo**, venta, creado_en | `DT-4`, `INV-2`, `DT-24` |
 
 **Sin columna `saldo`.** Saldo = suma de movimientos.
 
@@ -365,7 +383,7 @@ Diecisiete entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres
 
 | Entidad | Campos clave | Sostiene |
 |---|---|---|
-| `MovimientoInventario` | producto, tipo (`ingreso`/`venta`/`merma`), cantidad **con signo**, **motivo**, venta, creado_en | `DT-5`, `INV-3`, `INV-8` |
+| `MovimientoInventario` | producto, tipo (`ingreso`/`venta`/`merma`), cantidad **con signo**, **motivo**, venta, creado_en | `DT-5`, `INV-3`, `INV-8`, `DT-24` |
 
 **Sin columna `existencias`.** Existencias = suma de movimientos.
 
@@ -402,8 +420,8 @@ Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`).
 | Invariante | Decisión que la sostiene | Cómo |
 |---|---|---|
 | `INV-1` Sin saldo negativo | `DT-1`, `DT-6` | Validación dentro del bloqueo pesimista |
-| `INV-2` Saldo reconstruible | `DT-4` | El saldo **es** la suma del historial |
-| `INV-3` Existencias explicables | `DT-5` | Las existencias **son** la suma del historial |
+| `INV-2` Saldo reconstruible | `DT-4`, `DT-24` | El saldo **es** la suma del historial, y todo movimiento entra por un único asentador |
+| `INV-3` Existencias explicables | `DT-5`, `DT-24` | Las existencias **son** la suma del historial, y todo movimiento entra por un único asentador |
 | `INV-4` Restricciones no desactivables | `DT-11` | Ningún rol tiene permiso de escritura **sobre las restricciones**: la administración escribe su catálogo (`HU-26`) y nada más |
 | `INV-5` Bloqueo por condición | `DT-7` | Relación evaluada en la venta, no lista materializada |
 | `INV-6` Sin autorregistro | `DT-10` | Las rutas de registro no existen |
@@ -411,7 +429,7 @@ Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`).
 | `INV-8` Motivo obligatorio | `DT-5` | Restricción en la base de datos |
 | `INV-9` Recomendaciones orientativas | — | Es de interfaz (`HU-34`), no de modelo |
 | `INVD-1` Ninguna cuenta por autorregistro | `DT-10` | Mismo mecanismo para los cuatro roles |
-| `INVD-2` Desactivado no compra | `DT-12`, `DT-6` | Estado evaluado dentro de la transacción de venta |
+| `INVD-2` Desactivado no compra | `DT-12`, `DT-6`, `DT-24` | Estado evaluado en el asentador, por donde pasa **todo** movimiento de billetera |
 | `INVD-3` Solo la institución reactiva | `DT-11`, `DT-12` | Transición de estado permitida solo a ese rol |
 | `INVD-4` Reasignar invalida el anterior | `DT-9` | El código vigente es un único valor por estudiante |
 | `INVD-5` Efectivo explicable | `DT-5` | Cierre calculado desde ventas registradas |

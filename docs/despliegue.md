@@ -82,6 +82,7 @@ En `railway.json`, versionado:
 |---|---|
 | Construcción | `manage.py tailwind build && manage.py collectstatic --noinput` |
 | Arranque | `migrate` → `sembrar` → `gunicorn` |
+| Matriz `[S11]` | La sincroniza `sembrar` en cada arranque: un modelo nuevo llega con sus permisos puestos |
 
 > **`preDeployCommand` de `railway.json` se ignora en silencio.** Se probó: el plan que
 > imprime Railpack en el registro de construcción muestra los pasos `install`, `build` y
