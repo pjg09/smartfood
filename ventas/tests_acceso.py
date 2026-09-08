@@ -78,12 +78,28 @@ class ElPuntoDeVentaNoAdelantaNingunaHistoriaTest(TestCase):
         self.cuerpo = self.client.get(reverse("punto-de-venta")).content.decode()
 
     def test_declara_las_historias_que_llenaran_cada_hueco(self):
-        """`HU-15` ya no está en la lista, y por la mejor razón: **está
-        construida** (`TT-70`, `TT-71`). El campo escanea de verdad, así que su
-        hueco dejó de ser un hueco. Lo que queda por llenar es lo de abajo."""
-        for historia in ["HU-16", "HU-17", "HU-21"]:
+        """`HU-15` y `HU-16` ya no están en la lista, y por la mejor razón:
+        **están construidas**. El escaneo es `TT-70` y `TT-71`; la búsqueda por
+        documento, `TT-73`. Los dos campos buscan de verdad, así que sus huecos
+        dejaron de ser huecos. Lo que queda por llenar es lo de abajo.
+
+        `HU-16` sale de la lista en este mismo Pull Request: hasta ahora el aviso
+        del hueco la citaba como pendiente aunque el campo ya existiera, que es
+        la clase de texto que se queda viejo sin que nadie lo note.
+        """
+        for historia in ["HU-17", "HU-21"]:
             with self.subTest(historia=historia):
                 self.assertIn(historia, self.cuerpo)
+
+    def test_los_huecos_no_son_botones_apagados(self):
+        """Un hueco dice qué historia lo llena; no finge la acción que falta.
+
+        Es la diferencia entre declarar y adelantar. Un «Cobrar» deshabilitado
+        promete que un día hará algo y no dice cuándo ni de qué depende, y en una
+        caja invita a pulsarlo esperando que reaccione. El bloque punteado con el
+        identificador de la historia dice las dos cosas.
+        """
+        self.assertNotIn("disabled", self.cuerpo)
 
     def test_el_campo_de_identificacion_retiene_el_foco(self):
         """`TT-57`: la pistola escribe donde esté el foco.
@@ -93,12 +109,19 @@ class ElPuntoDeVentaNoAdelantaNingunaHistoriaTest(TestCase):
         """
         self.assertIn("data-foco-permanente", self.cuerpo)
 
-    def test_no_lleva_navegacion(self):
+    def test_la_barra_no_se_despliega_ni_hay_cajon(self):
         """`INT-2`: quien cobra no navega.
 
-        Sin barra lateral y sin cajón: las dos cosas del armazón de `INT-1` que
-        aquí serían sitios a los que llegar por error con cola delante. Lo único
-        que sale de esta pantalla es cerrar sesión.
+        La pantalla tiene una columna de iconos, pero **no es la barra de
+        `INT-1`**: no se despliega —no hay botón que lo intente— y no tiene
+        cajón de móvil. Las dos cosas que se descartan son las mismas de antes,
+        y por el mismo motivo: los 280 px de las etiquetas salen de la zona
+        donde el cajero pulsa, y un cajón es un sitio al que llegar por error
+        con cola delante.
+
+        Que la columna exista no reabre la navegación: su única entrada es esta
+        misma pantalla. Sirve para situarse y para salir, que es justo lo que
+        `INT-2` deja hacer.
         """
         self.assertNotIn("data-alternar-barra", self.cuerpo)
         self.assertNotIn("data-cajon", self.cuerpo)

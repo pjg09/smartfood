@@ -208,9 +208,31 @@
    * mano (`HU-16`) o pulsar nada con el teclado, que es lo contrario de lo que
    * se busca.
    */
+  /* Los dos campos del punto de venta, y **cuál manda ahora**.
+   *
+   * Desde que los modos son pestañas (`TT-71`, `TT-73`), «el campo del lector»
+   * ya no es siempre el mismo elemento: en la pestaña de documento, el campo
+   * visible es el otro. Devolver el foco al de la tarjeta cuando está escondido
+   * no hace nada —`focus()` sobre un elemento con `hidden` se ignora en
+   * silencio— y el cajero se queda escribiendo en ninguna parte.
+   *
+   * `offsetParent` es `null` para un elemento que no se pinta, y es la forma
+   * barata de preguntar «¿se ve?» sin leer estilos calculados. */
+  function campoActivoDelPunto() {
+    var campos = document.querySelectorAll("[data-foco-permanente], [data-vuelve-al-lector]");
+    for (var i = 0; i < campos.length; i += 1) {
+      if (campos[i].offsetParent !== null) return campos[i];
+    }
+    return null;
+  }
+
   function montarFocoPermanente() {
-    var campo = document.querySelector("[data-foco-permanente]");
-    if (campo === null) return;
+    if (document.querySelector("[data-foco-permanente]") === null) return;
+
+    function devolverElFoco() {
+      var campo = campoActivoDelPunto();
+      if (campo !== null) campo.focus();
+    }
 
     document.addEventListener("focusout", function () {
       // En el siguiente ciclo: durante `focusout`, el elemento que va a recibir
@@ -218,15 +240,15 @@
       // que lo pierde. Comprobarlo ahora daría siempre el mismo resultado.
       setTimeout(function () {
         if (document.activeElement === null || document.activeElement === document.body) {
-          campo.focus();
+          devolverElFoco();
         }
       }, 0);
     });
 
-    // Escape lo devuelve a mano, esté donde esté: es la vuelta rápida al lector
-    // sin tener que buscar el campo con el ratón.
+    // Escape lo devuelve a mano, esté donde esté: es la vuelta rápida al campo
+    // activo sin tener que buscarlo con el ratón.
     document.addEventListener("keydown", function (evento) {
-      if (evento.key === "Escape") campo.focus();
+      if (evento.key === "Escape") devolverElFoco();
     });
 
     /* Tras cada búsqueda, el campo se vacía y recupera el foco (`TT-71`).
@@ -237,24 +259,64 @@
      * seleccionar y borrar entre estudiante y estudiante, con la fila delante.
      *
      * Se vacía al terminar la petición y no al dispararla: si fallara la red, lo
-     * que se escaneó sigue a la vista para poder reintentarlo o teclearlo. */
-    campo.addEventListener("htmx:afterRequest", function () {
-      campo.value = "";
-      campo.focus();
-    });
-
-    /* Lo mismo para la búsqueda por documento (`TT-73`): al terminar, ese campo
-     * se vacía y **el foco vuelve al del lector**, no se queda donde estaba.
+     * que se escaneó sigue a la vista para poder reintentarlo o teclearlo.
      *
-     * Es la diferencia entre las dos vías: al documento se llega a propósito, una
-     * vez, porque alguien olvidó la tarjeta; al lector se vuelve siempre. Si el
-     * foco se quedara en el documento, la siguiente tarjeta escaneada acabaría
-     * escrita ahí y buscaría un documento que no existe. */
-    document.querySelectorAll("[data-vuelve-al-lector]").forEach(function (otro) {
-      otro.addEventListener("htmx:afterRequest", function () {
-        otro.value = "";
-        campo.focus();
+     * Vale para las DOS vías, y el foco vuelve al campo del modo activo. En la
+     * pestaña de tarjeta eso es el lector, que es donde tiene que estar; en la
+     * de documento, el propio campo de documento, porque quien está buscando a
+     * mano suele buscar a más de uno seguido. */
+    document.querySelectorAll("[data-foco-permanente], [data-vuelve-al-lector]").forEach(
+      function (campo) {
+        campo.addEventListener("htmx:afterRequest", function () {
+          campo.value = "";
+          devolverElFoco();
+        });
+      }
+    );
+  }
+
+  /* --- Modos de búsqueda del punto de venta -------------------------------
+   *
+   * `HU-15` y `HU-16` son dos vías al mismo resultado, y aquí son dos pestañas.
+   * **Los dos campos existen siempre en el documento**: la pestaña enseña uno y
+   * esconde el otro, no los crea. Eso es lo que mantiene una sola ruta para las
+   * dos —el primer criterio de `HU-16`— sin que nadie tenga que mantenerlo así.
+   *
+   * Se esconde con el ATRIBUTO `hidden` y no con una clase: sin JavaScript, el
+   * panel de documento nace oculto y la pantalla sigue sirviendo para lo que se
+   * usa el 95 % de las veces, que es escanear.
+   *
+   * Al cambiar de modo se enfoca el campo que acaba de aparecer. Sin eso, el
+   * cajero pulsa «Documento» y tiene que pulsar otra vez dentro del campo — dos
+   * gestos con la fila delante, para algo que solo tiene un sitio donde escribir.
+   */
+  function montarModosDeBusqueda() {
+    var caja = document.querySelector("[data-modos-de-busqueda]");
+    if (caja === null) return;
+
+    var botones = caja.querySelectorAll("[data-modo]");
+    var paneles = caja.querySelectorAll("[data-panel]");
+    if (botones.length === 0 || paneles.length === 0) return;
+
+    caja.addEventListener("click", function (evento) {
+      var boton = evento.target.closest("[data-modo]");
+      if (boton === null || !caja.contains(boton)) return;
+
+      var elegido = boton.getAttribute("data-modo");
+
+      botones.forEach(function (otro) {
+        otro.setAttribute(
+          "aria-pressed",
+          otro.getAttribute("data-modo") === elegido ? "true" : "false"
+        );
       });
+
+      paneles.forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-panel") !== elegido;
+      });
+
+      var campo = caja.querySelector('[data-panel="' + elegido + '"] input');
+      if (campo !== null) campo.focus();
     });
   }
 
@@ -400,5 +462,6 @@
     montarCabeceraPublica();
     montarSelectorDeEstudiante();
     montarFocoPermanente();
+    montarModosDeBusqueda();
   });
 })();

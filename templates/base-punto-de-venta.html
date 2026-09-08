@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load interfaz %}
 
 {% comment %} Armazón del punto de venta (TT-57, INT-2, DT-23).
 
@@ -12,22 +13,25 @@
    1. **Pantalla completa y sin scroll de página.** `h-dvh` y `overflow-hidden`:
       lo que hay cabe, y si algo no cabe, desborda dentro de su zona. Una página
       que se desplaza obliga al cajero a buscar dónde quedó el total.
-   2. **Sin navegación.** No hay barra lateral, ni cajón, ni menú. Quien cobra no
-      navega: entra, cobra y sale. Un menú aquí solo son sitios a los que
-      llegar por error con cola delante.
+   2. **La barra lateral es una columna de iconos y no se despliega.** No es un
+      estado que se pueda alternar y por eso no hay botón que lo intente: los
+      280 px de las etiquetas se los quitaría a la zona donde el cajero pulsa,
+      y quien cobra no navega —entra, cobra y sale—. Hoy tiene una sola entrada,
+      que es lo que el Sprint 2 construyó; no se dibujan huecos por adelantado.
    3. **Sin diálogos.** Ninguna acción del punto de venta se confirma con un
       modal (`PR-12` lo repite para el carrito): un diálogo roba el foco, y el
       foco es del lector.
    4. **Foco permanente.** La pistola lectora escribe **donde esté el foco**, así
-      que el foco vuelve solo al campo marcado con `data-foco-permanente` en
-      cuanto se pierde. Sin esto, el cajero tiene que soltar el lector y tocar
-      la pantalla entre venta y venta, que es justo el tiempo que no hay.
+      que el foco vuelve solo al campo del modo activo en cuanto se pierde. Sin
+      esto, el cajero tiene que soltar el lector y tocar la pantalla entre venta
+      y venta, que es justo el tiempo que no hay.
 
    Lo que este armazón NO decide: qué se muestra al identificar (`HU-17`), cómo
    se identifica (`HU-15`, `HU-16`) ni cómo se cobra (`HU-21`). Coloca las tres
    zonas y se aparta.
 
    Bloques:
+     encabezado       el título de la pantalla y su frase de apoyo
      identificacion   columna izquierda: quién compra
      catalogo         columna central: qué compra
      ticket           columna derecha: cuánto es
@@ -37,72 +41,104 @@
   {% comment %} `h-dvh` y no `min-h-dvh`: aquí la altura es un presupuesto fijo, no un
      mínimo. Con `min-h` la página crece y aparece scroll, que es lo que el punto
      de venta no puede tener. {% endcomment %}
-  <div class="flex h-dvh flex-col overflow-hidden bg-fondo">
+  <div class="h-dvh overflow-hidden bg-fondo">
 
-    {% comment %} Barra mínima: quién cobra y por dónde se sale. Nada más. No lleva
-       enlaces a otras pantallas a propósito — ver la decisión 2 de arriba. {% endcomment %}
-    <header class="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-borde
-                   bg-superficie px-4 escritorio:px-6">
+    {% comment %} La misma barra flotante que el resto de la aplicación, sin el botón de
+       las tres rayas: aquí no hay nada que desplegar (decisión 2). Empieza en
+       `left-28` para dejar sitio a la columna de iconos; en móvil va pegada al
+       techo y a todo el ancho, como en el armazón de la aplicación. {% endcomment %}
+    <header class="no-imprimir fixed inset-x-0 top-0 z-30 flex h-16 items-center gap-3
+                   overflow-hidden border-b border-borde bg-superficie px-4 shadow-sm
+                   tablet:top-4 tablet:right-4 tablet:left-28 tablet:h-18 tablet:rounded-2xl
+                   tablet:border-0 tablet:px-6 tablet:shadow-lg">
       <div class="flex min-w-0 items-center gap-3">
-        {% include "partials/marca.html" with tamano="sm" %}
+        {% include "partials/marca.html" %}
         {% comment %} El punto de venta se opera en escritorio (`INT-2`), pero a 390 px la
-           barra no puede verse rota: el rótulo y la etiqueta del botón se van, y
-           quedan la marca y el icono de salir. {% endcomment %}
+           barra no puede verse rota: el rótulo se va y quedan la marca y lo
+           demás. {% endcomment %}
         <span class="hidden rounded-full bg-acento-suave px-3 py-1 text-sm font-medium
                      whitespace-nowrap text-acento-fuerte tablet:inline">
           Punto de venta
         </span>
       </div>
 
-      <div class="flex items-center gap-3">
-        <span class="hidden max-w-56 truncate text-sm text-texto-suave escritorio:inline">
-          {{ user.email }}
-        </span>
+      <div class="flex flex-1 items-center justify-end gap-3">
+        {% include "partials/ficha-de-sesion.html" %}
         {% include "partials/selector-de-tema.html" %}
-        {% comment %} Salir es un formulario porque `/salir/` solo acepta POST. Es la única
-           salida de esta pantalla, y por eso está aquí y no escondida. {% endcomment %}
+        {% comment %} Salir es un formulario porque `/salir/` solo acepta POST. Está aquí y
+           también al pie de la columna de iconos: es la única salida de esta
+           pantalla y no puede depender de encontrarla. {% endcomment %}
         <form method="post" action="{% url 'salir' %}">
           {% csrf_token %}
-          <button type="submit"
-                  class="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-borde
-                         bg-superficie-hover px-3 text-sm font-medium text-texto-suave
-                         transition-colors hover:border-primario hover:bg-primario
-                         hover:text-sobre-primario">
+          <button type="submit" aria-label="Cerrar sesión"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md
+                         border border-borde bg-superficie-hover text-texto-suave
+                         transition-all hover:-translate-y-0.5 hover:border-primario
+                         hover:bg-primario hover:text-sobre-primario hover:shadow-lg">
             <svg class="h-4 w-4" aria-hidden="true"><use href="#i-salir"></use></svg>
-            <span class="hidden tablet:inline">Cerrar sesión</span>
-            <span class="sr-only tablet:hidden">Cerrar sesión</span>
           </button>
         </form>
       </div>
     </header>
 
-    {% comment %} Las tres zonas. Se apilan por debajo de 1024 px, que no es el aparato de
-       `INT-2` pero tampoco tiene por qué verse roto.
+    {% comment %} La columna de iconos. Mismo panel oscuro y mismo degradado que la barra
+       de la aplicación, para que las dos pantallas se lean como el mismo
+       producto; lo que cambia es que esta no se despliega nunca. En móvil no
+       está: a 390 px la pantalla es para las tres zonas. {% endcomment %}
+    <aside class="no-imprimir fixed top-4 bottom-4 left-4 z-20 hidden w-20 overflow-hidden
+                  rounded-2xl bg-linear-to-b from-nav-fondo to-nav-fondo-fin shadow-lg
+                  tablet:block">
+      {% menu_del_punto_de_venta %}
+    </aside>
 
-       **Cada columna se desplaza por dentro solo desde `escritorio`**, que es donde
-       la altura es un presupuesto cerrado (1024 × 600). Apiladas no: con
-       `overflow-y-auto` en la zona y la altura repartida por la rejilla, el texto
-       de un hueco se recortaba a media frase en vez de empujar hacia abajo. Ahí el
-       scroll lo lleva el lienzo entero.
+    {% comment %} El lienzo deja sitio a las dos barras. `pt-26` son los 16 px de margen
+       más los 72 de la barra más otros 16; `ml-28`, los 16 más los 80 de la
+       columna más 16. {% endcomment %}
+    {% comment %} `@container` va AQUÍ y no en la rejilla, y esa distinción cuesta una
+       tarde: una consulta de contenedor mira el ANCESTRO más cercano que sea
+       contenedor, así que un elemento **nunca es su propio contenedor**. Con
+       `@container` y `rejilla-caja` en la misma caja, las tres consultas de
+       `estilos/fuente.css` no encuentran contra qué medirse, no fallan y la
+       pantalla se queda en una sola columna sin dar ningún aviso.
 
-       `min-h-0` acompaña al `overflow`: sin él, un hijo de una rejilla se niega a
-       encoger por debajo de su contenido y el desbordamiento se escapa a la página
-       en lugar de quedarse dentro de la columna. {% endcomment %}
-    <main id="contenido"
-          class="rejilla-caja min-h-0 flex-1 gap-4 overflow-y-auto p-4
-                 escritorio:overflow-hidden escritorio:p-6">
+       Puesto en el envoltorio, lo que se mide es su caja de contenido —ya
+       descontados el relleno y el hueco de la columna de iconos—, que es
+       exactamente el presupuesto que la rejilla tiene que repartir. {% endcomment %}
+    <div class="@container flex h-full flex-col gap-4 overflow-hidden px-4 pt-20 pb-4
+                tablet:pt-26 tablet:pr-4 tablet:pl-28">
 
-      <section aria-label="Estudiante" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
-        {% block identificacion %}{% endblock %}
-      </section>
+      <header class="shrink-0">
+        {% block encabezado %}{% endblock %}
+      </header>
 
-      <section aria-label="Catálogo" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
-        {% block catalogo %}{% endblock %}
-      </section>
+      {% comment %} Las tres zonas. Se apilan por debajo de 1024 px, que no es el aparato de
+         `INT-2` pero tampoco tiene por qué verse roto.
 
-      <section aria-label="Venta" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
-        {% block ticket %}{% endblock %}
-      </section>
-    </main>
+         **Cada columna se desplaza por dentro solo desde `escritorio`**, que es donde
+         la altura es un presupuesto cerrado (1024 × 600). Apiladas no: con
+         `overflow-y-auto` en la zona y la altura repartida por la rejilla, el texto
+         de un hueco se recortaba a media frase en vez de empujar hacia abajo. Ahí el
+         scroll lo lleva el lienzo entero.
+
+         `min-h-0` acompaña al `overflow`: sin él, un hijo de una rejilla se niega a
+         encoger por debajo de su contenido y el desbordamiento se escapa a la página
+         en lugar de quedarse dentro de la columna. {% endcomment %}
+      <main id="contenido"
+            class="rejilla-caja min-h-0 flex-1 gap-4 overflow-y-auto
+                   escritorio:overflow-hidden">
+
+        <section aria-label="Estudiante" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
+          {% block identificacion %}{% endblock %}
+        </section>
+
+        <section aria-label="Catálogo" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
+          {% block catalogo %}{% endblock %}
+        </section>
+
+        <section aria-label="Venta" class="flex flex-col gap-4 escritorio:min-h-0 escritorio:overflow-y-auto">
+          {% block ticket %}{% endblock %}
+        </section>
+      </main>
+    </div>
   </div>
 {% endblock %}

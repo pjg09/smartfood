@@ -879,30 +879,64 @@
    * (`grid-cols-[20rem_1fr_22rem]`) es el valor arbitrario que esta hoja existe
    * para evitar. Se le da nombre de intención, igual que a los degradados.
    *
-   * **Solo desde `escritorio` (1024 px), que es el aparato de `INT-2`.** Por
-   * debajo las tres zonas se apilan y no hay rejilla que definir: el punto de
-   * venta no se opera desde un teléfono.
+   * ### Mide su CONTENEDOR, no la ventana, y eso no es un refinamiento
    *
-   * Las medidas están calculadas para 1024 px: 320 de identificación + 352 de
-   * ticket + 32 de huecos dejan 320 al catálogo, que es donde el cajero pulsa.
-   * Si alguna de las dos laterales crece, el catálogo es quien paga.
+   * Estaba en `@media (min-width: 64rem)` con tres anchos fijos calculados para
+   * los 992 px que dejaba la pantalla cuando el punto de venta no tenía barra
+   * lateral. Al ganarla, el hueco real pasó a ser `ventana − 112` (los 80 px de
+   * la columna más sus dos márgenes de 16), y la cuenta dejó de salir: en la
+   * tablet de 1024 × 600 de `INT-2`, `20rem + 22rem + 2rem` de huecos se comen
+   * 704 de los 896 disponibles y **al catálogo le quedan 192 px**, que es donde
+   * el cajero pulsa.
+   *
+   * La media query no puede saberlo porque mide la ventana y la rejilla vive en
+   * lo que sobra. Con `@container` el presupuesto se compara contra el espacio
+   * que hay de verdad, así que da igual el zoom, el aparato y lo que ocupe el
+   * cromo mañana.
+   *
+   * **Cada umbral incluye los DOS huecos de `gap-4`**, que son 2rem más. Es el
+   * error fácil: unas columnas que suman 44rem piden 46 con los huecos, y la
+   * rejilla se sale de su contenedor justo en el escalón que venía a arreglar el
+   * problema.
+   *
+   *   44rem = 12 + 16 + 14 (42) + 2 de huecos
+   *   52rem = 16 + 16 + 18 (50) + 2
+   *   60rem = 20 + 16 + 22 (58) + 2
+   *
+   * **La pista central nunca baja de 16rem**, ni en el escalón apretado: es la
+   * zona de trabajo, y lo que encoge son las dos laterales, que son texto y
+   * botones. Por debajo de todos los umbrales las tres zonas se apilan, que es
+   * lo correcto en un teléfono — el punto de venta no se opera desde ahí.
    */
   .rejilla-caja {
     display: grid;
     grid-template-columns: 1fr;
   }
 
-  /* **El punto de ruptura va DENTRO de la clase, no como `escritorio:` en la
+  /* **Los puntos de ruptura van DENTRO de la clase, no como `escritorio:` en la
    * plantilla.** Las variantes de Tailwind solo alcanzan a las utilidades que
    * genera él: `escritorio:rejilla-caja` no existe, no se compila y **no da
-   * ningún error** — la pantalla simplemente se queda en una columna. Medido a
-   * 1024 px antes de darse cuenta.
-   *
-   * La alternativa sería declararla con `@utility`, pero entonces las tres
-   * medidas quedarían repartidas entre esta hoja y la plantilla. */
-  @media (min-width: 64rem) {
+   * ningún error** — la pantalla simplemente se queda en una columna. */
+  @container (width >= 44rem) {
+    /* El escalón apretado: entra en el hueco de un portátil con zoom, donde
+       antes la rejilla pedía más de lo que había y el ticket se pintaba fuera. */
     .rejilla-caja {
-      grid-template-columns: 20rem 1fr 22rem;
+      grid-template-columns: 12rem minmax(16rem, 1fr) 14rem;
+    }
+  }
+
+  @container (width >= 52rem) {
+    /* El de la tablet de `INT-2`: a 1024 px de ventana el contenedor mide 56rem,
+       así que es este el que se aplica y al catálogo le quedan 320 px. */
+    .rejilla-caja {
+      grid-template-columns: 16rem minmax(16rem, 1fr) 18rem;
+    }
+  }
+
+  @container (width >= 60rem) {
+    /* Los anchos cómodos, para un monitor. */
+    .rejilla-caja {
+      grid-template-columns: 20rem minmax(16rem, 1fr) 22rem;
     }
   }
 

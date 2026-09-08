@@ -6,143 +6,205 @@
    que va dentro llega en sus propias historias, y cada hueco dice cuál:
 
      · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
-     · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
-     · catálogo, carrito y cobro           — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
+     · catálogo, carrito y cobro             — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
 
    Los huecos declaran **qué falta y cuándo**, no un cero: en este sistema un
    saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
-   venta es el peor sitio para confundirlos.
+   venta es el peor sitio para confundirlos. Por eso las dos columnas vacías son
+   tarjetas con su título y un bloque punteado dentro, y no botones apagados que
+   finjan un cobro que no existe: **una acción deshabilitada promete que un día
+   hará algo**, y aquí lo honesto es decir qué historia lo trae.
 
-   El campo de identificación **ya busca** (`TT-71`): el lector teclea el código y
-   envía Enter, y eso pide el fragmento contra el selector de `TT-70`. No está
-   dentro de un `<form>` a propósito — uno sin acción envía a la propia URL y
-   perdería el foco recargando, que es lo contrario de lo que el POS necesita.
+   El campo de identificación **ya busca** (`TT-71`, `TT-73`): el lector teclea el
+   código y envía Enter, y eso pide el fragmento contra el selector de `TT-70`.
+   No está dentro de un `<form>` a propósito — uno sin acción envía a la propia
+   URL y perdería el foco recargando, que es lo contrario de lo que el punto de
+   venta necesita.
+
+   **Los dos modos son pestañas, y los dos campos existen siempre en el
+   documento**: cambiar de pestaña enseña uno y esconde el otro, no los crea. Es
+   lo que mantiene una sola ruta para las dos vías —el primer criterio de
+   `HU-16`, «con el mismo resultado»— sin que nadie tenga que mantenerlo así.
 {% endcomment %}
 
 {% block titulo %}Punto de venta · SmartFood{% endblock %}
 
+{% block encabezado %}
+  <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Punto de venta</h1>
+  <p class="text-base font-medium text-texto-suave">
+    Escanea la tarjeta del estudiante. El lector funciona sin tocar la pantalla.
+  </p>
+{% endblock %}
+
 {% block identificacion %}
-  <div class="flex flex-col gap-2 rounded-md border border-borde bg-superficie p-4 shadow-sm">
-    <label for="identificacion" class="text-base font-medium text-texto">
-      Escanea la tarjeta
-    </label>
-    {% comment %} `autofocus` para el primer pintado y `data-foco-permanente` para todo lo
+  <section data-modos-de-busqueda
+           class="flex flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+    <h2 class="text-lg font-semibold text-texto">Cliente</h2>
+
+    {% comment %} **El icono va ENCIMA de la etiqueta, no al lado.** En la columna de 20 rem
+       que da `rejilla-caja`, un icono más la palabra al lado dejan el texto
+       recortado —«Tarj…»—, y el rótulo es justo lo que dice qué hace el botón.
+       Apilados manda el ancho de la palabra y entra entera; de paso el área
+       táctil crece, que en una caja se agradece. {% endcomment %}
+    <div role="group" aria-label="Cómo buscar al estudiante" class="flex gap-1.5">
+      <button type="button" data-modo="tarjeta" aria-pressed="true"
+              class="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md
+                     border px-1 py-2 text-base font-medium transition-colors
+                     border-borde bg-superficie text-texto hover:bg-superficie-hover
+                     aria-pressed:border-primario aria-pressed:bg-primario
+                     aria-pressed:text-sobre-primario">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+        <span class="max-w-full truncate">Tarjeta</span>
+      </button>
+      <button type="button" data-modo="documento" aria-pressed="false"
+              class="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md
+                     border px-1 py-2 text-base font-medium transition-colors
+                     border-borde bg-superficie text-texto hover:bg-superficie-hover
+                     aria-pressed:border-primario aria-pressed:bg-primario
+                     aria-pressed:text-sobre-primario">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-identificacion"></use></svg>
+        <span class="max-w-full truncate">Documento</span>
+      </button>
+    </div>
+
+    {% comment %} Panel de la tarjeta: la vía normal.
+
+       `autofocus` para el primer pintado y `data-foco-permanente` para todo lo
        demás: la pistola escribe donde esté el foco, así que si un clic lo lleva a
-       otra parte, `interfaz.js` lo devuelve aquí.
+       otra parte, `interfaz.js` lo devuelve al campo del modo activo.
 
        **El lector es un teclado**: teclea el código y envía Enter. No hay driver
        ni SDK, y por eso el disparo es `keyup[key=='Enter']` y no un botón — el
        cajero no pulsa nada entre tarjeta y tarjeta.
 
        `hx-vals` manda el valor como `codigo`: así el parámetro de la URL no
-       depende de cómo se llame el control en la plantilla.
-
-       Al terminar, `interfaz.js` vacía el campo y le devuelve el foco, para que
-       la siguiente tarjeta escriba sobre un campo limpio sin que nadie borre. {% endcomment %}
-    <input type="text" id="identificacion" name="identificacion"
-           autocomplete="off" autofocus data-foco-permanente
-           placeholder="Código de la tarjeta"
-           hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
-           hx-trigger="keyup[key=='Enter']"
-           hx-vals="js:{codigo: document.getElementById('identificacion').value}"
-           hx-target="#estudiante-identificado"
-           hx-swap="innerHTML"
-           hx-indicator="#buscando-estudiante"
-           class="h-12 w-full rounded-md border border-borde bg-superficie px-3 font-mono
-                  text-lg tracking-widest text-texto transition-colors
-                  placeholder:font-texto placeholder:tracking-normal placeholder:text-texto-suave
-                  hover:border-acento focus:border-acento focus:outline-none">
-    <p class="flex items-center justify-between gap-2 text-sm text-texto-suave">
-      <span>El lector escribe aquí solo. También se puede teclear y pulsar Enter.</span>
-      <span id="buscando-estudiante" class="htmx-indicator shrink-0">Buscando…</span>
-    </p>
+       depende de cómo se llame el control en la plantilla. {% endcomment %}
+    <div data-panel="tarjeta" class="flex flex-col gap-1">
+      <label for="identificacion" class="text-base font-medium text-texto">
+        Código de la tarjeta
+      </label>
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-escaner"></use></svg>
+        <input type="text" id="identificacion" name="identificacion"
+               autocomplete="off" autofocus data-foco-permanente
+               placeholder="Escanea la tarjeta…"
+               hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
+               hx-trigger="keyup[key=='Enter']"
+               hx-vals="js:{codigo: document.getElementById('identificacion').value}"
+               hx-target="#estudiante-identificado"
+               hx-swap="innerHTML"
+               hx-indicator="#buscando-estudiante"
+               class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                      font-mono text-lg tracking-widest text-texto transition-colors
+                      placeholder:font-texto placeholder:tracking-normal placeholder:text-texto-suave
+                      hover:border-acento focus:border-acento focus:outline-none">
+      </div>
+      <p class="text-sm text-texto-suave">
+        Con el lector no hace falta pulsar nada.
+      </p>
+    </div>
 
     {% comment %} `TT-73`, `HU-16`. La alternativa para quien no trae la tarjeta.
 
-       Va **debajo y más pequeño**, no al lado: la vía normal es el lector, y dos
-       campos del mismo peso harían dudar cuál usar con la fila delante. Pero está
-       a la vista y no escondido en un desplegable — cuando hace falta, hace falta
-       ya.
-
-       **Sin `data-foco-permanente`**: el foco es del lector. Al terminar la
-       búsqueda vuelve solo allí, así que el cajero teclea un documento, ve al
-       estudiante y sigue escaneando sin tocar nada.
+       **Sin `data-foco-permanente`**: ese marcador es del lector. Mientras esta
+       pestaña esté activa, `interfaz.js` trata este campo como el del modo
+       activo y le devuelve el foco; al volver a la de tarjeta, el foco vuelve al
+       lector solo.
 
        Pide a la MISMA ruta que el escaneo, con otro parámetro: el resultado tiene
        que ser el mismo (`HU-16`, primer criterio). {% endcomment %}
-    <div class="flex flex-col gap-1 border-t border-borde pt-3">
-      <label for="documento" class="text-sm font-medium text-texto-suave">
-        ¿Sin tarjeta? Busca por documento
+    <div data-panel="documento" hidden class="flex flex-col gap-1">
+      <label for="documento" class="text-base font-medium text-texto">
+        Número de documento
       </label>
-      <input type="text" id="documento" name="documento"
-             autocomplete="off" inputmode="numeric" data-vuelve-al-lector
-             placeholder="Documento del estudiante"
-             hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
-             hx-trigger="keyup[key=='Enter']"
-             hx-vals="js:{documento: document.getElementById('documento').value}"
-             hx-target="#estudiante-identificado"
-             hx-swap="innerHTML"
-             hx-indicator="#buscando-estudiante"
-             class="h-10 w-full rounded-md border border-borde bg-superficie px-3 font-mono
-                    text-base tabular-nums text-texto transition-colors
-                    placeholder:font-texto placeholder:text-texto-suave
-                    hover:border-acento focus:border-acento focus:outline-none">
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-identificacion"></use></svg>
+        <input type="text" id="documento" name="documento"
+               autocomplete="off" inputmode="numeric" data-vuelve-al-lector
+               placeholder="1001234501"
+               hx-get="{% url 'identificacion-en-el-punto-de-venta' %}"
+               hx-trigger="keyup[key=='Enter']"
+               hx-vals="js:{documento: document.getElementById('documento').value}"
+               hx-target="#estudiante-identificado"
+               hx-swap="innerHTML"
+               hx-indicator="#buscando-estudiante"
+               class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                      font-mono text-lg tabular-nums text-texto transition-colors
+                      placeholder:font-texto placeholder:text-texto-suave
+                      hover:border-acento focus:border-acento focus:outline-none">
+      </div>
+      <p class="text-sm text-texto-suave">
+        Escríbelo y pulsa Enter. Sale el mismo resultado que con la tarjeta.
+      </p>
     </div>
-  </div>
+
+    {% comment %} Sin esto, en una red lenta la pantalla se queda igual un segundo y se
+       vuelve a escanear. La clase la enciende y la apaga HTMX. {% endcomment %}
+    <p id="buscando-estudiante" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
+  </section>
 
   {% comment %} Aquí aterriza el fragmento de `TT-71`. Empieza con el hueco de siempre y lo
      reemplaza el primer escaneo; a partir de ahí, cada Enter sustituye lo que
-     hubiera. {% endcomment %}
-  {% comment %} `grow` y no `flex-1`, más un alto mínimo. `flex-1` es `flex: 1 1 0%`: con
+     hubiera.
+
+     `grow` y no `flex-1`, más un alto mínimo. `flex-1` es `flex: 1 1 0%`: con
      base cero, apilada —por debajo de 1024 px— la columna no tiene altura que
      repartir y el bloque colapsa, recortando el texto. `grow` conserva la base
      automática y sigue ocupando el resto en escritorio. {% endcomment %}
   <div id="estudiante-identificado" class="flex grow flex-col">
-    <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
+    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
                 border border-dashed border-borde p-6 text-center">
       <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
                    text-acento-fuerte">
-        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-personas"></use></svg>
       </span>
       <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
       <p class="text-sm text-texto-suave">
         Pasa una tarjeta por el lector y aparecerán aquí su nombre y su documento.
+        Si no la trae, búscalo por documento.
       </p>
       <p class="text-sm text-texto-suave">
         El saldo, lo que lleva gastado hoy y sus restricciones llegan con
-        <strong class="text-texto">HU-17</strong>; buscar por documento, con
-        <strong class="text-texto">HU-16</strong>.
+        <strong class="text-texto">HU-17</strong>.
       </p>
     </div>
   </div>
 {% endblock %}
 
 {% block catalogo %}
-  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
-              border border-dashed border-borde p-6 text-center">
-    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
-      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
-    </span>
-    <p class="text-base font-medium text-texto">Aquí va el catálogo</p>
-    <p class="max-w-sm text-sm text-texto-suave">
-      Los productos con su precio, para añadirlos a la venta con un toque. Llegan
-      con <strong class="text-texto">HU-21</strong>, junto con el descuento
-      simultáneo de saldo y existencias.
-    </p>
-  </div>
+  <section class="flex grow flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+    <h2 class="text-lg font-semibold text-texto">Catálogo</h2>
+    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">Aquí van los productos</p>
+      <p class="max-w-sm text-sm text-texto-suave">
+        Con su precio y sus existencias, para añadirlos a la venta con un toque.
+        Llegan con <strong class="text-texto">HU-21</strong>, junto con el descuento
+        simultáneo de saldo y existencias.
+      </p>
+    </div>
+  </section>
 {% endblock %}
 
 {% block ticket %}
-  <div class="flex min-h-48 grow flex-col items-center justify-center gap-3 rounded-md
-              border border-dashed border-borde p-6 text-center">
-    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
-      <svg class="h-6 w-6" aria-hidden="true"><use href="#i-saldo"></use></svg>
-    </span>
-    <p class="text-base font-medium text-texto">Aquí va la venta</p>
-    <p class="max-w-sm text-sm text-texto-suave">
-      Las líneas, el total y el medio de pago. Llegan con
-      <strong class="text-texto">HU-54</strong> y <strong class="text-texto">HU-21</strong>.
-      Se confirma sin diálogo: el foco es del lector.
-    </p>
-  </div>
+  <section class="flex grow flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+    <h2 class="text-lg font-semibold text-texto">Ticket</h2>
+    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-recibo"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">Aquí va la venta</p>
+      <p class="max-w-sm text-sm text-texto-suave">
+        Las líneas, el total y el medio de pago. Llegan con
+        <strong class="text-texto">HU-54</strong> y <strong class="text-texto">HU-21</strong>.
+        Se confirma sin diálogo: el foco es del lector.
+      </p>
+    </div>
+  </section>
 {% endblock %}
