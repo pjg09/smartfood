@@ -15,9 +15,15 @@ cinco sprints de dos semanas.
 
 | | |
 |---|---|
-| Sprint | **1 de 5** — registro, perfiles, vinculación y catálogo |
-| Avance | 53 de 56 tareas · 23 de 24 Pull Requests |
+| Sprint | **2 de 5** — billetera, inventario y punto de venta |
+| Avance del sprint | 16 de 37 tareas · 7 de 16 Pull Requests |
+| Historias terminadas | 24 de 59 |
+| Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
+
+> El avance de arriba envejece con cada PR. **La fuente es
+> [`docs/plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md)**, que
+> es donde vive el estado de cada tarea; esta tabla solo lo resume.
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
 > está desconectado. El plan gratuito del proveedor no lo sostiene: la base de datos se
@@ -77,13 +83,14 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | Documento | Para qué |
 |---|---|
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
-| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-11`) |
-| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-21`) |
+| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
+| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-23`) |
 | [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 59 historias con sus criterios de aceptación |
 
 > **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-> Once decisiones amplían el anteproyecto y no están incorporadas a él: para saber qué hace
-> y qué no hace el sistema hay que mirar los dos.
+> Ninguna de las decisiones de `[S1]` está incorporada al anteproyecto: para saber qué hace y
+> qué no hace el sistema hay que mirar los dos. *(Antes esta línea decía «once decisiones»;
+> era el número de entonces, y con cada `DEC` nueva hacía falta recordar actualizarlo.)*
 
 **Cómo se está construyendo**
 
@@ -106,6 +113,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
+| [`prueba-de-concepto-del-lector.md`](./docs/prueba-de-concepto-del-lector.md) | Guion de la validación con tarjetas impresas y lector físico (`ENT-02`) |
 
 ---
 
@@ -141,5 +149,5 @@ Antes de abrir un PR, los tres tienen que pasar:
 ```bash
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
-uv run python manage.py test
+uv run python manage.py test --noinput
 ```

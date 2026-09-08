@@ -314,11 +314,52 @@ ninguno (`DEC-9`), así que ahí no hay nada que copiar de la terminal: el enlac
 ```bash
 uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run   # sin cambios sin migrar
-uv run python manage.py test
+uv run python manage.py test --noinput
 ```
 
 Los tres tienen que pasar. El segundo es `DoD-3` y es el que más se olvida: un modelo
 editado sin su migración no da error hasta que otra persona levanta el proyecto.
+
+`--noinput` en el tercero: si una ejecución anterior se interrumpió a media prueba, la base
+de datos de prueba se queda creada y el comando siguiente **se queda esperando** una
+respuesta que nadie escribe. Con la opción, la borra y sigue.
+
+### [S5.1] Mirar una pantalla sin abrir el navegador
+
+Para revisar cómo queda algo —y para adjuntar la evidencia a un PR mientras `DoD-4` esté
+suspendido— no hace falta abrir el navegador a mano: se renderiza la pantalla con el cliente
+de pruebas y se fotografía con Chrome sin interfaz.
+
+```bash
+# 1. Renderizar con `django.test.Client` y guardar el HTML, reescribiendo las
+#    rutas de `/static/` a `file:///…/staticfiles/`.
+# 2. Fotografiar:
+google-chrome --headless --disable-gpu --hide-scrollbars \
+  --allow-file-access-from-files --window-size=1024,600 \
+  --virtual-time-budget=3000 --screenshot=pantalla.png "file://$PWD/pantalla.html"
+```
+
+**Dos detalles sin los cuales la captura miente**, y los dos costaron una ronda de
+diagnóstico:
+
+- **`--allow-file-access-from-files`.** Sin él, el navegador no carga el JavaScript que vive
+  en otra carpeta, así que no corre nada: el tema no se aplica, la cabecera de la portada no
+  se vuelve transparente y el menú no responde. La página **parece rota** cuando lo que falta
+  es un permiso del navegador.
+- **Desactivar transiciones y animaciones**, inyectando
+  `*{transition:none!important;animation:none!important}` en el `<head>`.
+  `--virtual-time-budget` congela el reloj, así que toda transición se fotografía en su
+  **estado inicial**: un elemento que cambia de color al cargar sale del color viejo. Es el
+  más engañoso de los dos, porque la captura sale bien formada y con el valor equivocado.
+
+Para una pantalla con sesión basta `force_login` en el cliente. Y para un estado que no se
+puede dejar en la base —dar de baja a un estudiante es irreversible por diseño (`DEC-7`)— se
+envuelve todo en `transaction.atomic()` y se termina con `transaction.set_rollback(True)`: la
+captura sale y la base queda como estaba.
+
+**El punto de venta se mira a 1024 × 600** (`INT-2`) y la interfaz del acudiente a 390 px de
+ancho (`INT-1`): son los aparatos para los que están diseñadas, no el monitor de quien
+programa.
 
 ---
 
