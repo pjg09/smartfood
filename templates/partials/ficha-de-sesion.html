@@ -1,0 +1,33 @@
+{% comment %} Quién tiene la sesión abierta, en la barra superior (DT-23).
+
+   **Dice el nombre y el rol, no el correo.** Es el cambio que trae este
+   fragmento y tiene motivo: en estas pantallas conviven cuatro roles con la
+   misma barra (`[S11]`), y lo que hace falta saber de un vistazo no es la
+   dirección con la que alguien entró, sino **con qué permisos está mirando**.
+   Un correo largo, además, se come el ancho de la barra y era lo primero que
+   había que ocultar al estrechar; el rol cabe siempre.
+
+   El correo no se pierde: sigue estando en el admin y en la cuenta. Lo que deja
+   de estar es a la vista, en una pantalla que a veces se opera de cara al
+   público — la caja, sin ir más lejos.
+
+   Se pinta una sola vez y se incluye: sale en la barra de la aplicación y en la
+   del punto de venta, que son dos armazones distintos con la misma pieza.
+{% endcomment %}
+{% if user.is_authenticated %}
+  {% comment %} El tope crece con la pantalla: a 768 px la barra ya lleva el logotipo y
+     lo que traiga la pantalla, y un nombre largo sin tope se lo come todo. {% endcomment %}
+  <span class="hidden max-w-56 shrink-0 items-center gap-2 rounded-md border border-borde
+               bg-superficie-hover px-3 py-1.5 tablet:inline-flex escritorio:max-w-80">
+    <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-colegio"></use></svg>
+    {% comment %} `min-w-0` y `truncate` juntos: sin el primero, un nombre largo se niega a
+       encoger, la caja se sale de la cabecera y `overflow-hidden` la corta sin
+       ningún aviso. {% endcomment %}
+    <span class="min-w-0 truncate text-sm font-semibold text-texto">
+      {{ user.nombre|default:user.email }}
+    </span>
+    <span class="hidden shrink-0 text-sm whitespace-nowrap text-texto-suave escritorio:inline">
+      {{ user.get_rol_display }}
+    </span>
+  </span>
+{% endif %}
