@@ -137,11 +137,11 @@ El inventario opera sobre **unidades vendibles**. Nada de insumos, recetas ni co
 |---|---|---|---|
 | `TT-70` | Selector de identificación por código de tarjeta, que respeta el estado del estudiante | Pedro | ☑ |
 | `TT-71` | Campo de escaneo con foco permanente que dispara la búsqueda al recibir Enter (`DT-16`) | Carlos | ☑ |
-| `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas (`ENT-02`, `ALC-OUT-05`) | Alejandro | ☐ |
+| `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas (`ENT-02`, `ALC-OUT-05`) | Alejandro | ☑ |
 
 El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni integración. `TT-71` es un campo con foco que se recupera al perderse.
 
-`TT-72` cierra `ENT-02`, uno de los siete entregables del proyecto. Las tarjetas se imprimen con lo que construyó `TT-37` en el Sprint 1.
+`TT-72` cierra `ENT-02`, uno de los siete entregables del proyecto. Las tarjetas se imprimieron con lo que construyó `TT-37` en el Sprint 1. **Ejecutada el 2026-09-11**: el guion está en `./prueba-de-concepto-del-lector.md` y la evidencia, en `ENT-05`. Con ella `HU-15` queda cerrada.
 
 ### `[HU-16]` Identificación alternativa por documento
 

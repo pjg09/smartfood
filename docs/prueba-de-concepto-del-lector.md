@@ -9,9 +9,9 @@
 | documentos_fuente | `./backlog-historias-de-usuario.md` (`HU-15`, `HU-45`); `./decisiones-tecnicas.md` (`DT-22`, `DT-9`); `./smartfood.md` (`ENT-02`, `ALC-OUT-05`) |
 | tipo_documento | Guion de prueba. **Es el insumo de `ENT-02`**, no un artefacto de Scrum |
 | tarea | `TT-72` (`PR-07`), responsable Alejandro |
-| estado | ☐ **Pendiente de ejecutar**: es trabajo físico |
+| estado | ☑ **Ejecutada** el 2026-09-11, con impresora, tarjetas de papel y lector USB |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Por qué existe este documento
 
@@ -20,8 +20,10 @@ impresora, papel y un lector USB. El software que la hace posible está construi
 probado —`TT-37` imprime la tarjeta, `TT-70` y `TT-71` la leen—, pero *que el aparato
 teclee lo que hay impreso* solo se comprueba pasándolo.
 
-Este guion existe para que la ejecución no dependa de recordar los pasos el día que se
-haga, y para que su resultado quede escrito donde `ENT-05` lo pide.
+**Ya se pasó.** El guion se ejecutó el 2026-09-11 y `ENT-02` queda cerrado con él. El
+documento se conserva porque sigue siendo el guion: si hay que repetir la prueba —otro
+lector, otra impresora, o el día de la demostración del Avance 1— estos son los pasos, y
+`[S1]` sigue diciendo qué puede fallar.
 
 ---
 
@@ -82,13 +84,14 @@ Los tres primeros son de `DT-22`; los dos últimos, de configuración del aparat
 
 ---
 
-## [S4] Cómo se registra el resultado
+## [S4] Dónde está el resultado
 
-Una tabla con una fila por tarjeta —estudiante, intentos, resultado— y una nota con la
-marca y el modelo del lector. Va a `ENT-05` junto con los otros tres escenarios
-críticos, y **se registra tal cual salga**: una prueba de concepto que solo se apunta
-cuando sale bien no es evidencia de nada.
+**La evidencia vive en `ENT-05`**, junto con los otros tres escenarios críticos, no en
+este repositorio: una tabla con una fila por tarjeta —estudiante, intentos, resultado— y
+una nota con la marca y el modelo del lector. Aquí solo consta que la ejecución ocurrió y
+cuándo; el detalle lo aporta `corpus:ENT-05`, que es donde la asignatura lo pide.
 
-Si alguna tarjeta no lee, lo que hay que anotar es **qué se cambió para que leyera**
-—reimprimir al 100 %, cambiar el ángulo, limpiar el lector—, porque eso es lo que
-tendrá que saber quien opere la caja en producción.
+Se registra **tal cual salga**: una prueba de concepto que solo se apunta cuando sale bien
+no es evidencia de nada. Si alguna tarjeta no leyó, lo que hay que anotar es **qué se
+cambió para que leyera** —reimprimir al 100 %, cambiar el ángulo, limpiar el lector—,
+porque eso es lo que tendrá que saber quien opere la caja.
