@@ -1,4 +1,5 @@
-{% comment %} TT-71, TT-73. El estudiante identificado (`HU-15`, `HU-16`).
+{% load dinero %}
+{% comment %} TT-71, TT-73, TT-75. El estudiante identificado y su cobro (`HU-15`, `HU-16`, `HU-17`).
 
    Fragmento, no página (`DT-16`): lo devuelve `identificacion` a cada Enter del
    lector y reemplaza solo la zona del estudiante.
@@ -9,9 +10,21 @@
    por documento es una alternativa al escaneo, **con el mismo resultado**». Con
    dos plantillas, ese «mismo» duraría hasta el primer ajuste de una de ellas.
 
-   Lo que NO hay aquí: saldo, consumo del día ni restricciones. Son `HU-17`
-   (`PR-09`), y el cajero ve el saldo **solo al cobrar** (`[S11]`), no por haber
-   pasado una tarjeta por el lector. La fotografía es `HU-58` (`PR-10`).
+   **El saldo se enseña aquí y solo aquí** (`HU-17`, `[S11]`). «Solo al cobrar»
+   no significa «al confirmar la venta»: el primer criterio de la historia dice
+   «al identificar al estudiante se muestran los tres datos», y su razón de ser
+   es *saber antes de cobrar si la venta va a poder realizarse*. Lo que sostiene
+   el «solo» no es este fragmento, es que `ventas.selectors.informacion_de_cobro`
+   sea el único camino por el que el saldo llega al rol cajero, y exija ese rol
+   (`DT-11`, `DT-15`).
+
+   **De los tres datos hay dos.** Las restricciones vigentes son `HU-09` … `HU-13`,
+   del Sprint 3, y su bloque dice qué falta y qué historia lo trae en lugar de
+   fingir «sin restricciones» — que en una caja se leería como *puede comprar
+   cualquier cosa*, y es lo único que nadie puede afirmar todavía. Por eso `HU-17`
+   no se cierra con este Pull Request.
+
+   La fotografía es `HU-58` (`PR-10`).
 {% endcomment %}
 
 {% if estudiante %}
@@ -47,6 +60,105 @@
         </span>
       </p>
     {% endif %}
+
+    {% comment %} `TT-75`, `HU-17`. La información de cobro.
+
+       Va **dentro de la misma tarjeta** que el nombre y no en una sección aparte:
+       en la caja las tres cosas se leen de un golpe —quién es, cuánto tiene y
+       cuánto lleva—, y separarlas en dos bloques con su propio borde obliga a
+       recorrer la columna dos veces.
+
+       Tarjeta de resumen (`[S2.1]` del sistema visual) **sin su enlace de acción
+       y sin su frase de apoyo**, y las dos ausencias son deliberadas:
+
+       · No hay a dónde ir. Recargar es del acudiente (`HU-06`); ofrecérselo al
+         cajero sería abrirle una puerta que `[S11]` no le da.
+       · «Es la suma de sus movimientos» es una explicación para quien consulta
+         su cuenta, no para quien cobra. Cuesta dos líneas por tarjeta, y a
+         1024 × 600 —la pantalla de `INT-2`— esas líneas empujan la cifra por
+         debajo del pliegue. En la caja, el texto que sobra tiene un precio
+         medible: un gesto de scroll por venta.
+
+       Lo que sí se escribe es lo accionable: cuando no hay saldo, qué hacer.
+    {% endcomment %}
+    <div class="grid gap-2" role="group" aria-label="Información de cobro">
+
+      {% comment %} **El rojo aquí significa algo** (`INV-1`): sin saldo no se le puede
+         cobrar nada, y esa es literalmente la pregunta que trae al cajero a esta
+         pantalla —«saber antes de cobrar si la venta va a poder realizarse»—. No
+         es adorno: con saldo, la tarjeta usa una serie como cualquier otra cifra.
+
+         El rechazo de la venta por saldo insuficiente es `HU-19` (`PR-14`) y
+         ocurre en el servicio, dentro del bloqueo (`INV-1`, `DT-6`). Esto es el
+         aviso previo, no el control. {% endcomment %}
+      <article class="relative flex flex-col gap-1 overflow-hidden rounded-md border px-3 pt-3 pb-2
+                      {% if cobro.saldo > 0 %}border-borde bg-superficie
+                      {% else %}border-error bg-error-suave{% endif %}">
+        <span aria-hidden="true"
+              class="absolute inset-x-0 top-0 h-1 bg-linear-to-r
+                     {% if cobro.saldo > 0 %}from-serie-1 to-serie-1/50
+                     {% else %}from-error to-error/50{% endif %}"></span>
+        <div class="flex items-center gap-2">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md
+                       {% if cobro.saldo > 0 %}bg-serie-1/10 text-serie-1
+                       {% else %}bg-error-suave text-error-fuerte{% endif %}">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+          </span>
+          <h3 class="text-base font-semibold {% if cobro.saldo > 0 %}text-texto-suave{% else %}text-error-fuerte{% endif %}">
+            Saldo
+          </h3>
+        </div>
+        {% comment %} `tabular-nums` y el filtro `dinero`: la cifra se escribe en un solo
+           sitio del sistema, nunca en la plantilla ni en JavaScript. Lleva `COP`
+           porque es la cifra grande de la pantalla; la de abajo, no. {% endcomment %}
+        <p class="font-display text-2xl tabular-nums {% if cobro.saldo > 0 %}text-texto{% else %}text-error-fuerte{% endif %}">
+          {{ cobro.saldo|dinero:"COP" }}
+        </p>
+        {% if cobro.saldo <= 0 %}
+          <p class="text-sm text-error-fuerte">
+            No alcanza para cobrar nada. Su acudiente tiene que recargar.
+          </p>
+        {% endif %}
+      </article>
+
+      {% comment %} Un consumo en cero **sí es un dato** y por eso puede escribirse: el libro
+         de movimientos existe y hoy no tiene ninguna venta suya (`INV-2`). No es
+         el caso del hueco de abajo, donde el cero sería una afirmación que el
+         sistema todavía no puede hacer. {% endcomment %}
+      <article class="relative flex items-center justify-between gap-2 overflow-hidden rounded-md
+                      border border-borde bg-superficie px-3 py-2">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-4 to-serie-4/50"></span>
+        <div class="flex items-center gap-2">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-serie-4/10 text-serie-4">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-tendencia"></use></svg>
+          </span>
+          <h3 class="text-base font-semibold text-texto-suave">Consumo de hoy</h3>
+        </div>
+        <p class="font-display text-lg tabular-nums text-texto">{{ cobro.consumo_del_dia|dinero }}</p>
+      </article>
+
+      {% comment %} `[S2.4]`, bloque punteado: **un hueco dice qué falta y qué historia lo
+         trae**. Aquí no se puede escribir «sin restricciones»: el sistema no
+         guarda ninguna todavía, y en una caja esa frase se leería como *puede
+         comprar cualquier cosa*, que es justo lo que `INV-4` e `INV-5` existen
+         para impedir. Decirlo es el tercer criterio que `HU-17` deja abierto.
+
+         Ni `error` ni `aviso`: no ha fallado nada y no hay ningún riesgo
+         detectado — hay una capacidad que aún no existe (`[S1]`, regla 3). {% endcomment %}
+      <div class="flex items-start gap-2 rounded-md border border-dashed border-borde px-3 py-2">
+        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md
+                     bg-serie-5/10 text-serie-5">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+        </span>
+        <div class="flex flex-col">
+          <p class="text-base font-semibold text-texto">Restricciones</p>
+          <p class="text-sm text-texto-suave">
+            Llegan con <strong class="text-texto">HU-13</strong>, en el Sprint 3. Hasta
+            entonces esta pantalla no puede decir que no tenga.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 {% elif documento %}
   {% comment %} Un documento que no es de nadie. Dice qué hacer ahora, no solo que no
