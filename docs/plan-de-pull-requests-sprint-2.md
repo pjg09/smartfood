@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **17** de 37 | **8** de 16 |
-| Pendientes | 20 | 8 |
+| **Finalizadas** | **20** de 37 | **9** de 16 |
+| Pendientes | 17 | 7 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 8 | 14 |
-| Carlos | 6 | 11 |
-| Alejandro | 3 | 9 |
+| Pedro | 9 | 14 |
+| Carlos | 7 | 11 |
+| Alejandro | 4 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -104,7 +104,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☑ |
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☑ |
 | `PR-08` | `TT-73` | `HU-16` | ☑ |
-| `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
+| `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☑ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
@@ -338,21 +338,31 @@ imprime lo construido en `TT-37`. Es trabajo físico: hubo que imprimirlas de ve
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-17` — **no la cierra**, ver aviso |
 | Invariantes | `S11`: el cajero ve el saldo solo al cobrar |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-74` | Selector de la información de cobro: saldo y consumo del día | Pedro | ☐ |
-| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☐ |
-| `TT-76` | Caso de prueba: el cajero ve el saldo solo al cobrar | Alejandro | ☐ |
+| `TT-74` | Selector de la información de cobro: saldo y consumo del día | Pedro | ☑ |
+| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☑ |
+| `TT-76` | Caso de prueba: el cajero ve el saldo solo al cobrar | Alejandro | ☑ |
 
-> ⚠ **Este PR no cierra `HU-17`.** El tercer criterio de aceptación exige mostrar las
-> **restricciones vigentes**, y las restricciones son `HU-09` … `HU-13`, del **Sprint 3**.
-> El panel se construye aquí con saldo y consumo del día; el bloque de restricciones lo
-> añade `HU-13`, que declara depender de `HU-17`.
+> ⚠ **Este PR no cierra `HU-17`.** Su primer criterio exige los **tres** datos —saldo,
+> consumo del día y restricciones vigentes—, y las restricciones son `HU-09` … `HU-13`, del
+> **Sprint 3**. El panel se construyó aquí con los dos primeros; el bloque de restricciones
+> lo añade `HU-13`, que declara depender de `HU-17`.
 >
 > **No marques `HU-17` como terminada al cerrar el sprint.** `DoD-1` exige que se cumplan
 > *todos* los criterios. Se marca en el Sprint 3.
+
+Lo que sí queda cerrado es el segundo criterio, y es el que costaba: **el cajero ve el
+saldo solo al cobrar**. No lo sostiene un rótulo, lo sostiene que
+`ventas.selectors.informacion_de_cobro` sea el único camino por el que el saldo llega al
+rol cajero y exija ese rol (`DT-11`). `ventas/tests_cobro.py` lo comprueba por las dos
+caras: que lo ve al identificar, y que no lo alcanza por ninguna otra ruta.
+
+El hueco de restricciones **dice qué falta en lugar de afirmar que no hay** (`[S2.4]` del
+sistema visual): en una caja, «sin restricciones» se leería como *puede comprar cualquier
+cosa*, y es lo único que nadie puede afirmar hasta `HU-13`.
 
 ---
 

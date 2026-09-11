@@ -153,11 +153,11 @@ El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-74` | Selector de la información de cobro: saldo y consumo del día del estudiante | Pedro | ☐ |
-| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☐ |
-| `TT-76` | Caso de prueba: el cajero ve el saldo **solo al cobrar**, no como consulta libre (`S11`) | Alejandro | ☐ |
+| `TT-74` | Selector de la información de cobro: saldo y consumo del día del estudiante | Pedro | ☑ |
+| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☑ |
+| `TT-76` | Caso de prueba: el cajero ve el saldo **solo al cobrar**, no como consulta libre (`S11`) | Alejandro | ☑ |
 
-> ⚠ **Esta historia no puede cerrarse en el Sprint 2.** Su tercer criterio de aceptación exige mostrar **las restricciones vigentes**, y las restricciones son `HU-09` … `HU-13`, del **Sprint 3**. El panel se construye aquí con saldo y consumo del día, y el bloque de restricciones lo añade `HU-13`, que declara depender de `HU-17`.
+> ⚠ **Esta historia no se cierra en el Sprint 2.** Su primer criterio exige los **tres** datos —saldo, consumo del día y restricciones vigentes—, y las restricciones son `HU-09` … `HU-13`, del **Sprint 3**. El panel se construyó aquí con los dos primeros; el bloque de restricciones lo añade `HU-13`, que declara depender de `HU-17`. Mientras tanto, ese bloque dice qué falta en lugar de afirmar que el estudiante no tiene ninguna: en una caja, «sin restricciones» se leería como *puede comprar cualquier cosa*.
 >
 > Bajo `DoD-1` —«todos los criterios de aceptación se cumplen»— `HU-17` queda **abierta al cierre del sprint** y se marca terminada en el Sprint 3. No es un descuido de la planeación: es una consecuencia del reparto en cinco sprints, y vale más declararla que descubrirla al revisar. Ver `ANEXO A`.
 
