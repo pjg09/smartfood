@@ -117,9 +117,13 @@ class LasDosViasDanElMismoResultadoTest(TestCase):
         self.assertIn("No se le puede vender", cuerpo)
         self.assertEqual(self._por_tarjeta(), cuerpo)
 
-    def test_por_documento_tampoco_ensena_el_saldo(self):
-        """`[S11]`: el cajero lo ve **solo al cobrar**, venga por donde venga."""
-        self.assertNotIn("Saldo", self._por_documento())
+    def test_por_documento_tambien_trae_el_saldo(self):
+        """Segundo criterio de `HU-16`: el saldo se aplica igual por las dos vías.
+
+        Quien olvida la tarjeta no puede acabar en una venta montada a ciegas
+        porque su vía enseñe menos que la del lector.
+        """
+        self.assertIn("Saldo", self._por_documento())
 
     def test_un_documento_desconocido_dice_que_hacer(self):
         cuerpo = self.client.get(self.url, {"documento": "9999999999"}).content.decode()

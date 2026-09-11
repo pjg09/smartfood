@@ -82,6 +82,20 @@ tarjetas aunque su texto mida distinto.
 La franja superior usa una serie, **nunca `error`, `aviso` ni `exito`**: es decoración, y
 esos tres significan algo (`[S1]`, regla 3).
 
+**En el punto de venta la tarjeta va sin enlace y sin frase de apoyo**
+(`templates/ventas/partials/estudiante-identificado.html`, `TT-75`). No es un descuido:
+
+- No hay a dónde ir. Recargar es del acudiente (`HU-06`); ofrecérselo al cajero abriría una
+  puerta que `[S11]` no le da.
+- «Es la suma de sus movimientos» explica una cuenta a quien la consulta, no a quien cobra.
+  Cuesta dos líneas por tarjeta, y a 1024 × 600 esas líneas empujan la cifra fuera de la
+  vista. En una caja el texto que sobra tiene un precio medible: un gesto de scroll por
+  venta.
+
+Y ahí **la franja sí puede ser `error`**: un saldo en cero significa que no se le puede
+cobrar nada (`INV-1`). Es la excepción que confirma la regla 3 — el color de estado se gasta
+donde el estado existe, no como adorno.
+
 ### [S2.2] Tabla de datos
 
 **Una tabla no se reflujar a 390 px sin volverse ilegible.** Desde `tablet` es una tabla con
@@ -147,9 +161,9 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 
 ---
 
-## [ANEXO A] Las cuatro trampas que ya se pagaron
+## [ANEXO A] Las cinco trampas que ya se pagaron
 
-Las cuatro fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
+Las cinco fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
 
 | Trampa | Qué pasa | Salida |
 |---|---|---|
@@ -157,6 +171,13 @@ Las cuatro fallan **en silencio**: no dan error, y la pantalla simplemente se ve
 | `@container` en el mismo elemento que la rejilla | Un elemento nunca es su propio contenedor: las consultas no encuentran contra qué medirse | `@container` va en el envoltorio |
 | `tailwind build` sin `--force` | Compara la fecha de `fuente.css`, no la de las plantillas; contesta «up to date» y la clase nueva no está | `--force`, o `tailwind watch` en otra terminal |
 | `{% now "F" %}` | Devuelve el mes capitalizado, y en una fecha en español va en minúscula | `{% now "F" as mes %}` y luego `{{ mes\|lower }}` |
+| Fragmento HTMX que aterriza bajo el pliegue | En una columna con `overflow-y-auto`, lo que devuelve el intercambio puede nacer fuera de la vista — y `autofocus` mantiene el scroll donde está el campo | `hx-swap="… show:top"`, que sube el destino. Reordenar la columna **no** sirve: el foco vuelve a arrastrar el scroll |
+
+La quinta se pagó en `TT-75`. Conviene saber la medida, porque la pantalla de `INT-2` no da
+para más: **a 1024 × 600 la columna del estudiante deja 317 px visibles y la caja de
+búsqueda ocupa 298**. Todo lo que un fragmento traiga nace por debajo del pliegue, así que
+en el punto de venta un intercambio HTMX que no suba su destino es un intercambio que el
+cajero no ve.
 
 Para mirar una pantalla sin abrir el navegador —y para adjuntar la evidencia a un PR mientras
 `DoD-4` esté suspendido— la receta está en `[S5.1]` de `./desarrollo.md`.

@@ -56,7 +56,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
-| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73` |
+| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -201,7 +201,19 @@ resultados distintos. Un estudiante de baja o desactivado **se identifica igual*
 avisando de que no se le puede vender: decir «esa tarjeta no es de nadie» sería mentir y
 dejaría al cajero repitiendo el escaneo.
 
-**Todavía no cobra**: el saldo y las restricciones son `HU-17`, y la venta es `HU-21`.
+**Y al identificar aparece con qué se cobra** (`HU-17`): el saldo y el consumo del día,
+en el mismo fragmento y en la misma petición. Sin saldo, la tarjeta se pinta en rojo y
+dice qué hacer — es el «para» de la historia, *saber antes de cobrar si la venta va a
+poder realizarse*. Las restricciones vigentes son el tercer dato y llegan con `HU-13`, en
+el Sprint 3; hasta entonces su bloque **dice qué falta en vez de afirmar que no hay**,
+porque «sin restricciones» se leería en una caja como *puede comprar cualquier cosa*.
+
+**Aquí, y solo aquí, ve el cajero un saldo.** `[S11]` se lo concede «solo al cobrar», y lo
+que lo sostiene no es un rótulo: el selector que lo devuelve exige el rol cajero, y el
+cajero recibe `403` en el panel del acudiente, en la ficha del estudiante y en la recarga
+—las otras tres pantallas donde hay un saldo escrito—.
+
+**Todavía no cobra**: la venta es `HU-21`.
 
 ---
 
@@ -225,14 +237,14 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Restricciones y límite diario (`HU-09`…`HU-13`),
-identificación y venta en el punto de venta (`HU-15`…`HU-22`), el descuento y las
-alertas de inventario (`HU-28`, `HU-29`), reportes y recomendaciones
-(`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
+Restricciones y límite diario (`HU-09`…`HU-13`), la venta en el punto de venta
+(`HU-18`…`HU-22`), el descuento y las alertas de inventario (`HU-28`, `HU-29`), reportes y
+recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
-Del punto de venta existe **la pantalla y su puerta**, no lo que ocurre dentro: `TT-57` y
-`TT-58` son tareas de habilitación y **no cierran ninguna historia**. Saldo, restricciones
-y venta llegan en el Sprint 2, salvo las restricciones, que son del 3.
+Del punto de venta existe **la columna del estudiante entera** —identificarlo por las dos
+vías (`HU-15`, `HU-16`) y ver con qué se le cobra (`HU-17`)— y **los huecos de las otras
+dos**: catálogo y ticket llegan con `HU-21` y `HU-54`. `HU-17` sigue marcada como abierta
+aun con su panel construido: le falta el bloque de restricciones, que es del Sprint 3.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que

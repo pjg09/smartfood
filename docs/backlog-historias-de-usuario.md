@@ -16,7 +16,7 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) — **24 terminadas**, 35 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08`, `HU-16`, `HU-27` y `HU-52` en el Sprint 2 |
+| historias | 59 (`HU-01` … `HU-59`) — **25 terminadas**, 34 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08`, `HU-15`, `HU-16`, `HU-27` y `HU-52` en el Sprint 2 |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
@@ -924,7 +924,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 12 | `HU-11` | Bloqueo por alérgeno | EPI-3 | USR-2 | Must | ☐ |
 | 13 | `HU-13` | Restricciones no desactivables | EPI-3 | USR-2 | Must | ☐ |
 | 14 | `HU-14` | Código de tarjeta aleatorio | EPI-4 | USR-1 | Must | ☑ |
-| 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☐ |
+| 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☑ |
 | 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☐ |
 | 17 | `HU-58` | Fotografía visible al cobrar | EPI-11 | USR-3 | Must | ☐ |
 | 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☐ |
@@ -970,7 +970,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**24 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27` y `HU-16`, que cierran `PR-02` … `PR-06` y `PR-08` del Sprint 2. `HU-15` sigue abierta: le falta `TT-72`, la prueba con tarjetas impresas. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**25 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15` y `HU-16`, que cierran `PR-02` … `PR-08` del Sprint 2. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` esté integrado: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 

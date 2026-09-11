@@ -1,12 +1,13 @@
 {% extends "base-punto-de-venta.html" %}
 
-{% comment %} TT-57, TT-58, TT-71, TT-73. La pantalla del punto de venta (`INT-2`).
+{% comment %} TT-57, TT-58, TT-71, TT-73, TT-75. La pantalla del punto de venta (`INT-2`).
 
-   **Es una habilitación: coloca las tres zonas y el foco, y no cobra nada.** Lo
-   que va dentro llega en sus propias historias, y cada hueco dice cuál:
+   **Coloca las tres zonas y el foco, y todavía no cobra.** La columna del
+   estudiante ya está llena: identifica (`HU-15`, `HU-16`) y enseña saldo y
+   consumo del día (`HU-17`). Las otras dos siguen siendo huecos, y cada uno dice
+   qué historia lo llena:
 
-     · saldo, consumo del día y restricciones — `HU-17` (`PR-09`)
-     · catálogo, carrito y cobro             — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
+     · catálogo, carrito y cobro — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
 
    Los huecos declaran **qué falta y cuándo**, no un cero: en este sistema un
    saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
@@ -93,7 +94,7 @@
                hx-trigger="keyup[key=='Enter']"
                hx-vals="js:{codigo: document.getElementById('identificacion').value}"
                hx-target="#estudiante-identificado"
-               hx-swap="innerHTML"
+               hx-swap="innerHTML show:top"
                hx-indicator="#buscando-estudiante"
                class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
                       font-mono text-lg tracking-widest text-texto transition-colors
@@ -128,7 +129,7 @@
                hx-trigger="keyup[key=='Enter']"
                hx-vals="js:{documento: document.getElementById('documento').value}"
                hx-target="#estudiante-identificado"
-               hx-swap="innerHTML"
+               hx-swap="innerHTML show:top"
                hx-indicator="#buscando-estudiante"
                class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
                       font-mono text-lg tabular-nums text-texto transition-colors
@@ -145,9 +146,19 @@
     <p id="buscando-estudiante" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
   </section>
 
-  {% comment %} Aquí aterriza el fragmento de `TT-71`. Empieza con el hueco de siempre y lo
-     reemplaza el primer escaneo; a partir de ahí, cada Enter sustituye lo que
-     hubiera.
+  {% comment %} Aquí aterriza el fragmento de `TT-71` y `TT-75`. Empieza con el hueco de
+     siempre y lo reemplaza el primer escaneo; a partir de ahí, cada Enter
+     sustituye lo que hubiera.
+
+     **`show:top` en el `hx-swap`, y es lo que hace utilizable `HU-17`.** A
+     1024 × 600 —la pantalla que `INT-2` declara— esta columna mide 317 px
+     visibles y la caja de búsqueda de arriba ocupa 298: el estudiante nace por
+     debajo del pliegue. Y no basta con acortar el panel, porque `autofocus`
+     lleva el scroll al campo de escaneo en cada pintado. Con `show:top`, cada
+     tarjeta pasada trae su propio resultado a la vista, que es lo que la
+     historia promete —ver el saldo **de inmediato** al identificar—. La
+     alternativa, poner el panel encima del campo, no sirve: el foco volvería a
+     arrastrar el scroll al fondo y además escondería las pestañas de modo.
 
      `grow` y no `flex-1`, más un alto mínimo. `flex-1` es `flex: 1 1 0%`: con
      base cero, apilada —por debajo de 1024 px— la columna no tiene altura que
@@ -162,12 +173,8 @@
       </span>
       <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
       <p class="text-sm text-texto-suave">
-        Pasa una tarjeta por el lector y aparecerán aquí su nombre y su documento.
-        Si no la trae, búscalo por documento.
-      </p>
-      <p class="text-sm text-texto-suave">
-        El saldo, lo que lleva gastado hoy y sus restricciones llegan con
-        <strong class="text-texto">HU-17</strong>.
+        Pasa una tarjeta por el lector y aparecerán aquí su nombre, su saldo y lo
+        que lleva gastado hoy. Si no la trae, búscalo por documento.
       </p>
     </div>
   </div>

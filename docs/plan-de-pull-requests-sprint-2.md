@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **16** de 37 | **7** de 16 |
-| Pendientes | 21 | 9 |
+| **Finalizadas** | **20** de 37 | **9** de 16 |
+| Pendientes | 17 | 7 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 8 | 14 |
-| Carlos | 6 | 11 |
-| Alejandro | 2 | 9 |
+| Pedro | 9 | 14 |
+| Carlos | 7 | 11 |
+| Alejandro | 4 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -102,9 +102,9 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-04` | `TT-64` | `HU-07` | ☑ |
 | `PR-05` | `TT-65`–`TT-66` | `HU-52` · `INVD-2` | ☑ |
 | `PR-06` | `TT-67`–`TT-69` | `HU-27` · base de `INV-3` e `INV-8` | ☑ |
-| `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ◐ software sí; falta `TT-72` |
+| `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☑ |
 | `PR-08` | `TT-73` | `HU-16` | ☑ |
-| `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☐ |
+| `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☑ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
@@ -289,26 +289,26 @@ Inventario sobre **unidades vendibles**: ni insumos, ni recetas, ni costo de pro
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-15` |
 | Invariantes | consume `INV-7`; cierra **`ENT-02`** |
-| Estado | ◐ **Parcial**: `TT-70` y `TT-71` integrados; falta `TT-72` |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
 | `TT-70` | Selector de identificación por código de tarjeta, que respeta el estado del estudiante | Pedro | ☑ |
 | `TT-71` | Campo de escaneo con foco permanente que dispara la búsqueda al recibir Enter | Carlos | ☑ |
-| `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas | Alejandro | ☐ |
+| `TT-72` | Prueba de concepto con el lector físico y tarjetas impresas | Alejandro | ☑ |
 
 El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni SDK.
 
 `TT-72` cierra `ENT-02`, uno de los siete entregables del proyecto, con las tarjetas que
-imprime lo construido en `TT-37`. Es trabajo físico: hay que imprimirlas de verdad.
+imprime lo construido en `TT-37`. Es trabajo físico: hubo que imprimirlas de verdad.
 
-> **`PR-07` se integra con `TT-72` pendiente, y `HU-15` no se cierra con él.** El software
-> está construido y probado —el escaneo identifica, normaliza y respeta el estado—, pero el
-> tercer criterio de la historia es *validar a escala reducida con tarjetas físicas*, y eso
-> exige una impresora y un lector. `DoD-1` no admite dar por terminada una historia cuyo
-> criterio no se ha comprobado. El guion de la ejecución está en
-> `./prueba-de-concepto-del-lector.md`; al ejecutarlo se marca `TT-72`, se cierra `HU-15` y
-> este PR pasa a ☑.
+> **`PR-07` se integró con `TT-72` pendiente y se completó después.** El software entró
+> antes —el escaneo identifica, normaliza y respeta el estado—, pero el tercer criterio de
+> la historia es *validar a escala reducida con tarjetas físicas*, y eso exigía una
+> impresora y un lector; `DoD-1` no admite dar por terminada una historia cuyo criterio no
+> se ha comprobado. **El guion se ejecutó el 2026-09-11** con impresora, tarjetas de papel
+> y lector USB: `TT-72` queda marcada, `HU-15` cerrada y este PR pasa a ☑. Los pasos están
+> en `./prueba-de-concepto-del-lector.md` y la evidencia, en `ENT-05`.
 
 ---
 
@@ -338,21 +338,31 @@ imprime lo construido en `TT-37`. Es trabajo físico: hay que imprimirlas de ver
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-17` — **no la cierra**, ver aviso |
 | Invariantes | `S11`: el cajero ve el saldo solo al cobrar |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-74` | Selector de la información de cobro: saldo y consumo del día | Pedro | ☐ |
-| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☐ |
-| `TT-76` | Caso de prueba: el cajero ve el saldo solo al cobrar | Alejandro | ☐ |
+| `TT-74` | Selector de la información de cobro: saldo y consumo del día | Pedro | ☑ |
+| `TT-75` | Panel del estudiante en el punto de venta | Carlos | ☑ |
+| `TT-76` | Caso de prueba: el cajero ve el saldo solo al cobrar | Alejandro | ☑ |
 
-> ⚠ **Este PR no cierra `HU-17`.** El tercer criterio de aceptación exige mostrar las
-> **restricciones vigentes**, y las restricciones son `HU-09` … `HU-13`, del **Sprint 3**.
-> El panel se construye aquí con saldo y consumo del día; el bloque de restricciones lo
-> añade `HU-13`, que declara depender de `HU-17`.
+> ⚠ **Este PR no cierra `HU-17`.** Su primer criterio exige los **tres** datos —saldo,
+> consumo del día y restricciones vigentes—, y las restricciones son `HU-09` … `HU-13`, del
+> **Sprint 3**. El panel se construyó aquí con los dos primeros; el bloque de restricciones
+> lo añade `HU-13`, que declara depender de `HU-17`.
 >
 > **No marques `HU-17` como terminada al cerrar el sprint.** `DoD-1` exige que se cumplan
 > *todos* los criterios. Se marca en el Sprint 3.
+
+Lo que sí queda cerrado es el segundo criterio, y es el que costaba: **el cajero ve el
+saldo solo al cobrar**. No lo sostiene un rótulo, lo sostiene que
+`ventas.selectors.informacion_de_cobro` sea el único camino por el que el saldo llega al
+rol cajero y exija ese rol (`DT-11`). `ventas/tests_cobro.py` lo comprueba por las dos
+caras: que lo ve al identificar, y que no lo alcanza por ninguna otra ruta.
+
+El hueco de restricciones **dice qué falta en lugar de afirmar que no hay** (`[S2.4]` del
+sistema visual): en una caja, «sin restricciones» se leería como *puede comprar cualquier
+cosa*, y es lo único que nadie puede afirmar hasta `HU-13`.
 
 ---
 

@@ -17,6 +17,7 @@ from personas.selectors import (
     identificar_por_codigo_de_tarjeta,
     identificar_por_documento,
 )
+from ventas.selectors import informacion_de_cobro
 
 
 def _solo_el_cajero(usuario):
@@ -78,10 +79,20 @@ def identificacion(request):
     documento es una alternativa al escaneo, **con el mismo resultado**»: con dos
     vistas, ese «mismo» dependería de que nadie las dejara divergir.
 
-    `HU-17` trae el saldo, el consumo del día y las restricciones (`PR-09`); aquí
-    solo se identifica. Lo que sí se dice desde ahora es **si el estudiante puede
-    comprar**: identificar a alguien de baja y callarlo dejaría al cajero
-    montando una venta que va a fallar al final (`INVD-2`).
+    **Y trae la información de cobro** (`TT-75`, `HU-17`): identificar al
+    estudiante y mostrar su saldo son el mismo momento —el primer criterio de la
+    historia dice «al identificar al estudiante se muestran los tres datos»—, así
+    que son la misma petición. Partirlo en dos obligaría al campo de escaneo a
+    encadenar una segunda llamada por cada tarjeta, que es tiempo que la caja no
+    tiene.
+
+    Quién puede ver ese saldo lo decide `informacion_de_cobro`, no esta vista: la
+    regla de `[S11]` —el cajero lo ve **solo al cobrar**— vive en el selector
+    (`DT-15`). Aquí solo se llama cuando hay a quién cobrarle.
+
+    Lo que se dice además es **si el estudiante puede comprar**: identificar a
+    alguien de baja y callarlo dejaría al cajero montando una venta que va a
+    fallar al final (`INVD-2`).
     """
     _solo_el_cajero(request.user)
 
@@ -97,8 +108,19 @@ def identificacion(request):
     except Estudiante.DoesNotExist:
         estudiante = None
 
+    cobro = (
+        informacion_de_cobro(actor=request.user, estudiante=estudiante)
+        if estudiante is not None
+        else None
+    )
+
     return render(
         request,
         "ventas/partials/estudiante-identificado.html",
-        {"estudiante": estudiante, "codigo": codigo, "documento": documento},
+        {
+            "estudiante": estudiante,
+            "cobro": cobro,
+            "codigo": codigo,
+            "documento": documento,
+        },
     )
