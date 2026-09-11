@@ -69,8 +69,10 @@ class ElPuntoDeVentaNoAdelantaNingunaHistoriaTest(TestCase):
     """La pantalla declara qué falta; no enseña cifras que todavía no existen.
 
     Un cero en el saldo se lee como un saldo de cero, y en la caja esa confusión
-    cuesta una venta mal cobrada. `HU-17` trae el saldo, el consumo del día y las
-    restricciones; hasta entonces, el hueco dice de quién es.
+    cuesta una venta mal cobrada. La pantalla recién abierta **no tiene a quién
+    cobrarle**, así que no escribe ninguna cifra: el saldo y el consumo del día
+    llegan con el estudiante identificado (`HU-17`, `PR-09`), y el catálogo y el
+    cobro siguen siendo huecos que dicen qué historia los llena.
     """
 
     def setUp(self):
@@ -78,18 +80,19 @@ class ElPuntoDeVentaNoAdelantaNingunaHistoriaTest(TestCase):
         self.cuerpo = self.client.get(reverse("punto-de-venta")).content.decode()
 
     def test_declara_las_historias_que_llenaran_cada_hueco(self):
-        """`HU-15` y `HU-16` ya no están en la lista, y por la mejor razón:
-        **están construidas**. El escaneo es `TT-70` y `TT-71`; la búsqueda por
-        documento, `TT-73`. Los dos campos buscan de verdad, así que sus huecos
-        dejaron de ser huecos. Lo que queda por llenar es lo de abajo.
+        """La lista mengua a medida que las historias llegan, y eso es lo sano.
 
-        `HU-16` sale de la lista en este mismo Pull Request: hasta ahora el aviso
-        del hueco la citaba como pendiente aunque el campo ya existiera, que es
-        la clase de texto que se queda viejo sin que nadie lo note.
+        `HU-15` y `HU-16` salieron cuando los dos campos empezaron a buscar de
+        verdad (`TT-70`, `TT-71`, `TT-73`). `HU-17` sale en `PR-09`: la columna
+        del estudiante ya enseña saldo y consumo del día, así que su hueco dejó
+        de ser un hueco — el único que queda de esa historia es el bloque de
+        restricciones, y vive en el fragmento, no en esta página.
+
+        Queda el cobro. El día que un hueco cite una historia ya construida, este
+        texto se ha quedado viejo sin que nadie lo note, y por eso se comprueba.
         """
-        for historia in ["HU-17", "HU-21"]:
-            with self.subTest(historia=historia):
-                self.assertIn(historia, self.cuerpo)
+        self.assertIn("HU-21", self.cuerpo)
+        self.assertNotIn("HU-17", self.cuerpo)
 
     def test_los_huecos_no_son_botones_apagados(self):
         """Un hueco dice qué historia lo llena; no finge la acción que falta.

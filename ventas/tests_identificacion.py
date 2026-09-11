@@ -6,10 +6,11 @@ Los tres criterios de `HU-15`:
    teclea el código y envía Enter. No hay driver ni SDK, así que «integrar» es
    que el campo dispare la búsqueda con esa tecla — lo que se comprueba aquí es
    la búsqueda; que el aparato teclee de verdad es `TT-72`.
-2. **El escaneo identifica al estudiante** y trae su información de venta. El
-   saldo, el consumo del día y las restricciones son `HU-17` (`PR-09`): aquí se
-   identifica y se dice **si puede comprar**, que es lo que decide si la venta
-   tiene sentido.
+2. **El escaneo identifica al estudiante** y trae su información de venta. Esa
+   información es `HU-17` y llega desde `PR-09`: saldo y consumo del día, más el
+   aviso de **si puede comprar**. Lo que se prueba aquí es que el escaneo la
+   trae; que las cifras sean las correctas y que nadie más las vea es
+   `ventas/tests_cobro.py`.
 3. **Validación a escala reducida con tarjetas físicas.** Es `TT-72`, trabajo con
    una impresora y un lector de verdad: **no se puede automatizar**, y por eso
    esta historia no se cierra en este PR.
@@ -121,14 +122,21 @@ class ElEscaneoEnElPuntoDeVentaTest(TestCase):
         self.assertNotIn("<html", cuerpo)
         self.assertNotIn("<body", cuerpo)
 
-    def test_no_ensena_el_saldo(self):
-        """`[S11]`: el cajero ve el saldo **solo al cobrar** (`HU-17`), no por
-        haber pasado una tarjeta por el lector."""
+    def test_el_escaneo_trae_tambien_la_informacion_de_venta(self):
+        """Segundo criterio de `HU-15`: identifica **y trae su información de
+        venta** (`HU-17`).
+
+        Hasta `PR-09` esta prueba afirmaba lo contrario —que el fragmento no
+        enseñaba el saldo—, y era cierto: `HU-17` no estaba construida. Lo que
+        `[S11]` dice del cajero es «solo al cobrar», y escanear una tarjeta en la
+        caja **es** cobrar; lo que ese «solo» excluye es la consulta libre, y eso
+        lo vigila `ventas/tests_cobro.py`, que es donde puede vigilarse de verdad.
+        """
         cuerpo = self.client.get(
             self.url, {"codigo": self.estudiante.codigo_tarjeta}
         ).content.decode()
 
-        self.assertNotIn("Saldo", cuerpo)
+        self.assertIn("Saldo", cuerpo)
 
     def test_una_tarjeta_desconocida_dice_que_hacer(self):
         """No «no existe» a secas: lo que el cajero necesita saber es qué hacer
