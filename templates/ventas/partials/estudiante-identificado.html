@@ -225,6 +225,24 @@
         </div>
       </div>
     </div>
+
+    {% comment %} `TT-89`, `HU-53`. **La vuelta atrás que faltaba.** Identificado un
+       estudiante por equivocación —o atendido ya—, el siguiente cliente puede ser
+       un docente, y hasta ahora la única salida era pasar una tarjeta que no
+       fuera de nadie o recargar la página.
+
+       Es un enlace de acento y no un botón sólido: en esta columna la pieza
+       pesada tiene que ser la cifra del saldo, no una acción de deshacer
+       (`[S2.1]`). Y dice **qué pasa**, no «quitar»: la venta deja de salir de su
+       saldo y pasa a cobrarse en efectivo o por transferencia. {% endcomment %}
+    <button type="button"
+            hx-post="{% url 'cliente-generico' %}"
+            hx-target="#estudiante-identificado"
+            hx-swap="innerHTML"
+            data-quitar-cliente
+            class="self-start text-sm font-semibold text-acento-fuerte hover:underline">
+      Cobrar sin identificar a nadie
+    </button>
   </div>
 {% elif documento %}
   {% comment %} Un documento que no es de nadie. Dice qué hacer ahora, no solo que no

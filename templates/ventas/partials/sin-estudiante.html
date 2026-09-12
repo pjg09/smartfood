@@ -19,4 +19,17 @@
         Pasa una tarjeta por el lector y aparecerán aquí su nombre, su saldo y lo
         que lleva gastado hoy. Si no la trae, búscalo por documento.
       </p>
+      {% comment %} `TT-89`, `HU-53`. **Hay que decirlo, o el cajero no lo sabe.** «Pasa una
+         tarjeta» se lee como *hay que identificar para vender*, y `DEC-1` dice lo
+         contrario: un docente, alguien del personal o un visitante compran sin
+         estar registrados en ningún sitio.
+
+         No hay botón que encender. Una venta a cliente genérico **es** una venta
+         sin estudiante, así que el modo genérico es este estado: el cajero
+         monta la venta y cobra. {% endcomment %}
+      <p class="text-sm text-texto-suave" data-venta-generica>
+        <strong class="text-texto">No hace falta identificar a nadie para vender.</strong>
+        Un docente, alguien del personal o un visitante pagan en efectivo o por
+        transferencia: monta la venta y cobra.
+      </p>
     </div>

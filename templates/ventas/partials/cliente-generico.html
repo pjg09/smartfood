@@ -1,0 +1,13 @@
+{% comment %} TT-89. La vuelta a la venta sin identificar (`HU-53`, `DEC-1`).
+
+   Dos fragmentos en una respuesta: la columna del estudiante vuelve a su estado
+   vacío, y el medio de pago —que viaja fuera de banda— vuelve a ofrecer efectivo
+   y transferencia, que son los de una venta genérica (`HU-54`).
+
+   Es la misma pareja que devuelve el cobro, y por el mismo motivo: quién es el
+   cliente y con qué puede pagar son el mismo hecho contado dos veces.
+{% endcomment %}
+
+{% include "ventas/partials/sin-estudiante.html" %}
+
+{% include "ventas/partials/medio-de-pago.html" with oob=True %}
