@@ -67,7 +67,13 @@ PERMISOS_POR_ROL = {
         "inventario.movimientoinventario": ["add", "view"],
     },
     # `USR-3`. «Registrar ventas» y «Consultar restricciones» —consultar, no
-    # modificar: ahí está `INV-4`—. Ningún modelo suyo existe todavía.
+    # modificar: ahí está `INV-4`—.
+    #
+    # **`ventas.Venta` ya existe (`TT-78`) y sigue sin haber permiso, igual que
+    # la recarga del acudiente.** El cajero no entra al admin: `INT-2` es su
+    # interfaz, y quién puede vender lo decide el servicio de venta con el
+    # `actor` que recibe (`DT-15`). Un permiso aquí no protegería nada y
+    # sugeriría un camino por el admin que no existe.
     Rol.CAJERO: {},
     # `USR-2`. «Recargar saldo», «fijar límite diario», «configurar y retirar
     # restricciones» y consultar los reportes de su hijo. Ningún modelo suyo
@@ -96,9 +102,15 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         "Consultar reportes de consumo de su hijo",
     ],
     Rol.CAJERO: [
-        "Registrar ventas en el punto de venta",
+        # Como la recarga del acudiente: **construida, y sin permiso de admin**.
+        # El modelo existe desde `TT-78` y el cobro llega con `TT-80`; lo que no
+        # hay ni habrá es una puerta por `INT-3` para el cajero.
+        "Registrar ventas (modelo desde TT-78, sin permiso de admin)",
         "Consultar restricciones de un estudiante",
-        "Consultar saldo de un estudiante (solo al cobrar)",
+        # Hecha en `INT-2` (`HU-17`, `TT-74`): la concede
+        # `ventas.selectors.informacion_de_cobro`, que exige el rol, no un
+        # permiso de Django.
+        "Consultar saldo de un estudiante (hecha en INT-2, solo al cobrar)",
     ],
     Rol.ADMINISTRADOR: [
         "Consultar restricciones de un estudiante",
@@ -117,6 +129,10 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
 # y `USR-4` **en la capa de datos**, no en la interfaz.
 
 ESCRITURA_PROHIBIDA = {
+    # «Saldo» sigue aquí **aunque el cajero acabe de estrenar el medio de pago**
+    # (`TT-79`): elegir con qué se cobra no es escribir el saldo. El movimiento
+    # lo asienta el servicio de venta contra el libro, y sobre él el cajero no
+    # tiene ninguna otra vía (`INV-2`, `DT-24`).
     Rol.CAJERO: ["restricciones alimentarias", "saldo", "límite diario"],
     Rol.ADMINISTRADOR: ["restricciones alimentarias", "saldo", "límite diario"],
 }
