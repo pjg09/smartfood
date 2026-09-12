@@ -57,6 +57,8 @@ los mismos colores desde `DT-23`.
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
 | `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su fotografía, su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75`, `TT-77` |
+| `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
+| `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -233,7 +235,21 @@ aquí solo queda constancia de que se pagó así (`ALC-OUT-01`). La pantalla lo 
 quien lee «Transferencia» en una caja puede entender que el sistema la cobra o que recarga
 algo.
 
-**Todavía no cobra**: la venta es `HU-21`.
+**Y cobra** (`HU-21`, `TT-80`). El catálogo enseña precio y existencias, cada producto es un
+botón, el ticket suma y el botón cobra **sin preguntar** —`INT-2` descarta los diálogos: un
+modal roba el foco, y el foco es del lector—. Al confirmar, el saldo y las existencias se
+descuentan **en la misma transacción**: o las dos cosas, o ninguna.
+
+**Lo que impide que dos cajas cobren el mismo saldo es el orden** (`DT-6`): se bloquea,
+luego se valida, luego se escribe. Validar antes daría el mismo resultado en una prueba
+secuencial y dejaría la billetera en negativo con dos cajeros a la vez. Hay cuatro pruebas
+de concurrencia que lo vigilan, y se comprobó que fallan si alguien invierte ese orden.
+
+Tras cobrar, la caja queda lista para el siguiente: el carrito se vacía, el cliente se
+olvida y el catálogo vuelve con las existencias de ahora.
+
+**Lo que todavía no evalúa la venta** son las restricciones alimentarias y el límite diario
+(`HU-18`, `HU-20`), del Sprint 3. Su sitio es el mismo punto donde hoy se lee el saldo.
 
 ---
 
@@ -252,20 +268,30 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    nadie en el mismo momento. `HU-46`, `INVD-4`.
 6. **Dar de baja**: no borra nada y el acudiente lo ve en su panel. `HU-51`.
 7. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+8. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
+   historial, no de un contador. `HU-27`, `INV-3`.
+9. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
+   fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
+10. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
+    bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
+    `INV-3`.
+11. **Volver a cobrar sin saldo suficiente**: la venta se rechaza y no se descuenta nada.
+    `INV-1`; el escenario `TST-2` con su evidencia es `HU-19`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-Restricciones y límite diario (`HU-09`…`HU-13`), la venta en el punto de venta
-(`HU-18`…`HU-22`), el descuento y las alertas de inventario (`HU-28`, `HU-29`), reportes y
+Restricciones y límite diario (`HU-09`…`HU-13`), los rechazos que dependen de ellas
+(`HU-18`, `HU-20`), la venta a cliente genérico desde la pantalla (`HU-53`), la instantánea
+nutricional (`HU-22`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
 recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
-Del punto de venta existe **la columna del estudiante entera** —identificarlo por las dos
-vías (`HU-15`, `HU-16`), ver su fotografía (`HU-58`) y con qué se le cobra (`HU-17`)— y **el
-medio de pago** (`HU-54`). Lo que falta es el catálogo, el carrito y el total, que llegan
-con `HU-21`. `HU-17` sigue marcada como abierta aun con su panel construido: le falta el
-bloque de restricciones, que es del Sprint 3.
+**El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
+fotografía (`HU-58`), el saldo y el consumo del día (`HU-17`), el medio de pago (`HU-54`), y
+cobra descontando saldo y existencias en una sola transacción (`HU-21`). `HU-17` sigue
+marcada como abierta aun con su panel construido: le falta el bloque de restricciones, que
+es del Sprint 3.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
@@ -273,8 +299,9 @@ es la venta del punto de venta.
 
 La app `reportes` **no está creada**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` nació en `TT-57` para que la
-pantalla tuviera dónde vivir y **ya tiene sus modelos** (`TT-78`): la venta, con su medio de
-pago y su estudiante opcional, y la línea de venta. Lo que falta es el servicio que las
-asienta, que es `TT-80`. `billetera` e `inventario` tienen los suyos desde `TT-59` y
+pantalla tuviera dónde vivir y hoy tiene sus modelos (`TT-78`) y **su servicio** (`TT-80`):
+la venta con su medio de pago y su estudiante opcional, la línea de venta, y la transacción
+única que sostiene `INV-1`, `INV-2` e `INV-3` a la vez. Lo que le falta a la línea es
+congelar el precio y los nutrientes, que es `TT-84`. `billetera` e `inventario` tienen los suyos desde `TT-59` y
 `TT-67`, y **ninguno es una columna `saldo` ni `existencias`**; desde `TT-78` los dos
 señalan además la venta que origina cada movimiento.

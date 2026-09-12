@@ -16,7 +16,7 @@
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 59 (`HU-01` … `HU-59`) — **27 terminadas**, 32 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08`, `HU-15`, `HU-16`, `HU-27`, `HU-52`, `HU-54` y `HU-58` en el Sprint 2 |
+| historias | 59 (`HU-01` … `HU-59`) — **28 terminadas**, 31 pendientes; 18 al cierre del Sprint 1, más `HU-06`, `HU-07`, `HU-08`, `HU-15`, `HU-16`, `HU-21`, `HU-27`, `HU-52`, `HU-54` y `HU-58` en el Sprint 2 |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
@@ -927,7 +927,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☑ |
 | 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☐ |
 | 17 | `HU-58` | Fotografía visible al cobrar | EPI-11 | USR-3 | Must | ☑ |
-| 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☐ |
+| 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☑ |
 | 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must | ☐ |
 | 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
 | 21 | `HU-20` | Venta rechazada por límite diario (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
@@ -970,7 +970,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**27 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58` y `HU-54`, que cierran `PR-02` … `PR-08`, `PR-10` y `PR-11` del Sprint 2. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**28 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54` y `HU-21`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-12` del Sprint 2. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 

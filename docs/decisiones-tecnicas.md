@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 25 (`DT-1` … `DT-25`) |
+| decisiones | 26 (`DT-1` … `DT-26`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-25`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-26`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -209,7 +209,7 @@ Tres reglas lo sostienen:
 - La respuesta reemplaza el panel del estudiante: fotografía (`HU-58`), saldo, consumo del día y restricciones (`HU-17`).
 - **Sin diálogos de confirmación.** Cada uno cuesta un clic y un segundo por venta.
 - Todo navegable con teclado: el cajero no debería tocar el ratón.
-- **Alpine.js solo aquí**, para el estado local del carrito. En acudiente y administración, HTMX solo.
+- **Sin JavaScript de estado**: el carrito vive en la sesión y cada gesto devuelve un fragmento (`DT-26`, que corrige la previsión de Alpine.js de esta misma decisión). En acudiente y administración, HTMX solo.
 
 `INT-3` no lleva plantillas propias: lo cubre el admin (`DT-2`). Tailwind se compila con su CLI, sin CDN.
 
@@ -374,6 +374,28 @@ Ninguna función escribe un `MovimientoBilletera` ni un `MovimientoInventario` p
 **La ruta de acceso pasa a ser `/login/`.** Es una URL que la gente lee y teclea, y `login` es la palabra que espera de un producto web; el resto de las rutas siguen en español porque nombran cosas del dominio (`/carga/`, `/mis-estudiantes/`, `/punto-de-venta/`). **El nombre interno sigue siendo `acceso`**, que es lo que leen `LOGIN_URL`, doce `{% url %}` y once pruebas: ahí manda la convención del repositorio, y renombrarlo no habría cambiado nada en pantalla. `DEC-12` conserva `/acceso/` porque un registro de decisión no se reescribe; la ruta vigente es la de aquí.
 
 **Consecuencia sobre `DT-16`.** Sigue vigente. Lo que `DT-25` añade es que los armazones son cuatro y no tres —`base-punto-de-venta.html` ya existe— y que el del punto de venta lleva una columna de iconos que **no se despliega**: no es la barra de `INT-1` con otro estado, es lo que esa barra es allí.
+
+---
+
+#### `[DT-26]` El carrito del punto de venta vive en el servidor, no en el navegador
+
+**Corrige:** `DT-16`, que preveía **Alpine.js** «solo aquí, para el estado local del carrito». La decisión de `DT-16` sobre HTMX y sobre los fragmentos sigue entera; lo único que se retira es esa frase.
+
+**El hecho que lo obliga: el dinero se escribe en un solo sitio.** Un carrito en el navegador tiene que pintar el importe de cada renglón y el total mientras el cajero los toca, y eso exige **un segundo formateador de dinero en JavaScript** junto al de `billetera/templatetags/dinero.py`. El día que cambie el formato —y ya cambió una vez, en `DT-25`— la misma pantalla enseña dos monedas.
+
+No es una preocupación hipotética: **`DT-25` ya descartó exactamente esto por su nombre** al adoptar la pantalla de recarga, donde se rechazó «su total vivo recalculado en el navegador, que exigiría un segundo formateador de dinero y rompería la regla de `TT-64`». Lo que `DT-26` hace es aplicar esa misma regla donde más cifras hay.
+
+**Decidido:**
+
+- El carrito y el estudiante al que se le está cobrando viven en la **sesión** (`ventas/carrito.py`).
+- Cada gesto —añadir, descontar, quitar, vaciar— es un `POST` que devuelve **el fragmento del ticket** (`DT-16`).
+- **No se añade Alpine.js.** El proyecto sigue con HTMX y un único `interfaz.js` sin dependencias.
+
+**Lo que cuesta y por qué se acepta.** Un viaje al servidor por toque, en lugar de ninguno. En la práctica es una petición que devuelve un fragmento pequeño contra un servidor en la misma red del colegio, mientras que la alternativa ahorra esos viajes y añade una segunda fuente de verdad —el carrito del navegador y el que el cobro valida— más un formateador duplicado. `INT-2` pide velocidad, y la petición que de verdad importa por su latencia es la del escaneo, que no cambia.
+
+**Lo que gana además, y no estaba en el argumento original:** el carrito **sobrevive a un refresco**. En una caja, perder la venta montada porque alguien rozó `F5` es un error que se paga con la fila esperando.
+
+**Lo que no cambia.** Nada de esto autoriza nada: `registrar_venta` vuelve a validarlo todo contra la base, dentro del bloqueo (`DT-6`). La sesión es comodidad de pantalla, no fuente de verdad.
 
 ---
 
