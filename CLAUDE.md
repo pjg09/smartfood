@@ -8,7 +8,9 @@ Guía de trabajo para Claude Code en este repositorio.
 trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UPB, 202601).
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
-**El Sprint 1 está cerrado** —56 de 56 tareas y 18 de 18 historias—. **Estamos en el Sprint 2**, semanas 8 y 9, con el **Avance 1** (`EVA-3`, 20 % de la nota) en la semana 10.
+**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y **13 de 14 historias** el segundo, cerrado el 2026-09-12. La que falta es `HU-17`, a la que le queda un criterio que depende del Sprint 3 — está declarado, no olvidado.
+
+**Lo siguiente es el Avance 1** (`EVA-3`, 20 % de la nota), en la semana 10: lo que se enseña es lo que hay en `main`. **El Sprint 3 todavía no tiene backlog ni plan de PR**; hasta que los tenga, no hay `TT-nn` nuevo que trabajar.
 
 ## Antes de escribir código, lee esto
 
@@ -18,12 +20,12 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-25`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-26`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-2-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-57` … `TT-93`), con responsable |
-| `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y **el estado de cada una** |
-| `docs/sprint-1-backlog.md` | El sprint anterior, cerrado. Consulta histórica |
-| `docs/plan-de-pull-requests-sprint-1.md` | El plan del sprint anterior, cerrado. Documento de archivo |
+| `docs/sprint-2-backlog.md` | Las 37 tareas del **último sprint cerrado** (`TT-57` … `TT-93`), con responsable |
+| `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y el estado de cada una. **El estado manda aquí** |
+| `docs/sprint-1-backlog.md` | El Sprint 1, cerrado. Consulta histórica |
+| `docs/plan-de-pull-requests-sprint-1.md` | El plan del Sprint 1, cerrado. Documento de archivo |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -262,22 +264,29 @@ automático está desconectado a propósito.
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).
 
-## Al trabajar una tarea del Sprint 2
+## Al trabajar una tarea de un sprint
 
-1. Busca la tarea en `docs/sprint-2-backlog.md` (`TT-nn`) y la historia de la que cuelga (`HU-nn`).
+1. Busca la tarea en el sprint backlog vigente (`TT-nn`) y la historia de la que cuelga (`HU-nn`).
 2. Lee los **criterios de aceptación** de esa historia en `docs/backlog-historias-de-usuario.md`.
    Son el contrato: ni menos, ni más.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
    está ahí, para.
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
-5. Al terminar, marca la tarea `☑` **en los dos documentos** —`plan-de-pull-requests-sprint-2.md` y
-   `sprint-2-backlog.md`— dentro del propio PR, y actualiza los contadores. Deben coincidir.
+5. Al terminar, marca la tarea `☑` **en los dos documentos** —el plan de PR y el sprint backlog—
+   dentro del propio PR, y actualiza los contadores. Deben coincidir. **Comprueba la redacción de
+   las dos filas**: no siempre es idéntica, y un reemplazo que sirve en un documento puede no
+   alcanzar la fila del otro. Pasó con `TT-87`.
 6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
-   `backlog-historias-de-usuario.md`. **Ojo con `HU-17`: `PR-09` no la cierra** (le faltan
-   las restricciones del Sprint 3).
+   `backlog-historias-de-usuario.md`. **`HU-17` es la excepción viva**: su panel está construido
+   desde `PR-09`, y sigue abierta porque le faltan las restricciones del Sprint 3.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. `[ANEXO D]` del backlog verifica el grafo de dependencias.
+
+**Una tarea que otra ya satisfizo se marca igual, diciendo dónde se hizo.** Pasó dos veces en el
+Sprint 2: `TT-86` llegó con `TT-80` —`INV-1` no admite un commit intermedio en el que una venta
+deje deuda— y `TT-88`, también. Dejarlas sin marcar falsea el avance; marcarlas sin decirlo
+esconde que el reparto previsto no era el real.
 
 ## Documentación
 

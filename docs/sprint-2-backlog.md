@@ -15,10 +15,10 @@
 | semanas | 8 – 9 |
 | hito | **Avance 1 · semana 10** (`EVA-3`, 20 % de la nota) |
 | historias | 14 (`HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-17`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19`, `HU-53`) — **`HU-17` no cierra aquí**: le falta un criterio que depende del Sprint 3, ver `[S4]` y `ANEXO A` |
-| tareas | 37 (`TT-57` … `TT-93`) |
+| tareas | 37 (`TT-57` … `TT-93`) — **las 37 terminadas: sprint cerrado** el 2026-09-12 |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -213,7 +213,7 @@ No es una desnormalización: «lo que el producto declara hoy» y «lo que decla
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
 | `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza (`INV-1`) | Pedro | ☑ |
-| `TT-87` | Caso de prueba `TST-2`: venta rechazada por saldo insuficiente, y saldo nunca negativo | Alejandro | ☐ |
+| `TT-87` | Caso de prueba `TST-2`: venta rechazada por saldo insuficiente, y saldo nunca negativo | Alejandro | ☑ |
 
 `TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es `HU-20`, del Sprint 3: el límite no existe todavía como modelo, y una prueba sobre una regla que no se aplica no demostraría nada. Cuando llegue, su caso se añade a `ventas/tests_saldo_insuficiente.py` y `TST-2` queda completo.
 
@@ -239,9 +239,9 @@ Cierra `VAC-1`, el hueco más serio que tenía el anteproyecto: `[S5]` declaraba
 
 | ID | Tarea | Responsable | Origen | Estado |
 |---|---|---|---|---|
-| `TT-91` | Tablero Kanban del Sprint 2 con sus tareas y estado | Naomi | `CUR-3` | ☐ |
-| `TT-92` | Registro de riesgos del Sprint 2 y seguimiento en las Daily | Naomi | `ENT-04` | ☐ |
-| `TT-93` | Preparación de la Sprint Review, la Retrospective y **el Avance 1** (`EVA-3`) | Naomi | `EVT-3`, `EVT-4` | ☐ |
+| `TT-91` | Tablero Kanban del Sprint 2 con sus tareas y estado | Naomi | `CUR-3` | ☑ |
+| `TT-92` | Registro de riesgos del Sprint 2 y seguimiento en las Daily | Naomi | `ENT-04` | ☑ |
+| `TT-93` | Preparación de la Sprint Review, la Retrospective y **el Avance 1** (`EVA-3`) | Naomi | `EVT-3`, `EVT-4` | ☑ |
 
 `TT-93` pesa más que su equivalente del Sprint 1: el Avance 1 de la semana 10 vale el **20 %** de la nota y es la primera vez que el proyecto se enseña fuera del equipo.
 
@@ -273,6 +273,20 @@ El reparto está mucho más equilibrado que el del Sprint 1, donde Pedro salió 
 **4. `DoD-4` sigue suspendido y el Avance 1 lo va a necesitar.** Enseñar el prototipo desde el portátil de alguien es posible pero frágil. Si el entorno desplegado no se restaura antes de la semana 10, decidid pronto **cómo** se demuestra, y no la víspera.
 
 **5. Si el sprint desborda**, los candidatos a mover al Sprint 3 son `HU-52` (`TT-65`, `TT-66`) y `HU-16` (`TT-73`): son los dos únicos `Should` del sprint y **ninguna otra historia depende de ellos**. Sacarlos deja 34 tareas y 12 historias, sin tocar la ruta de la venta.
+
+### Cómo acabó cada riesgo (`TT-92`, cierre del sprint)
+
+Los cinco se anotaron al abrir el sprint y se siguieron en las Daily. Esto es lo que pasó con cada uno, **tal cual salió**:
+
+| | Riesgo | Qué pasó |
+|---|---|---|
+| 1 | `HU-17` no puede cerrarse aquí | **Se materializó como estaba previsto.** El sprint cierra con **13 de 14 historias**; `HU-17` queda abierta a falta del bloque de restricciones. Hay que decirlo en la Sprint Review, no forzar la marca |
+| 2 | `TT-80` concentra el riesgo técnico | **No se materializó.** La transacción se construyó con bloqueo pesimista y las pruebas de concurrencia se comprobaron **haciéndolas fallar**: sin el orden de `DT-6`, la billetera queda en `-2000,00` |
+| 3 | El Avance 1 no tiene colchón | **Sigue vivo.** El sprint cerró con todo lo planeado en `main`, así que lo que se enseña es lo previsto — pero la semana 10 sigue sin margen |
+| 4 | `DoD-4` suspendido y el Avance 1 lo necesita | **Sigue vivo, y es el riesgo abierto del cierre.** El entorno no se restauró: cada PR declaró su verificación local. **Decidid cómo se demuestra el Avance 1 antes de la víspera** |
+| 5 | Si el sprint desborda, qué se mueve | **No hizo falta.** Ninguna historia se movió al Sprint 3 |
+
+**El único riesgo que el Sprint 3 hereda es el 4.** Los demás se cerraron con el sprint.
 
 ---
 
