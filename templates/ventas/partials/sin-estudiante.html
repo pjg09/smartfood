@@ -1,0 +1,22 @@
+{% comment %} TT-57, TT-75. El estado vacío de la columna del estudiante.
+
+   Vive aparte porque lo pintan dos sitios: la pantalla al abrirse, y el cobro —
+   que lo devuelve fuera de banda para que la caja quede lista para el siguiente
+   cliente—. Con el bloque escrito dos veces, el día que cambie el texto una de
+   las dos copias se queda vieja.
+
+   **No es un hueco de `[S2.4]`**: no falta ninguna historia, falta una tarjeta.
+   Por eso dice qué hacer y no qué historia lo trae.
+{% endcomment %}
+    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                   text-acento-fuerte">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-personas"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
+      <p class="text-sm text-texto-suave">
+        Pasa una tarjeta por el lector y aparecerán aquí su nombre, su saldo y lo
+        que lleva gastado hoy. Si no la trae, búscalo por documento.
+      </p>
+    </div>

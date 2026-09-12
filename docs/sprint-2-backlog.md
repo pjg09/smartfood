@@ -186,14 +186,16 @@ El **estudiante opcional** es lo que habilita `HU-53`: una venta sin estudiante 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-80` | Servicio de venta: **una** transacción con bloqueo pesimista sobre la billetera y los productos (`DT-6`) | Pedro | ☐ |
-| `TT-81` | Carrito y confirmación de la venta en el punto de venta, **sin diálogos de confirmación** (`DT-16`) | Carlos | ☐ |
-| `TT-82` | Caso de prueba de concurrencia: dos ventas simultáneas sobre la misma billetera | Alejandro | ☐ |
-| `TT-83` | Caso de prueba: saldo y existencias se descuentan en la misma operación, o ninguno (`INV-2`, `INV-3`) | Alejandro | ☐ |
+| `TT-80` | Servicio de venta: **una** transacción con bloqueo pesimista sobre la billetera y los productos (`DT-6`) | Pedro | ☑ |
+| `TT-81` | Carrito y confirmación de la venta en el punto de venta, **sin diálogos de confirmación** (`DT-16`) | Carlos | ☑ |
+| `TT-82` | Caso de prueba de concurrencia: dos ventas simultáneas sobre la misma billetera | Alejandro | ☑ |
+| `TT-83` | Caso de prueba: saldo y existencias se descuentan en la misma operación, o ninguno (`INV-2`, `INV-3`) | Alejandro | ☑ |
 
 **`TT-80` es la tarea de mayor riesgo del proyecto.** `DT-6` es explícito: se bloquea, **luego** se valida, **luego** se escribe. Validar fuera del bloqueo abre la ventana en la que dos cajeros cobran a la vez, ambos ven saldo suficiente e `INV-1` se rompe. Con 2 a 5 cajeros en una ventana de veinte a treinta minutos, esa concurrencia es real.
 
-`TT-82` existe porque una prueba secuencial no detecta ese fallo.
+`TT-82` existe porque una prueba secuencial no detecta ese fallo. **Se comprobó que lo detecta**: con la validación movida fuera del bloqueo, las cuatro pruebas de concurrencia fallan y la billetera queda en `-2000,00`.
+
+**`TT-86` quedó satisfecha aquí.** La tarea es «validación del saldo dentro del bloqueo», y no se puede integrar `TT-80` sin ella: `INV-1` no admite un solo commit de `main` en el que una venta pueda dejar deuda. Lo que le queda a `PR-14` es `TT-87`, el escenario crítico `TST-2` con su evidencia para `ENT-05`.
 
 ### `[HU-22]` Venta con información nutricional congelada
 
@@ -208,7 +210,7 @@ No es una desnormalización: «lo que el producto declara hoy» y «lo que decla
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza (`INV-1`) | Pedro | ☐ |
+| `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza (`INV-1`) | Pedro | ☑ |
 | `TT-87` | Caso de prueba `TST-2`: venta rechazada por saldo insuficiente, y saldo nunca negativo | Alejandro | ☐ |
 
 `TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es `HU-20`, del Sprint 3.

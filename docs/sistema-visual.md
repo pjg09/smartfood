@@ -102,6 +102,12 @@ donde el estado existe, no como adorno.
 la cabecera tintada; por debajo, cada fila es una ficha de dos franjas —arriba lo que se
 busca de un vistazo, abajo el detalle sobre fondo hundido—.
 
+**La misma partición en dos franjas vale para una columna estrecha, no solo para el móvil.**
+El renglón del ticket del punto de venta (`TT-81`) la usa: en 20 rem no caben el nombre del
+producto, su importe y tres botones en una línea, y lo que se recorta es siempre el nombre
+—«Empa…»—, que es justo lo que el cajero lee para saber si se equivocó. Arriba el nombre y
+el importe; abajo la cantidad y los gestos.
+
 El icono de cada rótulo va **siempre antes del texto**, también en la columna alineada a la
 derecha: invertirlo deja el icono descolgado.
 
@@ -169,6 +175,10 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 ## [S4] Lo que no se dibuja
 
 - **Un botón deshabilitado en lugar de un hueco.** Ver `[S2.4]`.
+- **Un diálogo de confirmación en el punto de venta.** `INT-2` los descarta: cada uno cuesta
+  un clic y un segundo por venta, y roba el foco —que es del lector—. El botón de cobrar
+  cobra (`TT-81`). Lo que protege de un cobro accidental no es un modal: es que el ticket
+  diga después exactamente qué se cobró.
 - **Una opción que la base va a rechazar**, ni siquiera apagada. Si no aplica, no se dibuja:
   ver `[S2.3]`. La diferencia con un hueco es que un hueco declara algo que llegará, y esto
   no va a llegar nunca — el efectivo no es un medio de pago pendiente para un estudiante.
@@ -189,14 +199,15 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 
 ---
 
-## [ANEXO A] Las cinco trampas que ya se pagaron
+## [ANEXO A] Las seis trampas que ya se pagaron
 
-Las cinco fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
+Las seis fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
 
 | Trampa | Qué pasa | Salida |
 |---|---|---|
 | Variante sobre una clase de `@layer components` | `escritorio:rejilla-caja` no se compila; la pantalla se queda en una columna | El punto de ruptura va dentro de la clase, en `fuente.css`. Si el efecto sí depende de un estado, se escribe con utilidades |
 | `@container` en el mismo elemento que la rejilla | Un elemento nunca es su propio contenedor: las consultas no encuentran contra qué medirse | `@container` va en el envoltorio |
+| `@container` puesto **demasiado arriba** | Peor que la anterior, porque sí hay contra qué medirse: la rejilla mide el lienzo entero y no su columna. El catálogo se partía en dos columnas de 145 px y los nombres salían «Empanada d…» | El contenedor es el ancestro **más cercano**: cada zona que responda a su propio ancho lleva el suyo |
 | `tailwind build` sin `--force` | Compara la fecha de `fuente.css`, no la de las plantillas; contesta «up to date» y la clase nueva no está | `--force`, o `tailwind watch` en otra terminal |
 | `{% now "F" %}` | Devuelve el mes capitalizado, y en una fecha en español va en minúscula | `{% now "F" as mes %}` y luego `{{ mes\|lower }}` |
 | Fragmento HTMX que aterriza bajo el pliegue | En una columna con `overflow-y-auto`, lo que devuelve el intercambio puede nacer fuera de la vista — y `autofocus` mantiene el scroll donde está el campo | `hx-swap="… show:top"`, que sube el destino. Reordenar la columna **no** sirve: el foco vuelve a arrastrar el scroll |

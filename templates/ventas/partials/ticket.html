@@ -1,0 +1,184 @@
+{% load dinero %}
+{% comment %} TT-80, TT-81. La venta en curso y su cobro (`HU-21`).
+
+   Fragmento, no página (`DT-16`): lo devuelven el carrito y el cobro, y es la
+   columna que cambia con cada gesto.
+
+   **Sus tres estados viven aquí**, por el mismo motivo que los del estudiante
+   identificado: vacío, con líneas, y recién cobrado. Quien pulsa no sabe de
+   antemano cuál va a ser —una venta puede rechazarse—, y partirlo obligaría al
+   botón a decidir a dónde pedir antes de saber qué pasa.
+
+   **Sin diálogo de confirmación** (`INT-2`): el botón cobra. Un modal roba el
+   foco, y el foco es del lector.
+{% endcomment %}
+
+<div id="ticket-de-venta" class="flex grow flex-col gap-3">
+
+  {% if cobrada %}
+    {% comment %} `exito` significa algo y aquí significa exactamente esto: el dinero y las
+       existencias ya se movieron, en la misma operación (`HU-21`). Se enseña el
+       total cobrado porque es lo que el cajero repite en voz alta. {% endcomment %}
+    <div class="flex items-start gap-3 rounded-md border border-exito bg-exito-suave p-4"
+         role="status" data-venta-cobrada>
+      <svg class="mt-0.5 h-5 w-5 text-exito-fuerte" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      <div class="flex flex-col gap-1">
+        <p class="text-base font-semibold text-exito-fuerte">Venta cobrada</p>
+        <p class="font-display text-2xl tabular-nums text-exito-fuerte">
+          {{ total_cobrado|dinero:"COP" }}
+        </p>
+        <p class="text-sm text-exito-fuerte">
+          {% if cobrada.estudiante %}
+            Descontado del saldo de {{ cobrada.estudiante.nombre }}.
+          {% else %}
+            Cobrada en {{ cobrada.get_medio_pago_display|lower }}.
+          {% endif %}
+          Ya está en el historial: el saldo y las existencias salen de ahí.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if rechazo %}
+    {% comment %} `INV-1`. Rojo, y con el motivo exacto: en una caja con cola, «no se pudo
+       cobrar» obliga a adivinar. **Y el carrito se queda como estaba** — no se
+       ha escrito nada, así que arreglar el motivo y volver a pulsar es todo lo
+       que hace falta. {% endcomment %}
+    <div class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4"
+         role="alert" data-venta-rechazada>
+      <svg class="mt-0.5 h-5 w-5 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <div class="flex flex-col gap-1 text-sm text-error-fuerte">
+        <p class="text-base font-semibold">La venta no se realizó</p>
+        <p>{{ rechazo }}</p>
+        <p>No se descontó nada: ni saldo ni existencias.</p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if lineas %}
+    <ul class="flex flex-col gap-2">
+      {% for linea in lineas %}
+        {% comment %} `data-linea-de-venta` es el marcador propio de esta pantalla: una
+           prueba que cuente renglones no puede buscar el nombre del producto, que
+           también sale en las etiquetas de los tres botones. {% endcomment %}
+        {% comment %} **Dos filas y no una.** El nombre del producto es lo que el cajero lee
+           para saber si se equivocó, y en la columna de 20 rem no cabe junto al
+           importe y a tres botones: salía «Empa…». Arriba el nombre y el importe,
+           que es lo que se busca de un vistazo; abajo el detalle y los gestos.
+        {% endcomment %}
+        <li data-linea-de-venta
+            class="flex flex-col gap-1 rounded-md border border-borde bg-superficie p-2">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="min-w-0 truncate text-base font-medium text-texto">{{ linea.producto.nombre }}</span>
+            <span class="shrink-0 font-display text-base tabular-nums text-texto">
+              {{ linea.importe|dinero }}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm text-texto-suave">
+              <span class="tabular-nums">{{ linea.cantidad }}</span> ×
+              {{ linea.producto.precio|dinero }}
+            </span>
+
+          {% comment %} Menos, más y quitar. Tres gestos de un toque y ningún campo de
+             número: teclear una cantidad con el lector en la mano cuesta más que
+             pulsar tres veces, y además le quita el foco al escáner. {% endcomment %}
+          <div class="flex shrink-0 items-center gap-1">
+            <button type="button" aria-label="Quitar una unidad de {{ linea.producto.nombre }}"
+                    hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                    hx-vals='{"producto": "{{ linea.producto.id }}", "accion": "descontar"}'
+                    hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                    class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                           text-texto transition-colors hover:bg-superficie-hover">−</button>
+            <button type="button" aria-label="Añadir una unidad de {{ linea.producto.nombre }}"
+                    hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                    hx-vals='{"producto": "{{ linea.producto.id }}", "accion": "anadir"}'
+                    hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                    class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                           text-texto transition-colors hover:bg-superficie-hover">+</button>
+            <button type="button" aria-label="Quitar {{ linea.producto.nombre }} de la venta"
+                    hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                    hx-vals='{"producto": "{{ linea.producto.id }}", "accion": "quitar"}'
+                    hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                    class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                           text-texto-suave transition-colors hover:border-error
+                           hover:bg-error-suave hover:text-error-fuerte">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+            </button>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="mt-auto flex flex-col gap-3 border-t border-borde pt-3">
+      <div class="flex items-baseline justify-between gap-3">
+        <span class="text-base font-semibold text-texto-suave">Total</span>
+        <span class="font-display text-2xl tabular-nums text-texto" data-total-de-la-venta>
+          {{ total|dinero:"COP" }}
+        </span>
+      </div>
+
+      {% comment %} **El botón cobra, y no pregunta.** `INT-2` descarta los diálogos: cada
+         uno cuesta un clic y un segundo por venta. Lo que protege de un cobro
+         accidental no es un modal, es que la venta se pueda deshacer con una
+         devolución — y que el ticket diga después exactamente qué se cobró.
+
+         El medio de pago viaja incluido: `hx-include` recoge el campo oculto del
+         bloque de la otra columna, que es quien sabe cuál aplica (`HU-54`). {% endcomment %}
+      <button type="button"
+              hx-post="{% url 'cobrar' %}"
+              hx-include="[name='medio_pago']"
+              hx-target="#ticket-de-venta"
+              hx-swap="innerHTML"
+              data-cobrar
+              class="flex h-12 w-full items-center justify-center gap-2 rounded-md
+                     bg-primario px-4 text-base font-semibold text-sobre-primario
+                     transition-colors hover:bg-primario-fuerte focus:outline-none">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-correcto"></use></svg>
+        Cobrar {{ total|dinero }}
+      </button>
+
+      <button type="button"
+              hx-post="{% url 'carrito-del-punto-de-venta' %}"
+              hx-vals='{"accion": "vaciar"}'
+              hx-target="#ticket-de-venta" hx-swap="innerHTML"
+              class="text-sm font-medium text-texto-suave transition-colors hover:text-error-fuerte">
+        Vaciar la venta
+      </button>
+    </div>
+  {% elif not cobrada %}
+    {% comment %} Vacío, no hueco: no falta ninguna historia. Dice qué hacer. {% endcomment %}
+    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-recibo"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">Todavía no hay nada en la venta</p>
+      <p class="max-w-sm text-sm text-texto-suave">
+        Pulsa un producto del catálogo y aparecerá aquí con su importe.
+      </p>
+    </div>
+  {% endif %}
+</div>
+
+{% comment %} `TT-81`. Lo que el cobro arrastra consigo.
+
+   **Van aquí, fuera de `#ticket-de-venta`, y no dentro.** HTMX solo atiende
+   `hx-swap-oob` en los elementos de primer nivel de la respuesta; anidados no
+   fallan, sencillamente no se intercambian — y la pantalla se queda con el
+   cliente anterior puesto sin dar ningún aviso.
+
+   Al cobrar, la venta terminó: el cliente se olvida —dejarlo puesto invitaría a
+   cobrarle la siguiente venta a quien ya se fue—, el medio de pago vuelve a su
+   estado sin estudiante y el catálogo se repinta porque las existencias que
+   acaba de mover son las que el siguiente cajero va a leer.
+{% endcomment %}
+{% if oob_estudiante %}
+  <div id="estudiante-identificado" class="flex grow flex-col" hx-swap-oob="true">
+    {% include "ventas/partials/sin-estudiante.html" %}
+  </div>
+  {% include "ventas/partials/medio-de-pago.html" with oob=True %}
+{% endif %}
+{% if oob_catalogo %}{% include "ventas/partials/catalogo.html" %}{% endif %}

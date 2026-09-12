@@ -11,7 +11,9 @@ from decimal import Decimal
 from django.core.exceptions import PermissionDenied
 
 from billetera.selectors import consumo_del_dia, saldo_de
+from catalogo.selectors import productos_en_el_catalogo
 from cuentas.models import Rol
+from inventario.selectors import existencias_por_producto
 
 
 @dataclass(frozen=True)
@@ -69,3 +71,62 @@ def informacion_de_cobro(*, actor, estudiante):
         saldo=saldo_de(estudiante),
         consumo_del_dia=consumo_del_dia(estudiante),
     )
+
+
+def catalogo_de_venta():
+    """Lo que hoy se puede vender, con sus existencias (`TT-81`, `HU-21`).
+
+    Los productos retirados no salen: siguen existiendo porque el historial los
+    referencia, pero no se ofrecen (`HU-26`).
+
+    **Las existencias llegan en una sola consulta**, no una por fila: el catálogo
+    del colegio no es corto y esto se pinta en cada gesto del cajero. Un producto
+    sin movimientos no aparece en el agregado, así que se lee con `.get(id, 0)` —
+    el cero no es un caso especial, es la suma de una lista vacía (`INV-3`).
+
+    **Lo que devuelve es informativo, no autorizante.** Que aquí figuren tres
+    empanadas no significa que al confirmar sigan estando: entre este pintado y
+    el cobro puede haber otra caja. La cifra que decide se lee **dentro** del
+    bloqueo, en `registrar_venta` (`DT-6`).
+    """
+    productos = list(productos_en_el_catalogo().order_by("categoria__nombre", "nombre"))
+    existencias = existencias_por_producto(productos)
+
+    for producto in productos:
+        producto.existencias = existencias.get(producto.id, 0)
+
+    return productos
+
+
+def lineas_del_carrito(carrito):
+    """Los renglones de la venta en curso, listos para pintar.
+
+    Recibe `{id_de_producto: cantidad}` tal como lo guarda `ventas.carrito` —con
+    los identificadores en texto, que es como los devuelve la sesión— y resuelve
+    los productos en **una** consulta.
+
+    Devuelve `(lineas, total)`. Cada línea trae producto, cantidad e importe; el
+    importe se calcula aquí y no en la plantilla porque una plantilla no
+    multiplica, y desde luego no en JavaScript (`DT-25`).
+
+    Un producto que ya no está en el catálogo **se cae del carrito en silencio**:
+    la alternativa es pintar un renglón de algo que el cobro va a rechazar de
+    todas formas. El cobro lo vuelve a comprobar, que es donde importa.
+    """
+    productos = {
+        str(producto.id): producto
+        for producto in productos_en_el_catalogo().filter(id__in=carrito)
+    }
+
+    lineas = []
+    total = Decimal("0.00")
+    for producto_id, cantidad in carrito.items():
+        producto = productos.get(str(producto_id))
+        if producto is None:
+            continue
+        importe = producto.precio * cantidad
+        total += importe
+        lineas.append({"producto": producto, "cantidad": cantidad, "importe": importe})
+
+    lineas.sort(key=lambda linea: linea["producto"].nombre)
+    return lineas, total

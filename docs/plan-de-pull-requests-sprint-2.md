@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **23** de 37 | **11** de 16 |
-| Pendientes | 14 | 5 |
+| **Finalizadas** | **28** de 37 | **12** de 16 |
+| Pendientes | 9 | 4 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 10 | 14 |
-| Carlos | 9 | 11 |
-| Alejandro | 4 | 9 |
+| Pedro | 12 | 14 |
+| Carlos | 10 | 11 |
+| Alejandro | 6 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -107,7 +107,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☑ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☑ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☑ |
-| `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
+| `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☑ |
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☐ |
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
 | `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
@@ -457,14 +457,14 @@ Tres decisiones que conviene no perder:
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-21` |
 | Invariantes | **`INV-1`, `INV-2`, `INV-3` a la vez** |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-80` | Servicio de venta: **una** transacción con bloqueo pesimista sobre billetera y productos | Pedro | ☐ |
-| `TT-81` | Carrito y confirmación de la venta, **sin diálogos de confirmación** | Carlos | ☐ |
-| `TT-82` | Caso de prueba de concurrencia: dos ventas simultáneas sobre la misma billetera | Alejandro | ☐ |
-| `TT-83` | Caso de prueba: saldo y existencias se descuentan en la misma operación, o ninguno | Alejandro | ☐ |
+| `TT-80` | Servicio de venta: **una** transacción con bloqueo pesimista sobre billetera y productos | Pedro | ☑ |
+| `TT-81` | Carrito y confirmación de la venta, **sin diálogos de confirmación** | Carlos | ☑ |
+| `TT-82` | Caso de prueba de concurrencia: dos ventas simultáneas sobre la misma billetera | Alejandro | ☑ |
+| `TT-83` | Caso de prueba: saldo y existencias se descuentan en la misma operación, o ninguno | Alejandro | ☑ |
 
 > 🔴 **El PR de mayor riesgo del proyecto.** `DT-6` es explícito: se bloquea, **luego** se
 > valida, **luego** se escribe. Validar fuera del bloqueo abre la ventana en la que dos
@@ -474,7 +474,22 @@ Tres decisiones que conviene no perder:
 > **Revisión de los dos desarrolladores, no la cruzada de rigor.** Si falla, no falla una
 > historia: falla el prototipo.
 
-`TT-82` existe porque una prueba secuencial no detecta ese fallo.
+`TT-82` existe porque una prueba secuencial no detecta ese fallo, **y se comprobó que lo
+detecta**: con la validación movida fuera del bloqueo, las cuatro pruebas de concurrencia
+fallan y la billetera queda en `-2000,00`. Una prueba de concurrencia que nadie ha visto
+fallar no prueba nada.
+
+Tres cosas más que salieron de aquí y conviene no perder:
+
+- **`TT-86` quedó satisfecha en este PR.** No se puede integrar `TT-80` sin validar el
+  saldo dentro del bloqueo: `INV-1` no admite un solo commit de `main` en el que una venta
+  pueda dejar deuda. A `PR-14` le queda `TT-87`, el escenario `TST-2` con su evidencia.
+- **El carrito vive en la sesión, no en el navegador** (`DT-26`, que corrige la previsión
+  de Alpine.js de `DT-16`). El motivo es el mismo por el que `DT-25` descartó el total vivo
+  de la recarga: un carrito en el navegador necesita un segundo formateador de dinero.
+- **La venta sin existencias se rechaza**, y eso **no sale de ningún criterio de
+  aceptación**. Está razonado en `ventas/services.py`; si el equipo prefiere permitirla, se
+  quita y se registra como decisión.
 
 ---
 
@@ -512,11 +527,17 @@ venderse» son hechos distintos. Sostiene los reportes de consumo del Sprint 5.
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza | Pedro | ☐ |
+| `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza | Pedro | ☑ **en `PR-12`** |
 | `TT-87` | Caso de prueba `TST-2`: venta rechazada, y saldo nunca negativo | Alejandro | ☐ |
 
 `TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es
 `HU-20`, del Sprint 3.
+
+> **`TT-86` llegó con `TT-80`, y no por adelantar trabajo.** `INV-1` es una invariante, no
+> una historia: no puede existir un commit de `main` en el que una venta deje la billetera
+> en negativo, y `TT-80` es el commit que introduce la venta. Lo que este PR aporta es
+> `TT-87` —el escenario `TST-2` con su evidencia para `ENT-05`— y el mensaje que el cajero
+> lee, que es lo que cierra `HU-19`.
 
 ---
 
