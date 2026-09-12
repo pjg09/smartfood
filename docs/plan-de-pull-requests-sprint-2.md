@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **31** de 37 | **14** de 16 |
-| Pendientes | 6 | 2 |
+| **Finalizadas** | **34** de 37 | **15** de 16 |
+| Pendientes | 3 | 1 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 13 | 14 |
-| Carlos | 10 | 11 |
-| Alejandro | 8 | 9 |
+| Pedro | 14 | 14 |
+| Carlos | 11 | 11 |
+| Alejandro | 9 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -110,7 +110,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☑ |
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☑ |
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☑ |
-| `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
+| `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☑ |
 | `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
 
 ### [S3.2] Pull Requests fuera del plan
@@ -578,16 +578,33 @@ validación de `INV-1`, el saldo queda en `-3502,00` en el paso 2.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-53` |
 | Invariantes | `DEC-1`; cierra **`VAC-1`** |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-88` | Venta sin estudiante: descuenta inventario, **no** toca billetera, sin restricciones | Pedro | ☐ |
-| `TT-89` | Modo de cliente genérico en el punto de venta | Carlos | ☐ |
-| `TT-90` | Caso de prueba: descuenta inventario y no altera ninguna billetera | Alejandro | ☐ |
+| `TT-88` | Venta sin estudiante: descuenta inventario, **no** toca billetera, sin restricciones | Pedro | ☑ |
+| `TT-89` | Modo de cliente genérico en el punto de venta | Carlos | ☑ |
+| `TT-90` | Caso de prueba: descuenta inventario y no altera ninguna billetera | Alejandro | ☑ |
 
 Cierra el hueco más serio que tenía el anteproyecto: `[S5]` declaraba `USR-6` y exigía
 registrar sus ventas, sin ningún `ALC-IN` que lo respaldara.
+
+**`TT-88` llegó con `TT-80`** (`PR-12`): `registrar_venta` acepta `estudiante=None` desde
+entonces, y no se separó en otra función porque serían dos caminos de escritura para el
+mismo libro (`DT-24`). Lo que este PR añade es la pantalla y la prueba que cierran la
+historia.
+
+**`TT-89` resultó no ser un modo**, y conviene que quede escrito antes de que alguien lo
+«arregle»: una venta a cliente genérico *es* una venta sin estudiante —`Venta.es_generica`—,
+así que no hay interruptor que encender. Un tercer estado que el modelo no tiene acabaría
+encontrándose activo con un estudiante identificado. Lo que faltaba era otra cosa:
+
+- **Decirlo.** «Pasa una tarjeta» se lee como *hay que identificar para vender*. Un cajero
+  que lo entiende así deja la venta del docente fuera del sistema, que es `VAC-1`
+  repitiéndose en la caja después de haberlo cerrado en el papel.
+- **Poder volver.** Identificado un estudiante por error, la única salida era pasar una
+  tarjeta que no fuera de nadie o recargar la página. Ahora hay un enlace que lo saca de la
+  venta **sin vaciar el carrito**: lo que cambia es quién paga, no lo que se lleva.
 
 ---
 
