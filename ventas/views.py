@@ -260,3 +260,29 @@ def cobrar(request):
             "oob_catalogo": True,
         },
     )
+
+
+@login_required
+@require_http_methods(["POST"])
+def cliente_generico(request):
+    """Saca al estudiante de la venta en curso (`TT-89`, `HU-53`).
+
+    **No enciende ningún modo: apaga la identificación.** Una venta a cliente
+    genérico **es** una venta sin estudiante (`DEC-1`), y eso ya es un estado del
+    modelo —`Venta.es_generica`—, no uno nuevo. Inventar aquí un interruptor de
+    «modo genérico» crearía un tercer estado que la base no tiene, y tarde o
+    temprano alguien lo encontraría encendido con un estudiante identificado.
+
+    Existe porque sin ella no había vuelta atrás: identificado un estudiante por
+    error, el siguiente cliente era un docente y la única salida era pasar una
+    tarjeta que no fuera de nadie o recargar la página.
+
+    `POST` porque cambia el estado de la sesión. Devuelve la columna del
+    estudiante en su estado vacío y arrastra el medio de pago, que con cliente
+    genérico vuelve a ser efectivo o transferencia (`HU-54`).
+    """
+    _solo_el_cajero(request.user)
+
+    carrito_de_la_venta.fijar_estudiante(request.session, None)
+
+    return render(request, "ventas/partials/cliente-generico.html")

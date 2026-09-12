@@ -19,7 +19,13 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
-from ventas.views import carrito, cobrar, identificacion, punto_de_venta
+from ventas.views import (
+    carrito,
+    cliente_generico,
+    cobrar,
+    identificacion,
+    punto_de_venta,
+)
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
 # único que necesita es hablar en español y no llamarse «Django» (TT-05).
@@ -126,6 +132,14 @@ urlpatterns = [
     # escribe en ninguna tabla, y cobrar abre la transacción que sostiene `INV-1`,
     # `INV-2` e `INV-3` a la vez. Juntarlas sería dejar la operación más delicada
     # del sistema detrás de un `if` sobre un campo del formulario.
+    # Dejar de cobrarle a un estudiante (`TT-89`, `HU-53`). No enciende un modo:
+    # apaga la identificación, porque una venta a cliente genérico **es** una
+    # venta sin estudiante (`DEC-1`).
+    path(
+        "punto-de-venta/cliente-generico/",
+        cliente_generico,
+        name="cliente-generico",
+    ),
     path("punto-de-venta/carrito/", carrito, name="carrito-del-punto-de-venta"),
     path("punto-de-venta/cobrar/", cobrar, name="cobrar"),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),

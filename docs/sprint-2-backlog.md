@@ -223,11 +223,15 @@ El segundo criterio —«el saldo nunca queda negativo, **bajo ninguna combinaci
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-88` | Venta sin estudiante: descuenta inventario, **no** toca ninguna billetera y no aplica restricciones (`DEC-1`) | Pedro | ☐ |
-| `TT-89` | Modo de cliente genérico en el punto de venta | Carlos | ☐ |
-| `TT-90` | Caso de prueba: la venta genérica descuenta inventario y no altera ninguna billetera | Alejandro | ☐ |
+| `TT-88` | Venta sin estudiante: descuenta inventario, **no** toca ninguna billetera y no aplica restricciones (`DEC-1`) | Pedro | ☑ |
+| `TT-89` | Modo de cliente genérico en el punto de venta | Carlos | ☑ |
+| `TT-90` | Caso de prueba: la venta genérica descuenta inventario y no altera ninguna billetera | Alejandro | ☑ |
 
 Cierra `VAC-1`, el hueco más serio que tenía el anteproyecto: `[S5]` declaraba `USR-6` y exigía registrar sus ventas, sin ningún `ALC-IN` que lo respaldara.
+
+**`TT-88` llegó con `TT-80`.** `registrar_venta` acepta `estudiante=None` desde `PR-12`, y no se separó en otra función porque serían **dos caminos de escritura para el mismo libro**, que es lo que `DT-24` evita. Lo que este PR añade es la pantalla y la prueba que cierran la historia.
+
+**`TT-89` resultó no ser un modo.** Una venta a cliente genérico *es* una venta sin estudiante —`Venta.es_generica`—, así que no hay interruptor que encender: un tercer estado que el modelo no tiene acabaría encontrándose activo con un estudiante identificado. Lo que faltaba era **decirlo** —«Pasa una tarjeta» se lee como *hay que identificar para vender*, y eso es literalmente `VAC-1` repitiéndose en la caja— y **poder volver**: identificado alguien por error, la única salida era pasar una tarjeta que no fuera de nadie o recargar la página.
 
 ---
 

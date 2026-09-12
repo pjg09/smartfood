@@ -57,6 +57,7 @@ los mismos colores desde `DT-23`.
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
 | `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su fotografía, su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75`, `TT-77` |
+| `/punto-de-venta/cliente-generico/` | `POST`. Saca al estudiante de la venta en curso | **Solo cajero** | `TT-89` |
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
@@ -253,6 +254,13 @@ subir un precio o corregir una ficha nutricional no reescribe las ventas ya asen
 es lo que hace que el historial de consumo de `HU-30` sea un historial y no una proyección
 del catálogo de hoy sobre el pasado.
 
+**Y se puede cobrar sin identificar a nadie** (`HU-53`, `DEC-1`). Un docente, alguien del
+personal o un visitante compran sin estar registrados en ningún sitio: la venta descuenta
+inventario como cualquier otra, **no toca ninguna billetera** y se paga en efectivo o por
+transferencia. No hay modo que encender —una venta a cliente genérico **es** una venta sin
+estudiante—, así que la columna del cliente lo dice cuando está vacía, y ofrece volver a
+ella cuando hay alguien identificado, sin vaciar el carrito.
+
 **Si el saldo no alcanza, la venta no se realiza y la pantalla dice cuánto falta** (`HU-19`,
 `INV-1`): «No alcanza: el saldo es $5.000 y la venta suma $10.000. Faltan $5.000». No se
 descuenta nada —ni saldo ni existencias— y **el carrito se queda montado**, porque lo que el
@@ -294,7 +302,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 ## [S6] Lo que todavía no existe
 
 Restricciones y límite diario (`HU-09`…`HU-13`), los rechazos que dependen de ellas
-(`HU-18`, `HU-20`), la venta a cliente genérico desde la pantalla (`HU-53`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
+(`HU-18`, `HU-20`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
 recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
 **El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
