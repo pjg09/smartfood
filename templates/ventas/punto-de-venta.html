@@ -7,7 +7,10 @@
    consumo del día (`HU-17`). Las otras dos siguen siendo huecos, y cada uno dice
    qué historia lo llena:
 
-     · catálogo, carrito y cobro — `HU-21`, `HU-54` (`PR-11`, `PR-12`)
+     · catálogo, carrito y total — `HU-21` (`PR-12`)
+
+   El medio de pago ya está (`TT-79`, `HU-54`), encima del hueco del ticket: es
+   un campo del asiento y llega antes que la venta a propósito.
 
    Los huecos declaran **qué falta y cuándo**, no un cero: en este sistema un
    saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
@@ -201,6 +204,15 @@
 {% block ticket %}
   <section class="flex grow flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
     <h2 class="text-lg font-semibold text-texto">Ticket</h2>
+
+    {% comment %} `TT-79`. El medio de pago va **arriba del ticket y no dentro del hueco**:
+       es lo único de esta columna que ya funciona, y meterlo en el bloque
+       punteado lo haría parecer parte de lo que falta.
+
+       Se repinta solo cuando cambia el estudiante, por intercambio fuera de
+       banda desde la identificación. {% endcomment %}
+    {% include "ventas/partials/medio-de-pago.html" %}
+
     <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
                 border border-dashed border-borde p-6 text-center">
       <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
@@ -208,8 +220,8 @@
       </span>
       <p class="text-base font-medium text-texto">Aquí va la venta</p>
       <p class="max-w-sm text-sm text-texto-suave">
-        Las líneas, el total y el medio de pago. Llegan con
-        <strong class="text-texto">HU-54</strong> y <strong class="text-texto">HU-21</strong>.
+        Las líneas y el total. Llegan con <strong class="text-texto">HU-21</strong>,
+        que es también la que guardará con la venta el medio elegido aquí arriba.
         Se confirma sin diálogo: el foco es del lector.
       </p>
     </div>

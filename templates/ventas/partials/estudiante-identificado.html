@@ -261,3 +261,24 @@
     </div>
   </div>
 {% endif %}
+
+{% comment %} `TT-79`, `HU-54`. **El medio de pago viaja con la identificación**, no en una
+   segunda petición.
+
+   `hx-swap-oob="true"` hace que HTMX coloque este bloque en el `#medio-de-pago`
+   de la columna del ticket, además de intercambiar el destino normal. Es una
+   respuesta con dos fragmentos, no una página: `DT-16` prohíbe un endpoint que
+   devuelva a veces un fragmento y a veces la pantalla entera, y esto no es eso —
+   lo que cambia al identificar es quién compra **y** con qué puede pagar, y las
+   dos cosas las decide el mismo hecho.
+
+   Una segunda llamada costaría otro viaje por tarjeta, que es lo que `INT-2` no
+   tiene; y calcularlo en el navegador pondría la regla de `HU-54` en un tercer
+   sitio, que es el que se olvidaría de actualizar.
+
+   Va **fuera del `{% templatetag openblock %} if estudiante {% templatetag closeblock %}`** a propósito: cuando la tarjeta no es de
+   nadie, el bloque también tiene que volver a su estado sin estudiante. Si se
+   quedara con «Billetera» del escaneo anterior, el cajero cobraría contra el
+   saldo de quien ya no está en pantalla.
+{% endcomment %}
+{% include "ventas/partials/medio-de-pago.html" with oob=True %}

@@ -320,8 +320,53 @@
     });
   }
 
+  /* --- Medio de pago del punto de venta ----------------------------------
+   *
+   * `TT-79`, `HU-54`. Mueve el `aria-pressed` entre efectivo y transferencia y
+   * copia lo elegido al campo oculto que leerá el cobro de `TT-80`.
+   *
+   * **Esto NO decide qué opciones hay.** Eso lo decide el servidor al pintar el
+   * bloque, porque es una regla —`HU-54` y `DEC-1`— y no un estado de la
+   * interfaz: con estudiante identificado no hay grupo de botones que mover, hay
+   * una afirmación. Aquí solo se registra cuál de las que hay está elegida.
+   *
+   * ── SE DELEGA DESDE `document`, Y ESA ES LA DIFERENCIA CON LOS DEMÁS ────
+   * Los otros grupos cuelgan su oyente de una caja que vive toda la sesión, así
+   * que basta montarlos una vez. Este bloque, en cambio, **lo reemplaza HTMX
+   * entero** en cada identificación (`hx-swap-oob`): un oyente colgado de él se
+   * iría con el nodo viejo en el primer escaneo, y los botones dejarían de
+   * responder sin dar ningún error. Delegando desde `document`, el oyente
+   * sobrevive a todos los reemplazos.
+   * ───────────────────────────────────────────────────────────────────────
+   */
+  function montarMediosDePago() {
+    document.addEventListener("click", function (evento) {
+      var boton = evento.target.closest("[data-medio]");
+      if (boton === null) return;
+
+      var grupo = boton.closest("[data-medios-de-pago]");
+      if (grupo === null) return;
+
+      var elegido = boton.getAttribute("data-medio");
+
+      grupo.querySelectorAll("[data-medio]").forEach(function (otro) {
+        otro.setAttribute(
+          "aria-pressed",
+          otro.getAttribute("data-medio") === elegido ? "true" : "false"
+        );
+      });
+
+      /* El campo oculto es el que se envía; los botones solo lo enseñan. Un
+       * botón pulsado mientras el campo dice otra cosa miente sobre lo que se va
+       * a cobrar, que en una caja se paga en efectivo descuadrado. */
+      var campo = document.querySelector("[data-valor-del-medio]");
+      if (campo !== null) campo.value = elegido;
+    });
+  }
+
   /* HTMX intercambia fragmentos, no páginas (`DT-16`), así que el armazón no se
-   * vuelve a construir: basta con montarlo una vez. */
+   * vuelve a construir: basta con montarlo una vez. La excepción es
+   * `montarMediosDePago`, que delega desde `document` por lo que explica ahí. */
   /* --- Revelar la contraseña ---------------------------------------------
    *
    * El campo de `TT-56`. Cambia el `type` entre `password` y `text`, el icono y
@@ -463,5 +508,6 @@
     montarSelectorDeEstudiante();
     montarFocoPermanente();
     montarModosDeBusqueda();
+    montarMediosDePago();
   });
 })();
