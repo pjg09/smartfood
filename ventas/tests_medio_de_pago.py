@@ -136,19 +136,25 @@ class LaLineaDeVentaEsUnRenglonPorProductoTest(TestCase):
         """El total saldría igual —es una suma—, pero el reporte de `HU-35`
         tendría que decidir si «tres empanadas» son una línea o tres. Obliga al
         carrito de `TT-81` a agrupar, que es además lo que el cajero espera."""
-        LineaVenta.objects.create(venta=self.venta, producto=self.producto, cantidad=2)
+        LineaVenta.objects.create(
+            venta=self.venta, producto=self.producto, cantidad=2, precio_unitario=3500
+        )
 
         with self.assertRaises(IntegrityError), transaction.atomic():
             LineaVenta.objects.create(
-                venta=self.venta, producto=self.producto, cantidad=1
+                venta=self.venta, producto=self.producto, cantidad=1, precio_unitario=3500
             )
 
     def test_el_mismo_producto_en_otra_venta_si(self):
         otra = Venta.objects.create(cajero=cajero("otro@example.com"),
                                     medio_pago=MedioDePago.EFECTIVO)
-        LineaVenta.objects.create(venta=self.venta, producto=self.producto, cantidad=2)
+        LineaVenta.objects.create(
+            venta=self.venta, producto=self.producto, cantidad=2, precio_unitario=3500
+        )
 
-        LineaVenta.objects.create(venta=otra, producto=self.producto, cantidad=1)
+        LineaVenta.objects.create(
+            venta=otra, producto=self.producto, cantidad=1, precio_unitario=3500
+        )
 
         self.assertEqual(LineaVenta.objects.count(), 2)
 
@@ -159,19 +165,27 @@ class LaLineaDeVentaEsUnRenglonPorProductoTest(TestCase):
             with self.subTest(cantidad=cantidad):
                 with self.assertRaises(IntegrityError), transaction.atomic():
                     LineaVenta.objects.create(
-                        venta=self.venta, producto=self.producto, cantidad=cantidad
+                        venta=self.venta,
+                        producto=self.producto,
+                        cantidad=cantidad,
+                        precio_unitario=3500,
                     )
 
-    def test_la_linea_todavia_no_congela_el_precio(self):
-        """`DT-8` y `HU-22` son `TT-84` (`PR-13`), y esta prueba lo declara.
+    def test_la_linea_congela_el_precio_y_los_nutrientes(self):
+        """`TT-84`, `DT-8`, `HU-22`. Hasta `PR-13` esta prueba afirmaba lo
+        contrario —que la línea **no** guardaba el precio— y era cierta: la
+        historia que lo congela no había llegado. Lo que se vigila ahora es que
+        la instantánea siga completa.
 
-        No es una laguna que se olvidó: una columna de precio siempre nula diría
-        que el dato existe y no se llenó. Cuando `TT-84` la añada, esta prueba se
-        cae y se reescribe, que es justo lo que tiene que pasar.
-        """
+        Se compara contra `CAMPOS_DE_LA_INSTANTANEA`, que es la lista que el
+        servicio copia: si alguien añade un nutriente al catálogo y no lo trae
+        aquí, el historial se queda corto sin que nada falle."""
         campos = {f.name for f in LineaVenta._meta.get_fields()}
 
-        self.assertNotIn("precio", campos)
+        self.assertIn("precio_unitario", campos)
+        for campo in LineaVenta.CAMPOS_DE_LA_INSTANTANEA:
+            with self.subTest(campo=campo):
+                self.assertIn(campo, campos)
 
 
 class LosLibrosSenalanLaVentaQueLosOriginaTest(TestCase):
