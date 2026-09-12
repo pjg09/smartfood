@@ -56,7 +56,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
-| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75` |
+| `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su fotografía, su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75`, `TT-77` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
 
@@ -208,6 +208,14 @@ poder realizarse*. Las restricciones vigentes son el tercer dato y llegan con `H
 el Sprint 3; hasta entonces su bloque **dice qué falta en vez de afirmar que no hay**,
 porque «sin restricciones» se leería en una caja como *puede comprar cualquier cosa*.
 
+**Y con la cara de quien debería estar presentando la tarjeta** (`HU-58`, `DEC-8`). Es un
+control **preventivo** de suplantación: el código de la tarjeta opera como credencial de
+acceso al saldo (`FUN-4`), y desactivarla (`HU-47`, `HU-48`) solo actúa desde que alguien
+reporta la pérdida — la fotografía cierra las horas que van de una cosa a la otra. Si el
+estudiante no tiene fotografía **la venta procede igual, y el hueco se dice**: un avatar
+genérico haría creer que la comprobación se hizo. Ninguna es de una persona real: se
+generan en el seed (`INVD-6`).
+
 **Aquí, y solo aquí, ve el cajero un saldo.** `[S11]` se lo concede «solo al cobrar», y lo
 que lo sostiene no es un rótulo: el selector que lo devuelve exige el rol cajero, y el
 cajero recibe `403` en el panel del acudiente, en la ficha del estudiante y en la recarga
@@ -242,9 +250,10 @@ Restricciones y límite diario (`HU-09`…`HU-13`), la venta en el punto de vent
 recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
 Del punto de venta existe **la columna del estudiante entera** —identificarlo por las dos
-vías (`HU-15`, `HU-16`) y ver con qué se le cobra (`HU-17`)— y **los huecos de las otras
-dos**: catálogo y ticket llegan con `HU-21` y `HU-54`. `HU-17` sigue marcada como abierta
-aun con su panel construido: le falta el bloque de restricciones, que es del Sprint 3.
+vías (`HU-15`, `HU-16`), ver su fotografía (`HU-58`) y con qué se le cobra (`HU-17`)— y
+**los huecos de las otras dos**: catálogo y ticket llegan con `HU-21` y `HU-54`. `HU-17`
+sigue marcada como abierta aun con su panel construido: le falta el bloque de
+restricciones, que es del Sprint 3.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que

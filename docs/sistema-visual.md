@@ -129,6 +129,12 @@ apagada promete que un día hará algo y no dice cuándo ni de qué depende. El 
 falta y qué historia lo trae —`HU-17`, `HU-21`—, que son las dos cosas.
 `ventas/tests_acceso.py` lo vigila.
 
+**También sirve para un dato que falta, no solo para una función que falta.** El estudiante
+sin fotografía en el punto de venta (`TT-77`) lleva el mismo borde discontinuo en el sitio
+donde iría la cara, con el rótulo «Sin foto». La alternativa —dibujar la silueta genérica
+de la ficha del acudiente— le diría al cajero que la comprobación de identidad se hizo y
+salió bien. **Un hueco silencioso miente; uno marcado, no.**
+
 ---
 
 ## [S3] Los cuatro armazones
@@ -158,6 +164,12 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
   no existe no son lo mismo, y en la caja esa confusión cuesta una venta mal cobrada.
 - **Una fotografía de una persona real.** `INVD-6`. Los avatares se generan en el seed y los
   huecos de imagen los cubre la clase `lamina`.
+- **Un retrato en redondo donde la cara es el dato.** En la ficha del acudiente la
+  fotografía es identidad visual y va circular; en el punto de venta (`TT-77`) es lo que se
+  compara con la persona que está enfrente, y el recorte circular se come las sienes y las
+  orejas. Va cuadrada, por la misma razón por la que un carné no la lleva en redondo.
+- **Un `<img>` con el `src` vacío** cuando no hay imagen. El navegador pide la página a sí
+  misma y deja un icono de imagen rota justo donde debería estar el dato.
 
 ---
 
