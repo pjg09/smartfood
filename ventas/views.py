@@ -17,7 +17,14 @@ from personas.selectors import (
     identificar_por_codigo_de_tarjeta,
     identificar_por_documento,
 )
-from ventas.selectors import informacion_de_cobro
+from personas.services import EstudianteNoOperativo
+from ventas import carrito as carrito_de_la_venta
+from ventas.selectors import (
+    catalogo_de_venta,
+    informacion_de_cobro,
+    lineas_del_carrito,
+)
+from ventas.services import VentaRechazada, registrar_venta, total_de
 
 
 def _solo_el_cajero(usuario):
@@ -55,7 +62,11 @@ def punto_de_venta(request):
     """
     _solo_el_cajero(request.user)
 
-    return render(request, "ventas/punto-de-venta.html")
+    return render(
+        request,
+        "ventas/punto-de-venta.html",
+        {"productos": catalogo_de_venta(), **_contexto_del_ticket(request)},
+    )
 
 
 @login_required
@@ -114,6 +125,10 @@ def identificacion(request):
         else None
     )
 
+    # `TT-81`. Quién es el cliente lo recuerda el servidor, no un campo oculto:
+    # entre escanear y cobrar puede haber otro escaneo, y manda el último.
+    carrito_de_la_venta.fijar_estudiante(request.session, estudiante)
+
     return render(
         request,
         "ventas/partials/estudiante-identificado.html",
@@ -122,5 +137,126 @@ def identificacion(request):
             "cobro": cobro,
             "codigo": codigo,
             "documento": documento,
+        },
+    )
+
+
+def _estudiante_de_la_venta(request):
+    """El estudiante al que se le está cobrando, o `None` si es genérica.
+
+    Se resuelve contra la base en cada petición en lugar de guardar el objeto:
+    entre escanear y cobrar puede haberse dado de baja, y lo que manda es el
+    estado de ahora. Si el identificador guardado ya no existe, se trata como si
+    no hubiera cliente — no como un error, porque no lo es para quien está en la
+    caja.
+    """
+    identificador = carrito_de_la_venta.estudiante_id(request.session)
+    if not identificador:
+        return None
+    return Estudiante.objects.filter(pk=identificador).first()
+
+
+def _contexto_del_ticket(request, **extra):
+    """Lo que necesita el fragmento del ticket, en un solo sitio.
+
+    Lo arman tres vistas —la pantalla, el carrito y el cobro— y la
+    identificación por añadidura. Repetirlo en cada una es como una de ellas
+    acaba enseñando un total que no corresponde a sus líneas.
+    """
+    estudiante = _estudiante_de_la_venta(request)
+    lineas, total = lineas_del_carrito(carrito_de_la_venta.leer(request.session))
+    return {"estudiante": estudiante, "lineas": lineas, "total": total, **extra}
+
+
+@login_required
+@require_http_methods(["POST"])
+def carrito(request):
+    """Añade, descuenta o quita un renglón de la venta en curso (`TT-81`).
+
+    **`POST` y no `GET`**: cambia el estado de la sesión, y un `GET` que cambia
+    algo es un enlace que el navegador puede reproducir solo.
+
+    Devuelve el **fragmento del ticket** y nada más: lo que cambia al tocar el
+    carrito es la columna del ticket (`DT-16`). El catálogo no se repinta —sus
+    existencias no cambian hasta que se cobre—, y repintarlo costaría el doble de
+    bytes en cada toque.
+
+    No comprueba existencias: montar el carrito no es cobrar. La cifra que decide
+    se lee dentro del bloqueo, al confirmar (`DT-6`); avisar antes sería una
+    promesa que otra caja puede romper entre este toque y el siguiente.
+    """
+    _solo_el_cajero(request.user)
+
+    accion = request.POST.get("accion", "anadir")
+    producto_id = request.POST.get("producto", "")
+
+    if accion == "vaciar":
+        carrito_de_la_venta.vaciar(request.session)
+    elif accion == "quitar":
+        carrito_de_la_venta.quitar(request.session, producto_id)
+    elif accion == "descontar":
+        carrito_de_la_venta.anadir(request.session, producto_id, -1)
+    else:
+        carrito_de_la_venta.anadir(request.session, producto_id, 1)
+
+    return render(
+        request, "ventas/partials/ticket.html", _contexto_del_ticket(request)
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def cobrar(request):
+    """Confirma la venta (`TT-80`, `TT-81`, `HU-21`).
+
+    **Sin diálogo de confirmación** (`INT-2`, `DT-16`): un modal roba el foco, y
+    el foco es del lector. El botón cobra.
+
+    La vista no decide nada: junta lo que hay en la sesión y llama al servicio,
+    que es quien bloquea, valida y escribe dentro de una sola transacción
+    (`DT-6`). Si el servicio rechaza, aquí solo se traduce el motivo a algo que
+    el cajero pueda leer — **la venta no se ha escrito**, porque la transacción
+    del servicio se deshizo entera.
+
+    Devuelve el fragmento del ticket en sus dos estados —cobrada o rechazada—,
+    que es la misma zona de la pantalla y por tanto el mismo fragmento. Cuando
+    cobra, arrastra fuera de banda el panel del estudiante y el catálogo: la
+    venta terminó, así que el cliente se olvida y las existencias ya son otras.
+    """
+    _solo_el_cajero(request.user)
+
+    estudiante = _estudiante_de_la_venta(request)
+    lineas = {
+        producto_id: int(cantidad)
+        for producto_id, cantidad in carrito_de_la_venta.leer(request.session).items()
+    }
+
+    try:
+        venta = registrar_venta(
+            actor=request.user,
+            lineas=lineas,
+            estudiante=estudiante,
+            medio_pago=request.POST.get("medio_pago") or None,
+        )
+    except (VentaRechazada, EstudianteNoOperativo) as rechazo:
+        return render(
+            request,
+            "ventas/partials/ticket.html",
+            _contexto_del_ticket(request, rechazo=" ".join(rechazo.messages)
+                                 if hasattr(rechazo, "messages") else str(rechazo)),
+        )
+
+    carrito_de_la_venta.vaciar(request.session)
+
+    return render(
+        request,
+        "ventas/partials/ticket.html",
+        {
+            **_contexto_del_ticket(request),
+            "cobrada": venta,
+            "total_cobrado": total_de(venta),
+            "productos": catalogo_de_venta(),
+            "oob_estudiante": True,
+            "oob_catalogo": True,
         },
     )

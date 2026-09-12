@@ -2,22 +2,22 @@
 
 {% comment %} TT-57, TT-58, TT-71, TT-73, TT-75. La pantalla del punto de venta (`INT-2`).
 
-   **Coloca las tres zonas y el foco, y todavía no cobra.** La columna del
-   estudiante ya está llena: identifica (`HU-15`, `HU-16`) y enseña saldo y
-   consumo del día (`HU-17`). Las otras dos siguen siendo huecos, y cada uno dice
-   qué historia lo llena:
+   **Las tres zonas están llenas y la pantalla cobra** (`TT-81`, `HU-21`):
+   identifica (`HU-15`, `HU-16`), enseña saldo y consumo del día (`HU-17`) con la
+   fotografía (`HU-58`), ofrece el catálogo con sus existencias y descuenta las
+   dos cosas al confirmar.
 
-     · catálogo, carrito y total — `HU-21` (`PR-12`)
+   Lo que sigue faltando son las **restricciones alimentarias** y el **límite
+   diario** (`HU-09` … `HU-13`, `HU-18`, `HU-20`), del Sprint 3. Su hueco está en
+   el panel del estudiante y dice qué historia lo trae, que es la regla de
+   `[S2.4]`: un hueco declara qué falta y cuándo, nunca un cero — un saldo en
+   cero y un saldo que todavía no existe no son lo mismo, y la caja es el peor
+   sitio para confundirlos.
 
-   El medio de pago ya está (`TT-79`, `HU-54`), encima del hueco del ticket: es
-   un campo del asiento y llega antes que la venta a propósito.
-
-   Los huecos declaran **qué falta y cuándo**, no un cero: en este sistema un
-   saldo en cero y un saldo que todavía no existe no son lo mismo, y el punto de
-   venta es el peor sitio para confundirlos. Por eso las dos columnas vacías son
-   tarjetas con su título y un bloque punteado dentro, y no botones apagados que
-   finjan un cobro que no existe: **una acción deshabilitada promete que un día
-   hará algo**, y aquí lo honesto es decir qué historia lo trae.
+   **Cada columna es un fragmento y se repinta sola.** El estudiante lo trae la
+   identificación; el ticket, cada gesto sobre el carrito; y al cobrar, el ticket
+   arrastra fuera de banda el panel del estudiante y el catálogo, porque la venta
+   acaba de mover las dos cosas.
 
    El campo de identificación **ya busca** (`TT-71`, `TT-73`): el lector teclea el
    código y envía Enter, y eso pide el fragmento contra el selector de `TT-70`.
@@ -168,36 +168,23 @@
      repartir y el bloque colapsa, recortando el texto. `grow` conserva la base
      automática y sigue ocupando el resto en escritorio. {% endcomment %}
   <div id="estudiante-identificado" class="flex grow flex-col">
-    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
-                border border-dashed border-borde p-6 text-center">
-      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
-                   text-acento-fuerte">
-        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-personas"></use></svg>
-      </span>
-      <p class="text-base font-medium text-texto">Ningún estudiante identificado</p>
-      <p class="text-sm text-texto-suave">
-        Pasa una tarjeta por el lector y aparecerán aquí su nombre, su saldo y lo
-        que lleva gastado hoy. Si no la trae, búscalo por documento.
-      </p>
-    </div>
+    {% include "ventas/partials/sin-estudiante.html" %}
   </div>
 {% endblock %}
 
 {% block catalogo %}
-  <section class="flex grow flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+  {% comment %} **`@container` va AQUÍ, en la sección, y no en la rejilla de dentro.** Es la
+     misma trampa que ya costó una tarde en `base-punto-de-venta.html`, con el
+     matiz que la hace peor: arriba hay otro contenedor —el lienzo— así que las
+     consultas del catálogo **sí encuentran contra qué medirse**, solo que miden
+     lo que no es. Con el lienzo como referencia, a 1024 px el catálogo se partía
+     en dos columnas de 145 px y los nombres salían como «Empanada d…». Un
+     elemento nunca es su propio contenedor, y el contenedor que le toca es el
+     más cercano, no el que uno tenía en la cabeza. {% endcomment %}
+  <section class="@container flex grow flex-col gap-3 rounded-md border border-borde
+                  bg-superficie p-4 shadow-sm">
     <h2 class="text-lg font-semibold text-texto">Catálogo</h2>
-    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
-                border border-dashed border-borde p-6 text-center">
-      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
-        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
-      </span>
-      <p class="text-base font-medium text-texto">Aquí van los productos</p>
-      <p class="max-w-sm text-sm text-texto-suave">
-        Con su precio y sus existencias, para añadirlos a la venta con un toque.
-        Llegan con <strong class="text-texto">HU-21</strong>, junto con el descuento
-        simultáneo de saldo y existencias.
-      </p>
-    </div>
+    {% include "ventas/partials/catalogo.html" %}
   </section>
 {% endblock %}
 
@@ -205,25 +192,11 @@
   <section class="flex grow flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
     <h2 class="text-lg font-semibold text-texto">Ticket</h2>
 
-    {% comment %} `TT-79`. El medio de pago va **arriba del ticket y no dentro del hueco**:
-       es lo único de esta columna que ya funciona, y meterlo en el bloque
-       punteado lo haría parecer parte de lo que falta.
-
-       Se repinta solo cuando cambia el estudiante, por intercambio fuera de
-       banda desde la identificación. {% endcomment %}
+    {% comment %} `TT-79`. El medio de pago va **arriba del ticket**: se decide por quién
+       compra, no por lo que lleva. Se repinta solo cuando cambia el estudiante,
+       por intercambio fuera de banda desde la identificación. {% endcomment %}
     {% include "ventas/partials/medio-de-pago.html" %}
 
-    <div class="flex min-h-40 grow flex-col items-center justify-center gap-3 rounded-md
-                border border-dashed border-borde p-6 text-center">
-      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-3/10 text-serie-3">
-        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-recibo"></use></svg>
-      </span>
-      <p class="text-base font-medium text-texto">Aquí va la venta</p>
-      <p class="max-w-sm text-sm text-texto-suave">
-        Las líneas y el total. Llegan con <strong class="text-texto">HU-21</strong>,
-        que es también la que guardará con la venta el medio elegido aquí arriba.
-        Se confirma sin diálogo: el foco es del lector.
-      </p>
-    </div>
+    {% include "ventas/partials/ticket.html" %}
   </section>
 {% endblock %}

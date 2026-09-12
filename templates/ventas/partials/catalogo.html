@@ -1,0 +1,62 @@
+{% load dinero %}
+{% comment %} TT-81. Lo que se puede vender (`HU-21`, `INT-2`).
+
+   **Cada producto es un botón, no una fila con un botón dentro.** El cajero
+   pulsa el producto y se añade: en una ventana de veinte a treinta minutos, un
+   gesto por unidad es el presupuesto entero.
+
+   Las existencias se enseñan porque el cajero necesita saber si le queda antes
+   de prometerlo, **y no son autorizantes**: entre este pintado y el cobro puede
+   haber otra caja. La cifra que decide se lee dentro del bloqueo (`DT-6`).
+
+   El producto agotado **se ofrece igual y se marca**. No es un hueco de `[S2.4]`
+   —no falta ninguna historia, falta mercancía— y tampoco un botón deshabilitado:
+   el ingreso de `HU-27` puede estar entrando por la otra puerta mientras el
+   cajero mira. Lo que pasa si se cobra sin existencias lo dice el ticket, con el
+   nombre del producto y cuántas quedan.
+
+   Se repinta entero al cobrar, por intercambio fuera de banda: la venta acaba de
+   mover las existencias de todo lo que llevaba.
+{% endcomment %}
+
+<div id="catalogo-de-venta" class="grid gap-2 @md:grid-cols-2"{% if oob_catalogo %} hx-swap-oob="true"{% endif %}>
+  {% for producto in productos %}
+    <button type="button"
+            hx-post="{% url 'carrito-del-punto-de-venta' %}"
+            hx-vals='{"producto": "{{ producto.id }}", "accion": "anadir"}'
+            hx-target="#ticket-de-venta"
+            hx-swap="innerHTML"
+            data-producto-del-catalogo
+            class="flex min-w-0 flex-col gap-1 rounded-md border border-borde bg-superficie
+                   p-3 text-left transition-colors hover:border-primario
+                   hover:bg-superficie-hover focus:border-acento focus:outline-none">
+      <span class="truncate text-base font-medium text-texto">{{ producto.nombre }}</span>
+      <span class="font-display text-lg tabular-nums text-texto">{{ producto.precio|dinero }}</span>
+      {% comment %} Ámbar cuando no queda nada: en este sistema el ámbar significa «un
+         límite a punto de agotarse», y esto es exactamente eso. Con existencias
+         la cifra es texto suave, porque entonces no significa nada. {% endcomment %}
+      <span class="text-sm {% if producto.existencias > 0 %}text-texto-suave{% else %}text-aviso-fuerte{% endif %}">
+        {% if producto.existencias > 0 %}
+          Quedan <span class="tabular-nums">{{ producto.existencias }}</span>
+        {% else %}
+          Sin existencias
+        {% endif %}
+      </span>
+    </button>
+  {% empty %}
+    {% comment %} `[S2.4]`. Aquí sí es un hueco: no hay catálogo que ofrecer, y quien lo
+       llena es la administración de la cafetería (`HU-26`), no una historia
+       pendiente. {% endcomment %}
+    <div class="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-6 text-center @md:col-span-2">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+      </span>
+      <p class="text-base font-medium text-texto">No hay nada en el catálogo</p>
+      <p class="max-w-sm text-sm text-texto-suave">
+        Lo gestiona la administración de la cafetería desde su interfaz
+        (<strong class="text-texto">HU-26</strong>).
+      </p>
+    </div>
+  {% endfor %}
+</div>
