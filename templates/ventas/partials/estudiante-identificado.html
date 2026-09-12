@@ -1,5 +1,5 @@
 {% load dinero %}
-{% comment %} TT-71, TT-73, TT-75. El estudiante identificado y su cobro (`HU-15`, `HU-16`, `HU-17`).
+{% comment %} TT-71, TT-73, TT-75, TT-77. El estudiante identificado y su cobro (`HU-15`, `HU-16`, `HU-17`, `HU-58`).
 
    Fragmento, no página (`DT-16`): lo devuelve `identificacion` a cada Enter del
    lector y reemplaza solo la zona del estudiante.
@@ -24,18 +24,84 @@
    cualquier cosa*, y es lo único que nadie puede afirmar todavía. Por eso `HU-17`
    no se cierra con este Pull Request.
 
-   La fotografía es `HU-58` (`PR-10`).
+   **La fotografía está desde `PR-10`** (`HU-58`, `DEC-8`), al lado del nombre, y
+   cuando el estudiante no la tiene se dice en su sitio en vez de poner un avatar
+   genérico: la venta procede igual, pero el cajero tiene que saber que ahí el
+   control preventivo no está disponible.
 {% endcomment %}
 
 {% if estudiante %}
   <div class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm"
        role="status">
-    <div class="flex flex-col gap-1">
-      <span class="text-sm font-medium text-texto-suave">Estudiante identificado</span>
-      <h2 class="font-display text-xl text-texto">{{ estudiante.nombre }}</h2>
-      <p class="text-base text-texto-suave">
-        Documento <span class="font-mono tabular-nums">{{ estudiante.documento }}</span>
-      </p>
+    {% comment %} `TT-77`, `HU-58`. La fotografía, al lado del nombre.
+
+       Es un control **preventivo** de suplantación (`DEC-8`): el código de la
+       tarjeta «opera como una credencial de acceso al saldo» (`FUN-4`), y
+       desactivarla (`HU-47`, `HU-48`) solo actúa desde que alguien reporta la
+       pérdida. Entre que un niño pierde la tarjeta y lo cuenta pueden pasar
+       horas; la fotografía cierra ese intervalo, porque el cajero ve de quién es
+       la tarjeta que le están presentando.
+
+       **Cuadrada y no redonda**, que es la única divergencia deliberada con la
+       ficha del acudiente (`templates/partials/estudiante-seleccionado.html`).
+       Allí el retrato es identidad visual; aquí es el dato que hay que comparar
+       con la cara que está enfrente, y un recorte circular se come las sienes y
+       las orejas. Es la razón por la que un carné no lleva la foto en redondo.
+
+       La URL viene **firmada y caduca pronto** (`DT-18`, `DT-21`): la fotografía
+       de un menor no puede quedar en una dirección adivinable ni en una que siga
+       sirviendo meses después (`ALC-OUT-08`, Ley 1581 de 2012). No se sirve desde
+       la aplicación como la imagen de producto, aunque eso daría una URL
+       cacheable: `DT-21` lo decidió así a propósito, y aquí el argumento de la
+       caché no aplica — se pinta una fotografía por venta, no cincuenta por
+       pantalla.
+
+       En este repositorio **ninguna es de una persona real**: se generan en el
+       seed (`INVD-6`, `ALC-OUT-07`). {% endcomment %}
+    {% comment %} **El rótulo «Estudiante identificado» deja de verse, y sigue leyéndose.**
+       Con una fotografía al lado del nombre, la línea sobra: lo que hay en
+       pantalla es una cara y un nombre que aparecieron al pasar la tarjeta, y
+       nadie necesita que se lo digan. Lo que no sobra son sus 28 px — la
+       diferencia exacta entre que el consumo del día quepa a 1024 × 600 o se
+       corte—. Va en `sr-only` y no borrado: quien llegue por lector de pantalla
+       necesita saber de qué es esta región, y ahí no cuesta nada.
+
+       Y el nombre baja a `text-lg`. Cuando hay fotografía, **la cara es el dato
+       que se compara**; el nombre sirve para confirmarla, no al revés. Una línea
+       menos de nombre es una línea más de cifras a la vista, y esas se pagan
+       caras aquí. {% endcomment %}
+    <div class="flex flex-col">
+      <span class="sr-only">Estudiante identificado</span>
+
+      <div class="flex items-center gap-3">
+      {% if estudiante.tiene_foto %}
+        <img src="{{ estudiante.url_de_la_foto }}" alt=""
+             class="h-16 w-16 shrink-0 rounded-md border border-borde object-cover">
+      {% else %}
+        {% comment %} **El hueco se dice, no se disimula** — es el segundo criterio de
+           `HU-58` leído entero: la venta procede igual, pero el cajero tiene que
+           saber que en este estudiante el control preventivo no está disponible.
+           Un avatar genérico y silencioso haría creer que la comprobación se hizo
+           y salió bien, que es peor que no tener nada.
+
+           Borde discontinuo y el rótulo dentro, como el bloque punteado de
+           `[S2.4]`: dice qué falta en el sitio donde estaría. Ni `error` ni
+           `aviso` — no ha fallado nada y no hay riesgo detectado (`[S1]`,
+           regla 3). {% endcomment %}
+        <span class="flex h-16 w-16 shrink-0 flex-col items-center justify-center gap-0.5
+                     rounded-md border border-dashed border-borde text-texto-suave">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-personas"></use></svg>
+          <span class="text-xs font-medium">Sin foto</span>
+        </span>
+      {% endif %}
+
+        <div class="flex min-w-0 flex-col">
+          <h2 class="font-display text-lg text-texto">{{ estudiante.nombre }}</h2>
+          <p class="text-base text-texto-suave">
+            Documento <span class="font-mono tabular-nums">{{ estudiante.documento }}</span>
+          </p>
+        </div>
+      </div>
     </div>
 
     {% comment %} `INVD-2`. Se identifica igual —la tarjeta es correcta y el estudiante
