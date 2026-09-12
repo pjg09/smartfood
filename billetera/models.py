@@ -98,9 +98,22 @@ class MovimientoBilletera(models.Model):
     **Sin `monto = 0`.** Un movimiento que no mueve nada no es un movimiento: es
     ruido en el historial que `INV-2` obliga a poder leer.
 
-    La referencia a la venta que origina el movimiento llega con `TT-78`, cuando
-    exista el modelo. Hasta entonces no se declara una clave ajena a una tabla
-    que no existe.
+    ── EL MOVIMIENTO DE VENTA DICE CUÁL (`TT-78`) ──────────────────────────
+    La clave ajena a `Venta` es la que `TT-59` dejó prometida, y ahora existe la
+    tabla. **No es adorno: es la mitad de `INV-2`.** Que el saldo se reconstruya
+    desde el historial exige que cada sumando se pueda explicar, y «−3.500» sin
+    decir de qué compra sale no explica nada — es el mismo número que había que
+    creer, con otro origen.
+
+    Por eso una `CheckConstraint` obliga a que todo movimiento de tipo `venta`
+    apunte a la suya, y a que una recarga **no** apunte a ninguna: una recarga no
+    nace de una venta, y dejarla referenciar una sería permitir que el libro
+    contara una historia falsa. La devolución queda libre a propósito — corrige,
+    y no siempre corrige una venta concreta (`DT-24`).
+
+    `PROTECT`: borrar una venta que ya movió saldo dejaría el movimiento sin lo
+    que lo explica.
+    ─────────────────────────────────────────────────────────────────────────
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
@@ -112,6 +125,16 @@ class MovimientoBilletera(models.Model):
     )
     tipo = models.CharField("tipo", max_length=20, choices=TipoDeMovimiento.choices)
     monto = models.DecimalField("monto", max_digits=10, decimal_places=2)
+    # `null=True`: una recarga no sale de ninguna venta. Qué tipos la exigen y
+    # cuáles la prohíben lo dicen las restricciones de abajo, no un comentario.
+    venta = models.ForeignKey(
+        "ventas.Venta",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="movimientos_de_billetera",
+        verbose_name="venta",
+    )
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
 
     class Meta:
@@ -139,6 +162,25 @@ class MovimientoBilletera(models.Model):
                     | models.Q(tipo=TipoDeMovimiento.DEVOLUCION, monto__gt=0)
                 ),
                 name="movimiento_signo_segun_tipo",
+            ),
+            # `TT-78`. Un movimiento de venta sin la venta que lo origina es un
+            # sumando que no se puede explicar, y `INV-2` pide poder explicarlos
+            # todos.
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(tipo=TipoDeMovimiento.VENTA)
+                    | models.Q(venta__isnull=False)
+                ),
+                name="movimiento_de_venta_con_su_venta",
+            ),
+            # Y al revés: una recarga no nace de una venta. Sin esto, el libro
+            # podría decir que un ingreso de saldo salió de una compra.
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(tipo=TipoDeMovimiento.RECARGA)
+                    | models.Q(venta__isnull=True)
+                ),
+                name="movimiento_de_recarga_sin_venta",
             ),
         ]
 

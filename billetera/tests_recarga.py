@@ -31,6 +31,7 @@ from cuentas.models import Rol, Usuario
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, EstadoDelEstudiante, Estudiante
 from personas.services import EstudianteNoOperativo, dar_de_baja
+from ventas.models import MedioDePago, Venta
 
 CLAVE = "clave-de-prueba-2026"
 
@@ -60,6 +61,24 @@ def acudiente_con_estudiante(sufijo="1", estudiantes=1):
     return usuario, acudiente, hijos
 
 
+def venta_de(estudiante):
+    """Una venta cualquiera de ese estudiante, para colgarle su movimiento.
+
+    Desde `TT-78` un movimiento de tipo `venta` **tiene que señalar la venta que
+    lo origina**: es lo que hace que el historial de `INV-2` se pueda explicar y
+    no solo sumar. Estas pruebas no ejercitan el cobro —es `TT-80`—, así que la
+    fabrican directamente; lo que comprueban sigue siendo el saldo.
+    """
+    cajero = Usuario.objects.crear_usuario(
+        email=f"cajero-{estudiante.documento}-{Venta.objects.count()}@example.com",
+        rol=Rol.CAJERO,
+        nombre="Cajero",
+    )
+    return Venta.objects.create(
+        cajero=cajero, estudiante=estudiante, medio_pago=MedioDePago.BILLETERA
+    )
+
+
 class LaBilleteraNoGuardaElSaldoTest(TestCase):
     """`DT-4`, `INV-2`. La decisión que este PR no puede perder."""
 
@@ -80,7 +99,10 @@ class LaBilleteraNoGuardaElSaldoTest(TestCase):
             billetera=billetera, tipo=TipoDeMovimiento.RECARGA, monto=Decimal("20000.00")
         )
         MovimientoBilletera.objects.create(
-            billetera=billetera, tipo=TipoDeMovimiento.VENTA, monto=Decimal("-3500.00")
+            billetera=billetera,
+            tipo=TipoDeMovimiento.VENTA,
+            monto=Decimal("-3500.00"),
+            venta=venta_de(estudiante),
         )
         MovimientoBilletera.objects.create(
             billetera=billetera, tipo=TipoDeMovimiento.DEVOLUCION, monto=Decimal("500.00")
@@ -108,12 +130,20 @@ class ElSignoLoImponeLaBaseTest(TestCase):
     def setUp(self):
         _, _, (estudiante,) = acudiente_con_estudiante()
         self.billetera = Billetera.objects.create(estudiante=estudiante)
+        # La venta se pasa siempre, incluso donde el tipo no la exige: lo que
+        # estas pruebas vigilan es **el signo**, y sin la referencia el rechazo
+        # podría venir de la restricción de `TT-78` y darlas por buenas sin
+        # haber ejercitado nada.
+        self.venta = venta_de(estudiante)
 
     def _no_deja(self, tipo, monto):
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 MovimientoBilletera.objects.create(
-                    billetera=self.billetera, tipo=tipo, monto=Decimal(monto)
+                    billetera=self.billetera,
+                    tipo=tipo,
+                    monto=Decimal(monto),
+                    venta=self.venta if tipo == TipoDeMovimiento.VENTA else None,
                 )
 
     def test_una_recarga_no_puede_ser_negativa(self):

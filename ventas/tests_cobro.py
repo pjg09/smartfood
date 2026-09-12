@@ -34,6 +34,7 @@ from cuentas.models import Rol, Usuario
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, EstadoDelEstudiante, Estudiante
 from personas.services import dar_de_baja
+from ventas.models import MedioDePago, Venta
 from ventas.selectors import informacion_de_cobro
 
 
@@ -61,10 +62,23 @@ def movimiento(estudiante, tipo, monto, cuando=None):
     `creado_en` es `auto_now_add`, así que no se puede fijar al crear: se
     reescribe después con un `update`, que **no** vuelve a pasar por el campo
     automático. Es la única forma de tener movimientos de ayer sin esperar un día.
+
+    Desde `TT-78`, un movimiento de venta **señala la venta que lo origina**
+    (`INV-2`), así que se fabrica una. El cobro de verdad es `TT-80`.
     """
     billetera, _ = Billetera.objects.get_or_create(estudiante=estudiante)
+    venta = None
+    if tipo == TipoDeMovimiento.VENTA:
+        cajero = Usuario.objects.crear_usuario(
+            email=f"cajero-{Venta.objects.count()}@example.com",
+            rol=Rol.CAJERO,
+            nombre="Cajero",
+        )
+        venta = Venta.objects.create(
+            cajero=cajero, estudiante=estudiante, medio_pago=MedioDePago.BILLETERA
+        )
     asiento = MovimientoBilletera.objects.create(
-        billetera=billetera, tipo=tipo, monto=Decimal(monto)
+        billetera=billetera, tipo=tipo, monto=Decimal(monto), venta=venta
     )
     if cuando is not None:
         MovimientoBilletera.objects.filter(pk=asiento.pk).update(creado_en=cuando)

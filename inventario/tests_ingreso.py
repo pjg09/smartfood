@@ -34,6 +34,7 @@ from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_de, existencias_por_producto, historial_de
 from inventario.services import asentar, ingresar_mercancia
+from ventas.models import MedioDePago, Venta
 
 CLAVE = "clave-de-prueba-2026"
 
@@ -65,7 +66,19 @@ class LasExistenciasNoSeGuardanTest(TestCase):
         empanada = producto()
 
         asentar(producto=empanada, tipo=TipoDeMovimientoDeInventario.INGRESO, cantidad=30)
-        asentar(producto=empanada, tipo=TipoDeMovimientoDeInventario.VENTA, cantidad=-4)
+        # Desde `TT-78` una salida por venta señala la venta que la origina
+        # (`INV-3`). El cobro de verdad es `TT-80`; aquí se fabrica.
+        asentar(
+            producto=empanada,
+            tipo=TipoDeMovimientoDeInventario.VENTA,
+            cantidad=-4,
+            venta=Venta.objects.create(
+                cajero=Usuario.objects.crear_usuario(
+                    email="cajero@example.com", rol=Rol.CAJERO, nombre="Cajero"
+                ),
+                medio_pago=MedioDePago.EFECTIVO,
+            ),
+        )
         asentar(
             producto=empanada,
             tipo=TipoDeMovimientoDeInventario.MERMA,

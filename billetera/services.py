@@ -69,7 +69,7 @@ TIPOS_QUE_OPERAN = frozenset({TipoDeMovimiento.RECARGA, TipoDeMovimiento.VENTA})
 
 
 @transaction.atomic
-def asentar(*, estudiante, tipo, monto):
+def asentar(*, estudiante, tipo, monto, venta=None):
     """**El único sitio por el que se escribe en el libro** (`TT-65`, `HU-52`).
 
     Devuelve el `MovimientoBilletera` creado.
@@ -92,6 +92,20 @@ def asentar(*, estudiante, tipo, monto):
     es del cajero (`[S11]`)— y son los servicios de arriba los que la aplican.
     Meter aquí un `actor` obligaría a inventar uno en la venta, donde quien opera
     es el cajero sobre la billetera de un tercero.
+
+    ── `venta` (`TT-78`) ───────────────────────────────────────────────────
+    El movimiento de tipo `venta` **tiene que decir de qué venta sale**: es lo
+    que convierte el historial de `INV-2` en algo explicable y no en una columna
+    de números que hay que creer. La comprueba una `CheckConstraint`, y aquí se
+    exige antes para dar un mensaje que se entienda.
+
+    Una recarga no la lleva —no nace de ninguna compra— y una devolución puede o
+    no llevarla: corrige, y no siempre corrige una venta concreta (`DT-24`).
+
+    `asentar()` es el único punto de escritura del libro, así que **este
+    argumento es el único camino** por el que el servicio de venta de `TT-80`
+    podrá dejar esa referencia.
+    ─────────────────────────────────────────────────────────────────────────
     """
     if tipo in TIPOS_QUE_OPERAN:
         # `INVD-2`: ni desactivado ni de baja se compra ni se recarga. La puerta
@@ -99,10 +113,23 @@ def asentar(*, estudiante, tipo, monto):
         # el primer servicio que moviera dinero no tuviera que reconstruirla.
         comprobar_que_puede_operar(estudiante)
 
+    # **Va después de `INVD-2` a propósito.** Las dos comprobaciones rechazan, y
+    # lo que cambia es qué se le dice a quien llama. «Este estudiante no opera»
+    # es una respuesta sobre el mundo —la que el cajero necesita leer—; «falta la
+    # referencia a la venta» es una respuesta sobre el código. Con el orden al
+    # revés, cobrarle a un estudiante de baja contestaría lo segundo.
+    if tipo == TipoDeMovimiento.VENTA and venta is None:
+        raise ValidationError(
+            "Un movimiento de venta tiene que decir de qué venta sale: sin eso, "
+            "el historial que reconstruye el saldo deja de explicarse (INV-2)."
+        )
+    if tipo == TipoDeMovimiento.RECARGA and venta is not None:
+        raise ValidationError("Una recarga no sale de ninguna venta.")
+
     billetera, _ = Billetera.objects.get_or_create(estudiante=estudiante)
 
     return MovimientoBilletera.objects.create(
-        billetera=billetera, tipo=tipo, monto=monto
+        billetera=billetera, tipo=tipo, monto=monto, venta=venta
     )
 
 

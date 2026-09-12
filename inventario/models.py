@@ -68,9 +68,20 @@ class MovimientoInventario(models.Model):
     origina dice qué se vendió, a quién y cuándo (`TT-78`).
     ─────────────────────────────────────────────────────────────────────────
 
-    La referencia a la venta que origina el movimiento llega con `TT-78`, cuando
-    exista el modelo. Hasta entonces no se declara una clave ajena a una tabla
-    que no existe.
+    ── Y AHORA LA SEÑALA (`TT-78`) ─────────────────────────────────────────
+    La clave ajena a `Venta` es la que `TT-67` dejó prometida. Es lo que convierte
+    la frase de arriba en algo comprobable: el motivo de una salida por venta **es**
+    la venta, y con la referencia puesta se puede ir a mirarla en lugar de
+    suponerla. `INV-3` pide que las existencias se expliquen desde el historial, y
+    una salida de tres unidades sin decir de qué venta no las explica.
+
+    Dos restricciones lo sostienen: el movimiento de venta apunta a la suya, y el
+    ingreso y la merma **no** apuntan a ninguna — los dos son manuales y su
+    explicación es el motivo, no una compra que no existió.
+
+    `PROTECT`: borrar una venta que ya movió existencias dejaría el movimiento
+    sin lo que lo explica.
+    ─────────────────────────────────────────────────────────────────────────
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
@@ -89,6 +100,16 @@ class MovimientoInventario(models.Model):
     # `blank=True` y `default=""`, nunca `null`: dos formas de decir «no hay
     # motivo» son dos formas de que la restricción de `INV-8` se pueda esquivar.
     motivo = models.CharField("motivo", max_length=200, blank=True, default="")
+    # `null=True`: un ingreso y una merma no salen de ninguna venta. Qué tipos la
+    # exigen y cuáles la prohíben lo dicen las restricciones de abajo.
+    venta = models.ForeignKey(
+        "ventas.Venta",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="movimientos_de_inventario",
+        verbose_name="venta",
+    )
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
 
     class Meta:
@@ -120,6 +141,29 @@ class MovimientoInventario(models.Model):
                     | ~models.Q(motivo="")
                 ),
                 name="movimiento_inventario_merma_con_motivo",
+            ),
+            # `TT-78`. El motivo de una salida por venta **es** la venta, y aquí
+            # se obliga a que se pueda ir a mirarla (`INV-3`).
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(tipo=TipoDeMovimientoDeInventario.VENTA)
+                    | models.Q(venta__isnull=False)
+                ),
+                name="movimiento_inventario_de_venta_con_su_venta",
+            ),
+            # El ingreso y la merma son manuales: los explica su motivo, no una
+            # compra. Referenciar una venta desde ellos sería inventarla.
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(
+                        tipo__in=[
+                            TipoDeMovimientoDeInventario.INGRESO,
+                            TipoDeMovimientoDeInventario.MERMA,
+                        ]
+                    )
+                    | models.Q(venta__isnull=True)
+                ),
+                name="movimiento_inventario_manual_sin_venta",
             ),
         ]
 
