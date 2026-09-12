@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **30** de 37 | **13** de 16 |
-| Pendientes | 7 | 3 |
+| **Finalizadas** | **31** de 37 | **14** de 16 |
+| Pendientes | 6 | 2 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 13 | 14 |
 | Carlos | 10 | 11 |
-| Alejandro | 7 | 9 |
+| Alejandro | 8 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -109,7 +109,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☑ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☑ |
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☑ |
-| `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
+| `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☑ |
 | `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
 | `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
 
@@ -538,12 +538,12 @@ Dos decisiones que conviene no perder:
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-19` |
 | Invariantes | **`INV-1`** · escenario crítico **`TST-2`** |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
 | `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza | Pedro | ☑ **en `PR-12`** |
-| `TT-87` | Caso de prueba `TST-2`: venta rechazada, y saldo nunca negativo | Alejandro | ☐ |
+| `TT-87` | Caso de prueba `TST-2`: venta rechazada, y saldo nunca negativo | Alejandro | ☑ |
 
 `TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es
 `HU-20`, del Sprint 3.
@@ -553,6 +553,19 @@ Dos decisiones que conviene no perder:
 > en negativo, y `TT-80` es el commit que introduce la venta. Lo que este PR aporta es
 > `TT-87` —el escenario `TST-2` con su evidencia para `ENT-05`— y el mensaje que el cajero
 > lee, que es lo que cierra `HU-19`.
+
+**El mensaje resultó ser trabajo de verdad, no un adorno.** `HU-19` la opera `USR-3` con
+una fila delante, y el rechazo decía «El saldo es de 46500.00 y la venta suma 99000.00».
+Ahora dice **cuánto falta y en pesos** —«No alcanza: el saldo es $5.000 y la venta suma
+$10.000. Faltan $5.000»—, formateado con el único formateador del sistema
+(`billetera/templatetags/dinero.py`, que es una función además de un filtro). Un servicio
+que rechaza bien y una pantalla que dice «error» no cumplen la historia.
+
+**El segundo criterio es el que obligó a escribir distinto.** «El saldo nunca queda
+negativo, bajo ninguna combinación de operaciones» no se demuestra con tres casos elegidos
+a mano —los que uno elige son los que ya sabe que funcionan—: se recorren 120 operaciones
+intercaladas con semilla fija y se comprueba la propiedad **después de cada paso**. Sin la
+validación de `INV-1`, el saldo queda en `-3502,00` en el paso 2.
 
 ---
 

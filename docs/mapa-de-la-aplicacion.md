@@ -253,6 +253,12 @@ subir un precio o corregir una ficha nutricional no reescribe las ventas ya asen
 es lo que hace que el historial de consumo de `HU-30` sea un historial y no una proyección
 del catálogo de hoy sobre el pasado.
 
+**Si el saldo no alcanza, la venta no se realiza y la pantalla dice cuánto falta** (`HU-19`,
+`INV-1`): «No alcanza: el saldo es $5.000 y la venta suma $10.000. Faltan $5.000». No se
+descuenta nada —ni saldo ni existencias— y **el carrito se queda montado**, porque lo que el
+cajero necesita es quitar un renglón y volver a pulsar, no montar la venta otra vez con la
+fila esperando.
+
 **Lo que todavía no evalúa la venta** son las restricciones alimentarias y el límite diario
 (`HU-18`, `HU-20`), del Sprint 3. Su sitio es el mismo punto donde hoy se lee el saldo.
 
@@ -280,8 +286,8 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 10. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
     bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
     `INV-3`.
-11. **Volver a cobrar sin saldo suficiente**: la venta se rechaza y no se descuenta nada.
-    `INV-1`; el escenario `TST-2` con su evidencia es `HU-19`.
+11. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
+    no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
 
 ---
 
