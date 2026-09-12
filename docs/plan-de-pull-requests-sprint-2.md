@@ -82,14 +82,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **28** de 37 | **12** de 16 |
-| Pendientes | 9 | 4 |
+| **Finalizadas** | **30** de 37 | **13** de 16 |
+| Pendientes | 7 | 3 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 12 | 14 |
+| Pedro | 13 | 14 |
 | Carlos | 10 | 11 |
-| Alejandro | 6 | 9 |
+| Alejandro | 7 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -108,7 +108,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☑ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☑ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☑ |
-| `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☐ |
+| `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☑ |
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
 | `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☐ |
 | `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
@@ -502,15 +502,30 @@ Tres cosas más que salieron de aquí y conviene no perder:
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-22` |
 | Invariantes | `DT-8`, `DT-19` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-84` | Instantánea del precio y de la información nutricional en la línea de venta | Pedro | ☐ |
-| `TT-85` | Caso de prueba: editar un producto no altera las ventas ya asentadas | Alejandro | ☐ |
+| `TT-84` | Instantánea del precio y de la información nutricional en la línea de venta | Pedro | ☑ |
+| `TT-85` | Caso de prueba: editar un producto no altera las ventas ya asentadas | Alejandro | ☑ |
 
 No es una desnormalización: «lo que el producto declara hoy» y «lo que declaraba al
-venderse» son hechos distintos. Sostiene los reportes de consumo del Sprint 5.
+venderse» son hechos distintos. Una desnormalización guarda un valor que se podría
+recalcular; esto guarda uno que, sin copiarlo, se perdería. Sostiene los reportes de
+consumo del Sprint 5.
+
+**`TT-85` se comprobó haciéndola fallar**: con la línea leyendo el precio del producto,
+una venta ya asentada de `$7.000` pasa a decir `$19.800` al subir el precio del catálogo.
+
+Dos decisiones que conviene no perder:
+
+- **El nombre del producto no se copia.** `ALC-IN-20` habla de la información nutricional,
+  y la clave ajena va con `PROTECT` —un producto vendido no desaparece—, así que el nombre
+  siempre se puede leer. Hay una prueba que lo deja escrito en vez de implícito.
+- **La lista de campos a copiar vive en el modelo** (`LineaVenta.CAMPOS_DE_LA_INSTANTANEA`)
+  y no en el servicio. El día que el catálogo declare un nutriente más, la venta lo copia
+  sin tocarse; con la lista escrita en el servicio, el dato nuevo no llegaría al historial
+  y nadie lo echaría en falta hasta el reporte de `HU-30`.
 
 ---
 

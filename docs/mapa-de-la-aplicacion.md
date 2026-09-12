@@ -248,6 +248,11 @@ de concurrencia que lo vigilan, y se comprobó que fallan si alguien invierte es
 Tras cobrar, la caja queda lista para el siguiente: el carrito se vacía, el cliente se
 olvida y el catálogo vuelve con las existencias de ahora.
 
+Cada renglón **se queda con el precio y los nutrientes de ese momento** (`HU-22`, `DT-8`):
+subir un precio o corregir una ficha nutricional no reescribe las ventas ya asentadas, que
+es lo que hace que el historial de consumo de `HU-30` sea un historial y no una proyección
+del catálogo de hoy sobre el pasado.
+
 **Lo que todavía no evalúa la venta** son las restricciones alimentarias y el límite diario
 (`HU-18`, `HU-20`), del Sprint 3. Su sitio es el mismo punto donde hoy se lee el saldo.
 
@@ -283,8 +288,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 ## [S6] Lo que todavía no existe
 
 Restricciones y límite diario (`HU-09`…`HU-13`), los rechazos que dependen de ellas
-(`HU-18`, `HU-20`), la venta a cliente genérico desde la pantalla (`HU-53`), la instantánea
-nutricional (`HU-22`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
+(`HU-18`, `HU-20`), la venta a cliente genérico desde la pantalla (`HU-53`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
 recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
 **El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
@@ -301,7 +305,8 @@ La app `reportes` **no está creada**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` nació en `TT-57` para que la
 pantalla tuviera dónde vivir y hoy tiene sus modelos (`TT-78`) y **su servicio** (`TT-80`):
 la venta con su medio de pago y su estudiante opcional, la línea de venta, y la transacción
-única que sostiene `INV-1`, `INV-2` e `INV-3` a la vez. Lo que le falta a la línea es
-congelar el precio y los nutrientes, que es `TT-84`. `billetera` e `inventario` tienen los suyos desde `TT-59` y
+única que sostiene `INV-1`, `INV-2` e `INV-3` a la vez. La línea congela además el precio y los
+nutrientes que el producto declaraba al venderse (`TT-84`, `HU-22`): editar el catálogo
+mañana no reescribe lo que se cobró hoy. `billetera` e `inventario` tienen los suyos desde `TT-59` y
 `TT-67`, y **ninguno es una columna `saldo` ni `existencias`**; desde `TT-78` los dos
 señalan además la venta que origina cada movimiento.
