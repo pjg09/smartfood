@@ -165,9 +165,9 @@ El lector **es un teclado**: teclea el código y envía Enter. No hay driver ni 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-77` | Fotografía del estudiante en el panel de cobro, con marcador visible cuando no la tiene | Carlos | ☐ |
+| `TT-77` | Fotografía del estudiante en el panel de cobro, con marcador visible cuando no la tiene | Carlos | ☑ |
 
-Control **preventivo** de suplantación (`DEC-8`): el cajero ve a quién pertenece la tarjeta que le presentan. Si el estudiante no tiene fotografía, la venta procede igual.
+Control **preventivo** de suplantación (`DEC-8`): el cajero ve a quién pertenece la tarjeta que le presentan. Si el estudiante no tiene fotografía, la venta procede igual — y el hueco **se dice**: un avatar genérico haría creer que la comprobación se hizo y salió bien.
 
 ### `[HU-54]` Medio de pago en toda venta
 

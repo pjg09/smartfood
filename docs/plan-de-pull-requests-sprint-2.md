@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **20** de 37 | **9** de 16 |
-| Pendientes | 17 | 7 |
+| **Finalizadas** | **21** de 37 | **10** de 16 |
+| Pendientes | 16 | 6 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 9 | 14 |
-| Carlos | 7 | 11 |
+| Carlos | 8 | 11 |
 | Alejandro | 4 | 9 |
 | Naomi | 0 | 3 |
 
@@ -105,7 +105,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-07` | `TT-70`–`TT-72` | `HU-15` → `ENT-02` | ☑ |
 | `PR-08` | `TT-73` | `HU-16` | ☑ |
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☑ |
-| `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☐ |
+| `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☑ |
 | `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☐ |
@@ -375,14 +375,30 @@ cosa*, y es lo único que nadie puede afirmar hasta `HU-13`.
 | Responsables | Carlos |
 | Historia | `HU-58` |
 | Invariantes | `DEC-8`; complementa `DEC-5` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-77` | Fotografía en el panel de cobro, con marcador visible cuando no la tiene | Carlos | ☐ |
+| `TT-77` | Fotografía en el panel de cobro, con marcador visible cuando no la tiene | Carlos | ☑ |
 
 Control **preventivo** de suplantación: la desactivación de `HU-47` y `HU-48` solo actúa
 una vez reportada la pérdida; la fotografía actúa en el momento.
+
+**Cierra `HU-58`**, y es la única historia del sprint que se cierra sin tocar una sola
+línea de lógica: el dato ya existía desde `HU-57` (`TT-51`) y el panel desde `PR-09`. Lo
+que faltaba era enseñarlo donde sirve.
+
+Dos decisiones que conviene no perder:
+
+- **El hueco se dice, no se disimula.** El segundo criterio —«si no tiene fotografía, la
+  venta procede igual»— leído entero exige que el cajero **sepa** que ahí el control no
+  está disponible. Un avatar genérico y silencioso haría creer que la comprobación se hizo
+  y salió bien, que es peor que no tener nada. Se dibuja el bloque punteado de `[S2.4]`
+  con el rótulo «Sin foto».
+- **La fotografía es cuadrada**, a diferencia de la de la ficha del acudiente. Allí el
+  retrato es identidad visual; aquí es el dato que se compara con la cara que está
+  enfrente, y el recorte circular se come las sienes. Es la razón por la que un carné no
+  lleva la foto en redondo.
 
 ---
 
