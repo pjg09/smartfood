@@ -201,10 +201,12 @@ El **estudiante opcional** es lo que habilita `HU-53`: una venta sin estudiante 
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-84` | Instantánea del precio y de la información nutricional en la línea de venta (`DT-8`) | Pedro | ☐ |
-| `TT-85` | Caso de prueba: editar un producto no altera las ventas ya asentadas | Alejandro | ☐ |
+| `TT-84` | Instantánea del precio y de la información nutricional en la línea de venta (`DT-8`) | Pedro | ☑ |
+| `TT-85` | Caso de prueba: editar un producto no altera las ventas ya asentadas | Alejandro | ☑ |
 
-No es una desnormalización: «lo que el producto declara hoy» y «lo que declaraba al venderse» son hechos distintos (`DT-19`). Sostiene los reportes de consumo del Sprint 5.
+No es una desnormalización: «lo que el producto declara hoy» y «lo que declaraba al venderse» son hechos distintos (`DT-19`). Una desnormalización guarda un valor que se podría recalcular; esto guarda uno que, sin copiarlo, se perdería. Sostiene los reportes de consumo del Sprint 5.
+
+**`TT-85` se comprobó por el lado que prueba algo**: con la línea leyendo el precio del producto en vez del suyo, una venta ya asentada de `$7.000` pasa a decir `$19.800` al subir el precio del catálogo, y la prueba falla. Una copia que nadie ha visto sobrevivir a una edición no es una copia.
 
 ### `[HU-19]` Venta rechazada por saldo insuficiente
 

@@ -158,13 +158,35 @@ class Venta(models.Model):
 
 
 class LineaVenta(models.Model):
-    """Un renglón de la venta: qué producto y cuántas unidades.
+    """Un renglón de la venta: qué producto, cuántas unidades, y **qué era ese
+    producto en ese momento** (`TT-84`, `DT-8`, `HU-22`).
 
-    **Todavía no guarda el precio ni la información nutricional.** Los copia
-    `TT-84` (`PR-13`, `DT-8`, `HU-22`), y hasta entonces no se declaran campos
-    vacíos que finjan tenerlos: una columna de precio siempre nula diría que el
-    dato existe y no se llenó, cuando lo que pasa es que la historia que lo
-    congela no ha llegado.
+    ═══════════════════════════════════════════════════════════════════════
+    **EL PRECIO Y LOS NUTRIENTES SE COPIAN AQUÍ, NO SE LEEN DEL PRODUCTO.**
+
+    `ALC-IN-20` pide que el historial muestre la información nutricional «tal
+    como estaba declarada **al momento de la venta**». Con una referencia al
+    producto, subir el precio el martes reescribiría lo que costó el lunes, y
+    corregir una ficha nutricional cambiaría lo que un niño comió el mes pasado.
+    El reporte de consumo de `HU-30` dejaría de ser un historial para ser una
+    proyección del catálogo de hoy sobre el pasado.
+
+    **No es una desnormalización** (`DT-19`). «Lo que el producto declara hoy» y
+    «lo que declaraba cuando se vendió» son **hechos distintos**, no dos copias
+    del mismo: el segundo no se puede derivar del primero. Una desnormalización
+    guarda un valor que se podría recalcular; esto guarda uno que se perdería.
+    ═══════════════════════════════════════════════════════════════════════
+
+    **El nombre no se copia**, y es deliberado: `ALC-IN-20` habla de la
+    información nutricional, y la clave ajena va con `PROTECT` —un producto
+    vendido no desaparece, se retira del catálogo—, así que el nombre siempre se
+    puede leer. Si algún día renombrar un producto hiciera ilegible un historial,
+    eso es una decisión nueva y se registra; hoy no hay criterio que lo pida.
+
+    **Los nutrientes admiten nulo igual que en el producto**, y significan lo
+    mismo: «no declarado», no «cero». Una cafetería no tiene la ficha técnica de
+    todo lo que vende, y convertir ese hueco en un cero haría que los reportes de
+    `HU-30` sumaran ceros inventados en vez de enseñar lo que falta.
 
     ── UNA LÍNEA POR PRODUCTO EN CADA VENTA ────────────────────────────────
     Dos renglones del mismo producto en la misma venta son el mismo renglón con
@@ -203,6 +225,49 @@ class LineaVenta(models.Model):
     # no esto: aquí «tres» son tres unidades vendidas, no menos tres.
     cantidad = models.IntegerField("cantidad")
 
+    # --- La instantánea (`TT-84`, `DT-8`) -----------------------------------
+    #
+    # Mismos nombres que en `catalogo.Producto` y mismos tipos, con una sola
+    # excepción: aquí el precio se llama `precio_unitario`, porque en un renglón
+    # conviven dos cifras —lo que costaba **una** unidad y lo que sumó el
+    # renglón— y `precio` a secas invita a confundirlas.
+    precio_unitario = models.DecimalField(
+        "precio unitario", max_digits=10, decimal_places=2
+    )
+    porcion = models.CharField("porción", max_length=60, blank=True, default="")
+    energia_kcal = models.PositiveIntegerField("energía (kcal)", null=True, blank=True)
+    proteinas_g = models.DecimalField(
+        "proteínas (g)", max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    carbohidratos_g = models.DecimalField(
+        "carbohidratos (g)", max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    azucares_g = models.DecimalField(
+        "azúcares (g)", max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    grasas_totales_g = models.DecimalField(
+        "grasas totales (g)", max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    grasas_saturadas_g = models.DecimalField(
+        "grasas saturadas (g)", max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    sodio_mg = models.PositiveIntegerField("sodio (mg)", null=True, blank=True)
+
+    # Los campos que se copian del producto al vender. Vive aquí y no repartido
+    # por el servicio para que añadir un nutriente al catálogo sea **una** línea:
+    # si esta lista se queda corta, el dato nuevo no llega al historial y nadie
+    # se entera hasta que un reporte lo eche en falta meses después.
+    CAMPOS_DE_LA_INSTANTANEA = (
+        "porcion",
+        "energia_kcal",
+        "proteinas_g",
+        "carbohidratos_g",
+        "azucares_g",
+        "grasas_totales_g",
+        "grasas_saturadas_g",
+        "sodio_mg",
+    )
+
     class Meta:
         verbose_name = "línea de venta"
         verbose_name_plural = "líneas de venta"
@@ -210,6 +275,13 @@ class LineaVenta(models.Model):
             models.CheckConstraint(
                 condition=models.Q(cantidad__gt=0),
                 name="linea_venta_cantidad_positiva",
+            ),
+            # El precio congelado no puede ser negativo. Cero sí: una cortesía o
+            # una promoción son ventas legítimas, y `INV-1` no se toca porque
+            # restar cero no deja a nadie debiendo.
+            models.CheckConstraint(
+                condition=models.Q(precio_unitario__gte=0),
+                name="linea_venta_precio_no_negativo",
             ),
             models.UniqueConstraint(
                 fields=["venta", "producto"],
@@ -219,3 +291,13 @@ class LineaVenta(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} × {self.producto}"
+
+    @property
+    def importe(self):
+        """Lo que sumó el renglón, **con el precio de entonces**.
+
+        Se calcula y no se guarda: es el producto de dos columnas que ya están
+        aquí, así que guardarlo sería la desnormalización que la instantánea no
+        es —un valor derivable de otros dos de la misma fila (`DT-19`)—.
+        """
+        return self.precio_unitario * self.cantidad

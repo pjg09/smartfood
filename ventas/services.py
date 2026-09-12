@@ -248,9 +248,28 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
         cajero=actor, estudiante=estudiante, medio_pago=medio_pago
     )
 
+    # ── LA INSTANTÁNEA (`TT-84`, `DT-8`, `HU-22`) ───────────────────────────
+    # El precio y los nutrientes se copian **de la fila bloqueada**, que es la
+    # que se acaba de leer para validar. No se vuelve a consultar el producto:
+    # entre una lectura y otra podría haberse editado, y entonces la venta se
+    # habría cobrado a un precio y registrado a otro.
+    #
+    # Los nutrientes salen de `CAMPOS_DE_LA_INSTANTANEA` y no de una lista
+    # escrita aquí: el día que el catálogo declare un nutriente más, esto lo
+    # copia sin tocarse. Si la lista se quedara corta, el dato nuevo no llegaría
+    # al historial y nadie lo echaría en falta hasta el reporte de `HU-30`.
     LineaVenta.objects.bulk_create(
         [
-            LineaVenta(venta=venta, producto=producto, cantidad=lineas[producto.id])
+            LineaVenta(
+                venta=venta,
+                producto=producto,
+                cantidad=lineas[producto.id],
+                precio_unitario=producto.precio,
+                **{
+                    campo: getattr(producto, campo)
+                    for campo in LineaVenta.CAMPOS_DE_LA_INSTANTANEA
+                },
+            )
             for producto in productos
         ]
     )
@@ -278,15 +297,16 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
 
 
 def total_de(venta):
-    """Lo que sumó la venta, desde sus líneas.
+    """Lo que sumó la venta, **con los precios de entonces** (`HU-22`).
 
     **No hay columna `total`**, y es la misma decisión que `DT-4` y `DT-5`: un
     total guardado al lado de las líneas es una segunda fuente de verdad que un
-    día dirá algo distinto. Se calcula desde el precio del producto hasta que
-    `TT-84` congele el suyo en la línea (`DT-8`, `HU-22`), momento en el que esta
-    función pasará a leerlo de ahí y dejará de depender del catálogo.
+    día dirá algo distinto. Aquí sí se puede calcular sin riesgo porque los
+    sumandos ya no cambian: desde `TT-84` el precio vive congelado en la línea
+    (`DT-8`), así que subir el precio de una empanada mañana no reescribe lo que
+    costó la venta de hoy.
+
+    Es la diferencia entre calcular un dato derivable —legítimo— y leer uno que
+    se movió por debajo, que es lo que hacía esta función antes de `TT-84`.
     """
-    return sum(
-        (linea.producto.precio * linea.cantidad for linea in venta.lineas.all()),
-        Decimal("0.00"),
-    )
+    return sum((linea.importe for linea in venta.lineas.all()), Decimal("0.00"))
