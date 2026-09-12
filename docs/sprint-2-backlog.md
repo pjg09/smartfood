@@ -215,7 +215,9 @@ No es una desnormalización: «lo que el producto declara hoy» y «lo que decla
 | `TT-86` | Validación del saldo **dentro** del bloqueo; si no alcanza, la venta no se realiza (`INV-1`) | Pedro | ☑ |
 | `TT-87` | Caso de prueba `TST-2`: venta rechazada por saldo insuficiente, y saldo nunca negativo | Alejandro | ☐ |
 
-`TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es `HU-20`, del Sprint 3.
+`TST-2` es escenario crítico de `ENT-05`. Su otra mitad —rechazo por límite diario— es `HU-20`, del Sprint 3: el límite no existe todavía como modelo, y una prueba sobre una regla que no se aplica no demostraría nada. Cuando llegue, su caso se añade a `ventas/tests_saldo_insuficiente.py` y `TST-2` queda completo.
+
+El segundo criterio —«el saldo nunca queda negativo, **bajo ninguna combinación** de operaciones»— no se demuestra con casos elegidos a mano: se recorre una secuencia de 120 operaciones intercaladas y se comprueba la propiedad después de cada paso. **Se comprobó que detecta el fallo**: sin la validación de `INV-1`, el saldo queda en `-3502,00` en el paso 2.
 
 ### `[HU-53]` Venta a cliente genérico
 

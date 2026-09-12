@@ -31,6 +31,7 @@ from django.db import transaction
 from billetera.models import Billetera, TipoDeMovimiento
 from billetera.selectors import saldo_de
 from billetera.services import asentar as asentar_en_la_billetera
+from billetera.templatetags.dinero import dinero
 from catalogo.models import Producto
 from cuentas.models import Rol
 from inventario.models import TipoDeMovimientoDeInventario
@@ -54,12 +55,24 @@ class CarritoVacio(VentaRechazada):
 
 
 class SaldoInsuficiente(VentaRechazada):
-    """`INV-1`. Ninguna venta deja la billetera en negativo.
+    """`INV-1`, `HU-19`, escenario crítico `TST-2`.
 
-    El rechazo con su mensaje es `HU-19` (`PR-14`); la invariante es de aquí,
-    porque no puede existir un solo commit de `main` en el que una venta pueda
-    dejar deuda.
+    **Ninguna venta deja la billetera en negativo.** El primer criterio de
+    `HU-19` —«si los fondos son insuficientes, la venta no se realiza»— se
+    cumple lanzando esto **dentro** del bloqueo, antes de escribir nada
+    (`DT-6`); el segundo —«el saldo nunca queda negativo, bajo ninguna
+    combinación de operaciones»— lo vigila `ventas/tests_saldo_insuficiente.py`.
+
+    Lleva `saldo`, `total` y `faltante` además del mensaje. Quien la atienda
+    puede así decir cuánto falta sin volver a consultar nada, y una prueba puede
+    exigir la cifra en lugar de buscar un texto dentro de otro texto.
     """
+
+    def __init__(self, mensaje, *, saldo=None, total=None):
+        super().__init__(mensaje)
+        self.saldo = saldo
+        self.total = total
+        self.faltante = None if saldo is None or total is None else total - saldo
 
 
 class ExistenciasInsuficientes(VentaRechazada):
@@ -225,7 +238,7 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
         disponibles = existencias.get(producto.id, 0)
         if disponibles < lineas[producto.id]:
             raise ExistenciasInsuficientes(
-                f"De «{producto.nombre}» quedan {disponibles}, y se piden "
+                f"De «{producto.nombre}» quedan {disponibles} y se piden "
                 f"{lineas[producto.id]}."
             )
 
@@ -239,8 +252,22 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
         # el único punto del sistema donde esa comparación es de fiar.
         saldo = saldo_de(estudiante)
         if saldo < total:
+            # ── EL MENSAJE VA EN PESOS, NO EN `Decimal` ─────────────────
+            # `HU-19` la opera el cajero con una fila delante: «El saldo es de
+            # 46500.00» obliga a traducir mentalmente, y a las tres de la tarde
+            # eso se lee mal. Se formatea con **el único formateador del
+            # sistema**, `billetera.templatetags.dinero`, que es una función
+            # normal además de un filtro — importarla aquí no rompe la regla de
+            # un solo sitio, la cumple.
+            #
+            # Y dice **cuánto falta**, que es lo que el cajero necesita para
+            # decirle al estudiante si quita algo o si su acudiente recarga.
+            # ─────────────────────────────────────────────────────────────
             raise SaldoInsuficiente(
-                f"El saldo es de {saldo} y la venta suma {total}: no alcanza."
+                f"No alcanza: el saldo es {dinero(saldo)} y la venta suma "
+                f"{dinero(total)}. Faltan {dinero(total - saldo)}.",
+                saldo=saldo,
+                total=total,
             )
 
     # ── 3. ESCRIBIR ─────────────────────────────────────────────────────────
