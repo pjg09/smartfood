@@ -221,6 +221,18 @@ que lo sostiene no es un rótulo: el selector que lo devuelve exige el rol cajer
 cajero recibe `403` en el panel del acudiente, en la ficha del estudiante y en la recarga
 —las otras tres pantallas donde hay un saldo escrito—.
 
+**Y con qué se paga ya está decidido** (`HU-54`, `TT-79`). La columna del ticket ofrece
+**solo lo que la base va a aceptar**: con un estudiante identificado el medio es la
+billetera y no hay nada que elegir —su compra sale de su saldo—; sin estudiante, efectivo o
+transferencia, que son los medios de la venta a cliente genérico (`DEC-1`). No son tres
+botones con uno apagado: lo que no aplica **no se ofrece**, y quien lo impone de verdad es
+una `CheckConstraint`, no la pantalla.
+
+**La transferencia no pasa por el sistema.** Va del banco del cliente al de la cafetería y
+aquí solo queda constancia de que se pagó así (`ALC-OUT-01`). La pantalla lo dice, porque
+quien lee «Transferencia» en una caja puede entender que el sistema la cobra o que recarga
+algo.
+
 **Todavía no cobra**: la venta es `HU-21`.
 
 ---
@@ -250,17 +262,19 @@ Restricciones y límite diario (`HU-09`…`HU-13`), la venta en el punto de vent
 recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
 Del punto de venta existe **la columna del estudiante entera** —identificarlo por las dos
-vías (`HU-15`, `HU-16`), ver su fotografía (`HU-58`) y con qué se le cobra (`HU-17`)— y
-**los huecos de las otras dos**: catálogo y ticket llegan con `HU-21` y `HU-54`. `HU-17`
-sigue marcada como abierta aun con su panel construido: le falta el bloque de
-restricciones, que es del Sprint 3.
+vías (`HU-15`, `HU-16`), ver su fotografía (`HU-58`) y con qué se le cobra (`HU-17`)— y **el
+medio de pago** (`HU-54`). Lo que falta es el catálogo, el carrito y el total, que llegan
+con `HU-21`. `HU-17` sigue marcada como abierta aun con su panel construido: le falta el
+bloque de restricciones, que es del Sprint 3.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
 es la venta del punto de venta.
 
 La app `reportes` **no está creada**: cada una se crea en el sprint que
-la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` existe desde `TT-57` porque la
-pantalla necesitaba un sitio donde vivir, pero **está vacía de modelos**: los suyos son de
-`TT-78` y el servicio de venta, de `TT-80`. `billetera` e `inventario` sí tienen los suyos
-—desde `TT-59` y `TT-67`—, y **ninguno es una columna `saldo` ni `existencias`**.
+la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` nació en `TT-57` para que la
+pantalla tuviera dónde vivir y **ya tiene sus modelos** (`TT-78`): la venta, con su medio de
+pago y su estudiante opcional, y la línea de venta. Lo que falta es el servicio que las
+asienta, que es `TT-80`. `billetera` e `inventario` tienen los suyos desde `TT-59` y
+`TT-67`, y **ninguno es una columna `saldo` ni `existencias`**; desde `TT-78` los dos
+señalan además la venta que origina cada movimiento.

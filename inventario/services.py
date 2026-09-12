@@ -35,7 +35,7 @@ def _comprobar_que_gestiona_el_inventario(actor, accion):
 
 
 @transaction.atomic
-def asentar(*, producto, tipo, cantidad, motivo=""):
+def asentar(*, producto, tipo, cantidad, motivo="", venta=None):
     """**El único sitio por el que se escribe en el libro** (`TT-67`, `INV-3`).
 
     Devuelve el `MovimientoInventario` creado.
@@ -53,6 +53,19 @@ def asentar(*, producto, tipo, cantidad, motivo=""):
     El signo y el motivo obligatorio de `INV-8` los impone además la base
     (`DT-5`). Aquí se comprueban antes para dar un mensaje que se entienda, no
     para sustituirla: la restricción es la que no se olvida.
+
+    ── `venta` (`TT-78`) ───────────────────────────────────────────────────
+    La salida por venta **señala la venta que la origina**. Es lo que hace
+    comprobable la frase de arriba —el motivo de una venta es la venta misma— y
+    lo que `INV-3` necesita para que unas existencias se puedan explicar.
+
+    El ingreso y la merma no la llevan: los dos son manuales y los explica su
+    motivo, no una compra que no existió.
+
+    Como `asentar()` es el único punto de escritura del libro, **este argumento
+    es el único camino** por el que el servicio de venta de `TT-80` podrá dejar
+    esa referencia.
+    ─────────────────────────────────────────────────────────────────────────
     """
     if cantidad == 0:
         raise ValidationError("Un movimiento de cero no mueve nada.")
@@ -65,6 +78,16 @@ def asentar(*, producto, tipo, cantidad, motivo=""):
             "Una venta o una merma restan: la cantidad tiene que ser negativa."
         )
 
+    if tipo == TipoDeMovimientoDeInventario.VENTA and venta is None:
+        raise ValidationError(
+            "Una salida por venta tiene que decir de qué venta sale: es lo que "
+            "explica las existencias que quedaron (INV-3)."
+        )
+    if tipo != TipoDeMovimientoDeInventario.VENTA and venta is not None:
+        raise ValidationError(
+            "El ingreso y la merma son manuales: los explica su motivo, no una venta."
+        )
+
     # `INV-8`: toda disminución **manual** exige motivo. La venta no, porque su
     # motivo es la venta misma.
     if tipo == TipoDeMovimientoDeInventario.MERMA and not motivo.strip():
@@ -74,7 +97,11 @@ def asentar(*, producto, tipo, cantidad, motivo=""):
         )
 
     return MovimientoInventario.objects.create(
-        producto=producto, tipo=tipo, cantidad=cantidad, motivo=motivo.strip()
+        producto=producto,
+        tipo=tipo,
+        cantidad=cantidad,
+        motivo=motivo.strip(),
+        venta=venta,
     )
 
 

@@ -1,0 +1,86 @@
+{% comment %} TT-79. Con qué se paga la venta (`HU-54`, `DEC-1`).
+
+   **Lo que se ofrece depende de si hay estudiante, y no es una comodidad de la
+   interfaz: es la regla.** `HU-54` dice que las ventas de estudiante son
+   *siempre* billetera, y `DEC-1` que los medios de una venta genérica son
+   efectivo y transferencia. Juntas: hay estudiante **si y solo si** el medio es
+   billetera. Quien la impone de verdad es la `CheckConstraint`
+   `venta_medio_de_pago_segun_el_cliente` (`DT-15`, regla 2); esta pantalla no
+   ofrece lo que la base va a rechazar, que no es lo mismo que impedirlo.
+
+   Por eso **no hay tres botones con uno apagado**. Con un estudiante delante,
+   efectivo y transferencia no son opciones deshabilitadas: no son opciones. Y
+   sin estudiante, la billetera tampoco — la billetera es individual por
+   estudiante (`HU-06`), así que cobrar contra ella sin decir de quién no
+   significa nada.
+
+   El bloque **lo repinta el servidor**, no el navegador: llega por intercambio
+   fuera de banda desde la respuesta de identificación (`hx-swap-oob`). La regla
+   vive en un solo sitio y la pantalla la refleja; duplicarla en JavaScript sería
+   la tercera copia, y la que se olvidaría de actualizar.
+
+   El valor viaja en un `<input type="hidden">` que leerá el cobro de `TT-80`
+   (`PR-12`). Hoy no hay nada que confirmar, y el hueco de abajo lo dice.
+{% endcomment %}
+
+<div id="medio-de-pago" class="flex flex-col gap-2"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <h3 class="text-base font-semibold text-texto">Medio de pago</h3>
+
+  {% if estudiante %}
+    {% comment %} No es un grupo de modos con una sola opción —eso sería un botón que no
+       hace nada—: es la afirmación de lo que va a pasar, con su motivo. El
+       cajero no elige aquí, y fingir que elige le haría buscar la alternativa.
+    {% endcomment %}
+    <input type="hidden" name="medio_pago" value="billetera">
+    <p class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover p-3"
+       data-medio-fijo="billetera">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md
+                   bg-serie-1/10 text-serie-1">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-saldo"></use></svg>
+      </span>
+      <span class="flex flex-col">
+        <span class="text-base font-semibold text-texto">Billetera</span>
+        <span class="text-sm text-texto-suave">
+          Las compras de un estudiante salen siempre de su saldo.
+        </span>
+      </span>
+    </p>
+  {% else %}
+    {% comment %} Grupo de modos (`[S2.3]`): `aria-pressed`, todas las opciones a la vista y
+       una sola pulsación. El icono va encima de la etiqueta, como en el selector
+       de búsqueda — «Transferencia» al lado de un icono en una columna estrecha
+       se recorta, y el rótulo es lo que dice qué hace el botón. {% endcomment %}
+    <input type="hidden" name="medio_pago" value="efectivo" data-valor-del-medio>
+    <div role="group" aria-label="Con qué paga el cliente" class="flex gap-1.5"
+         data-medios-de-pago>
+      <button type="button" data-medio="efectivo" aria-pressed="true"
+              class="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md
+                     border px-1 py-2 text-base font-medium transition-colors
+                     border-borde bg-superficie text-texto hover:bg-superficie-hover
+                     aria-pressed:border-primario aria-pressed:bg-primario
+                     aria-pressed:text-sobre-primario">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-efectivo"></use></svg>
+        <span class="max-w-full truncate">Efectivo</span>
+      </button>
+      <button type="button" data-medio="transferencia" aria-pressed="false"
+              class="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md
+                     border px-1 py-2 text-base font-medium transition-colors
+                     border-borde bg-superficie text-texto hover:bg-superficie-hover
+                     aria-pressed:border-primario aria-pressed:bg-primario
+                     aria-pressed:text-sobre-primario">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-movil"></use></svg>
+        <span class="max-w-full truncate">Transferencia</span>
+      </button>
+    </div>
+
+    {% comment %} **Hay que decirlo aquí y no en la documentación**: la transferencia va de
+       la app del cliente a la cuenta de la cafetería y **no pasa por el sistema**
+       (`DEC-1`, `ALC-OUT-01`). Quien lea «Transferencia» en una caja puede
+       entender que el sistema la cobra o que recarga algo, y lo único que hace es
+       dejar constancia. Callarlo es como se cuadra mal una caja. {% endcomment %}
+    <p class="text-sm text-texto-suave">
+      La transferencia se hace por fuera, del banco del cliente al de la cafetería.
+      Aquí solo queda constancia de que se pagó así.
+    </p>
+  {% endif %}
+</div>

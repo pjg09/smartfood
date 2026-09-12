@@ -32,6 +32,7 @@ from billetera.services import recargar
 from cuentas.models import Rol, Usuario
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
+from ventas.models import MedioDePago, Venta
 
 
 def acudiente_con_estudiante(sufijo="1"):
@@ -63,6 +64,25 @@ def suma_en_python(estudiante):
     return total
 
 
+def venta_de(estudiante):
+    """Una venta cualquiera de ese estudiante, para colgarle su movimiento.
+
+    Desde `TT-78` un movimiento de tipo `venta` **tiene que señalar la venta que
+    lo origina**: es lo que hace que el historial de `INV-2` se pueda explicar y
+    no solo sumar. Estas pruebas no ejercitan el cobro —es `TT-80`—, así que la
+    fabrican directamente; lo que `TST-3` compara sigue siendo saldo contra
+    historial.
+    """
+    cajero = Usuario.objects.crear_usuario(
+        email=f"cajero-{Venta.objects.count()}@example.com",
+        rol=Rol.CAJERO,
+        nombre="Cajero",
+    )
+    return Venta.objects.create(
+        cajero=cajero, estudiante=estudiante, medio_pago=MedioDePago.BILLETERA
+    )
+
+
 class TST3ElSaldoCoincideConSuHistorialTest(TestCase):
     """`TST-3`, `INV-2`, `HU-08`. El escenario crítico, en cuatro formas."""
 
@@ -89,7 +109,10 @@ class TST3ElSaldoCoincideConSuHistorialTest(TestCase):
         billetera = Billetera.objects.get(estudiante=self.estudiante)
 
         MovimientoBilletera.objects.create(
-            billetera=billetera, tipo=TipoDeMovimiento.VENTA, monto=Decimal("-12500.50")
+            billetera=billetera,
+            tipo=TipoDeMovimiento.VENTA,
+            monto=Decimal("-12500.50"),
+            venta=venta_de(self.estudiante),
         )
         MovimientoBilletera.objects.create(
             billetera=billetera, tipo=TipoDeMovimiento.DEVOLUCION, monto=Decimal("2500.50")
@@ -122,7 +145,14 @@ class TST3ElSaldoCoincideConSuHistorialTest(TestCase):
                 monto = -Decimal(azar.randrange(100, 300000)) / 100
 
             MovimientoBilletera.objects.create(
-                billetera=billetera, tipo=tipo, monto=monto
+                billetera=billetera,
+                tipo=tipo,
+                monto=monto,
+                venta=(
+                    venta_de(self.estudiante)
+                    if tipo == TipoDeMovimiento.VENTA
+                    else None
+                ),
             )
             esperado += monto
 
@@ -138,7 +168,10 @@ class TST3ElSaldoCoincideConSuHistorialTest(TestCase):
         recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("10000"))
         billetera = Billetera.objects.get(estudiante=self.estudiante)
         MovimientoBilletera.objects.create(
-            billetera=billetera, tipo=TipoDeMovimiento.VENTA, monto=Decimal("-2500")
+            billetera=billetera,
+            tipo=TipoDeMovimiento.VENTA,
+            monto=Decimal("-2500"),
+            venta=venta_de(self.estudiante),
         )
 
         al_derecho = sum(
