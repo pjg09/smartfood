@@ -122,6 +122,19 @@ Quién está pulsado lo mueve `assets/js/interfaz.js`, no el servidor, siempre q
 viva en el navegador (el tema) o en otro control (los atajos de importe de la recarga). Un
 botón que sigue pulsado mientras el campo dice otra cosa miente sobre lo que se va a enviar.
 
+**Qué opciones hay, en cambio, lo decide el servidor cuando es una regla.** El medio de pago
+del punto de venta (`TT-79`) es el caso: con un estudiante identificado, efectivo y
+transferencia **no son opciones deshabilitadas, no son opciones** —`HU-54` y `DEC-1` dicen
+que su compra sale de la billetera—, así que el grupo desaparece y queda la afirmación de lo
+que va a pasar, con su motivo. Calcularlo en el navegador pondría la regla en un tercer
+sitio; el bloque llega repintado desde el servidor, en la misma respuesta de la
+identificación (`hx-swap-oob`).
+
+Esa es también la única excepción al montaje único de `interfaz.js`: un bloque que HTMX
+reemplaza entero se lleva consigo el oyente que le cuelgue, así que este se delega desde
+`document`. Sin error, sin aviso: los botones simplemente dejarían de responder tras el
+primer escaneo.
+
 ### [S2.4] Bloque punteado
 
 Es el hueco y el estado vacío. **Un hueco nunca es un botón deshabilitado**: una acción
@@ -156,6 +169,9 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 ## [S4] Lo que no se dibuja
 
 - **Un botón deshabilitado en lugar de un hueco.** Ver `[S2.4]`.
+- **Una opción que la base va a rechazar**, ni siquiera apagada. Si no aplica, no se dibuja:
+  ver `[S2.3]`. La diferencia con un hueco es que un hueco declara algo que llegará, y esto
+  no va a llegar nunca — el efectivo no es un medio de pago pendiente para un estudiante.
 - **Un color de estado como adorno.** Ver `[S1]`, regla 3.
 - **Una cifra de dinero formateada fuera de `billetera/templatetags/dinero.py`.** Ni en
   JavaScript ni en una plantilla: con dos formateadores, el día que cambie el formato la

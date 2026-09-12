@@ -173,12 +173,14 @@ Control **preventivo** de suplantación (`DEC-8`): el cajero ve a quién pertene
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-78` | App `ventas`: modelos de venta y línea de venta, con medio de pago y **estudiante opcional** (`DEC-1`) | Pedro | ☐ |
-| `TT-79` | Selección del medio de pago en el punto de venta | Carlos | ☐ |
+| `TT-78` | App `ventas`: modelos de venta y línea de venta, con medio de pago y **estudiante opcional** (`DEC-1`) | Pedro | ☑ |
+| `TT-79` | Selección del medio de pago en el punto de venta | Carlos | ☑ |
 
 **Va antes que la venta a propósito.** El medio de pago es un campo del asiento; añadirlo después obliga a reescribir transacciones ya registradas, que es lo que `INV-2` prohíbe.
 
 El **estudiante opcional** es lo que habilita `HU-53`: una venta sin estudiante es una venta a cliente genérico. La transferencia ocurre **fuera del sistema**; solo se deja constancia.
+
+`TT-78` cierra además la deuda que `TT-59` y `TT-67` dejaron escrita en sus modelos: los dos libros de movimientos **ya señalan la venta que los origina**, y el argumento `venta` de los dos `asentar()` (`DT-24`) es el camino por el que `TT-80` la dejará. Sin esa referencia, el historial de `INV-2` e `INV-3` sumaría bien y no explicaría nada.
 
 ### `[HU-21]` Descuento simultáneo de saldo y existencias
 

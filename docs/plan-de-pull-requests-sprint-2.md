@@ -82,13 +82,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **21** de 37 | **10** de 16 |
-| Pendientes | 16 | 6 |
+| **Finalizadas** | **23** de 37 | **11** de 16 |
+| Pendientes | 14 | 5 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 9 | 14 |
-| Carlos | 8 | 11 |
+| Pedro | 10 | 14 |
+| Carlos | 9 | 11 |
 | Alejandro | 4 | 9 |
 | Naomi | 0 | 3 |
 
@@ -106,7 +106,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-08` | `TT-73` | `HU-16` | ☑ |
 | `PR-09` | `TT-74`–`TT-76` | `HU-17` **parcial**, ver aviso | ☑ |
 | `PR-10` | `TT-77` | `HU-58` · `DEC-8` | ☑ |
-| `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☐ |
+| `PR-11` | `TT-78`–`TT-79` | `HU-54` · `DEC-1` | ☑ |
 | `PR-12` | `TT-80`–`TT-83` | `HU-21` · `INV-2`, `INV-3` | ☐ |
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☐ |
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☐ |
@@ -411,18 +411,40 @@ Dos decisiones que conviene no perder:
 | Responsables | Pedro y Carlos |
 | Historia | `HU-54` |
 | Invariantes | `DEC-1`; habilita `HU-53` |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-78` | App `ventas`: modelos de venta y línea, con medio de pago y **estudiante opcional** | Pedro | ☐ |
-| `TT-79` | Selección del medio de pago en el punto de venta | Carlos | ☐ |
+| `TT-78` | App `ventas`: modelos de venta y línea, con medio de pago y **estudiante opcional** | Pedro | ☑ |
+| `TT-79` | Selección del medio de pago en el punto de venta | Carlos | ☑ |
 
 > **Va antes que la venta a propósito.** El medio de pago es un campo del asiento; añadirlo
 > después obliga a reescribir transacciones ya registradas, que es lo que `INV-2` prohíbe.
 
 El **estudiante opcional** es lo que hace posible `PR-15`: una venta sin estudiante es una
 venta a cliente genérico. La transferencia ocurre fuera del sistema; solo se deja constancia.
+
+Tres decisiones que conviene no perder:
+
+- **El medio de pago y el estudiante se implican mutuamente.** `HU-54` dice que las ventas
+  de estudiante son siempre billetera y `DEC-1` que las genéricas son en efectivo o por
+  transferencia: son las dos direcciones de una misma regla, y la impone una
+  `CheckConstraint`, no el servicio de `TT-80` —que lo escribe otra persona dos semanas
+  después—.
+- **Los dos libros ya señalan la venta que los origina.** Es la clave ajena que `TT-59` y
+  `TT-67` dejaron prometida en sus modelos. Sin ella, el historial de `INV-2` e `INV-3`
+  suma bien y no explica nada: «−3.500» sin decir de qué compra sale es el mismo número que
+  había que creer. El argumento `venta` de los dos `asentar()` (`DT-24`) es el único camino
+  por el que `TT-80` la dejará.
+- **Una línea por producto en cada venta.** Dos renglones del mismo producto son el mismo
+  renglón con otra cantidad; obliga al carrito de `TT-81` a agrupar, que es además lo que
+  el cajero espera ver.
+
+> **Lo que la pantalla ofrece es exactamente lo que la base admite**, y hay una prueba que
+> compara las dos listas. Con un estudiante identificado no se dibujan efectivo y
+> transferencia apagados: **no son opciones**. El bloque se repinta desde el servidor por
+> intercambio fuera de banda, en la misma respuesta de la identificación — calcularlo en el
+> navegador pondría la regla de `HU-54` en un tercer sitio.
 
 ---
 
