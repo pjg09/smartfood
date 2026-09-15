@@ -229,6 +229,73 @@
       letter-spacing: -0.025em;
     }
     #site-name .marca-acento { color: var(--accent); }
+
+    /* ── La composición, no solo los colores (`DT-27`) ──────────────────────
+       Hasta aquí este fichero solo redefinía variables, y eso dejaba el admin
+       con los colores de la marca y la gramática de Django: lista plana en la
+       barra lateral, títulos en el tipo del cuerpo y tablas apretadas. Lo que
+       sigue acerca la **forma** a la del resto del producto sin tocar una sola
+       plantilla de Django —todo es CSS sobre las clases que el admin ya emite—.
+
+       El límite es el mismo de `DT-2`: **esto viste el admin, no lo reconstruye.**
+       Cuando una pantalla necesita ser otra cosa, se construye aparte, y de eso
+       hay exactamente una (`/padron/`).
+       ──────────────────────────────────────────────────────────────────── */
+
+    /* Los títulos, en el tipo de display de la marca. El admin los pone en el
+       tipo del cuerpo y a 1,2 rem, que al lado de una pantalla nuestra se lee
+       como otra aplicación. */
+    #content h1, .module h2, .module caption, #content-main h1 {
+      font-family: "Poppins", "Inter", system-ui, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    #content h1 { font-size: 1.6rem; }
+
+    /* La barra lateral: píldoras redondeadas como el menú de la aplicación, con
+       la activa en el acento. Django la emite como una tabla de módulos, así que
+       lo que se redondea son sus filas. */
+    #nav-sidebar .module th,
+    #nav-sidebar .module td { border-radius: 8px; }
+    /* Los rótulos de sección pierden el fondo marino y se quedan como
+       antetítulo. **El color es `--body-fg` y no `--body-quiet-color`**: sobre
+       fondo transparente el gris apagado que Django usa para texto secundario
+       baja de 4,5:1 y deja de leerse. Perder el fondo obliga a subir el texto. */
+    #nav-sidebar .module caption {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      background: transparent;
+      color: var(--body-fg);
+      opacity: 0.75;
+    }
+    #nav-sidebar .current-model {
+      background: var(--primary);
+      border-radius: 8px;
+    }
+    #nav-sidebar .current-model a { color: var(--primary-fg); font-weight: 600; }
+
+    /* Tablas: cabecera tintada, filas con aire y sin el subrayado permanente de
+       los enlaces. Es la «tabla de datos» de `[S2.2]` del sistema visual, hasta
+       donde el marcado del admin lo permite. */
+    #result_list thead th {
+      background: var(--primary-suave, #eef6f8);
+      text-transform: none;
+      font-size: 0.85rem;
+      letter-spacing: 0;
+    }
+    #result_list tbody td, #result_list tbody th { padding: 10px 12px; }
+    #result_list tbody a:not(.button) { text-decoration: none; font-weight: 600; }
+    #result_list tbody a:not(.button):hover { text-decoration: underline; }
+
+    /* Botones y campos con el mismo radio que el resto del producto. El admin
+       usa 4 px y la aplicación 6; la diferencia se nota justo al lado. */
+    .button, input[type=submit], input[type=button],
+    .submit-row input, a.button,
+    #changelist-search input[type=text] { border-radius: 6px; }
+
+    /* **La columna que se cortaba.** El enlace «Imprimir tarjeta» de la lista de
+       estudiantes parte en dos palabras y el admin no le da ancho, así que se
+       leía «Imprir / tarjet». No se toca el `list_display`: se le impide partir. */
+    #result_list td .button, #result_list td a.button { white-space: nowrap; }
   </style>
 {% endblock %}
 
