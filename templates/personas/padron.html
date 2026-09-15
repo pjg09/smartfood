@@ -1,0 +1,123 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} DT-27. El padrón de la institución (`HU-44`).
+
+   **Es la excepción declarada a `DT-2`**, y conviene saber por qué existe: es la
+   única pantalla de `INT-3` que secretaría abre a diario, y la única que responde
+   dos preguntas a la vez —quién está matriculado y quién sigue sin poder entrar
+   (`DEC-9`)—. El admin contesta la primera en tres clics y la segunda no la
+   contesta.
+
+   **Solo lee.** Dar de alta, editar, dar de baja o reasignar la tarjeta siguen
+   siendo del admin: cada fila enlaza allí. Duplicar el formulario sería duplicar
+   las reglas que lo validan, y `INV-4` obliga a que esas vivan en un solo sitio.
+
+   Composición de la referencia (`DT-23`, `DT-25`): encabezado de pantalla,
+   buscador de ancho completo con su icono, el interruptor de retirados y la
+   acción al lado, y debajo la tabla de datos. **Sin «Exportar»**: no tenemos
+   exportación, y un botón que no exporta es peor que no tenerlo.
+{% endcomment %}
+
+{% block titulo %}Padrón de estudiantes | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Padrón de estudiantes</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Quién está matriculado y qué acudientes han activado ya su cuenta.
+      </p>
+    </header>
+
+    {% comment %} El buscador **pide a cada tecla**, con medio segundo de espera para no
+       lanzar una consulta por letra. `hx-trigger` con `changed` evita repetir la
+       misma búsqueda cuando lo que se pulsó fue una flecha.
+
+       Va en un `<form>` de verdad, con `method="get"`, y esa es la parte que
+       suele faltar: sin JavaScript el campo sigue buscando al pulsar Enter,
+       porque la vista lee `busqueda` de la URL venga de donde venga. HTMX
+       acelera lo que ya funcionaba; no lo sustituye. {% endcomment %}
+    <form method="get" action="{% url 'padron' %}"
+          hx-get="{% url 'padron-tabla' %}"
+          hx-trigger="input changed delay:400ms from:#busqueda, change from:#retirados"
+          hx-target="#padron-tabla"
+          hx-swap="outerHTML"
+          hx-indicator="#buscando-en-el-padron"
+          class="flex flex-col gap-3">
+
+      {% comment %} Buscador, filtro y acción **en una fila** desde `tablet`, como en la
+         referencia: son las tres cosas que se hacen sobre la tabla y leerlas
+         juntas evita bajar la vista dos veces. Apilados por debajo, que es donde
+         una fila de tres no cabe sin estrangular el campo. {% endcomment %}
+      <div class="flex flex-col gap-3 tablet:flex-row tablet:items-end">
+
+      <div class="flex grow flex-col gap-1">
+        <label for="busqueda" class="text-base font-medium text-texto">Buscar</label>
+        <div class="relative">
+          <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+               aria-hidden="true"><use href="#i-buscar"></use></svg>
+          <input type="search" id="busqueda" name="busqueda" value="{{ busqueda }}"
+                 autocomplete="off"
+                 placeholder="Nombre, documento, tarjeta o acudiente"
+                 class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                        text-base text-texto transition-colors
+                        placeholder:text-texto-suave
+                        hover:border-acento focus:border-acento focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4 tablet:shrink-0 tablet:pb-1">
+        {% comment %} Interruptor y no dos pestañas: es un filtro que se suma al padrón, no
+           una vista distinta. El `value="1"` viaja solo cuando está marcado, que
+           es como el navegador manda los checkbox — su ausencia significa «no».
+
+           `peer` pinta el carril desde el estado del propio `input`, así que el
+           control sigue siendo una casilla de verdad: se enfoca con teclado y se
+           alterna con espacio sin una línea de JavaScript. {% endcomment %}
+        <label for="retirados" class="inline-flex cursor-pointer items-center gap-2">
+          <input type="checkbox" id="retirados" name="retirados" value="1"
+                 {% if incluir_retirados %}checked{% endif %}
+                 class="peer sr-only">
+          <span aria-hidden="true"
+                class="relative h-6 w-11 shrink-0 rounded-full border border-borde
+                       bg-superficie-hover transition-colors
+                       peer-checked:border-primario peer-checked:bg-primario
+                       peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                       after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                       after:rounded-full after:bg-texto-suave after:transition-transform
+                       peer-checked:after:translate-x-5
+                       peer-checked:after:bg-sobre-primario"></span>
+          <span class="text-base font-medium text-texto">Ver retirados</span>
+        </label>
+
+        <p id="buscando-en-el-padron" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
+
+        {% comment %} `HU-01`. La acción de esta pantalla es matricular, y va aquí arriba
+           como en la referencia: es lo único que se hace **desde** el padrón, y
+           cuando falta alguien es justo lo que se busca.
+
+           Enlace de acento y no botón sólido (`[S2.1]`): en una pantalla cuya
+           pieza principal es la tabla, un botón relleno arriba se lleva la mirada
+           por delante de los datos. {% endcomment %}
+        <a href="{% url 'carga-de-estudiantes' %}"
+           class="ml-auto inline-flex items-center gap-2 rounded-md border border-borde
+                  tablet:ml-0
+                  bg-superficie px-4 py-2 text-base font-semibold text-texto
+                  transition-colors hover:border-primario hover:bg-superficie-hover">
+          <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-cargar"></use></svg>
+          Cargar estudiantes
+        </a>
+      </div>
+
+      {% comment %} Sin JavaScript, este botón es lo que hace funcionar el formulario. Con
+         HTMX no hace falta pulsarlo, y por eso se esconde a la vista pero **no
+         se borra**: `sr-only` lo deja enfocable y operable con teclado. {% endcomment %}
+      </div>
+
+      <button type="submit" class="sr-only">Buscar</button>
+    </form>
+
+    {% include "personas/partials/padron-tabla.html" %}
+  </div>
+{% endblock %}

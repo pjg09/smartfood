@@ -18,9 +18,11 @@ from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
 from personas.models import Estudiante, Institucion
 from personas.selectors import (
+    cuentas_sin_activar,
     estudiante_a_cargo,
     estudiante_para_la_institucion,
     estudiantes_a_cargo,
+    padron,
 )
 from personas.services import cargar_estudiantes_y_acudientes
 from personas.tarjeta import ancho_mm, svg_del_codigo
@@ -196,3 +198,59 @@ def tarjeta_del_estudiante(request, estudiante_id):
             "ancho_impreso_mm": ancho_mm(estudiante.codigo_tarjeta),
         },
     )
+
+
+@login_required
+@require_http_methods(["GET"])
+def padron_de_estudiantes(request):
+    """El padrón de la institución (`DT-27`, `HU-44`).
+
+    **Quién puede verlo lo decide el selector**, que es donde vive la regla
+    (`DT-15`): aquí no se comprueba el rol dos veces. El `PermissionDenied` que
+    lanza sale como `403`, también para quien escriba la URL a mano (`DT-11`).
+
+    ── DEVUELVE PÁGINA O FRAGMENTO, Y SON DOS COSAS DISTINTAS ──────────────
+    `DT-16` prohíbe que **un mismo endpoint** devuelva a veces una página y a
+    veces un fragmento. Aquí no pasa eso: son **dos rutas** —`/padron/` y
+    `/padron/tabla/`— apuntando a la misma función porque lo que cambia es el
+    envoltorio, no lo que se responde. La lista es la misma consulta y el mismo
+    contexto; repetirla en dos funciones sería garantizar que un día divergen.
+
+    Lo dice `request.resolver_match.url_name`, no una cabecera de HTMX: una
+    cabecera la pone el cliente y se puede falsear; la ruta la resuelve Django.
+    ─────────────────────────────────────────────────────────────────────────
+
+    El buscador **no es un formulario que se envíe**: cada tecla pide la tabla y
+    reemplaza solo esa zona. Sin eso, secretaría teclea, pulsa Enter, espera a
+    que repinte la página entera y pierde el foco del campo en cada intento.
+    """
+    busqueda = request.GET.get("busqueda", "")
+    # La casilla solo llega cuando está marcada, que es como el navegador manda
+    # los checkbox. Su ausencia significa «no», no «no lo sé».
+    incluir_retirados = request.GET.get("retirados") == "1"
+
+    estudiantes = list(
+        padron(
+            actor=request.user,
+            busqueda=busqueda,
+            incluir_retirados=incluir_retirados,
+        )
+    )
+
+    contexto = {
+        "estudiantes": estudiantes,
+        "busqueda": busqueda,
+        "incluir_retirados": incluir_retirados,
+        "sin_activar": cuentas_sin_activar(estudiantes),
+        # El total sin filtrar, para poder decir «8 de 20» y que quien busca sepa
+        # que hay más. Con la búsqueda vacía las dos cifras coinciden y la frase
+        # sigue leyéndose bien.
+        "total": padron(
+            actor=request.user, incluir_retirados=incluir_retirados
+        ).count(),
+    }
+
+    if request.resolver_match.url_name == "padron-tabla":
+        return render(request, "personas/partials/padron-tabla.html", contexto)
+
+    return render(request, "personas/padron.html", contexto)
