@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 26 (`DT-1` … `DT-26`) |
+| decisiones | 27 (`DT-1` … `DT-27`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-26`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-27`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -211,7 +211,7 @@ Tres reglas lo sostienen:
 - Todo navegable con teclado: el cajero no debería tocar el ratón.
 - **Sin JavaScript de estado**: el carrito vive en la sesión y cada gesto devuelve un fragmento (`DT-26`, que corrige la previsión de Alpine.js de esta misma decisión). En acudiente y administración, HTMX solo.
 
-`INT-3` no lleva plantillas propias: lo cubre el admin (`DT-2`). Tailwind se compila con su CLI, sin CDN.
+`INT-3` lo cubre el admin (`DT-2`), **con una excepción declarada**: el padrón de la institución tiene pantalla propia porque es la que secretaría abre a diario y la única que responde quién sigue sin activar su cuenta (`DT-27`). Tailwind se compila con su CLI, sin CDN.
 
 #### `[DT-13]` Despliegue en PaaS con PostgreSQL gestionado
 
@@ -322,7 +322,7 @@ El esquema está en 3NF. Conviene notar que **`DT-4` y `DT-5` son consecuencia d
 
 **El tema oscuro no se imprime.** Se apaga en el origen, acotando los dos bloques oscuros a `@media screen`, y no persiguiendo tokens dentro de `@media print`: así la impresión cae sola en el tema claro y cualquier pantalla imprimible que se añada mañana ya sale bien. Lo que se imprime hoy es la tarjeta de `TT-37`, que es papel de verdad (`ENT-02`).
 
-**`INT-3` se tematiza, no se reescribe.** El admin de Django ya está escrito contra sus propias variables CSS (`--primary`, `--header-bg`, …), así que hablar el idioma de la marca cuesta un `admin/base_site.html` que las redefine. Rehacer sus plantillas sería construir a mano justo lo que `DT-2` decidió no construir.
+**`INT-3` se tematiza, no se reescribe.** El admin de Django ya está escrito contra sus propias variables CSS (`--primary`, `--header-bg`, …), así que hablar el idioma de la marca cuesta un `admin/base_site.html` que las redefine — y desde `DT-27`, también la composición: píldoras en la barra lateral, títulos en el tipo de display y tabla con la cabecera tintada, todo con CSS sobre las clases que Django ya emite. Rehacer sus plantillas sería construir a mano justo lo que `DT-2` decidió no construir; la única pantalla que sí se construyó, y por qué, está en `DT-27`.
 
 **Consecuencia sobre `DT-16`.** Sigue vigente y sin cambios: una vista HTMX devuelve un fragmento, nunca una página. Lo que `DT-23` añade es que hay **tres armazones** —`base-publica.html`, `base-acceso.html` y `base-aplicacion.html`— colgando de una base común, y que `INT-2` tendrá el suyo en el Sprint 2.
 
@@ -396,6 +396,27 @@ No es una preocupación hipotética: **`DT-25` ya descartó exactamente esto por
 **Lo que gana además, y no estaba en el argumento original:** el carrito **sobrevive a un refresco**. En una caja, perder la venta montada porque alguien rozó `F5` es un error que se paga con la fila esperando.
 
 **Lo que no cambia.** Nada de esto autoriza nada: `registrar_venta` vuelve a validarlo todo contra la base, dentro del bloqueo (`DT-6`). La sesión es comodidad de pantalla, no fuente de verdad.
+
+---
+
+#### `[DT-27]` El padrón tiene pantalla propia; el resto de `INT-3` sigue siendo el admin
+
+**Corrige parcialmente:** `DT-2`, que decía que `INT-3` **no lleva plantillas propias**. Sigue siendo cierto para todo menos para una lectura, y esta decisión declara cuál y por qué, para que la excepción no crezca sola.
+
+**El hecho que lo obliga.** Al comparar el producto con su referencia visual (`DT-23`) se vio que la institución tiene dos experiencias distintas: la pantalla de carga, que es del sistema visual, y el padrón, que es el admin de Django con nuestros colores — barra lateral de Django, breadcrumbs, «Escoja estudiante a modificar» y un desplegable de acciones. La institución abre el padrón **a diario**; es la pantalla que más ve y la única que no parece del producto.
+
+Hay además una razón que no es de estética: **el admin no responde la pregunta que secretaría trae.** La carga masiva genera la invitación pero no la entrega (`DEC-9`), así que la pregunta diaria es «quién sigue sin activar su cuenta», y en el admin eso son dos filtros y una columna que no existe.
+
+**Decidido:**
+
+- `/padron/` es una pantalla propia, con el sistema visual: buscador sobre nombre, documento, tarjeta y acudiente; interruptor de retirados; tabla de datos; y el recuento de cuentas sin activar.
+- **Solo lee.** Dar de alta, editar, dar de baja y reasignar la tarjeta siguen siendo del admin: cada fila enlaza allí. No hay servicio detrás ni formulario, y hay una prueba que comprueba que `POST` responde `405`.
+- **Es la única excepción.** Acudientes, instituciones, catálogo, inventario y ventas siguen en el admin. Cuando alguien proponga la segunda, que traiga su razón: `DT-2` sigue vigente y el motivo por el que existe —no construir a mano lo que el admin ya hace— no ha cambiado.
+- El admin, además, se acerca en **composición** y no solo en color: píldoras en la barra lateral, títulos en el tipo de display y tabla con la cabecera tintada. Todo con CSS sobre las clases que Django ya emite, **sin sustituir ninguna plantilla suya**.
+
+**Lo que no se copió de la referencia, y por qué.** «Exportar» no existe: no tenemos exportación y un botón que no exporta es peor que no tenerlo. «Reenviar invitaciones» tampoco: `DEC-9` decide que la carga masiva **no** entrega invitaciones porque las direcciones son ficticias, y una pantalla que ofreciera reenviarlas prometería un correo que no sale. Se enseña el recuento, que es el dato real.
+
+**Descartado: rehacer también la edición.** Sería reescribir el formulario del estudiante con sus validaciones, y con él las reglas que `INV-4` obliga a tener en un solo sitio. La lectura no las toca; la escritura sí.
 
 ---
 

@@ -130,6 +130,13 @@ lo hiciera, sería una tarea y le tocaría estar arriba.
 | PR | Qué hizo | Por qué no es una tarea | Estado |
 |---|---|---|---|
 | `PR-X1` | Completar la adopción del sistema visual en todas las pantallas construidas (`DT-25`) | `DT-23` es del Sprint 1 y no dejó tarea abierta; esto es trabajo sobre lo ya entregado, no alcance nuevo | ☑ |
+| `PR-X2` | Padrón de la institución con pantalla propia y el admin acercado en composición (`DT-27`) | Salió de comparar el producto con su referencia visual, no de una historia. `HU-44` ya estaba cerrada en el Sprint 1 y no dejó tarea abierta | ☑ |
+
+`PR-X2` **añade una pantalla y una decisión, y ninguna regla de negocio**: el padrón solo lee,
+cada fila enlaza al admin para editar y hay una prueba que comprueba que `POST` responde `405`.
+Lo que sí introduce es una **excepción declarada a `DT-2`** —la única pantalla de `INT-3`
+construida a mano—, y por eso va con su registro (`DT-27`) en vez de callado. No cierra
+ninguna historia: `HU-44` se cerró en el Sprint 1 y esto no le añade criterios.
 
 `PR-X1` toca las ocho pantallas existentes y la hoja de estilos, pero **ninguna regla de
 negocio**: los servicios, los selectores y las invariantes quedan como estaban. Lo que sí
