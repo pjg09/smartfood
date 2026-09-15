@@ -1,5 +1,10 @@
 # SmartFood — Plan de Pull Requests del Sprint 2
 
+> **Sprint cerrado el 2026-09-12.** Las 37 tareas y los 16 Pull Requests están
+> integrados en `main`. El plan del Sprint 3 todavía no está escrito; mientras no lo
+> esté, este documento sigue siendo el último estado válido y **no se edita salvo para
+> corregir un desfase con `main`**.
+
 ## [S0] Bloque de control del documento
 
 | Campo | Valor |
@@ -10,10 +15,10 @@
 | documentos_fuente | `./sprint-2-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md` |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | 2 de 5 · semanas 8 – 9 · **Avance 1 · semana 10** (`EVA-3`) |
-| tareas cubiertas | 37 de 37 (`TT-57` … `TT-93`) |
+| tareas cubiertas | 37 de 37 (`TT-57` … `TT-93`) — **todas finalizadas** |
 | pull requests | 16 (`PR-01` … `PR-16`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -82,15 +87,15 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **34** de 37 | **15** de 16 |
-| Pendientes | 3 | 1 |
+| **Finalizadas** | **37** de 37 | **16** de 16 |
+| Pendientes | 0 | 0 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 14 | 14 |
 | Carlos | 11 | 11 |
 | Alejandro | 9 | 9 |
-| Naomi | 0 | 3 |
+| Naomi | 3 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
 
@@ -111,7 +116,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-13` | `TT-84`–`TT-85` | `HU-22` · `DT-8` | ☑ |
 | `PR-14` | `TT-86`–`TT-87` | `HU-19` · `INV-1`, `TST-2` | ☑ |
 | `PR-15` | `TT-88`–`TT-90` | `HU-53` · cierra `VAC-1` | ☑ |
-| `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☐ |
+| `PR-16` | `TT-91`–`TT-93` | Gestión del sprint y Avance 1 | ☑ |
 
 ### [S3.2] Pull Requests fuera del plan
 
@@ -618,16 +623,27 @@ encontrándose activo con un estudiante identificado. Lo que faltaba era otra co
 | Rama | `docs/TT-91-gestion-del-sprint-2` |
 | Responsables | Naomi |
 | Historia | ninguna — gestión |
-| Estado | ☐ |
+| Estado | ☑ **Integrado en `main`** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-91` | Tablero Kanban del Sprint 2 | Naomi | ☐ |
-| `TT-92` | Registro de riesgos del Sprint 2 | Naomi | ☐ |
-| `TT-93` | Preparación de la Sprint Review, la Retrospective y el **Avance 1** | Naomi | ☐ |
+| `TT-91` | Tablero Kanban del Sprint 2 | Naomi | ☑ |
+| `TT-92` | Registro de riesgos del Sprint 2 | Naomi | ☑ |
+| `TT-93` | Preparación de la Sprint Review, la Retrospective y el **Avance 1** | Naomi | ☑ |
 
 `TT-91` y `TT-92` no esperan al final: el tablero se abre el primer día. Lo que se integra
 al cierre es su resultado.
+
+**Qué queda en el repositorio y qué no**, igual que en `PR-24` del Sprint 1:
+
+- El **tablero de `TT-91` vive en su herramienta**, no aquí. Este documento es el único
+  sitio donde vive el estado de las tareas; el tablero es la vista de la Daily.
+- De `TT-92` queda el cierre del registro de riesgos: **cómo acabó cada uno de los cinco**,
+  en el `ANEXO A` de `./sprint-2-backlog.md`. Se anotó tal cual salió, incluido el que
+  sigue vivo.
+- El material de `TT-93` —Sprint Review, Retrospective y **Avance 1** (`EVA-3`)— es de la
+  asignatura y va a `corpus:`, no al repositorio. Lo que el Avance enseña sí está aquí: es
+  lo que hay en `main`.
 
 ---
 
