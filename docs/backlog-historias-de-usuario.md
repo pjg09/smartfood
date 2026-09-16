@@ -247,7 +247,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 - **Criterios de aceptación:**
   - El bloqueo se aplica sobre la **condición** (el alérgeno), no sobre una lista fija de productos.
   - Un producto incorporado al catálogo **después** de configurado el bloqueo queda cubierto automáticamente si declara ese alérgeno.
-  - Depende de que el catálogo declare alérgenos por producto (`HU-25`).
+  - Depende de que el catálogo declare alérgenos por producto (`HU-26`).
 - **Origen:** `ALC-IN-08`, `FUN-3`, `OBJ-E5`, `INV-5`
 
 #### `[HU-12]` Retiro de una restricción
