@@ -295,26 +295,40 @@ fila esperando.
 
 El orden en que se enseña lo construido. Cada paso se comprobó de extremo a extremo.
 
+> **El recorrido crea las existencias y el saldo por su propio camino** —pasos 4 y 10—, así
+> que enseñado entero no hace falta nada más. Para saltar directo al punto de venta, el atajo
+> de `[S1.2]` de `./desarrollo.md` los siembra de una vez: sin existencias ni saldo, la
+> demostración se queda en la pantalla de identificación.
+
 1. **`/login/` como institución** → `/carga/`, subir un CSV con dos filas del mismo
    acudiente. `HU-01`, `HU-02`.
 2. **`manage.py invitacion <correo del acudiente>`** → abrir el enlace, definir la
    contraseña. `HU-03`. **Tiene que ser un acudiente cargado por la pantalla**: a los que
    siembra `--estudiantes` se les asigna contraseña y el comando los rechaza (`DEC-11`).
 3. **`/login/` con ese acudiente** → `/mis-estudiantes/`, con su selector. `HU-04`.
-4. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
-5. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
+4. **Recargar la billetera** de uno de sus estudiantes. El saldo aparece en su ficha con el
+   movimiento debajo: es la suma del historial, no una cifra guardada. `HU-06`, `HU-07`,
+   `HU-08`, `INV-2`.
+5. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
+   activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
+   marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
+6. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
+7. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
-6. **Dar de baja**: no borra nada y el acudiente lo ve en su panel. `HU-51`.
-7. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
-8. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
+8. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
+   salir salvo que se marque «Ver retirados». `HU-51`, `HU-52`.
+9. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+10. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
    historial, no de un contador. `HU-27`, `INV-3`.
-9. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
-   fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
-10. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
+11. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
+    fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
+12. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
     bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
     `INV-3`.
-11. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
+13. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
+14. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
+    inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
 
 ---
 

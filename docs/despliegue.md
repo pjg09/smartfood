@@ -8,14 +8,20 @@
 | titulo | Estado real del entorno de pruebas y cómo está montado |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable de la asignatura |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-20`, `DT-21`); `./convenciones-de-git.md`; `./definicion-de-terminado.md` (`DoD-4`) |
-| actualizado | 2026-08-30 · **entorno congelado** |
+| actualizado | 2026-09-15 · **entorno congelado desde el 2026-08-30** |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] ⏸ Entorno congelado desde el 2026-08-30
 
 **El despliegue automático está desconectado y no debe tocarse Railway** hasta que Pedro
 consulte con la docente si la asignatura exige un entorno desplegado.
+
+> ⏳ **Esa consulta ya tiene fecha límite: el Avance 1 de la semana 10** (`EVA-3`, 20 % de la
+> nota). Es el riesgo 4 del `ANEXO A` de `./sprint-2-backlog.md`, el único de los cinco que
+> el sprint no cerró y el único que el Sprint 3 hereda. Si el entorno no se restaura antes,
+> **hay que decidir cómo se demuestra** —desde un portátil, con grabación, o como se acuerde—
+> y decidirlo con margen, no la víspera.
 
 El plan gratuito no lo sostiene, por dos fallos que **no son del código**:
 

@@ -60,6 +60,47 @@ Después, repetir desde `docker compose up -d`.
 
 ## [S2] Con qué se entra
 
+### [S1.2] Dejar el punto de venta listo para cobrar
+
+**`sembrar` no crea existencias ni saldo**, y hasta que las haya el punto de venta no puede
+cobrar: los dieciséis productos salen «Sin existencias» y cualquier venta se rechaza.
+
+No es un descuido del seed. **Ninguna de las dos cifras es un campo**: el saldo es la suma de
+los movimientos de la billetera (`DT-4`, `INV-2`) y las existencias, la de los movimientos de
+inventario (`DT-5`, `INV-3`). Sembrar un número sin su historial sería inventar un asiento, y
+el primer `TST-3` lo cazaría.
+
+Lo que hace falta es un primer movimiento **por el camino real**, no un `UPDATE`:
+
+```bash
+uv run python manage.py shell -c '
+from decimal import Decimal
+from billetera.services import recargar
+from catalogo.models import Producto
+from cuentas.models import Usuario
+from inventario.services import ingresar_mercancia
+from personas.models import Estudiante
+
+admin = Usuario.objects.get(email="administracion@example.com")
+for p in Producto.objects.filter(activo=True):
+    ingresar_mercancia(actor=admin, producto=p, cantidad=40,
+                       motivo="Carga inicial de demostración")
+
+for e in Estudiante.objects.filter(estado="activo"):
+    recargar(actor=e.acudiente.usuario, estudiante=e, monto=Decimal("50000"))
+'
+```
+
+Pasa por `ingresar_mercancia` y `recargar`, así que respeta el punto único de asiento de
+`DT-24` y deja el historial que `INV-2` e `INV-3` obligan a poder leer. Escribir esas filas a
+mano —desde `dbshell` o pgAdmin— salta las comprobaciones de los servicios y es lo que rompe
+el `migrate` de la semana siguiente cuando llegue una `CheckConstraint` nueva.
+
+**Es lo primero que hay que correr antes de enseñar el punto de venta.** Sin esto, la
+demostración se queda en la pantalla de identificación.
+
+---
+
 ### [S2.1] Entorno local
 
 | | |
