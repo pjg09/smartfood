@@ -21,6 +21,8 @@ from personas.views import (
     tarjeta_del_estudiante,
 )
 from restricciones.views import (
+    alergenos_bloqueados,
+    bloqueo_de_alergeno,
     bloqueo_de_producto,
     limite_diario,
     productos_bloqueados,
@@ -147,6 +149,19 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/restricciones/productos/bloqueo/",
         bloqueo_de_producto,
         name="bloqueo-de-producto",
+    ),
+    # Alérgenos bloqueados (`TT-102`, `HU-11`, `INV-5`). **Dos rutas y no tres**:
+    # a diferencia de los productos, los alérgenos son ocho y no hay buscador
+    # que servir, así que no hace falta una ruta de fragmento para la lista.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/restricciones/alergenos/",
+        alergenos_bloqueados,
+        name="alergenos-bloqueados",
+    ),
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/restricciones/alergenos/bloqueo/",
+        bloqueo_de_alergeno,
+        name="bloqueo-de-alergeno",
     ),
     # Vista imprimible de la tarjeta (`TT-37`, `HU-45`). Es de la institución
     # (`USR-5`), no del acudiente: quien produce la tarjeta es el colegio.

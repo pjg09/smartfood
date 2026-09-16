@@ -399,6 +399,14 @@ class LaPantallaDeProductosBloqueadosTest(TestCase):
         self.assertContains(self.client.get(self.url), "HU-11")
 
     def test_la_ficha_del_panel_cuenta_los_bloqueados(self):
+        """Se afirma sobre la cifra y la URL, no sobre el texto del botón.
+
+        La primera versión de esta prueba buscaba «Cambiar los productos» y se
+        rompió en cuanto `TT-102` reescribió la tarjeta para meter también los
+        alérgenos. La copia cambia; el recuento en el contexto y la ruta a la
+        pantalla, no. Es la misma regla de `CLAUDE.md` que pide buscar un
+        `data-*` propio en vez de un trozo de texto.
+        """
         bloquear_producto(
             actor=self.usuario, estudiante=self.estudiante, producto=self.empanada
         )
@@ -406,12 +414,14 @@ class LaPantallaDeProductosBloqueadosTest(TestCase):
 
         respuesta = self.client.get(reverse("mis-estudiantes"))
 
-        self.assertContains(respuesta, "Cambiar los productos")
+        self.assertEqual(respuesta.context["productos_bloqueados"], 1)
         self.assertContains(respuesta, self.url)
 
     def test_sin_bloqueos_la_ficha_lo_dice_y_ofrece_bloquear(self):
         self._entrar()
         respuesta = self.client.get(reverse("mis-estudiantes"))
 
+        self.assertEqual(respuesta.context["productos_bloqueados"], 0)
         self.assertContains(respuesta, "Ninguna")
-        self.assertContains(respuesta, "Bloquear productos")
+        # La puerta a la pantalla sigue ahí aunque no haya nada bloqueado.
+        self.assertContains(respuesta, self.url)

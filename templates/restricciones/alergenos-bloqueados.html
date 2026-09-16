@@ -1,0 +1,66 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} TT-102. Alérgenos bloqueados de un estudiante (`HU-11`, `INV-5`, `INT-1`).
+
+   Encabezado de pantalla copiado de `billetera/recarga.html` (`DT-25`). Sin barra
+   de filtros: los alérgenos son ocho y caben de un vistazo; una fila de filtros
+   sobre una lista que no se filtra es la composición vacía.
+
+   **Lo que esta pantalla tiene que dejar claro es lo que la distingue de la de
+   productos**, y por eso el aviso va arriba del todo. Va en `acento` y no en
+   `aviso` ni en `exito`: aquí no falta nada que advertir —el ámbar es para eso—
+   ni se ha completado ninguna operación —el verde es para eso—. Es información,
+   y gastar un color de estado en ella le quita fuerza donde sí hace falta
+   (`[S1]`, regla 3).
+
+   El contenido no es adorno: es la única de las dos pantallas que cubre lo que
+   todavía no existe, y el acudiente de un niño alérgico necesita saberlo para no
+   ponerse a marcar productos uno a uno.
+{% endcomment %}
+
+{% block titulo %}Alérgenos bloqueados | {{ estudiante.nombre }} | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      {% comment %} El indicador va **en la línea del título**, no en una fila propia:
+         `htmx-indicator` oculta con `opacity` y no con `display`, así que aparte
+         reservaría su alto siempre y dejaría un hueco permanente. Es la misma
+         corrección que ya se hizo en la pantalla de productos. {% endcomment %}
+      <div class="flex items-baseline justify-between gap-3">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Alérgenos bloqueados</h1>
+        <span id="guardando-alergeno" class="htmx-indicator shrink-0 text-sm text-texto-suave">Guardando…</span>
+      </div>
+      <p class="text-base font-medium text-texto-suave">
+        Marca a qué es alérgico <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong>.
+        Es de este estudiante: si tienes más a tu cargo, cada uno lleva los suyos.
+      </p>
+    </header>
+
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-acento bg-acento-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-acento-fuerte" aria-hidden="true"><use href="#i-escudo"></use></svg>
+      <div class="flex flex-col gap-1 text-sm text-acento-fuerte">
+        <p>
+          <strong class="font-semibold">Bloquear un alérgeno cubre también lo que llegue
+          después.</strong> No estás marcando los productos que hoy lo llevan: estás
+          marcando la condición. El día que la cafetería agregue algo con ese alérgeno,
+          queda fuera solo, sin que tengas que volver aquí.
+        </p>
+        <p>
+          Por eso, para una alergia, esto es lo que hay que usar — y no bloquear productos
+          uno a uno, que solo alcanza a los que ya existen.
+        </p>
+      </div>
+    </div>
+
+    {% include "restricciones/partials/lista-de-alergenos.html" %}
+  </div>
+{% endblock %}

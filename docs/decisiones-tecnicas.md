@@ -498,12 +498,14 @@ catálogo. El motivo es obligatorio en la merma, que es **la disminución manual
 | Entidad | Campos clave | Sostiene |
 |---|---|---|
 | `RestriccionProducto` | estudiante, producto, **únicos juntos** | `HU-10`, `DT-28` |
-| `RestriccionAlergeno` | estudiante, alérgeno | `HU-11`, `INV-5` |
+| `RestriccionAlergeno` | estudiante, alérgeno, **únicos juntos** · **ningún producto** | `HU-11`, `INV-5`, `DT-28` |
 | `LimiteDiario` | estudiante (uno a uno), monto **positivo** | `HU-09`, `DT-28` |
 
 Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`) y viven en la app `restricciones` (`DT-28`).
 
-`RestriccionProducto` existe desde `TT-97` y es **una lista**: filas de productos señalados uno a uno. `RestriccionAlergeno` será **una condición** que se evalúa contra lo que cada producto declara, y por eso son dos tablas y no una con un campo «tipo»: unificarlas convierte «implementar el alérgeno como la lista de los productos que hoy lo llevan» en algo que parece una optimización, y eso es exactamente lo que `INV-5` prohíbe.
+`RestriccionProducto` existe desde `TT-97` y es **una lista**: filas de productos señalados uno a uno. `RestriccionAlergeno` existe desde `TT-100` y es **una condición**: dos columnas y ninguna más. Qué productos cubre **no es un dato**, es el resultado de cruzarla con `ProductoAlergeno` en cada consulta (`restricciones.selectors.productos_cubiertos_por_alergeno`), y de ahí sale que un producto añadido después quede cubierto sin que nadie recalcule nada.
+
+Son dos tablas y no una con un campo «tipo» precisamente por eso: unificarlas convierte «resolver el alérgeno como la lista de los productos que hoy lo llevan» en algo que parece una optimización, y eso es exactamente lo que `INV-5` prohíbe. El fallo sería además silencioso — no rompe nada el día que se introduce, rompe semanas después, en la caja.
 
 `LimiteDiario` existe desde `TT-94`. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
 

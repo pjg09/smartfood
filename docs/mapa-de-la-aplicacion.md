@@ -60,6 +60,8 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/restricciones/productos/` | Catálogo con un interruptor por producto: qué no puede comprar | Acudiente, **solo los suyos** | `TT-99` |
 | `/mis-estudiantes/<id>/restricciones/productos/lista/` | Fragmento HTMX de esa lista, filtrada por el buscador | Acudiente, **solo los suyos** | `TT-99` |
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` | `POST`. Bloquea o desbloquea un producto y devuelve la lista | Acudiente, **solo los suyos** | `TT-99` |
+| `/mis-estudiantes/<id>/restricciones/alergenos/` | Los alérgenos del catálogo con un interruptor: a qué es alérgico | Acudiente, **solo los suyos** | `TT-102` |
+| `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` | `POST`. Bloquea o desbloquea un alérgeno y devuelve la lista | Acudiente, **solo los suyos** | `TT-102` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
 | `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su fotografía, su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75`, `TT-77` |
@@ -81,6 +83,8 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/limite/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/productos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
@@ -206,7 +210,15 @@ es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad
 historial del que sale el saldo (`INV-2`). A un estudiante de baja o desactivado no se le
 ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-2`).
 
-Y desde ahí también los **productos bloqueados** (`HU-10`, `TT-99`): el catálogo con un
+Y desde ahí los **alérgenos bloqueados** (`HU-11`, `TT-102`), que es lo que hay que usar
+para una alergia: lo que se marca es **la condición**, no los productos que hoy la llevan,
+así que lo que la cafetería agregue el mes que viene queda fuera solo. La pantalla enseña
+cuántos productos lo declaran **hoy** —y dice «hoy»— porque esa cifra describe el catálogo
+actual y el bloqueo no depende de ella (`INV-5`). Se puede bloquear un alérgeno que
+todavía no declara ningún producto: el acudiente declara la alergia de su hijo, no el
+menú.
+
+Y los **productos bloqueados** (`HU-10`, `TT-99`): el catálogo con un
 interruptor por producto, buscador incluido. Lo que se marca aquí es una **lista de
 productos identificados**, no una condición: bloquear «Torta de chocolate» no bloquea lo
 demás que lleve maní, y la pantalla lo dice con todas las letras porque creerlo es
@@ -336,40 +348,48 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 5. **Fijar su límite diario** desde la misma ficha. Con dos estudiantes a cargo se ve que
    el cupo es de uno y no del otro. La pantalla avisa de que todavía no frena la caja:
    eso llega con `HU-20`. `HU-09`.
-6. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
+6. **Bloquear un alérgeno** desde la tarjeta de restricciones. Luego, como administración,
+   **crear un producto nuevo que lo declare**: queda cubierto sin volver a tocar nada. Es
+   `INV-5` enseñada en vivo, y el paso que más conviene no saltarse en la Sprint Review.
+   `HU-11`.
+7. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
    con su interruptor; lo bloqueado se marca en rojo. Bloquear uno **no** arrastra a los
    que comparten alérgeno — eso es `HU-11`, y la pantalla lo advierte. `HU-10`.
-   Más adelante, en el paso 14, se intenta cobrar uno de ellos: la venta se rechaza con
+   Más adelante, al cobrar, se intenta comprar uno de ellos: la venta se rechaza con
    saldo de sobra y sin forma de forzarla. `HU-60`, `INV-4`.
-7. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
+8. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
    marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
-8. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
-9. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
+9. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
+10. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
-10. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
+11. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
    salir salvo que se marque «Ver retirados». `HU-51`, `HU-52`.
-11. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
-12. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
+12. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+13. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
    historial, no de un contador. `HU-27`, `INV-3`.
-13. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
+14. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
     fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
-14. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
+15. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
     bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
     `INV-3`.
-15. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
+16. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
-16. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
+17. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
     inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-El bloqueo por alérgeno y lo que cuelga de él (`HU-11`…`HU-13`), los rechazos que dependen
-de las restricciones y del cupo (`HU-18`, `HU-20`), la merma y las alertas de inventario
+Lo que cuelga del control parental (`HU-12`, `HU-13`), los rechazos que dependen del
+alérgeno y del cupo (`HU-18`, `HU-20`), la merma y las alertas de inventario
 (`HU-28`, `HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).
+
+**Las tres restricciones se configuran; solo una frena la venta.** El producto bloqueado
+la rechaza (`HU-60`); el alérgeno lo hará con `HU-18` y el cupo diario con `HU-20`. Hasta
+entonces `HU-11` deja la condición escrita y consultable, pero la caja todavía no la mira.
 
 **El producto bloqueado ya frena la venta; el límite diario todavía no.** `HU-10` deja la
 lista escrita y `HU-60` la hace cumplir: cobrar algo bloqueado se rechaza dentro de la

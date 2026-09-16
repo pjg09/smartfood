@@ -4,7 +4,12 @@ Como los servicios, estos selectores no conocen `request`: reciben lo que
 necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
 """
 
-from restricciones.models import LimiteDiario, RestriccionProducto
+from catalogo.models import Alergeno, Producto
+from restricciones.models import (
+    LimiteDiario,
+    RestriccionAlergeno,
+    RestriccionProducto,
+)
 
 
 def limite_diario_de(estudiante):
@@ -90,3 +95,84 @@ def bloqueos_entre(estudiante, productos):
     return RestriccionProducto.objects.filter(
         estudiante=estudiante, producto__in=productos
     ).select_related("producto")
+
+
+def alergenos_bloqueados_de(estudiante):
+    """Las `RestriccionAlergeno` vigentes del estudiante (`HU-11`).
+
+    Devuelve un `QuerySet` sin evaluar, con el alérgeno ya traído.
+
+    **Esto es la lista de condiciones, no la de productos.** Lo que hay aquí son
+    los alérgenos que el acudiente señaló; qué productos quedan fuera por su
+    causa lo responde `productos_cubiertos_por_alergeno`, y lo responde
+    calculándolo.
+    """
+    return RestriccionAlergeno.objects.filter(estudiante=estudiante).select_related(
+        "alergeno"
+    )
+
+
+def identificadores_de_alergenos_bloqueados(estudiante):
+    """Solo los `id` de los alérgenos bloqueados, como conjunto.
+
+    Para pintar la pantalla de `TT-102`, que recorre el catálogo de alérgenos y
+    tiene que saber de cada uno si está bloqueado. Con esto es **una** consulta.
+    """
+    return set(
+        RestriccionAlergeno.objects.filter(estudiante=estudiante).values_list(
+            "alergeno_id", flat=True
+        )
+    )
+
+
+def productos_cubiertos_por_alergeno(estudiante):
+    """Los productos que este estudiante no puede comprar **por su alérgeno**.
+
+    ═══════════════════════════════════════════════════════════════════════
+    **ESTA FUNCIÓN ES `INV-5`. SU FORMA IMPORTA MÁS QUE SU RESULTADO.**
+
+    No lee ninguna lista guardada, porque no existe: cruza las restricciones de
+    alérgeno del estudiante con `catalogo.ProductoAlergeno` **cada vez que se la
+    llama**. De ahí salen las dos propiedades que `HU-11` pide y que ninguna
+    lista materializada puede dar:
+
+    · Un producto que la cafetería añada mañana declarando ese alérgeno queda
+      cubierto **sin que nadie recalcule nada**.
+    · Un producto que hoy existe y mañana declara el alérgeno queda cubierto en
+      el mismo momento en que lo declara.
+
+    Y la simétrica, que también importa: retirar la declaración de un producto lo
+    descubre en el acto. La verdad vive en `ProductoAlergeno`, en un solo sitio.
+
+    **Si alguien convierte esto en una tabla «porque consulta más rápido»,
+    `INV-5` se rompe y no se nota.** No falla nada ese día: falla semanas
+    después, en la caja, con un niño alérgico delante.
+    ═══════════════════════════════════════════════════════════════════════
+
+    `distinct()` no sobra: un producto que declare dos alérgenos bloqueados del
+    mismo estudiante saldría dos veces del cruce.
+
+    **No incluye los de `HU-10`.** Son dos restricciones distintas y se
+    consultan por separado; quien necesite las dos —la pantalla de `TT-106`, la
+    venta de `TT-113`— las junta arriba.
+    """
+    return Producto.objects.filter(
+        declaraciones__alergeno__bloqueos__estudiante=estudiante
+    ).distinct()
+
+
+def alergenos_que_bloquean(estudiante, producto):
+    """Qué alérgenos bloqueados de ese estudiante declara ese producto.
+
+    Devuelve un `QuerySet` de `Alergeno`, vacío si ninguno. Es la pregunta que
+    hará la venta en `TT-113` —«¿por qué no puede comprar esto?»— y la que
+    permite decírselo al cajero con el nombre del alérgeno y no con un «está
+    prohibido» sin explicación.
+
+    Se calcula igual que `productos_cubiertos_por_alergeno`, mirando de un lado
+    lo que el producto declara y del otro lo que el acudiente bloqueó. Ninguna
+    de las dos es una lista guardada (`INV-5`).
+    """
+    return Alergeno.objects.filter(
+        declaraciones__producto=producto, bloqueos__estudiante=estudiante
+    ).distinct()
