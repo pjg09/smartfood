@@ -1,0 +1,190 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero l10n %}
+
+{% comment %} TT-96. Pantalla del límite diario de gasto (`HU-09`, `INT-1`).
+
+   Composición copiada de `templates/billetera/recarga.html` (`DT-25`): encabezado
+   de pantalla, atajos de importe sobre un campo numérico y una columna de apoyo a
+   la derecha desde `escritorio`. No se inventa disposición nueva — es la misma
+   pregunta que la recarga —«¿qué cifra pongo?»— con otro significado.
+
+   **Lo que cambia respecto de la recarga es lo que se promete.** Allí el
+   movimiento queda asentado y el saldo sube al instante. Aquí la cifra queda
+   guardada pero **todavía no rechaza ninguna venta**: la comparación contra el
+   consumo del día la construye `TT-116` dentro del bloqueo de la transacción
+   (`PR-09`, `HU-20`, `DT-6`). Decirlo no es un descargo: un acudiente que crea
+   que su hijo ya tiene tope dejará de mirar, y eso es peor que no ofrecerle el
+   campo.
+
+   Ese aviso va en `aviso` y no en `error`: no ha fallado nada, es un estado —el
+   mismo criterio que usa la recarga para decir que el pago es simulado.
+{% endcomment %}
+
+{% block titulo %}Límite diario | {{ estudiante.nombre }} | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Límite diario de gasto</h1>
+      {% comment %} Primer criterio de `HU-09`: el límite se define **por estudiante**. La
+         frase lo dice donde se decide, no en una nota al pie: un acudiente con
+         varios hijos tiene que saber que lo que fije aquí no alcanza a los
+         demás. {% endcomment %}
+      <p class="text-base font-medium text-texto-suave">
+        Es de <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong>, no de
+        tu cuenta: si tienes más estudiantes a cargo, cada uno lleva el suyo y lo fijas
+        por separado.
+      </p>
+    </header>
+
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <p class="text-sm text-aviso-fuerte">
+        <strong class="font-semibold">Todavía no se aplica en la caja.</strong> El límite
+        queda guardado, pero la venta aún no lo comprueba: eso llega con
+        <span class="font-mono">HU-20</span>, en este mismo sprint. Hasta entonces sirve
+        para dejarlo configurado, no para frenar una compra.
+      </p>
+    </div>
+
+    <div class="grid gap-6 escritorio:grid-cols-3 escritorio:items-start">
+
+      <form method="post" data-montos-sugeridos
+            class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4
+                   shadow-sm escritorio:col-span-2">
+        {% csrf_token %}
+
+        <h2 class="text-lg font-semibold text-texto">
+          {% if limite %}Cambiar el límite{% else %}Fijar un límite{% endif %}
+        </h2>
+
+        {% if form.non_field_errors %}
+          <div role="alert"
+               class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+            <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+            <div class="text-sm text-error-fuerte">
+              {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% comment %} Atajos, no opciones: escriben el importe en el campo de abajo y ya
+           está. Por eso son `type="button"` y no radios — no son un segundo
+           control que el servidor tenga que leer.
+
+           Las cifras son más bajas que las de la recarga porque esto es lo que se
+           gasta **en un día**, no lo que se carga para la semana. `interfaz.js`
+           mueve el `aria-pressed` según lo que diga el campo, también al teclear a
+           mano: un botón pulsado mientras el campo dice otra cosa miente sobre lo
+           que se va a enviar. {% endcomment %}
+        <div role="group" aria-label="Importes sugeridos"
+             class="grid grid-cols-2 gap-3 tablet:grid-cols-4">
+          {% for monto in montos_sugeridos %}
+            <button type="button" data-monto="{{ monto|stringformat:'d' }}" aria-pressed="false"
+                    class="inline-flex h-12 items-center justify-center rounded-md border
+                           text-base font-medium whitespace-nowrap transition-colors
+                           border-borde bg-superficie text-texto hover:border-acento
+                           aria-pressed:border-transparente aria-pressed:bg-primario
+                           aria-pressed:text-sobre-primario">
+              {{ monto|dinero:"COP" }}
+            </button>
+          {% endfor %}
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="{{ form.monto.id_for_label }}" class="text-base font-medium text-texto">
+            U otro monto
+          </label>
+          <div class="relative">
+            <span aria-hidden="true"
+                  class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                         font-display text-lg text-texto-suave">$</span>
+            <input type="number" name="{{ form.monto.html_name }}" id="{{ form.monto.id_for_label }}"
+                   step="0.01" min="0.01" max="{{ form.monto.field.max_value }}"
+                   inputmode="decimal" required autofocus
+                   {% comment %} `unlocalize` no es un adorno: el proyecto está en `es-CO`, así que
+                      Django escribe el `Decimal` del límite vigente como «8000,00» —con
+                      coma— y un `<input type="number">` con coma **se pinta vacío, sin
+                      ningún error**. El acudiente que entra a cambiar su límite vería el
+                      campo en blanco y creería que no había ninguno. {% endcomment %}
+                   value="{{ form.monto.value|default_if_none:''|unlocalize }}"
+                   class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                          text-lg tabular-nums text-texto transition-colors
+                          hover:border-acento focus:border-acento focus:outline-none
+                          {% if form.monto.errors %}border-error{% else %}border-borde{% endif %}">
+          </div>
+          {% if form.monto.errors %}
+            <p class="text-sm font-medium text-error-fuerte">{{ form.monto.errors|join:" " }}</p>
+          {% else %}
+            {% comment %} El rango se enseña antes de enviar, pero **la regla vive en el
+               servicio**: esto es una comodidad, no la validación (`DT-15`). Y se
+               dice por qué no hay cero: un cupo de cero es «no puede comprar
+               nada», que no es lo mismo que no tener límite. {% endcomment %}
+            <p class="text-sm text-texto-suave">
+              Entre $0,01 y {{ form.monto.field.max_value|dinero:"COP" }}. Un límite de
+              cero no existe: sería no poder comprar nada.
+            </p>
+          {% endif %}
+        </div>
+
+        <button type="submit"
+                class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2
+                       rounded-md bg-primario px-6 text-lg font-medium whitespace-nowrap
+                       text-sobre-primario transition-colors hover:bg-primario-fuerte">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-limite"></use></svg>
+          {% if limite %}Guardar el cambio{% else %}Fijar el límite{% endif %}
+        </button>
+      </form>
+
+      <aside aria-labelledby="como-va-hoy"
+             class="flex flex-col gap-3 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+        <h2 id="como-va-hoy" class="text-lg font-semibold text-texto">Cómo va hoy</h2>
+
+        <dl class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <dt class="text-base font-medium text-texto-suave">Límite vigente</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">
+              {% if limite %}
+                {{ limite.monto|dinero:"COP" }}
+              {% else %}
+                Sin límite
+              {% endif %}
+            </dd>
+          </div>
+
+          {% comment %} Lo que lleva gastado hoy **sale del mismo libro que el saldo**
+             (`INV-2`, `DT-4`): es la suma de sus movimientos de venta de la jornada,
+             no un contador que alguien tenga que poner a cero cada medianoche.
+
+             Está aquí para que la cifra que se elija no salga de la nada, y **no**
+             para dar por hecho que el cupo ya frena algo: eso lo dice el aviso de
+             arriba. {% endcomment %}
+          <div class="flex flex-col gap-1 border-t border-borde pt-3">
+            <dt class="text-base font-medium text-texto-suave">Gastado hoy</dt>
+            <dd class="font-display text-2xl tabular-nums text-texto">
+              {{ consumo_de_hoy|dinero:"COP" }}
+            </dd>
+          </div>
+        </dl>
+
+        <p class="text-sm text-texto-suave">
+          {% if limite %}
+            Puedes cambiarlo cuando quieras; el nuevo cupo sustituye al anterior.
+            Retirarlo del todo llega con <span class="font-mono">HU-12</span>.
+          {% else %}
+            {{ estudiante.nombre }} no tiene cupo diario: puede gastar lo que tenga de
+            saldo. Fijar uno no toca su saldo ni sus movimientos.
+          {% endif %}
+        </p>
+      </aside>
+    </div>
+  </div>
+{% endblock %}

@@ -13,7 +13,7 @@
 | tareas cubiertas | 37 de 37 (`TT-94` … `TT-130`) |
 | pull requests | 14 (`PR-01` … `PR-14`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -69,8 +69,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 4. Si el PR cierra una historia, se marca también en la tabla `[S4]` de
    `./backlog-historias-de-usuario.md`.
 
-> ⚠ **`PR-06` cierra dos historias, no una.** Además de `HU-13`, salda `HU-17`, que el
-> Sprint 2 dejó abierta. Son dos marcas en el backlog de historias.
+> ⚠ **Dos PR de este sprint cierran dos historias cada uno.**
+>
+> - **`PR-06`**: además de `HU-13`, salda `HU-17`, que el Sprint 2 dejó abierta.
+> - **`PR-09`**: además de `HU-20`, salda `HU-09`, que `PR-01` dejó con su tercer
+>   criterio pendiente —evaluar el límite contra el consumo del día en cada venta es
+>   `TT-116`—.
+>
+> Son cuatro marcas en el backlog de historias, no dos.
 
 ---
 
@@ -78,13 +84,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **0** de 37 | **0** de 14 |
-| Pendientes | 37 | 14 |
+| **Finalizadas** | **3** de 37 | **1** de 14 |
+| Pendientes | 34 | 13 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 16 |
-| Carlos | 0 | 11 |
+| Pedro | 2 | 16 |
+| Carlos | 1 | 11 |
 | Alejandro | 0 | 7 |
 | Naomi | 0 | 3 |
 
@@ -92,7 +98,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
-| `PR-01` | `TT-94`–`TT-96` | `HU-09` · app `restricciones` | ☐ |
+| `PR-01` | `TT-94`–`TT-96` | app `restricciones` (`DT-28`) · `HU-09` **salvo su tercer criterio** | ☑ |
 | `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☐ |
 | `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☐ |
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☐ |
@@ -100,7 +106,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☐ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☐ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☐ |
-| `PR-09` | `TT-116`–`TT-118` | `HU-20` · **`TST-2`** | ☐ |
+| `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☐ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` | ☐ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☐ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
@@ -120,20 +126,27 @@ Los cortes se eligieron con tres criterios, en este orden:
 | Título del PR | `feat(restricciones): fijar el límite diario de gasto del estudiante` |
 | Rama | `feat/TT-94-limite-diario` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-09` |
+| Historia | `HU-09` — **no la cierra**: su tercer criterio es `TT-116`, en `PR-09` |
 | Invariantes | ninguna directamente; habilita `HU-20` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-94` | App `restricciones` y modelo de límite diario por estudiante | Pedro | ☐ |
-| `TT-95` | Servicio para fijar y modificar el límite, solo por el acudiente | Pedro | ☐ |
-| `TT-96` | Pantalla del límite diario en la interfaz del acudiente | Carlos | ☐ |
+| `TT-94` | App `restricciones` y modelo de límite diario por estudiante | Pedro | ☑ |
+| `TT-95` | Servicio para fijar y modificar el límite, solo por el acudiente | Pedro | ☑ |
+| `TT-96` | Pantalla del límite diario en la interfaz del acudiente | Carlos | ☑ |
 
-> **Este PR crea una app que `DT-15` no previó.** Las restricciones no encajan en ninguna
-> de las siete apps declaradas: pertenecen al estudiante pero referencian el catálogo.
-> **Registra la desviación con un `DT-` nuevo en este mismo PR**, como se hizo con `DT-24`
-> … `DT-27` en el Sprint 2. No la des por supuesta.
+> **Este PR creó una app que `DT-15` no previó**, y la desviación quedó registrada como
+> **`DT-28`** en `./decisiones-tecnicas.md`, como se hizo con `DT-24` … `DT-27` en el
+> Sprint 2.
+
+> ⚠ **`PR-01` no cierra `HU-09`, y el plan lo daba por hecho.** Cumple sus dos primeros
+> criterios —el límite se define por estudiante, y solo su acudiente lo fija o lo
+> modifica—, pero el tercero dice «el límite se evalúa contra el consumo del día en cada
+> venta», que es la validación dentro del bloqueo de la transacción: `TT-116`, de `PR-09`.
+> Es la misma frase que da sentido a `HU-20`. **`HU-09` se marca en
+> `./backlog-historias-de-usuario.md` al integrar `PR-09`**, junto con `HU-20`, y hasta
+> entonces queda declarada como abierta. Es el segundo caso del proyecto tras `HU-17`.
 
 ---
 
@@ -317,7 +330,7 @@ El cajero **no tiene** forma de forzar la venta: no es un aviso descartable.
 | Título del PR | `feat(ventas): rechazar la venta cuando se agotó el cupo del día` |
 | Rama | `feat/TT-116-rechazo-por-limite` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-20` |
+| Historias | `HU-20` **y `HU-09`** |
 | Invariantes | escenario crítico **`TST-2`**, mitad pendiente |
 | Estado | ☐ |
 
@@ -326,6 +339,12 @@ El cajero **no tiene** forma de forzar la venta: no es un aviso descartable.
 | `TT-116` | Validación del límite diario contra el consumo del día, dentro del bloqueo | Pedro | ☐ |
 | `TT-117` | Motivo de rechazo por límite, distinguible del de saldo | Carlos | ☐ |
 | `TT-118` | Caso de prueba `TST-2`: rechazo por cupo aunque haya saldo | Alejandro | ☐ |
+
+> ⚠ **Salda también `HU-09`.** `PR-01` dejó el cupo configurable por estudiante y
+> escribible solo por su acudiente, pero el tercer criterio de la historia —«el límite se
+> evalúa contra el consumo del día en cada venta»— es exactamente lo que construye
+> `TT-116`. **Al integrarlo hay que marcar DOS historias** en
+> `./backlog-historias-de-usuario.md`: `HU-20` y `HU-09`.
 
 Completa `TST-2`, cuya otra mitad cerró `HU-19` en el Sprint 2.
 
@@ -463,20 +482,24 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
 
 ## [S6] Advertencias sobre este plan
 
-1. **`PR-06` cierra dos historias.** `HU-13` y `HU-17`. Es la única vez en el proyecto que
+1. **`PR-09` cierra dos historias, y una de ellas es de `PR-01`.** `HU-20` y `HU-09`:
+   `PR-01` dejó el cupo configurable pero su tercer criterio —evaluarlo contra el consumo
+   del día en cada venta— es `TT-116`. Está anotado en `[S3.1]`, en el bloque de `PR-01` y
+   en `[S4]` del backlog de historias.
+2. **`PR-06` cierra dos historias.** `HU-13` y `HU-17`. Es la única vez en el proyecto que
    un PR salda una historia de un sprint anterior, y por eso es la marca más fácil de
    olvidar. Va anotada en `[S2]`, en `[S3.1]` y en el propio PR.
-2. **`PR-03` es el de mayor riesgo.** `INV-5` se rompe con una decisión de modelado que
+3. **`PR-03` es el de mayor riesgo.** `INV-5` se rompe con una decisión de modelado que
    parece una optimización. Revisadlo con `TT-103` delante.
-3. **Tres PR seguidos tocan el mismo servicio transaccional.** `PR-08`, `PR-09` y `PR-13`
+4. **Tres PR seguidos tocan el mismo servicio transaccional.** `PR-08`, `PR-09` y `PR-13`
    añaden validaciones dentro del bloqueo que construyó `TT-80` en el Sprint 2. Cada una es
    sencilla; el riesgo es el acumulado. Comprobad que el orden bloqueo → validación →
    escritura sigue intacto **después del tercero**, no solo después de cada uno.
-4. **Este sprint cierra `TST-1` y `TST-2`.** Dos de los cuatro escenarios críticos que
+5. **Este sprint cierra `TST-1` y `TST-2`.** Dos de los cuatro escenarios críticos que
    `ENT-05` exige demostrar. `TST-3` cerró en el Sprint 2 y `TST-4` es del Sprint 4: al
    acabar el 4, el plan de pruebas está completo.
-5. **Si el sprint desborda**, los candidatos a mover son `PR-04` (`HU-12`, el único
+6. **Si el sprint desborda**, los candidatos a mover son `PR-04` (`HU-12`, el único
    `Should`) y `PR-07` (`HU-38`, del que no depende ninguna historia). Quedan 12 PR y 33
    tareas. **No se pueden mover** `PR-08` ni `PR-09`.
-6. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
+7. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.

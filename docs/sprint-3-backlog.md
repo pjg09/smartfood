@@ -82,11 +82,13 @@ El Sprint 1 tuvo nueve —repositorio, entorno, despliegue, correo, buckets— y
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-94` | App `restricciones` y modelo de límite diario por estudiante | Pedro | ☐ |
-| `TT-95` | Servicio para fijar y modificar el límite, **solo por el acudiente** (`S11`) | Pedro | ☐ |
-| `TT-96` | Pantalla del límite diario en la interfaz del acudiente | Carlos | ☐ |
+| `TT-94` | App `restricciones` y modelo de límite diario por estudiante | Pedro | ☑ |
+| `TT-95` | Servicio para fijar y modificar el límite, **solo por el acudiente** (`S11`) | Pedro | ☑ |
+| `TT-96` | Pantalla del límite diario en la interfaz del acudiente | Carlos | ☑ |
 
-`TT-94` crea la app que usarán las tres historias de restricción. Ver el aviso de `[S3]`: la desviación de `DT-15` se registra aquí.
+`TT-94` creó la app que usan las tres historias de restricción, y la desviación de `DT-15` que anticipaba `[S3]` quedó registrada como **`DT-28`** en `./decisiones-tecnicas.md`.
+
+> **`HU-09` no se cierra con estas tres tareas.** Sus dos primeros criterios sí —el límite es por estudiante y solo lo fija su acudiente—, pero el tercero, «se evalúa contra el consumo del día en cada venta», es `TT-116` (`PR-09`). La historia se marca al integrar ese PR, junto con `HU-20`.
 
 El límite es **por estudiante**, no por acudiente: un acudiente con varios hijos fija uno distinto a cada uno.
 

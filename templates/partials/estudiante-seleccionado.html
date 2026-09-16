@@ -14,9 +14,11 @@
    `HU-07`: el saldo mostrado corresponde exactamente al historial, y aquí se
    puede ver.
 
-   El límite diario y las restricciones llegan en el Sprint 3 (`HU-09` … `HU-11`)
-   y sus tarjetas dicen **qué falta y cuándo**, no una cifra inventada: un cero
-   en el límite se leería como un límite de cero.
+   El límite diario ya está (`TT-96`, `HU-09`): se fija por estudiante y se ve
+   aquí. Lo que aún no hace es frenar una venta —eso es `HU-20`— y la tarjeta lo
+   dice. Las restricciones por producto y por alérgeno (`HU-10`, `HU-11`) siguen
+   siendo un hueco, y el suyo dice **qué falta y cuándo**, no una cifra
+   inventada: un cero en el límite se leería como un límite de cero.
 {% endcomment %}
 
 {% if seleccionado %}
@@ -128,9 +130,32 @@
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-limite"></use></svg>
         </span>
         <h3 class="text-base font-semibold text-texto-suave">Límite diario</h3>
-        <p class="text-base font-medium text-texto-suave">
-          Se fija para {{ seleccionado.nombre }}, no para la cuenta. Llega en el Sprint 3.
-        </p>
+        {% comment %} `TT-96`, `HU-09`. Ya no es un hueco: hay cifra cuando hay límite, y
+           cuando no la hay se dice que no la hay — **nunca un cero**, que se leería
+           como un cupo de cero, es decir, lo contrario (ver
+           `restricciones.models.LimiteDiario`). {% endcomment %}
+        {% if limite %}
+          <p class="font-display text-2xl tabular-nums text-texto">{{ limite.monto|dinero:"COP" }}</p>
+          <p class="text-base font-medium text-texto-suave">
+            Es de {{ seleccionado.nombre }}, no de la cuenta. Todavía no frena la venta:
+            eso llega con <span class="font-mono">HU-20</span>.
+          </p>
+        {% else %}
+          <p class="font-display text-2xl text-texto">Sin límite</p>
+          <p class="text-base font-medium text-texto-suave">
+            Puede gastar el saldo que tenga. Se fija para {{ seleccionado.nombre }}, no
+            para la cuenta.
+          </p>
+        {% endif %}
+        {% comment %} Un enlace de acento abajo con `mt-auto`, como la tarjeta del saldo y
+           como pide la composición (`[S2.1]` de `docs/sistema-visual.md`). **No se
+           esconde para un estudiante de baja**: configurar un cupo no mueve dinero
+           y el servicio no lo prohíbe (ver `fijar_limite_diario`), así que ocultarlo
+           ofrecería una explicación falsa de por qué no está. {% endcomment %}
+        <a href="{% url 'limite-diario' seleccionado.id %}"
+           class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
+          {% if limite %}Cambiar el límite{% else %}Fijar un límite{% endif %}
+        </a>
       </article>
 
       <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde

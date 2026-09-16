@@ -27,6 +27,7 @@ from personas.selectors import (
 from personas.services import cargar_estudiantes_y_acudientes
 from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
+from restricciones.selectors import limite_diario_de
 
 
 class ArchivoDeCargaForm(forms.Form):
@@ -98,10 +99,17 @@ def _contexto_del_estudiante(estudiante):
     donde se juntan los dos dominios, y es el sitio correcto: **una vista
     compone**. La dependencia entre modelos sigue yendo en un solo sentido —
     `billetera` conoce a `personas` y no al revés.
+
+    `TT-96` añade el límite diario por la misma puerta y con el mismo argumento:
+    `restricciones` conoce a `personas`, y es la vista la que junta las dos
+    lecturas para pintar la ficha. Puede ser `None`, y ese caso no es un hueco:
+    significa que el acudiente no fijó cupo, que es distinto de un cupo de cero
+    (`restricciones.models.LimiteDiario`).
     """
     return {
         "seleccionado": estudiante,
         "saldo": saldo_de(estudiante) if estudiante is not None else None,
+        "limite": limite_diario_de(estudiante) if estudiante is not None else None,
         "movimientos": (
             historial_de(estudiante, limite=ULTIMOS_MOVIMIENTOS)
             if estudiante is not None

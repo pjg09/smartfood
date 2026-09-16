@@ -56,6 +56,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
+| `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
 | `/estudiantes/<id>/tarjeta/` | Tarjeta imprimible con su código de barras | Institución | `TT-37` |
 | `/punto-de-venta/` | Punto de venta: identificación, catálogo y venta | **Solo cajero** | `TT-57`, `TT-58` |
 | `/punto-de-venta/identificacion/` | Fragmento HTMX del estudiante con su fotografía, su saldo y su consumo del día, por tarjeta o por documento | **Solo cajero** | `TT-71`, `TT-73`, `TT-75`, `TT-77` |
@@ -74,20 +75,22 @@ los mismos colores desde `DT-23`.
 | `/carga/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/recargar/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/limite/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/catalogo/imagenes/<clave>` | 200 | 200 | 200 | 200 | **200** |
 
-Dos filas piden explicación:
+Cuatro filas piden explicación:
 
 - **El acudiente recibe `403` en la tarjeta, también la de su propio hijo.** `HU-45` es de
   `USR-5`: quien produce la tarjeta es el colegio. Si algún día el acudiente tiene que
   verla, será con una historia que lo pida.
-- **Un acudiente que pide la recarga de un estudiante ajeno recibe `404`, no `403`.**
-  Comprobado ejecutando. Es la misma regla del fragmento HTMX: los dos casos —no
+- **Un acudiente que pide la recarga o el límite de un estudiante ajeno recibe `404`, no
+  `403`.** Comprobado ejecutando. Es la misma regla del fragmento HTMX: los dos casos —no
   existe y no es tuyo— se responden igual a propósito, porque un `403` le confirmaría
-  a un desconocido que ese estudiante existe.
+  a un desconocido que ese estudiante existe. Los otros tres roles reciben `403` antes de
+  que se mire ningún identificador: el rol se rechaza primero.
 - **La administración de la cafetería recibe `403` en el punto de venta.** No es un
   olvido: `[S11]` concede «registrar ventas en el punto de venta» al cajero y a nadie
   más. Quien administra el catálogo no cobra.
@@ -198,12 +201,20 @@ es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad
 historial del que sale el saldo (`INV-2`). A un estudiante de baja o desactivado no se le
 ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-2`).
 
+Y desde ahí también `limite`, el **cupo diario de gasto** de cada estudiante (`HU-09`,
+`TT-96`). Es por estudiante y no de la cuenta: un acudiente con tres hijos fija tres cupos
+distintos. **Lo escribe solo él**, entre por donde entre —`INV-4`—, y la pantalla dice sin
+rodeos que el cupo todavía no rechaza ninguna venta: esa comprobación es `HU-20`, y hasta
+entonces prometerla sería peor que no ofrecer el campo. A un estudiante de baja **sí** se
+le puede configurar: fijar un cupo no mueve dinero, así que `INVD-2` no lo alcanza.
+
 `/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno, **el saldo de
 cada uno y sus últimos cinco movimientos** (`HU-07`). El saldo no es un campo guardado: se
 calcula sumando el historial al pedir la página (`INV-2`), y el historial va debajo
-precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). El saldo, el límite diario y las restricciones **son suyos y llegan en los
-sprints 2 y 3**; hoy la pantalla declara dónde irán y **cuándo**, en vez de enseñar un cero
-—un saldo en cero y un saldo que todavía no existe no son lo mismo—.
+precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). El saldo y el límite diario **son suyos y ya están** (`HU-07`, `HU-09`); las restricciones por
+producto y por alérgeno llegan en este mismo sprint y su tarjeta declara dónde irán y
+**cuándo**, en vez de enseñar un cero —un cupo de cero y un cupo que todavía no existe no
+son lo mismo—.
 
 Entra desde el teléfono (`INT-1`), así que la pantalla se diseña a 390 px primero: la barra
 lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
@@ -309,34 +320,41 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 4. **Recargar la billetera** de uno de sus estudiantes. El saldo aparece en su ficha con el
    movimiento debajo: es la suma del historial, no una cifra guardada. `HU-06`, `HU-07`,
    `HU-08`, `INV-2`.
-5. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
+5. **Fijar su límite diario** desde la misma ficha. Con dos estudiantes a cargo se ve que
+   el cupo es de uno y no del otro. La pantalla avisa de que todavía no frena la caja:
+   eso llega con `HU-20`. `HU-09`.
+6. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
    marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
-6. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
-7. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
+7. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
+8. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
-8. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
+9. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
    salir salvo que se marque «Ver retirados». `HU-51`, `HU-52`.
-9. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
-10. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
+10. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+11. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
    historial, no de un contador. `HU-27`, `INV-3`.
-11. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
+12. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
     fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
-12. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
+13. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
     bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
     `INV-3`.
-13. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
+14. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
-14. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
+15. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
     inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-Restricciones y límite diario (`HU-09`…`HU-13`), los rechazos que dependen de ellas
-(`HU-18`, `HU-20`), la merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y
-recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
+Las restricciones por producto y por alérgeno (`HU-10`…`HU-13`), los rechazos que dependen
+de ellas y del cupo (`HU-18`, `HU-20`), la merma y las alertas de inventario (`HU-28`,
+`HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
+
+**El límite diario se configura pero todavía no se aplica.** `HU-09` deja el cupo escrito
+por estudiante y solo por su acudiente; compararlo con el consumo del día dentro de la
+venta es `HU-20`, y hasta entonces el punto de venta no lo consulta.
 
 **El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
 fotografía (`HU-58`), el saldo y el consumo del día (`HU-17`), el medio de pago (`HU-54`), y

@@ -20,6 +20,7 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
+from restricciones.views import limite_diario
 from ventas.views import (
     carrito,
     cliente_generico,
@@ -108,6 +109,16 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/recargar/",
         recarga,
         name="recarga",
+    ),
+    # Límite diario de gasto (`TT-96`, `HU-09`). Cuelga de la ruta del
+    # estudiante por el mismo motivo que la recarga: **el límite es por
+    # estudiante**, no de la cuenta del acudiente (primer criterio de `HU-09`).
+    # Un acudiente con tres hijos fija tres cupos distintos, y una ruta sin
+    # estudiante no sabría cuál.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/limite/",
+        limite_diario,
+        name="limite-diario",
     ),
     # Vista imprimible de la tarjeta (`TT-37`, `HU-45`). Es de la institución
     # (`USR-5`), no del acudiente: quien produce la tarjeta es el colegio.
