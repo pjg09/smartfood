@@ -14,8 +14,8 @@
 | sprint | 3 de 5 |
 | semanas | 10 – 11 |
 | hito | ninguno propio. El **Avance 2** (`EVA-4`) cae en la semana 14, al cerrar el Sprint 4 |
-| historias | 13 (`HU-09`, `HU-10`, `HU-11`, `HU-12`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-47`, `HU-48`, `HU-49`, `HU-50`, `HU-60`) **más el cierre de `HU-17`**, que el Sprint 2 dejó abierta. `HU-60` se añadió durante el sprint (`ANEXO A`, punto 5) |
-| tareas | 40 (`TT-94` … `TT-133`) |
+| historias | 14 (`HU-09`, `HU-10`, `HU-11`, `HU-12`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-47`, `HU-48`, `HU-49`, `HU-50`, `HU-60`, `HU-61`) **más el cierre de `HU-17`**, que el Sprint 2 dejó abierta. `HU-60` se añadió durante el sprint (`ANEXO A`, punto 5) |
+| tareas | 43 (`TT-94` … `TT-136`) |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
 | version | 1.0 |
@@ -37,7 +37,7 @@
 | S1 | Objetivo del Sprint | `COM-2` |
 | S2 | Definición de Terminado | Puntero a `./definicion-de-terminado.md` (`COM-3`) |
 | S3 | Tareas de habilitación | **Ninguna.** Se explica por qué |
-| S4 | Tareas por historia | `TT-94` … `TT-127`, `TT-131` … `TT-133` |
+| S4 | Tareas por historia | `TT-94` … `TT-127`, `TT-131` … `TT-136` |
 | S5 | Tareas de gestión del Sprint | `TT-128` … `TT-130` |
 | S6 | Reparto por responsable | Carga de cada integrante |
 | ANEXO A | Riesgos del sprint | Lo que puede salir mal y qué hacer |
@@ -224,6 +224,18 @@ Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: 
 
 `TT-132` estrena el mecanismo que usarán `TT-114`, `TT-117` y `TT-126`: cada clase de rechazo lleva una etiqueta estable que llega hasta el HTML del ticket, de modo que una prueba pueda exigir **cuál** se enseñó sin buscar una frase dentro del mensaje.
 
+### `[HU-61]` Retiro del límite diario
+
+| ID | Tarea | Responsable | Estado |
+|---|---|---|---|
+| `TT-134` | Servicio de retiro del límite diario, con asiento (`DEC-13`) | Pedro | ☑ |
+| `TT-135` | Acción de retirar en la pantalla del límite, con su historial | Carlos | ☑ |
+| `TT-136` | Caso de prueba: retirado **no** es cero, y queda asentado de cuánto era | Alejandro | ☑ |
+
+> **Segunda historia añadida durante el sprint**, después de `HU-60`. Se vio al delimitar el alcance de `HU-12` en `PR-04`: `[S11]` daba al acudiente «**fijar** límite diario» y, en otra fila, «configurar y **retirar** restricciones alimentarias». El cupo se podía subir o bajar, nunca quitar. `DEC-13` amplía esa fila.
+
+`TT-134` amplía además el libro de `TT-104`: el asiento gana un campo `sobre`, porque el límite diario no tiene clave ajena a la que apuntar y «ninguna de las dos puesta» tendría que significar «límite» — adivinar en vez de decir.
+
 ---
 
 ## [S5] Tareas de gestión del Sprint
@@ -240,12 +252,12 @@ Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: 
 
 | Integrante | Rol `[S12]` | Tareas | Cuáles |
 |---|---|---|---|
-| **Pedro** | Desarrollador backend | **17** | `TT-94`, `TT-95`, `TT-97`, `TT-98`, `TT-100`, `TT-101`, `TT-104`, `TT-106`, `TT-107`, `TT-111`, `TT-113`, `TT-116`, `TT-119`, `TT-121`, `TT-123`, `TT-125`, `TT-131` |
-| **Carlos** | Desarrollador frontend | **12** | `TT-96`, `TT-99`, `TT-102`, `TT-105`, `TT-109`, `TT-112`, `TT-114`, `TT-117`, `TT-120`, `TT-122`, `TT-126`, `TT-132` |
-| **Alejandro** | Analista de datos y UX | **8** | `TT-103`, `TT-108`, `TT-110`, `TT-115`, `TT-118`, `TT-124`, `TT-127`, `TT-133` |
+| **Pedro** | Desarrollador backend | **18** | `TT-94`, `TT-95`, `TT-97`, `TT-98`, `TT-100`, `TT-101`, `TT-104`, `TT-106`, `TT-107`, `TT-111`, `TT-113`, `TT-116`, `TT-119`, `TT-121`, `TT-123`, `TT-125`, `TT-131`, `TT-134` |
+| **Carlos** | Desarrollador frontend | **13** | `TT-96`, `TT-99`, `TT-102`, `TT-105`, `TT-109`, `TT-112`, `TT-114`, `TT-117`, `TT-120`, `TT-122`, `TT-126`, `TT-132`, `TT-135` |
+| **Alejandro** | Analista de datos y UX | **9** | `TT-103`, `TT-108`, `TT-110`, `TT-115`, `TT-118`, `TT-124`, `TT-127`, `TT-133`, `TT-136` |
 | **Naomi** | Líder de proyecto | **3** | `TT-128`, `TT-129`, `TT-130` |
 
-**Total: 40 tareas.**
+**Total: 43 tareas.**
 
 ---
 
@@ -285,11 +297,11 @@ Los responsables salen de la matriz `[S12]` de `./smartfood.md`. La serie `TT-` 
 
 ## [ANEXO C] Verificación del orden de construcción
 
-El orden de las 40 tareas se comprobó por script contra el grafo de dependencias:
+El orden de las 43 tareas se comprobó por script contra el grafo de dependencias:
 
 | Comprobación | Resultado |
 |---|---|
-| Tareas colocadas | 40 de 40, ninguna repetida |
+| Tareas colocadas | 43 de 43, ninguna repetida |
 | Tareas situadas antes de algo que las bloquea | **0** |
 
 **Se desarrolla de arriba abajo, sin excepciones.**
@@ -309,6 +321,7 @@ El orden de las 40 tareas se comprobó por script contra el grafo de dependencia
 | `TT-126` Motivo de rechazo distinguible | `TT-113`, `TT-116`, `TT-125`, `TT-132` | `HU-18`, `HU-20`, `HU-50`, `HU-60` |
 | `TT-131` Validación de producto bloqueado en la venta | `TT-98` Servicio de bloqueo | `HU-10` |
 | `TT-132` Motivo de rechazo por producto bloqueado | `TT-131` | `HU-60` |
+| `TT-134` Retiro del límite diario | `TT-95` Servicio del límite, `TT-104` El libro | `HU-09`, `HU-12` |
 
 ### Dependencias con sprints anteriores
 
@@ -325,6 +338,8 @@ Todo lo siguiente ya está en `main`:
 ### Trabajo en paralelo
 
 **Cinco raíces** sin dependencia dentro del sprint: `TT-94` (app y límite), `TT-119` (desactivación por la institución) y las tres de gestión.
+
+`TT-134` … `TT-136` se añadieron igual que las anteriores y tampoco rompen el orden: dependen de `TT-95` y de `TT-104`, las dos muy por delante.
 
 `TT-131` … `TT-133` se añadieron después de la planeación y **no rompen el orden**: lo único que las bloquea dentro del sprint es `TT-98`, que va muy por delante. Van al final de `[S4]` para no romper los `TT-` ascendentes, y `TT-132` queda además antes que `TT-126`, que ahora lo necesita — el mecanismo de motivos lo estrena el primero que llegó.
 

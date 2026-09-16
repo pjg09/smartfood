@@ -178,13 +178,43 @@
         <p class="text-sm text-texto-suave">
           {% if limite %}
             Puedes cambiarlo cuando quieras; el nuevo cupo sustituye al anterior.
-            Retirarlo del todo llega con <span class="font-mono">HU-12</span>.
           {% else %}
             {{ estudiante.nombre }} no tiene cupo diario: puede gastar lo que tenga de
             saldo. Fijar uno no toca su saldo ni sus movimientos.
           {% endif %}
         </p>
+
+        {% if limite %}
+          {% comment %} `TT-135`, `HU-61`. **Formulario propio y no un segundo botón del
+             de arriba**: en un formulario con dos envíos, el primero del DOM es el que
+             dispara Enter, y quien teclea una cifra y pulsa Enter se quedaría sin cupo
+             en vez de cambiarlo.
+
+             Enlace de acento y no botón sólido: retirar es la acción secundaria de esta
+             pantalla —a lo que se viene es a fijar o cambiar— y un botón relleno aquí
+             competiría con el de guardar. Va en `error` porque quita una protección,
+             que es lo que el rojo significa en este sistema (`[S1]`, regla 3). {% endcomment %}
+          <form method="post" action="{% url 'retiro-del-limite-diario' estudiante.id %}"
+                class="border-t border-borde pt-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-md text-base font-semibold
+                           text-error-fuerte transition-colors hover:underline">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+              Retirar el límite
+            </button>
+            <p class="pt-1 text-sm text-texto-suave">
+              {{ estudiante.nombre }} volverá a poder gastar su saldo sin tope. Queda
+              anotado quién lo retiró y cuándo.
+            </p>
+          </form>
+        {% endif %}
       </aside>
     </div>
+
+    {% comment %} `TT-105`, `HU-12`. El mismo historial que las dos pantallas de
+       restricciones. Aquí no hace falta meterlo en ningún fragmento: esta pantalla
+       no es HTMX, escribe y redirige, así que cada visita lo trae fresco. {% endcomment %}
+    {% include "restricciones/partials/historial-de-restricciones.html" %}
   </div>
 {% endblock %}

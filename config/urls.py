@@ -26,6 +26,7 @@ from restricciones.views import (
     bloqueo_de_producto,
     limite_diario,
     productos_bloqueados,
+    retiro_del_limite_diario,
 )
 from ventas.views import (
     carrito,
@@ -125,6 +126,15 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/limite/",
         limite_diario,
         name="limite-diario",
+    ),
+    # Retiro del límite diario (`TT-135`, `HU-61`, `DEC-13`). **Ruta aparte y no
+    # un segundo botón del mismo formulario**: en un formulario con dos envíos,
+    # el primero del DOM es el que dispara Enter, y quien teclea una cifra y
+    # pulsa Enter se quedaría sin cupo en vez de cambiarlo.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/limite/retirar/",
+        retiro_del_limite_diario,
+        name="retiro-del-limite-diario",
     ),
     # Productos bloqueados (`TT-99`, `HU-10`). Cuelga del estudiante por lo
     # mismo que el límite: **la lista es suya**, no de la cuenta del acudiente.

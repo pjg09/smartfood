@@ -1,4 +1,6 @@
-"""Vistas del control parental (`TT-96`, `TT-99`, `TT-102`, `TT-105`, `HU-09` … `HU-12`).
+"""Vistas del control parental (`TT-96`, `TT-99`, `TT-102`, `TT-105`, `TT-135`).
+
+Cubre `HU-09` … `HU-12` y `HU-61`.
 
 Solo HTTP: parsear la petición, delegar en un servicio o un selector, y
 renderizar. **Cero lógica de negocio** (`DT-15`): quién puede fijar el límite y
@@ -40,6 +42,7 @@ from restricciones.services import (
     desbloquear_alergeno,
     desbloquear_producto,
     fijar_limite_diario,
+    retirar_limite_diario,
 )
 
 # Los atajos de importe de la pantalla del límite. **Son una comodidad de la
@@ -147,8 +150,45 @@ def limite_diario(request, estudiante_id):
             # plantilla lo dice con todas las letras.
             "consumo_de_hoy": consumo_del_dia(estudiante),
             "montos_sugeridos": MONTOS_SUGERIDOS,
+            # `TT-135`. Aquí el historial **no** va dentro de ningún fragmento,
+            # a diferencia de las dos pantallas de restricciones: esta no es
+            # HTMX, escribe y redirige, así que cada visita lo trae fresco.
+            "historial": historial_de_restricciones(estudiante, limite=ULTIMOS_CAMBIOS),
         },
     )
+
+
+@login_required
+@require_http_methods(["POST"])
+def retiro_del_limite_diario(request, estudiante_id):
+    """Quita del todo el límite diario del estudiante (`TT-135`, `HU-61`).
+
+    **Ruta propia y no un segundo botón del formulario del cupo**, y la razón no
+    es de estilo: en un formulario con dos botones de envío, el primero del DOM
+    es el que dispara la tecla Enter. Con «Retirar» dentro del mismo formulario,
+    un acudiente que teclea una cifra y pulsa Enter podría quedarse sin cupo en
+    vez de cambiarlo — justo lo contrario de lo que quería.
+
+    `POST` y redirección, como fijar: escribe, y un `GET` que escribe es una URL
+    que el navegador puede reproducir solo. No devuelve fragmento porque esta
+    pantalla no es HTMX (`DT-16`).
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    if retirar_limite_diario(actor=request.user, estudiante=estudiante):
+        messages.success(
+            request,
+            f"{estudiante.nombre} vuelve a poder gastar su saldo sin tope diario.",
+        )
+    else:
+        # No es un error: es el estado que se pedía. Decirlo evita que el
+        # acudiente se quede dudando de si el botón hizo algo.
+        messages.info(request, f"{estudiante.nombre} no tenía ningún límite diario.")
+
+    return redirect("mis-estudiantes")
 
 
 @login_required

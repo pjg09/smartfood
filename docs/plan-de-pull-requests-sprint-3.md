@@ -10,10 +10,10 @@
 | documentos_fuente | `./sprint-3-backlog.md` (`[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md` |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | 3 de 5 · semanas 10 – 11 |
-| tareas cubiertas | 40 de 40 (`TT-94` … `TT-133`) |
-| pull requests | 15 (`PR-01` … `PR-15`) |
+| tareas cubiertas | 43 de 43 (`TT-94` … `TT-136`) |
+| pull requests | 16 (`PR-01` … `PR-16`) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -84,17 +84,17 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **15** de 40 | **5** de 15 |
+| **Finalizadas** | **18** de 43 | **6** de 16 |
 | Pendientes | 25 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 8 | 17 |
-| Carlos | 5 | 12 |
-| Alejandro | 2 | 8 |
+| Pedro | 9 | 18 |
+| Carlos | 6 | 13 |
+| Alejandro | 3 | 9 |
 | Naomi | 0 | 3 |
 
-### [S3.1] Estado de los 15 Pull Requests
+### [S3.1] Estado de los 16 Pull Requests
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
@@ -113,10 +113,11 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
 | `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
 | `PR-15` | `TT-131`–`TT-133` | `HU-60` · **historia añadida durante el sprint** | ☑ |
+| `PR-16` | `TT-134`–`TT-136` | `HU-61` · `DEC-13` · **historia añadida durante el sprint** | ☑ |
 
 ---
 
-## [S4] Los 15 Pull Requests
+## [S4] Los 16 Pull Requests
 
 ### Configuración del control parental — `PR-01` … `PR-04`
 
@@ -528,6 +529,36 @@ así no hay que renumerar de `PR-03` a `PR-14`.
 cada clase de rechazo lleva una etiqueta estable que llega al HTML del ticket. Con cuatro
 motivos por delante, uno por historia habría sido cuatro maneras de decir lo mismo.
 
+#### `PR-16` — `HU-61` Retiro del límite diario
+
+| | |
+|---|---|
+| Título del PR | `feat(restricciones): retirar por completo el límite diario` |
+| Rama | `feat/TT-134-retiro-del-limite-diario` |
+| Responsables | Pedro, Carlos y Alejandro |
+| Historia | `HU-61` — **añadida durante el sprint** (`DEC-13`) |
+| Invariantes | `INV-4` · `ALC-IN-19`: el retiro se asienta |
+| Estado | ☑ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-134` | Servicio de retiro del límite diario, con asiento | Pedro | ☑ |
+| `TT-135` | Acción de retirar en la pantalla del límite, con su historial | Carlos | ☑ |
+| `TT-136` | Caso de prueba: retirado no es cero, y queda asentado | Alejandro | ☑ |
+
+> **Esto amplía el alcance, y por eso lleva `DEC-13` delante.** `[S11]` daba al acudiente
+> «**fijar** límite diario»; «retirar» estaba en la fila de las restricciones
+> alimentarias, así que `HU-12` no alcanzaba al cupo. La única salida que quedaba era
+> fijar una cifra tan alta que equivaliera a no tener tope — peor que no tenerlo, porque
+> la pantalla seguiría diciendo que hay uno.
+
+**Va el último por número y no por orden de construcción**, como `PR-14` y `PR-15`. Depende
+de `PR-01` y de `PR-04`, las dos ya en `main`.
+
+`TT-134` amplía el libro de `TT-104` con un campo `sobre`: el límite diario no tiene clave
+ajena a la que apuntar, y dejar que «ninguna de las dos puesta» significara «límite» sería
+la misma codificación implícita contra la que argumenta `LimiteDiario`.
+
 ---
 
 ## [S5] Qué se puede solapar
@@ -565,12 +596,14 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
 5. **Este sprint cierra `TST-1` y `TST-2`.** Dos de los cuatro escenarios críticos que
    `ENT-05` exige demostrar. `TST-3` cerró en el Sprint 2 y `TST-4` es del Sprint 4: al
    acabar el 4, el plan de pruebas está completo.
-6. **Si el sprint desborda**, los candidatos a mover son `PR-04` (`HU-12`, el único
-   `Should`) y `PR-07` (`HU-38`, del que no depende ninguna historia). Quedan 12 PR y 33
-   tareas. **No se pueden mover** `PR-08` ni `PR-09`.
-7. **El sprint creció de 37 a 40 tareas.** `HU-60` se añadió durante el sprint al
-   descubrirse que ninguna historia hacía cumplir el bloqueo por producto en la venta. Si
-   eso hace desbordar, los candidatos a mover siguen siendo los de arriba — **`HU-60` no
-   es uno de ellos**: sin su rechazo, `HU-10` entrega una protección que no existe.
+6. **El sprint creció de 37 a 43 tareas, en dos pasos y por el mismo motivo**: construir
+   el control parental destapó dos huecos que la planeación no vio. `HU-60` —ninguna
+   historia rechazaba la venta de un producto bloqueado— y `HU-61` —el cupo se podía
+   cambiar pero no retirar—. Las dos se registraron antes de construirse, la segunda con
+   `DEC-13` porque amplía `[S11]`.
+7. **Si el sprint desborda**, el candidato a mover es `PR-07` (`HU-38`, del que no depende
+   ninguna historia). `PR-04` ya no lo es: está integrado. **No se pueden mover** `PR-08`
+   ni `PR-09` —son `TST-1` y `TST-2`— ni `PR-15` ni `PR-16`: sin ellas, lo ya construido
+   promete una protección que no cumple.
 8. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.

@@ -27,7 +27,11 @@ from catalogo.models import Alergeno, Categoria, Producto
 from cuentas.models import Rol, Usuario
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
-from restricciones.models import AsientoDeRestriccion, TipoDeAsiento
+from restricciones.models import (
+    AsientoDeRestriccion,
+    RestriccionAsentada,
+    TipoDeAsiento,
+)
 from restricciones.selectors import historial_de_restricciones
 from restricciones.services import (
     bloquear_alergeno,
@@ -233,13 +237,31 @@ class ElAsientoNoSePuedeDejarAMediasTest(TestCase):
     def setUp(self):
         self.usuario, self.estudiante, self.producto, self.alergeno = escenario()
 
-    def test_un_asiento_sin_producto_ni_alergeno_no_entra(self):
+    def test_un_asiento_de_producto_sin_producto_no_entra(self):
+        """`sobre` y las claves ajenas tienen que cuadrar.
+
+        Desde `TT-134` la regla no es «una de las dos puesta»: un asiento del
+        límite diario no lleva ninguna, y es válido. Lo que la base exige es que
+        lo que dice `sobre` coincida con lo que hay.
+        """
         with self.assertRaises(IntegrityError), transaction.atomic():
             AsientoDeRestriccion.objects.create(
                 actor=self.usuario,
                 estudiante=self.estudiante,
                 tipo=TipoDeAsiento.RETIRO,
+                sobre=RestriccionAsentada.PRODUCTO,
                 nombre="lo que sea",
+            )
+
+    def test_un_asiento_del_limite_con_un_producto_colgando_no_entra(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            AsientoDeRestriccion.objects.create(
+                actor=self.usuario,
+                estudiante=self.estudiante,
+                tipo=TipoDeAsiento.RETIRO,
+                sobre=RestriccionAsentada.LIMITE_DIARIO,
+                producto=self.producto,
+                nombre="$8.000",
             )
 
     def test_un_asiento_con_los_dos_no_entra(self):
@@ -248,6 +270,7 @@ class ElAsientoNoSePuedeDejarAMediasTest(TestCase):
                 actor=self.usuario,
                 estudiante=self.estudiante,
                 tipo=TipoDeAsiento.RETIRO,
+                sobre=RestriccionAsentada.PRODUCTO,
                 producto=self.producto,
                 alergeno=self.alergeno,
                 nombre="las dos cosas",

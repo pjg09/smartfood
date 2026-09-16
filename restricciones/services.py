@@ -1,4 +1,6 @@
-"""Escrituras del control parental (`TT-95`, `TT-98`, `TT-101`, `TT-104`, `HU-09` … `HU-12`).
+"""Escrituras del control parental (`TT-95`, `TT-98`, `TT-101`, `TT-104`, `TT-134`).
+
+Cubre `HU-09` … `HU-12` y `HU-61`.
 
 **Toda escritura pasa por aquí** (`DT-15`). Reglas que no se negocian:
 
@@ -27,10 +29,12 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from cuentas.models import Rol
+from billetera.templatetags.dinero import dinero
 from restricciones.models import (
     AsientoDeRestriccion,
     LimiteDiario,
     RestriccionAlergeno,
+    RestriccionAsentada,
     RestriccionProducto,
     TipoDeAsiento,
 )
@@ -140,6 +144,11 @@ def fijar_limite_diario(*, actor, estudiante, monto):
     protección al hijo en el momento de volver.
     ─────────────────────────────────────────────────────────────────────────
 
+    **Deja asiento** (`TT-134`), y solo cuando la cifra cambia de verdad: volver
+    a guardar el mismo cupo no es un hecho nuevo. Así el historial responde
+    «¿desde cuándo tenía este tope?», que es la otra mitad de la pregunta que
+    `HU-61` hace auditable.
+
     **El límite no se aplica todavía en la venta.** La comparación contra el
     consumo del día —tercer criterio de `HU-09` y razón de ser de `HU-20`— la
     construye `TT-116` dentro del bloqueo de `registrar_venta` (`PR-09`, `DT-6`).
@@ -153,13 +162,23 @@ def fijar_limite_diario(*, actor, estudiante, monto):
 
     monto = _monto_valido(monto)
 
+    anterior = LimiteDiario.objects.filter(estudiante=estudiante).first()
     limite, _ = LimiteDiario.objects.update_or_create(
         estudiante=estudiante, defaults={"monto": monto}
     )
+
+    if anterior is None or anterior.monto != monto:
+        _asentar(
+            actor=actor,
+            estudiante=estudiante,
+            tipo=TipoDeAsiento.BLOQUEO,
+            sobre=RestriccionAsentada.LIMITE_DIARIO,
+            nombre=dinero(monto),
+        )
     return limite
 
 
-def _asentar(*, actor, estudiante, tipo, producto=None, alergeno=None):
+def _asentar(*, actor, estudiante, tipo, sobre, producto=None, alergeno=None, nombre=None):
     """**El único punto por el que se escribe en el libro** (`TT-104`, `HU-12`).
 
     Es el mismo patrón que `DT-24` fijó para la billetera y el inventario: un
@@ -171,17 +190,26 @@ def _asentar(*, actor, estudiante, tipo, producto=None, alergeno=None):
     dice cuál, el nombre dice cómo se llamaba. Renombrar el producto mañana no
     reescribe el asiento de hoy.
 
+    `sobre` es explícito y no se deduce de qué clave ajena viene puesta: el
+    límite diario no trae ninguna (`TT-134`, `DEC-13`). `nombre` solo hace falta
+    pasarlo para ese caso —es la cifra formateada—; para producto y alérgeno sale
+    del objeto.
+
     No abre transacción propia: lo llaman servicios que ya están dentro de la
     suya, y el asiento tiene que entrar o no entrar **con** el cambio que anota.
     Un retiro sin su asiento es justo lo que `HU-12` prohíbe.
     """
+    if nombre is None:
+        nombre = (producto or alergeno).nombre
+
     return AsientoDeRestriccion.objects.create(
         actor=actor,
         estudiante=estudiante,
         tipo=tipo,
+        sobre=sobre,
         producto=producto,
         alergeno=alergeno,
-        nombre=(producto or alergeno).nombre,
+        nombre=nombre,
     )
 
 
@@ -231,6 +259,7 @@ def bloquear_producto(*, actor, estudiante, producto):
             actor=actor,
             estudiante=estudiante,
             tipo=TipoDeAsiento.BLOQUEO,
+            sobre=RestriccionAsentada.PRODUCTO,
             producto=producto,
         )
     return restriccion
@@ -268,6 +297,7 @@ def desbloquear_producto(*, actor, estudiante, producto):
             actor=actor,
             estudiante=estudiante,
             tipo=TipoDeAsiento.RETIRO,
+            sobre=RestriccionAsentada.PRODUCTO,
             producto=producto,
         )
     return borradas > 0
@@ -313,6 +343,7 @@ def bloquear_alergeno(*, actor, estudiante, alergeno):
             actor=actor,
             estudiante=estudiante,
             tipo=TipoDeAsiento.BLOQUEO,
+            sobre=RestriccionAsentada.ALERGENO,
             alergeno=alergeno,
         )
     return restriccion
@@ -344,6 +375,57 @@ def desbloquear_alergeno(*, actor, estudiante, alergeno):
             actor=actor,
             estudiante=estudiante,
             tipo=TipoDeAsiento.RETIRO,
+            sobre=RestriccionAsentada.ALERGENO,
             alergeno=alergeno,
         )
     return borradas > 0
+
+
+@transaction.atomic
+def retirar_limite_diario(*, actor, estudiante):
+    """Quita del todo el límite diario del estudiante (`TT-134`, `HU-61`).
+
+    Devuelve `True` si había límite y se retiró, `False` si no lo había.
+
+    ── POR QUÉ ESTA FUNCIÓN EXISTE, Y POR QUÉ NO EXISTÍA ───────────────────
+    `[S11]` concede al acudiente «recargar saldo y **fijar** límite diario», y
+    «configurar y **retirar** restricciones alimentarias». Retirar estaba atado a
+    las alimentarias, así que `HU-12` no alcanzaba al cupo: un acudiente podía
+    bajarlo o subirlo, pero no quitarlo.
+
+    `DEC-13` amplía esa fila y `HU-61` es la historia. No es un detalle de
+    implementación: cambiar la matriz de permisos es alcance, y el alcance se
+    registra antes de construirse.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Retirar es borrar la fila, nunca poner el monto a cero.** Un cupo de cero
+    significa «no puede gastar nada» y es lo contrario de lo que se pide; la
+    `CheckConstraint` de `LimiteDiario` lo impide de todas formas. Sin fila, el
+    estudiante vuelve a poder gastar el saldo que tenga.
+
+    Idempotente, como los otros dos retiros: quitar lo que no había no es un
+    error, es el estado que se pedía. Y como ellos, **solo asienta si había algo
+    que retirar**.
+
+    El asiento guarda la cifra que tenía al retirarse, formateada (`DT-8`): «se
+    retiró el límite» sin decir de cuánto no explica lo que el acudiente hizo.
+    """
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Retirar el límite diario", "HU-61"
+    )
+
+    anterior = LimiteDiario.objects.filter(estudiante=estudiante).first()
+    if anterior is None:
+        return False
+
+    monto = anterior.monto
+    anterior.delete()
+
+    _asentar(
+        actor=actor,
+        estudiante=estudiante,
+        tipo=TipoDeAsiento.RETIRO,
+        sobre=RestriccionAsentada.LIMITE_DIARIO,
+        nombre=dinero(monto),
+    )
+    return True
