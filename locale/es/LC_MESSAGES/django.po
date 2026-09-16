@@ -1,0 +1,50 @@
+# Traducciones propias del proyecto SmartFood.
+#
+# **Solo lo que el catálogo de Django deja sin traducir.** Django 6.1 estrenó o
+# renombró estas cadenas del admin y su catálogo `es` todavía las devuelve en
+# inglés, así que en una pantalla por lo demás en español aparecían «Run» y
+# «- Select an option -». Se comprobó una por una contra
+# `django/conf/locale/es/LC_MESSAGES/django.mo`: las cuatro vuelven tal cual.
+#
+# Este fichero **no traduce nada del proyecto**: lo nuestro se escribe en español
+# desde el principio (`CLAUDE.md`) y no pasa por `gettext`. Es un parche sobre un
+# catálogo ajeno, y por eso es tan corto — cuando Django las incorpore, estas
+# entradas sobran y se borran.
+#
+# El registro es el del admin, que trata de usted («Escoja estudiante a
+# modificar»), no el de la aplicación, que tutea. Son dos interfaces distintas y
+# cada una mantiene su voz.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SmartFood\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. La opción vacía de cualquier desplegable con opciones. Django 6 la cambió de
+#. «---------» a un texto, y el texto no está traducido.
+#: django/db/models/fields/__init__.py
+msgid "- Select an option -"
+msgstr "- Seleccione una opción -"
+
+#. El botón que dispara la acción elegida en el listado del admin. Se llamaba
+#. «Go» —traducido como «Ir»— y en Django 6 pasó a «Run».
+#: django/contrib/admin/templates/admin/actions.html
+msgid "Run"
+msgstr "Ejecutar"
+
+#. El botón del buscador del listado.
+#: django/contrib/admin/templates/admin/search_form.html
+msgid "Search"
+msgstr "Buscar"
+
+#. El encabezado del buscador, que solo leen los lectores de pantalla. El
+#. marcador lleva el nombre en plural del modelo: «Buscar estudiantes».
+#: django/contrib/admin/templates/admin/search_form.html
+#, python-format
+msgid "Search %(name)s"
+msgstr "Buscar %(name)s"

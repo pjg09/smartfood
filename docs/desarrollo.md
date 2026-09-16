@@ -331,7 +331,28 @@ editado sin su migración no da error hasta que otra persona levanta el proyecto
 de datos de prueba se queda creada y el comando siguiente **se queda esperando** una
 respuesta que nadie escribe. Con la opción, la borra y sigue.
 
-### [S5.1] Mirar una pantalla sin abrir el navegador
+### [S5.1] Si tocas `locale/`
+
+El catálogo propio **solo parchea lo que Django deja sin traducir** en el admin —hoy
+cuatro cadenas de la versión 6.1—. El fichero que se edita es el `.po`; el que lee Django
+es el `.mo`, que hay que recompilar:
+
+```bash
+sudo apt install gettext        # una vez: msgfmt no viene con el sistema
+uv run python manage.py compilemessages
+```
+
+**Sin recompilar, el cambio no se ve y nada falla**: Django sigue leyendo el `.mo` viejo.
+Los dos ficheros van al repositorio, el `.po` porque es la fuente y el `.mo` porque el
+entorno desplegado no tiene `gettext` y `collectstatic` no compila mensajes.
+
+`cuentas/tests_traducciones.py` comprueba que las cuatro salen en español y que el parche
+no ha crecido: si alguien empieza a traducir por su cuenta lo que Django ya trae, se
+desincroniza a la primera versión.
+
+---
+
+### [S5.2] Mirar una pantalla sin abrir el navegador
 
 Para revisar cómo queda algo —y para adjuntar la evidencia a un PR mientras `DoD-4` esté
 suspendido— no hace falta abrir el navegador a mano: se renderiza la pantalla con el cliente
