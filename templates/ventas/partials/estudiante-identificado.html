@@ -18,11 +18,16 @@
    sea el único camino por el que el saldo llega al rol cajero, y exija ese rol
    (`DT-11`, `DT-15`).
 
-   **De los tres datos hay dos.** Las restricciones vigentes son `HU-09` … `HU-13`,
-   del Sprint 3, y su bloque dice qué falta y qué historia lo trae en lugar de
-   fingir «sin restricciones» — que en una caja se leería como *puede comprar
-   cualquier cosa*, y es lo único que nadie puede afirmar todavía. Por eso `HU-17`
-   no se cierra con este Pull Request.
+   **Los tres datos están** (`TT-109`): saldo, consumo del día y restricciones
+   vigentes. El tercero faltaba desde el Sprint 2 porque no existían, y es lo que
+   dejaba `HU-17` abierta. Ahora «sin restricciones» es una frase que el sistema
+   puede sostener, y por eso se puede escribir.
+
+   **Lo que este bloque NO puede hacer es dar a entender que la caja las aplica
+   todas.** Hoy rechaza el producto bloqueado (`HU-60`); el alérgeno es `HU-18` y
+   el cupo diario `HU-20`, los dos pendientes. Un cajero que crea que el sistema
+   frena el maní puede vender el maní. Por eso cada línea dice si la caja la hace
+   cumplir — y esas marcas se retiran cuando `HU-18` y `HU-20` entren.
 
    **La fotografía está desde `PR-10`** (`HU-58`, `DEC-8`), al lado del nombre, y
    cuando el estudiante no la tiene se dice en su sitio en vez de poner un avatar
@@ -203,27 +208,95 @@
         <p class="font-display text-lg tabular-nums text-texto">{{ cobro.consumo_del_dia|dinero }}</p>
       </article>
 
-      {% comment %} `[S2.4]`, bloque punteado: **un hueco dice qué falta y qué historia lo
-         trae**. Aquí no se puede escribir «sin restricciones»: el sistema no
-         guarda ninguna todavía, y en una caja esa frase se leería como *puede
-         comprar cualquier cosa*, que es justo lo que `INV-4` e `INV-5` existen
-         para impedir. Decirlo es el tercer criterio que `HU-17` deja abierto.
+      {% comment %} `TT-109`, `HU-13`, `HU-17`. **El tercer dato.**
 
-         Ni `error` ni `aviso`: no ha fallado nada y no hay ningún riesgo
-         detectado — hay una capacidad que aún no existe (`[S1]`, regla 3). {% endcomment %}
-      <div class="flex items-start gap-2 rounded-md border border-dashed border-borde px-3 py-2">
-        <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md
-                     bg-serie-5/10 text-serie-5">
-          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-restriccion"></use></svg>
-        </span>
-        <div class="flex flex-col">
-          <p class="text-base font-semibold text-texto">Restricciones</p>
-          <p class="text-sm text-texto-suave">
-            Llegan con <strong class="text-texto">HU-13</strong>, en el Sprint 3. Hasta
-            entonces esta pantalla no puede decir que no tenga.
+         Sin acción de ninguna clase: el cajero las ve y no tiene con qué
+         desactivarlas ni omitirlas — primer criterio de `HU-13`—. Lo que lo
+         garantiza no es que aquí no haya botón, es que no existe el permiso ni
+         el servicio que lo admita (`TT-107`, `INV-4`); esto solo evita ofrecer
+         algo que no hay.
+
+         Rojo cuando hay algo bloqueado: en este sistema el rojo significa una
+         venta que se va a rechazar (`[S1]`, regla 3), y eso es exactamente lo
+         que estas líneas son. El alérgeno va primero porque es el que hace
+         daño. {% endcomment %}
+      {% if cobro.restricciones.hay_alguna %}
+        <div class="flex flex-col gap-2 rounded-md border border-error bg-error-suave
+                    px-3 py-2" data-restricciones-vigentes>
+          <p class="flex items-center gap-2 text-base font-semibold text-error-fuerte">
+            <svg class="h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+            Restricciones
           </p>
+
+          {% if cobro.restricciones.alergenos %}
+            <div class="flex flex-col gap-0.5" data-alergenos-bloqueados>
+              <p class="text-base text-error-fuerte">
+                <strong class="font-semibold">Alérgenos:</strong>
+                {% for r in cobro.restricciones.alergenos %}{{ r.alergeno.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              </p>
+              {% comment %} **Marca temporal, se retira con `HU-18`.** Si el cajero cree que
+                 la caja frena el maní, puede vender el maní. {% endcomment %}
+              <p class="text-sm text-aviso-fuerte">
+                La caja todavía no los rechaza sola (<span class="font-mono">HU-18</span>):
+                no se lo vendas.
+              </p>
+            </div>
+          {% endif %}
+
+          {% if cobro.restricciones.productos %}
+            <p class="text-base text-error-fuerte" data-productos-bloqueados>
+              <strong class="font-semibold">Productos:</strong>
+              {% for r in cobro.restricciones.productos %}{{ r.producto.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </p>
+          {% endif %}
+
+          {% if cobro.restricciones.limite %}
+            <div class="flex flex-col gap-0.5" data-limite-diario>
+              {% comment %} El cupo restante se calcula en el selector: el cajero necesita la
+                 cifra que decide, no dos que restar de cabeza con una fila delante.
+                 Ámbar cuando ya no queda — es literalmente «un límite agotado»,
+                 que es lo que el ámbar significa aquí. {% endcomment %}
+              <p class="text-base {% if cobro.cupo_restante > 0 %}text-error-fuerte{% else %}text-aviso-fuerte{% endif %}">
+                <strong class="font-semibold">Cupo diario:</strong>
+                {{ cobro.restricciones.limite.monto|dinero }}
+                {% if cobro.cupo_restante > 0 %}
+                  · quedan <span class="tabular-nums">{{ cobro.cupo_restante|dinero }}</span>
+                {% else %}
+                  · <strong class="font-semibold">agotado</strong>
+                {% endif %}
+              </p>
+              <p class="text-sm text-aviso-fuerte">
+                La caja todavía no lo aplica (<span class="font-mono">HU-20</span>).
+              </p>
+            </div>
+          {% endif %}
         </div>
-      </div>
+      {% else %}
+        {% comment %} **Ahora sí se puede decir «sin restricciones»**, y antes no: hasta
+           `TT-94` el sistema no guardaba ninguna, así que la frase habría
+           significado «no sé» disfrazado de «no tiene». Con las tres tablas
+           existiendo, es una afirmación que la base sostiene.
+
+           Ni `error` ni `aviso`: no ha fallado nada y no hay riesgo detectado
+           (`[S1]`, regla 3). {% endcomment %}
+        <div class="flex items-start gap-2 rounded-md border border-borde px-3 py-2"
+             data-restricciones-vigentes>
+          <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md
+                       bg-serie-5/10 text-serie-5">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+          </span>
+          {% comment %} El rótulo es **el mismo en los dos estados**, y no es cosmética:
+             el cajero escanea el mismo sitio en cada venta, y un bloque que a veces
+             se llama «Restricciones» y a veces «Sin restricciones» le obliga a leer
+             en lugar de mirar. Lo que cambia debajo es la respuesta. {% endcomment %}
+          <div class="flex flex-col">
+            <p class="text-base font-semibold text-texto">Restricciones</p>
+            <p class="text-sm text-texto-suave">
+              Sin cupo, productos ni alérgenos configurados por su acudiente.
+            </p>
+          </div>
+        </div>
+      {% endif %}
     </div>
 
     {% comment %} `TT-89`, `HU-53`. **La vuelta atrás que faltaba.** Identificado un

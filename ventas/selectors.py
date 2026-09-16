@@ -14,25 +14,47 @@ from billetera.selectors import consumo_del_dia, saldo_de
 from catalogo.selectors import productos_en_el_catalogo
 from cuentas.models import Rol
 from inventario.selectors import existencias_por_producto
+from restricciones.selectors import RestriccionesVigentes, restricciones_vigentes
 
 
 @dataclass(frozen=True)
 class InformacionDeCobro:
     """Lo que el cajero ve del estudiante para decidir si cobra (`HU-17`).
 
-    Dos cifras hoy —saldo y consumo del día— y **una tercera que falta**: las
-    restricciones vigentes son `HU-09` … `HU-13`, del Sprint 3. Por eso `HU-17`
-    no se cierra en este Pull Request: su primer criterio pide los tres datos, y
-    `DoD-1` no admite dar por terminada una historia con un criterio sin cumplir.
+    **Los tres datos que pide el primer criterio**: saldo, consumo del día y
+    restricciones vigentes. El tercero faltaba desde el Sprint 2 —las
+    restricciones no existían— y es lo que dejaba `HU-17` abierta; `TT-109` lo
+    completa.
 
-    Es un objeto y no dos valores sueltos porque las dos cifras se leen juntas o
-    no se leen: «tiene $3.000» sin «y lleva $12.000 gastados hoy» es media
-    respuesta, y el día que se sume el límite diario habrá un solo sitio donde
-    añadirlo.
+    Es un objeto y no tres valores sueltos porque se leen juntos o no se leen:
+    «tiene $3.000» sin «y lleva $12.000 gastados hoy» es media respuesta, y
+    cualquiera de las dos sin «y el maní está bloqueado» sigue siéndolo.
+
+    `restricciones` llega como el objeto compuesto de `TT-106`, no desarmado en
+    tres campos: así el día que haya una cuarta restricción se añade en un solo
+    sitio y esta pantalla la hereda.
     """
 
     saldo: Decimal
     consumo_del_dia: Decimal
+    restricciones: RestriccionesVigentes
+
+    @property
+    def cupo_restante(self):
+        """Lo que le queda del límite diario hoy, o `None` si no tiene límite.
+
+        Se calcula aquí y no en la plantilla por dos motivos. Uno: una plantilla
+        de Django no resta. Dos, y es el que importa: el cajero necesita **la
+        cifra que decide**, no dos que tenga que restar de cabeza con una fila
+        delante.
+
+        Puede ser negativa si el consumo del día ya pasó el cupo. No se recorta a
+        cero: que esté en `-$500` dice algo —que el cupo se superó antes de que
+        `HU-20` lo hiciera cumplir— y taparlo sería inventar que cuadra.
+        """
+        if self.restricciones.limite is None:
+            return None
+        return self.restricciones.limite.monto - self.consumo_del_dia
 
 
 def informacion_de_cobro(*, actor, estudiante):
@@ -70,6 +92,15 @@ def informacion_de_cobro(*, actor, estudiante):
     return InformacionDeCobro(
         saldo=saldo_de(estudiante),
         consumo_del_dia=consumo_del_dia(estudiante),
+        # `TT-109`. Las restricciones entran por el mismo sitio que las dos
+        # cifras y con el mismo control de acceso: este sigue siendo el único
+        # camino por el que el rol cajero llega a los datos de un estudiante.
+        #
+        # `[S11]` concede **consultar** restricciones a los cuatro roles
+        # (`HU-38`), así que exigir el cajero aquí no las protege — las protege
+        # el saldo, que sí es «solo al cobrar». La consulta de los otros tres
+        # roles es `TT-111`, por su propia puerta.
+        restricciones=restricciones_vigentes(estudiante),
     )
 
 

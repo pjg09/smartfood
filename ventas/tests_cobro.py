@@ -282,17 +282,23 @@ class ElPanelDeCobroApareceAlIdentificarTest(TestCase):
         self.assertNotIn(">46500<", cuerpo)
         self.assertNotIn("46,500", cuerpo)
 
-    def test_el_tercer_dato_declara_que_falta_en_vez_de_decir_que_no_hay(self):
-        """`HU-17` no se cierra aquí, y la pantalla lo dice.
+    def test_el_tercer_dato_ya_esta_y_puede_decir_que_no_hay(self):
+        """Lo que esta prueba exigía se invirtió con `TT-109`, y por un motivo.
 
-        «Sin restricciones» se leería en una caja como *puede comprar cualquier
-        cosa*, y eso es exactamente lo que nadie puede afirmar hasta `HU-13`.
+        Hasta el Sprint 3 la pantalla **no podía** escribir que no hubiera
+        restricciones: el sistema no guardaba ninguna, así que la frase habría
+        sido «no sé» disfrazado de «no tiene» — y en una caja eso se lee como
+        *puede comprar cualquier cosa*. Por eso el bloque declaraba qué faltaba.
+
+        Con las tres tablas existiendo (`TT-94`, `TT-97`, `TT-100`), decir que
+        este estudiante no tiene ninguna es una afirmación que la base sostiene.
         """
         cuerpo = self._por_tarjeta()
 
         self.assertIn("Restricciones", cuerpo)
-        self.assertIn("HU-13", cuerpo)
-        self.assertNotIn("Sin restricciones", cuerpo)
+        self.assertIn("Sin cupo, productos ni alérgenos", cuerpo)
+        # Y ya no se remite a una historia pendiente para el bloque entero.
+        self.assertNotIn("Llegan con", cuerpo)
 
     def test_por_documento_sale_lo_mismo(self):
         """`HU-16`, primer criterio: **el mismo resultado**, no uno parecido."""
