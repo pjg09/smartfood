@@ -1,4 +1,4 @@
-"""Modelos del control parental (`TT-94`, `HU-09`, `DT-28`).
+"""Modelos del control parental (`TT-94`, `TT-97`, `HU-09`, `HU-10`, `DT-28`).
 
 Aquí van la estructura y las invariantes que la base de datos puede imponer:
 `CheckConstraint` y `UniqueConstraint`. **Sin lógica de negocio** (`DT-15`).
@@ -92,3 +92,71 @@ class LimiteDiario(models.Model):
 
     def __str__(self):
         return f"Límite diario de {self.estudiante.nombre}"
+
+
+class RestriccionProducto(models.Model):
+    """Un producto concreto que este estudiante no puede comprar (`HU-10`, `ALC-IN-08`).
+
+    ── ES UNA LISTA, Y `HU-11` ES UNA CONDICIÓN. NO SE UNIFICAN ────────────
+    Segundo criterio de `HU-10`: el bloqueo por producto **se distingue
+    explícitamente** del bloqueo por alérgeno. Aquí eso no es una etiqueta, es
+    una tabla aparte.
+
+    La alternativa tentadora —una sola tabla `Restriccion` con un campo `tipo`
+    y una clave ajena nullable a cada cosa— parece más económica y es la puerta
+    de entrada al defecto que `INV-5` prohíbe: con las dos cosas en la misma
+    forma, implementar el alérgeno como «las filas de los productos que hoy lo
+    declaran» deja de parecer un error y empieza a parecer una optimización. Y
+    el día que la cafetería añade un producto con ese alérgeno, el estudiante
+    deja de estar protegido sin que nada falle.
+
+    **Un producto es un identificador; un alérgeno es una condición que se
+    evalúa.** Son cosas distintas y por eso ocupan tablas distintas
+    (`RestriccionAlergeno` llega en `TT-100`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    **El bloqueo es del estudiante, no del acudiente.** Un acudiente con tres
+    hijos puede prohibirle la gaseosa a uno y no a los otros. Lo mismo que el
+    límite diario (`LimiteDiario`) y por el mismo motivo.
+
+    `UniqueConstraint(estudiante, producto)`: bloquear dos veces el mismo
+    producto no es bloquearlo «más». Lo impone la base y no un `if` del
+    servicio, que es lo que hace que un segundo camino de escritura no pueda
+    dejar filas duplicadas y con ellas un desbloqueo que no desbloquea (`DT-15`).
+
+    `PROTECT` en los dos extremos. Sobre el estudiante, por lo mismo que en
+    `LimiteDiario`. Sobre el producto, porque el catálogo **no borra**: un
+    producto que salió del menú se marca `activo=False` y sigue existiendo
+    (`INV-3`). Una cascada convertiría un cambio de catálogo de la cafetería en
+    el borrado silencioso de una restricción que puso una familia — que es
+    justo lo que `INV-4` no admite.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    estudiante = models.ForeignKey(
+        "personas.Estudiante",
+        on_delete=models.PROTECT,
+        related_name="productos_bloqueados",
+        verbose_name="estudiante",
+    )
+    producto = models.ForeignKey(
+        "catalogo.Producto",
+        on_delete=models.PROTECT,
+        related_name="bloqueos",
+        verbose_name="producto",
+    )
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "producto bloqueado"
+        verbose_name_plural = "productos bloqueados"
+        ordering = ["producto__nombre"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["estudiante", "producto"],
+                name="un_solo_bloqueo_por_estudiante_y_producto",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.producto.nombre} bloqueado para {self.estudiante.nombre}"
