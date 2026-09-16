@@ -8,9 +8,9 @@ Guía de trabajo para Claude Code en este repositorio.
 trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UPB, 202601).
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
-**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y **13 de 14 historias** el segundo. La que falta es `HU-17`, a la que le queda un criterio que depende de este sprint — está declarado, no olvidado.
+**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y 14 de 14 el segundo. `HU-17` arrastró abierta hasta que `PR-06` de este sprint le dio el bloque de restricciones que le faltaba — estaba declarado, no olvidado.
 
-**Estamos en el Sprint 3**, semanas 10 y 11: control parental —restricciones, alérgenos y límite de gasto—. Cierra `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, y salda `HU-17`. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrar el Sprint 4.
+**Estamos en el Sprint 3**, semanas 10 y 11: control parental —restricciones, alérgenos y límite de gasto—. Cierra `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, y saldó `HU-17`. **Creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrar el Sprint 4.
 
 El **Avance 1** (`EVA-3`, 20 %) cae en la semana 10, al arrancar este sprint: lo que se enseña es lo que hay en `main`.
 
@@ -24,8 +24,8 @@ El **Avance 1** (`EVA-3`, 20 %) cae en la semana 10, al arrancar este sprint: lo
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-3-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-94` … `TT-130`), con responsable |
-| `docs/plan-de-pull-requests-sprint-3.md` | Esas 37 tareas agrupadas en 14 PR, y el estado de cada una. **El estado manda aquí** |
+| `docs/sprint-3-backlog.md` | **Las tareas del sprint en curso** (`TT-94` … `TT-136`), con responsable |
+| `docs/plan-de-pull-requests-sprint-3.md` | Esas tareas agrupadas en PR, y el estado de cada una. **El estado manda aquí** — no lo repitas en este fichero |
 | `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
@@ -72,7 +72,8 @@ está mal entendida o de que falta una decisión.
 clave primaria en todas las tablas (generado en la aplicación), **excepto el código de tarjeta**.
 
 Una app por dominio, **y cada una se crea en el sprint que la necesita**: hoy existen
-`cuentas`, `personas`, `catalogo`, `billetera`, `inventario` y `ventas`; `reportes` no.
+`cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas` y `restricciones`
+—esta última no la previó `DT-15` y la declara `DT-28`—; `reportes` no.
 Dentro de cada una:
 
 | Archivo | Responsabilidad |
@@ -114,6 +115,10 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Trampas de este stack, ya pagadas
 
+- **Un `@transaction.atomic` suelto decora lo siguiente que haya, aunque sea una
+  clase.** Insertar una clase entre el decorador y su `def` la convierte en función; el
+  error salta lejos y no menciona el decorador. Mira qué hay justo encima antes de
+  insertar algo en `services.py`.
 - **`instance.pk` no distingue un alta.** La clave primaria es UUIDv7 generado en la
   aplicación (`DT-17`): una instancia recién construida **ya la tiene**. Pregunta por
   `instance._state.adding`.
@@ -125,6 +130,9 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   modelo, no el formulario.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+- **Un `Decimal` en un `<input type="number">` necesita `|unlocalize`.** En `es-CO`
+  Django escribe «8000,00» y el navegador **pinta el campo vacío, sin error**: quien entra
+  a cambiar un valor cree que no había ninguno.
 - **`{% now "F" %}` devuelve el mes capitalizado** y en español va en minúscula. No admite
   filtro directo: `{% now "F" as mes %}` y luego `{{ mes|lower }}`. La inicial de una frase se
   pone con `first-letter:uppercase`, nunca cortando la cadena — con acentos se rompe.
@@ -154,6 +162,12 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   propio ancho lleva el suyo.
 - **`hx-swap-oob` solo funciona en elementos de primer nivel de la respuesta.** Anidado no
   da error: no intercambia, y la zona se queda con lo anterior sin ningún aviso.
+  Por eso **lo que deba refrescarse tras un intercambio va DENTRO del fragmento**, no al
+  lado: fuera se queda enseñando lo de antes, que en un historial de auditoría es peor que
+  no enseñarlo.
+- **`htmx-indicator` oculta con `opacity`, no con `display`.** Un «Guardando…» en su propia
+  fila reserva su alto siempre y deja un hueco permanente. Va en la línea de un rótulo o
+  del título, nunca solo.
 - **El dinero se escribe en un solo sitio**, `billetera/templatetags/dinero.py`: `$25.000`,
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
@@ -215,7 +229,7 @@ uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huér
 ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
 —ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
 
-La suite completa pasa de 700 pruebas y **tarda unos dos minutos**: por encima del tiempo de
+La suite completa pasa de 850 pruebas y **tarda entre tres y cinco minutos**: por encima del tiempo de
 espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste.
 
@@ -231,6 +245,9 @@ Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo dife
 `assertNotContains(r, 'role="group"')` para decir «no se dibuja el selector de estudiante» se
 rompe el día que el armazón estrena otro grupo — y se rompió. Busca
 `data-selector-estudiante`, que sí es exclusivo de esa pantalla.
+**Y nunca sobre la copia**: `assertContains(r, "Bloquear productos")` se rompe en cuanto
+alguien mejora la redacción, en un PR que no tenía nada que ver. Afirma sobre la URL, sobre
+`response.context`, o sobre un `data-*`.
 
 Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
 con `django.test.Client`. Hace falta añadir el host que usa el cliente:
@@ -282,6 +299,9 @@ automático está desconectado a propósito.
   temas en un commit. Ahí se pone el fichero a mano.
 - **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
   instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
+- **No encadenes un PR sobre otro sin integrar.** Con squash merge, `main` recibe un commit
+  nuevo y la rama apilada conflictúa aunque el contenido sea idéntico. Si no queda otra:
+  `git rebase --onto main <punta-vieja-del-PR-anterior>` y `push --force-with-lease`.
 - **Datos ficticios siempre** (`ALC-OUT-07`). Ningún dato real de ningún estudiante entra en este
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).
@@ -292,16 +312,19 @@ automático está desconectado a propósito.
 2. Lee los **criterios de aceptación** de esa historia en `docs/backlog-historias-de-usuario.md`.
    Son el contrato: ni menos, ni más.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
-   está ahí, para.
+   está ahí, para — y **regístralo antes de construirlo**: historia nueva (`HU-nn`) si el backlog
+   no la tiene, y además `DEC-n` en `decisiones-de-alcance.md` si amplía `[S11]` o el
+   anteproyecto. Un PR no crea alcance; lo aplica. Pasó con `HU-60` y `HU-61`.
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
 5. Al terminar, marca la tarea `☑` **en los dos documentos** —el plan de PR y el sprint backlog—
    dentro del propio PR, y actualiza los contadores. Deben coincidir. **Comprueba la redacción de
    las dos filas**: no siempre es idéntica, y un reemplazo que sirve en un documento puede no
    alcanzar la fila del otro. Pasó con `TT-87`.
 6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
-   `backlog-historias-de-usuario.md`. **Ojo con `PR-06` de este sprint: cierra DOS historias**,
-   `HU-13` y `HU-17` —esta última arrastra abierta desde el Sprint 2 y es la marca más fácil
-   de olvidar del proyecto—.
+   `backlog-historias-de-usuario.md`. **Un PR puede cerrar más de una, y una puede venir de
+   un sprint anterior**: `PR-06` saldó `HU-13` y `HU-17`, esta última abierta desde el
+   Sprint 2, y `PR-09` vuelve a hacerlo con `HU-20` y `HU-09`. Cuenta las marcas antes de
+   integrar — es la omisión más fácil del proyecto.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. El `ANEXO C` del sprint backlog verifica el grafo de
@@ -319,6 +342,11 @@ congelada; no la edites. Si una decisión cambia, se actualiza aquí, con su ide
 
 Ninguna afirmación de estos documentos se inventa: cada una cita el identificador del que sale. Al
 añadir contenido, mantén esa propiedad o el documento pierde su valor.
+
+**Al insertar una fila en una tabla numerada, renumera emparejando por el identificador
+(`HU-nn`), nunca por el número.** Un reemplazo del número encuentra primero tu propia fila
+recién insertada, y si es global alcanza a las tablas de otros sprints del mismo documento.
+Después, comprueba por script que cada tabla va `1..N` sin saltos ni repetidos.
 
 **Lo que se queda atrás se reescribe, no se anota.** Cuando una afirmación deja de ser cierta
 —porque una decisión posterior la corrigió o porque el código cambió—, se **reescribe en presente**
