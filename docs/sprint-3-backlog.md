@@ -130,15 +130,17 @@ El retiro **se asienta**: es una acción sobre la seguridad alimentaria de un me
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-106` | Selector de las restricciones vigentes de un estudiante | Pedro | ☐ |
-| `TT-107` | Permisos: ni cajero, ni administración de cafetería, ni institución escriben restricciones (`INV-4`, `DT-11`) | Pedro | ☐ |
-| `TT-108` | Caso de prueba: los tres roles no tienen acción de escritura sobre restricciones (`INV-4`) | Alejandro | ☐ |
+| `TT-106` | Selector de las restricciones vigentes de un estudiante | Pedro | ☑ |
+| `TT-107` | Permisos: ni cajero, ni administración de cafetería, ni institución escriben restricciones (`INV-4`, `DT-11`) | Pedro | ☑ |
+| `TT-108` | Caso de prueba: los tres roles no tienen acción de escritura sobre restricciones (`INV-4`) | Alejandro | ☑ |
 | `TT-109` | Bloque de restricciones vigentes en el panel de cobro — **cierra `HU-17`** | Carlos | ☐ |
 | `TT-110` | Caso de prueba: `HU-17` completa — el panel muestra saldo, consumo del día y restricciones | Alejandro | ☐ |
 
 > **Aquí se salda la deuda del Sprint 2.** `HU-17` quedó abierta porque su tercer criterio exige mostrar las restricciones vigentes y no existían. `TT-109` añade ese bloque al panel que ya construyó `TT-75`. **Al integrarse, `HU-17` se marca terminada** en `./backlog-historias-de-usuario.md`, además de `HU-13`.
 
 `TT-107` es el corazón de `INV-4`: se aplica **en la capa de datos**, con permisos por modelo (`DT-11`). Ocultar el botón en la plantilla no es cumplir la invariante, es aparentarlo — y `TT-108` lo comprueba llamando al servicio con cada rol, no mirando la pantalla.
+
+**Lo que `TT-107` encontró, con su tamaño exacto.** `cuentas/permisos.py` declaraba la escritura prohibida solo para los dos roles de la cafetería. `INV-4` dice «ni el personal de la cafetería **ni la institución**», y el tercer criterio de `HU-13` lo repite. **Nada estuvo nunca expuesto** —la institución no tenía permiso sobre esos modelos, que además no existían hasta este sprint—: lo que faltaba era la declaración que lo habría detectado si alguien se lo concediera.
 
 ### `[HU-38]` Consulta de restricciones por los cuatro roles
 
