@@ -96,9 +96,9 @@ El límite es **por estudiante**, no por acudiente: un acudiente con varios hijo
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-97` | Modelo de restricción por producto, **distinto** del de alérgeno | Pedro | ☐ |
-| `TT-98` | Servicio de bloqueo y desbloqueo de un producto, solo por el acudiente | Pedro | ☐ |
-| `TT-99` | Selección de productos a bloquear en la interfaz del acudiente | Carlos | ☐ |
+| `TT-97` | Modelo de restricción por producto, **distinto** del de alérgeno | Pedro | ☑ |
+| `TT-98` | Servicio de bloqueo y desbloqueo de un producto, solo por el acudiente | Pedro | ☑ |
+| `TT-99` | Selección de productos a bloquear en la interfaz del acudiente | Carlos | ☑ |
 
 Los dos tipos de restricción se modelan **por separado** y no se unifican en una tabla con un campo «tipo». `HU-10` es una lista; `HU-11` es una condición. Mezclarlos invita a implementar el alérgeno como lista de productos, que es justo lo que `INV-5` prohíbe.
 
@@ -245,7 +245,11 @@ Al cerrar esta historia, la venta tiene **cuatro motivos de rechazo distintos**:
 
 **4. Un defecto del backlog que conviene corregir.** El tercer criterio de `HU-11` dice «depende de que el catálogo declare alérgenos por producto (`HU-25`)», pero `HU-25` es «Registro de la entrega del pedido», del Sprint 4. La historia del catálogo es **`HU-26`**, que es además lo que declara su tabla de dependencias. Es una referencia obsoleta de la redacción original. **No bloquea el sprint**, pero induce a error a quien la lea y merece un PR de una línea.
 
-**5. Si el sprint desborda**, los candidatos a mover al Sprint 4 son `HU-12` (`TT-104`, `TT-105`) y `HU-38` (`TT-111`, `TT-112`): `HU-12` es el único `Should` del sprint y de `HU-38` no depende ninguna otra historia. Quedan 33 tareas. **No se pueden mover** `HU-18` ni `HU-20`: son los escenarios críticos `TST-1` y `TST-2` de `ENT-05`.
+**5. Ninguna historia rechaza una venta por producto bloqueado.** Encontrado al construir `TT-98` (`PR-02`). Hay cuatro historias de rechazo —`HU-18` alérgeno, `HU-19` saldo, `HU-20` límite diario y `HU-50` desactivado— y **ninguna para la lista de `HU-10`**. `HU-10` cierra con sus dos criterios cumplidos porque ninguno habla de la venta, pero `ALC-IN-09` sí: «aplicación de las restricciones **en el momento de la venta**». Tal como está, el acudiente bloquea la gaseosa y la caja se la cobra igual.
+
+No se corrige aquí: crear una historia es alcance, y el alcance no lo decide un PR. **Queda declarado como punto abierto** para que el equipo lo resuelva en la Sprint Review — o con una historia nueva en el Sprint 4, o añadiendo el criterio a `HU-13`, que ya es la que dice que la cafetería no puede saltarse una restricción. `registrar_venta` valida hoy producto, cantidad, existencias y saldo, y nada más: el sitio donde entraría es el mismo bloqueo que tocan `TT-113`, `TT-116` y `TT-125`.
+
+**6. Si el sprint desborda**, los candidatos a mover al Sprint 4 son `HU-12` (`TT-104`, `TT-105`) y `HU-38` (`TT-111`, `TT-112`): `HU-12` es el único `Should` del sprint y de `HU-38` no depende ninguna otra historia. Quedan 33 tareas. **No se pueden mover** `HU-18` ni `HU-20`: son los escenarios críticos `TST-1` y `TST-2` de `ENT-05`.
 
 ---
 

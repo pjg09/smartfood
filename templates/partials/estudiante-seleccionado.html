@@ -16,9 +16,9 @@
 
    El límite diario ya está (`TT-96`, `HU-09`): se fija por estudiante y se ve
    aquí. Lo que aún no hace es frenar una venta —eso es `HU-20`— y la tarjeta lo
-   dice. Las restricciones por producto y por alérgeno (`HU-10`, `HU-11`) siguen
-   siendo un hueco, y el suyo dice **qué falta y cuándo**, no una cifra
-   inventada: un cero en el límite se leería como un límite de cero.
+   dice. Los productos bloqueados también (`TT-99`, `HU-10`); los alérgenos son
+   `HU-11` y su tarjeta dice **qué falta y cuándo**, no una cifra inventada: un
+   cero en el límite se leería como un límite de cero.
 {% endcomment %}
 
 {% if seleccionado %}
@@ -166,9 +166,30 @@
           <svg class="h-5 w-5" aria-hidden="true"><use href="#i-restriccion"></use></svg>
         </span>
         <h3 class="text-base font-semibold text-texto-suave">Restricciones</h3>
-        <p class="text-base font-medium text-texto-suave">
-          Alérgenos y productos bloqueados de {{ seleccionado.nombre }}. Llegan en el Sprint 3.
-        </p>
+        {% comment %} `TT-99`, `HU-10`. Media tarjeta deja de ser un hueco: los productos
+           bloqueados ya se cuentan. Los alérgenos siguen pendientes y la tarjeta lo
+           dice — enseñar solo el número de productos daría a entender que están
+           cubiertas las dos cosas, y `HU-11` es justo la que falta. {% endcomment %}
+        {% if productos_bloqueados %}
+          <p class="font-display text-2xl tabular-nums text-texto">
+            {{ productos_bloqueados }}
+          </p>
+          <p class="text-base font-medium text-texto-suave">
+            Producto{{ productos_bloqueados|pluralize }}
+            bloqueado{{ productos_bloqueados|pluralize }} para {{ seleccionado.nombre }}.
+            Los alérgenos llegan con <span class="font-mono">HU-11</span>.
+          </p>
+        {% else %}
+          <p class="font-display text-2xl text-texto">Ninguna</p>
+          <p class="text-base font-medium text-texto-suave">
+            {{ seleccionado.nombre }} puede comprar todo el catálogo. Los alérgenos llegan
+            con <span class="font-mono">HU-11</span>.
+          </p>
+        {% endif %}
+        <a href="{% url 'productos-bloqueados' seleccionado.id %}"
+           class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
+          {% if productos_bloqueados %}Cambiar los productos{% else %}Bloquear productos{% endif %}
+        </a>
       </article>
     </section>
 

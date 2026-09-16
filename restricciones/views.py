@@ -1,4 +1,4 @@
-"""Vistas del control parental (`TT-96`, `HU-09`).
+"""Vistas del control parental (`TT-96`, `TT-99`, `HU-09`, `HU-10`).
 
 Solo HTTP: parsear la petición, delegar en un servicio o un selector, y
 renderizar. **Cero lógica de negocio** (`DT-15`): quién puede fijar el límite y
@@ -21,10 +21,20 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import consumo_del_dia
+from catalogo.models import Producto
+from catalogo.selectors import productos_en_el_catalogo
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
-from restricciones.selectors import limite_diario_de
-from restricciones.services import MONTO_MAXIMO, fijar_limite_diario
+from restricciones.selectors import (
+    identificadores_de_productos_bloqueados,
+    limite_diario_de,
+)
+from restricciones.services import (
+    MONTO_MAXIMO,
+    bloquear_producto,
+    desbloquear_producto,
+    fijar_limite_diario,
+)
 
 # Los atajos de importe de la pantalla del límite. **Son una comodidad de la
 # interfaz, no una regla**: el rango que de verdad manda es el del servicio
@@ -125,3 +135,106 @@ def limite_diario(request, estudiante_id):
             "montos_sugeridos": MONTOS_SUGERIDOS,
         },
     )
+
+
+@login_required
+@require_http_methods(["GET"])
+def productos_bloqueados(request, estudiante_id):
+    """Pantalla de selección de productos a bloquear (`TT-99`, `HU-10`).
+
+    **Dos rutas a la misma vista**, como el padrón (`DT-27`): la página y su
+    lista. No es un endpoint que devuelva a veces una cosa y a veces otra
+    (`DT-16`) — es la misma respuesta con y sin envoltorio, y la vista lo
+    distingue por el nombre de la ruta, que resuelve Django y no puede falsear
+    el cliente.
+
+    La autorización la hace el selector: un estudiante que no está a cargo de
+    quien pregunta es un 404, igual que uno que no existe.
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    contexto = _contexto_de_productos(estudiante, request.GET.get("busqueda", ""))
+
+    if request.resolver_match.url_name == "productos-bloqueados-lista":
+        return render(request, "restricciones/partials/lista-de-productos.html", contexto)
+
+    return render(request, "restricciones/productos-bloqueados.html", contexto)
+
+
+@login_required
+@require_http_methods(["POST"])
+def bloqueo_de_producto(request, estudiante_id):
+    """Bloquea o desbloquea un producto y devuelve la lista repintada (`TT-99`).
+
+    **Es `POST` y devuelve un fragmento** (`DT-16`): cambia el estado del
+    sistema, así que un `GET` sería una URL que el navegador puede reproducir
+    solo.
+
+    Devuelve **la lista entera**, no el renglón que se tocó. Con el renglón
+    bastaría para el interruptor, pero la cabecera lleva el recuento de
+    bloqueados y quedaría diciendo una cifra vieja: dos intercambios
+    coordinados (`hx-swap-oob`) por cada toque, para dieciséis productos, es más
+    fragilidad que ahorro — y `hx-swap-oob` falla en silencio si el elemento no
+    queda en el primer nivel de la respuesta.
+
+    **La vista no decide quién puede**: llama al servicio, que corta entre por
+    donde entre (`DT-15`, `INV-4`). Aquí solo se traduce la respuesta.
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    try:
+        producto = Producto.objects.get(pk=request.POST.get("producto"))
+    except (Producto.DoesNotExist, ValidationError, ValueError):
+        # Un identificador que no es de ningún producto —o que ni siquiera es un
+        # UUID— es una petición inválida, no un error del acudiente.
+        raise Http404("Ese producto no existe.") from None
+
+    if request.POST.get("accion") == "desbloquear":
+        desbloquear_producto(actor=request.user, estudiante=estudiante, producto=producto)
+    else:
+        bloquear_producto(actor=request.user, estudiante=estudiante, producto=producto)
+
+    return render(
+        request,
+        "restricciones/partials/lista-de-productos.html",
+        _contexto_de_productos(estudiante, request.POST.get("busqueda", "")),
+    )
+
+
+def _contexto_de_productos(estudiante, busqueda):
+    """Lo que la lista necesita, venga de la página, del buscador o de un toque.
+
+    **La misma función para los tres caminos**, a propósito: los tres pintan la
+    misma plantilla, y armar el contexto tres veces es cómo acaban enseñando
+    cosas distintas.
+
+    Se ofrecen **solo los productos en el catálogo** (`activo=True`): ofrecer
+    bloquear algo que ya no se vende es ruido. El servicio sí admite bloquear un
+    retirado —ver `bloquear_producto`—, que es lo que mantiene la restricción si
+    el producto vuelve.
+    """
+    busqueda = (busqueda or "").strip()
+
+    productos = productos_en_el_catalogo()
+    if busqueda:
+        productos = productos.filter(nombre__icontains=busqueda)
+
+    bloqueados = identificadores_de_productos_bloqueados(estudiante)
+
+    return {
+        "estudiante": estudiante,
+        "busqueda": busqueda,
+        # Se anota en cada producto si está bloqueado, en lugar de dejar que la
+        # plantilla lo pregunte: una plantilla no debería poder disparar una
+        # consulta por fila.
+        "productos": [
+            {"producto": p, "bloqueado": p.id in bloqueados} for p in productos
+        ],
+        "total_bloqueados": len(bloqueados),
+    }

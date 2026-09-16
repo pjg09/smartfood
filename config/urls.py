@@ -20,7 +20,11 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
-from restricciones.views import limite_diario
+from restricciones.views import (
+    bloqueo_de_producto,
+    limite_diario,
+    productos_bloqueados,
+)
 from ventas.views import (
     carrito,
     cliente_generico,
@@ -119,6 +123,30 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/limite/",
         limite_diario,
         name="limite-diario",
+    ),
+    # Productos bloqueados (`TT-99`, `HU-10`). Cuelga del estudiante por lo
+    # mismo que el límite: **la lista es suya**, no de la cuenta del acudiente.
+    #
+    # Dos rutas a la misma vista —la página y su lista—, como el padrón: es la
+    # misma respuesta con y sin envoltorio, y la vista lo distingue por el
+    # nombre de la ruta, que resuelve Django y no puede falsear el cliente
+    # (`DT-16`).
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/restricciones/productos/",
+        productos_bloqueados,
+        name="productos-bloqueados",
+    ),
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/restricciones/productos/lista/",
+        productos_bloqueados,
+        name="productos-bloqueados-lista",
+    ),
+    # El interruptor. **`POST`**: escribe, y un `GET` que escribe es una URL que
+    # el navegador puede reproducir solo.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/restricciones/productos/bloqueo/",
+        bloqueo_de_producto,
+        name="bloqueo-de-producto",
     ),
     # Vista imprimible de la tarjeta (`TT-37`, `HU-45`). Es de la institución
     # (`USR-5`), no del acudiente: quien produce la tarjeta es el colegio.

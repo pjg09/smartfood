@@ -1,0 +1,94 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} TT-99. Productos bloqueados de un estudiante (`HU-10`, `INT-1`).
+
+   Encabezado de pantalla y barra de filtros, las dos copiadas (`DT-25`): la
+   primera de `billetera/recarga.html`, la segunda de `personas/padron.html`.
+   Aquí la barra lleva buscador y nada más — no hay filtro que añadir ni una
+   segunda acción que ofrecer, y una fila de tres con dos huecos no es la
+   composición, es su esqueleto.
+
+   **La pantalla dice lo que el bloqueo NO es.** `HU-11` —bloquear un alérgeno
+   entero, de modo que cubra lo que la cafetería añada después— es otra cosa y
+   llega en su propia historia. Sin decirlo, un acudiente que bloquee «Torta de
+   chocolate» puede creer que su hijo queda protegido del maní, y eso es
+   exactamente la clase de malentendido que el control parental no puede
+   permitirse.
+{% endcomment %}
+
+{% block titulo %}Productos bloqueados | {{ estudiante.nombre }} | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Productos bloqueados</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Marca lo que <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong>
+        no puede comprar, aunque tenga saldo. Es de este estudiante: si tienes más a tu
+        cargo, cada uno lleva su propia lista.
+      </p>
+    </header>
+
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <p class="text-sm text-aviso-fuerte">
+        <strong class="font-semibold">Esto bloquea productos, uno a uno — no alérgenos.</strong>
+        Si lo que quieres es que quede fuera todo lo que lleve maní, incluido lo que la
+        cafetería agregue el mes que viene, eso es el bloqueo por alérgeno y llega con
+        <span class="font-mono">HU-11</span>. Marcar aquí los productos que hoy lo llevan
+        <strong class="font-semibold">no</strong> cubre los que se añadan después.
+      </p>
+    </div>
+
+    {% comment %} El buscador pide a cada tecla con 400 ms de espera, pero va dentro de un
+       `<form method="get">` de verdad, con su botón de envío en `sr-only`: sin
+       JavaScript sigue buscando al pulsar Enter, porque la vista lee `busqueda`
+       de la URL venga de donde venga. HTMX acelera lo que ya funcionaba; no lo
+       sustituye (`[S2.5]`). {% endcomment %}
+    <form method="get" action="{% url 'productos-bloqueados' estudiante.id %}"
+          hx-get="{% url 'productos-bloqueados-lista' estudiante.id %}"
+          hx-trigger="input changed delay:400ms from:#busqueda"
+          hx-target="#lista-de-productos"
+          hx-swap="outerHTML"
+          hx-indicator="#buscando-producto"
+          class="flex flex-col gap-1">
+
+      {% comment %} Los dos indicadores van **en la línea del rótulo**, no en una fila
+         propia. `htmx-indicator` oculta con `opacity`, no con `display`: en una
+         fila aparte reservarían su alto siempre, y la pantalla quedaba con un
+         hueco permanente entre el buscador y el recuento. Aquí no ocupan nada
+         cuando no pasa nada, y se leen donde está mirando quien acaba de
+         teclear. {% endcomment %}
+      <div class="flex items-baseline justify-between gap-3">
+        <label for="busqueda" class="text-base font-medium text-texto">Buscar en el catálogo</label>
+        <span class="flex items-center gap-3">
+          <span id="buscando-producto" class="htmx-indicator text-sm text-texto-suave">Buscando…</span>
+          <span id="guardando-bloqueo" class="htmx-indicator text-sm text-texto-suave">Guardando…</span>
+        </span>
+      </div>
+
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-buscar"></use></svg>
+        <input type="search" id="busqueda" name="busqueda" value="{{ busqueda }}"
+               autocomplete="off" placeholder="Nombre del producto"
+               class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                      text-base text-texto transition-colors
+                      placeholder:text-texto-suave
+                      hover:border-acento focus:border-acento focus:outline-none">
+      </div>
+
+      <button type="submit" class="sr-only">Buscar</button>
+    </form>
+
+    {% include "restricciones/partials/lista-de-productos.html" %}
+  </div>
+{% endblock %}
