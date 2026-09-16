@@ -31,9 +31,37 @@ class AltaDePersonalTest(TestCase):
             )
 
         self.assertEqual(cajero.rol, Rol.CAJERO)
-        self.assertTrue(cajero.is_staff, "el personal opera desde INT-3")
         self.assertEqual(len(mail.outbox), 1, "el alta dispara la invitación (HU-41)")
         self.assertIn("/invitacion/", mail.outbox[0].body)
+
+    def test_el_cajero_nace_sin_acceso_a_la_administracion(self):
+        """`[S11]`: al cajero le concede registrar ventas, y eso ocurre entero en
+        `INT-2`. `INT-3` es de `USR-4` y `USR-5`.
+
+        Hasta ahora nacía con `is_staff` y podía entrar a un admin **sin un solo
+        modelo**, porque `PERMISOS_POR_ROL[Rol.CAJERO]` está vacío. No era un
+        agujero —sin permisos no se toca nada— pero sí una puerta que no llevaba
+        a ninguna parte, y `DT-11` pide decidir el acceso en la capa de datos.
+        """
+        with self.captureOnCommitCallbacks(execute=True):
+            cajero = crear_cuenta_de_personal(
+                actor=self.actor, email="cajero@example.com", rol=Rol.CAJERO
+            )
+
+        self.assertFalse(cajero.is_staff)
+
+    def test_la_administracion_de_cafeteria_si_lo_tiene(self):
+        """La otra mitad, y hace falta: `USR-4` trabaja en el admin —catálogo,
+        precios e inventario—, así que quitárselo a los dos por igual habría
+        dejado la cafetería sin poder gestionar nada."""
+        with self.captureOnCommitCallbacks(execute=True):
+            administrador = crear_cuenta_de_personal(
+                actor=self.actor,
+                email="administracion@example.com",
+                rol=Rol.ADMINISTRADOR,
+            )
+
+        self.assertTrue(administrador.is_staff, "USR-4 opera desde INT-3")
 
     def test_quien_crea_la_cuenta_no_conoce_la_clave(self):
         """Tercer criterio de `HU-41`. La invariante del mecanismo entero."""

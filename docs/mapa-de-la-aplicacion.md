@@ -149,8 +149,11 @@ conviene no perder:
   catálogo, y desde `UX-6` ya no es superusuario, así que la matriz la vincula de verdad.
 - **Nadie alcanza los grupos de permisos.** Esos grupos **son** la matriz con la que `DT-11`
   sostiene `INV-4`; quien los edita puede concederle al cajero lo que la invariante prohíbe.
-- **El cajero entra al admin y ve una página vacía.** Es lo esperado: no tiene ningún modelo
-  hasta el punto de venta del Sprint 2 (`HU-15`, `HU-17`).
+- **El cajero ya no entra al admin.** Su cuenta nace sin `is_staff` y no tiene la entrada en
+  el menú: `[S11]` le concede registrar ventas, y eso ocurre entero en `INT-2`. Antes entraba
+  y veía un índice sin un solo modelo — no era un agujero, porque `PERMISOS_POR_ROL` no le
+  concede nada, pero sí una puerta que no llevaba a ninguna parte. La migración
+  `cuentas.0004` se lo quitó también a las cuentas que ya existían.
 
 ---
 
@@ -207,9 +210,11 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 ### Cajero (`USR-3`)
 
-`/punto-de-venta/`, y solo él: cualquier otro rol recibe `403` aunque escriba la URL
-(`DT-11`). La pantalla coloca las tres zonas —quién compra, qué compra y cuánto es— y
-el campo donde escribe el lector, que retiene el foco.
+`/punto-de-venta/`, y **solo eso**: es su única pantalla y su menú tiene una sola entrada.
+Cualquier otro rol recibe `403` aunque escriba la URL (`DT-11`), y él no entra al admin —
+`[S11]` le concede registrar ventas, y registrar ventas ocurre entero aquí. La pantalla
+coloca las tres zonas —quién compra, qué compra y cuánto es— y el campo donde escribe el
+lector, que retiene el foco.
 
 **Identificar ya funciona, por las dos vías.** El lector teclea el código y envía Enter
 (`HU-15`), y quien no trae la tarjeta se busca por su documento (`HU-16`): **las dos

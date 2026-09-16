@@ -74,6 +74,10 @@ PERMISOS_POR_ROL = {
     # interfaz, y quién puede vender lo decide el servicio de venta con el
     # `actor` que recibe (`DT-15`). Un permiso aquí no protegería nada y
     # sugeriría un camino por el admin que no existe.
+    #
+    # **Y desde ahora tampoco tiene `is_staff`.** Este diccionario vacío decía
+    # la verdad y la cuenta la contradecía: podía entrar al admin y ver un
+    # índice sin un solo modelo. `crear_personal` se lo da solo a `USR-4`.
     Rol.CAJERO: {},
     # `USR-2`. «Recargar saldo», «fijar límite diario», «configurar y retirar
     # restricciones» y consultar los reportes de su hijo. Ningún modelo suyo
