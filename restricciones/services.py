@@ -1,4 +1,4 @@
-"""Escrituras del control parental (`TT-95`, `TT-98`, `TT-101`, `HU-09` … `HU-11`).
+"""Escrituras del control parental (`TT-95`, `TT-98`, `TT-101`, `TT-104`, `HU-09` … `HU-12`).
 
 **Toda escritura pasa por aquí** (`DT-15`). Reglas que no se negocian:
 
@@ -28,9 +28,11 @@ from django.db import transaction
 
 from cuentas.models import Rol
 from restricciones.models import (
+    AsientoDeRestriccion,
     LimiteDiario,
     RestriccionAlergeno,
     RestriccionProducto,
+    TipoDeAsiento,
 )
 
 # Tope de un límite diario. **No es una regla de negocio disfrazada**: ninguna
@@ -157,6 +159,32 @@ def fijar_limite_diario(*, actor, estudiante, monto):
     return limite
 
 
+def _asentar(*, actor, estudiante, tipo, producto=None, alergeno=None):
+    """**El único punto por el que se escribe en el libro** (`TT-104`, `HU-12`).
+
+    Es el mismo patrón que `DT-24` fijó para la billetera y el inventario: un
+    solo asentador, y todos los servicios pasan por él. Con un `create` suelto
+    en cada uno, el quinto se olvida y el historial deja de explicar lo que pasó
+    sin que nada falle.
+
+    Guarda el nombre tal como está **en este momento** (`DT-8`): la clave ajena
+    dice cuál, el nombre dice cómo se llamaba. Renombrar el producto mañana no
+    reescribe el asiento de hoy.
+
+    No abre transacción propia: lo llaman servicios que ya están dentro de la
+    suya, y el asiento tiene que entrar o no entrar **con** el cambio que anota.
+    Un retiro sin su asiento es justo lo que `HU-12` prohíbe.
+    """
+    return AsientoDeRestriccion.objects.create(
+        actor=actor,
+        estudiante=estudiante,
+        tipo=tipo,
+        producto=producto,
+        alergeno=alergeno,
+        nombre=(producto or alergeno).nombre,
+    )
+
+
 @transaction.atomic
 def bloquear_producto(*, actor, estudiante, producto):
     """Impide que el estudiante compre ese producto (`TT-98`, `HU-10`).
@@ -192,9 +220,19 @@ def bloquear_producto(*, actor, estudiante, producto):
         actor, estudiante, "Bloquear un producto", "HU-10"
     )
 
-    restriccion, _ = RestriccionProducto.objects.get_or_create(
+    restriccion, creada = RestriccionProducto.objects.get_or_create(
         estudiante=estudiante, producto=producto
     )
+    # **Solo se asienta si algo cambió.** Un segundo toque sobre un producto ya
+    # bloqueado no es un hecho nuevo: anotarlo llenaría el historial de ruido y
+    # haría creer a quien lo lea que el acudiente lo bloqueó dos veces.
+    if creada:
+        _asentar(
+            actor=actor,
+            estudiante=estudiante,
+            tipo=TipoDeAsiento.BLOQUEO,
+            producto=producto,
+        )
     return restriccion
 
 
@@ -208,18 +246,14 @@ def desbloquear_producto(*, actor, estudiante, producto):
     `TT-99`. Desbloquear lo que no estaba bloqueado no es un error, es el estado
     que se pedía.
 
-    ═══════════════════════════════════════════════════════════════════════
-    **EL RETIRO TODAVÍA NO DEJA ASIENTO, Y ESO ES UNA DEUDA DECLARADA.**
+    ── EL RETIRO DEJA ASIENTO (`TT-104`, `HU-12`) ──────────────────────────
+    Borrar la fila y ya estaría sería perder el hecho: nadie podría reconstruir
+    quién retiró la protección ni cuándo. El asiento entra **dentro de la misma
+    transacción** que el borrado, así que o quedan los dos o no queda ninguno.
 
-    El segundo criterio de `HU-12` exige que retirar una restricción quede
-    asentado, por ser una acción auditable sobre la seguridad alimentaria de un
-    menor. Aquí se borra la fila y no queda constancia de que existió.
-
-    Lo construye `TT-104`, en `PR-04`, que es donde el plan del sprint puso la
-    historia del retiro. Hasta entonces hay una ventana en la que un desbloqueo
-    no se puede reconstruir. **No es un olvido: es el reparto del sprint**, y se
-    escribe aquí para que quien llegue a `TT-104` sepa que este es el sitio.
-    ═══════════════════════════════════════════════════════════════════════
+    Se asienta **solo si había algo que retirar**. Desbloquear lo que no estaba
+    bloqueado no es un hecho, es el estado que ya se tenía.
+    ─────────────────────────────────────────────────────────────────────────
     """
     _comprobar_que_es_su_acudiente(
         actor, estudiante, "Retirar el bloqueo de un producto", "HU-10"
@@ -228,6 +262,14 @@ def desbloquear_producto(*, actor, estudiante, producto):
     borradas, _ = RestriccionProducto.objects.filter(
         estudiante=estudiante, producto=producto
     ).delete()
+
+    if borradas:
+        _asentar(
+            actor=actor,
+            estudiante=estudiante,
+            tipo=TipoDeAsiento.RETIRO,
+            producto=producto,
+        )
     return borradas > 0
 
 
@@ -263,9 +305,16 @@ def bloquear_alergeno(*, actor, estudiante, alergeno):
         actor, estudiante, "Bloquear un alérgeno", "HU-11"
     )
 
-    restriccion, _ = RestriccionAlergeno.objects.get_or_create(
+    restriccion, creada = RestriccionAlergeno.objects.get_or_create(
         estudiante=estudiante, alergeno=alergeno
     )
+    if creada:
+        _asentar(
+            actor=actor,
+            estudiante=estudiante,
+            tipo=TipoDeAsiento.BLOQUEO,
+            alergeno=alergeno,
+        )
     return restriccion
 
 
@@ -279,8 +328,8 @@ def desbloquear_alergeno(*, actor, estudiante, alergeno):
     forma de que el retiro deje productos bloqueados por error: lo que se
     consulta vuelve a calcularse desde cero en la siguiente pregunta (`INV-5`).
 
-    **El retiro todavía no deja asiento**, igual que el de producto: el segundo
-    criterio de `HU-12` lo exige y lo construye `TT-104`, en `PR-04`.
+    **El retiro deja asiento** (`TT-104`, `HU-12`), dentro de la misma
+    transacción que el borrado, y solo si había algo que retirar.
     """
     _comprobar_que_es_su_acudiente(
         actor, estudiante, "Retirar el bloqueo de un alérgeno", "HU-11"
@@ -289,4 +338,12 @@ def desbloquear_alergeno(*, actor, estudiante, alergeno):
     borradas, _ = RestriccionAlergeno.objects.filter(
         estudiante=estudiante, alergeno=alergeno
     ).delete()
+
+    if borradas:
+        _asentar(
+            actor=actor,
+            estudiante=estudiante,
+            tipo=TipoDeAsiento.RETIRO,
+            alergeno=alergeno,
+        )
     return borradas > 0

@@ -6,6 +6,7 @@ necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
 
 from catalogo.models import Alergeno, Producto
 from restricciones.models import (
+    AsientoDeRestriccion,
     LimiteDiario,
     RestriccionAlergeno,
     RestriccionProducto,
@@ -176,3 +177,28 @@ def alergenos_que_bloquean(estudiante, producto):
     return Alergeno.objects.filter(
         declaraciones__producto=producto, bloqueos__estudiante=estudiante
     ).distinct()
+
+
+def historial_de_restricciones(estudiante, limite=None):
+    """Lo que se hizo con las restricciones de un estudiante, lo último primero.
+
+    Segundo criterio de `HU-12`: el retiro queda asentado, y asentado significa
+    **legible**. Un registro que nadie puede leer no hace auditable nada; esta
+    es la función que lo convierte en algo que se mira.
+
+    Devuelve un `QuerySet` sin evaluar, con el actor, el producto y el alérgeno
+    ya traídos: quien pinta el historial los necesita todos y sin esto serían
+    tres consultas por fila.
+
+    `limite` recorta para las pantallas que enseñan «los últimos cambios».
+    **Sin él se devuelve el historial entero**, que es lo que una auditoría
+    necesita: media lista no reconstruye nada.
+
+    El orden lo fija el modelo —`-creado_en`— y se repite aquí explícito: quien
+    lea esta función no tiene por qué ir al `Meta` a averiguarlo.
+    """
+    asientos = AsientoDeRestriccion.objects.filter(
+        estudiante=estudiante
+    ).select_related("actor", "producto", "alergeno").order_by("-creado_en")
+
+    return asientos[:limite] if limite is not None else asientos
