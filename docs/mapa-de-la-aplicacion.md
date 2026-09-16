@@ -218,6 +218,13 @@ actual y el bloqueo no depende de ella (`INV-5`). Se puede bloquear un alérgeno
 todavía no declara ningún producto: el acudiente declara la alergia de su hijo, no el
 menú.
 
+Las dos pantallas de restricciones llevan debajo **el historial de cambios** (`HU-12`,
+`TT-105`): qué se bloqueó, qué se retiró, cuándo y quién. Retirar una protección sobre la
+alimentación de un menor es una acción auditable, y un asiento que nadie puede leer no
+hace auditable nada. El historial mezcla productos y alérgenos porque el acudiente no
+separa mentalmente sus dos listas — y guarda el nombre **tal como estaba**, así que
+renombrar el catálogo no reescribe lo que vio al decidir (`DT-8`).
+
 Y los **productos bloqueados** (`HU-10`, `TT-99`): el catálogo con un
 interruptor por producto, buscador incluido. Lo que se marca aquí es una **lista de
 productos identificados**, no una condición: bloquear «Torta de chocolate» no bloquea lo
@@ -352,37 +359,39 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    **crear un producto nuevo que lo declare**: queda cubierto sin volver a tocar nada. Es
    `INV-5` enseñada en vivo, y el paso que más conviene no saltarse en la Sprint Review.
    `HU-11`.
-7. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
+7. **Retirar uno de los bloqueos** y mirar «Cambios recientes» debajo: queda anotado
+   quién lo retiró y cuándo, y el bloqueo anterior también está. `HU-12`.
+8. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
    con su interruptor; lo bloqueado se marca en rojo. Bloquear uno **no** arrastra a los
    que comparten alérgeno — eso es `HU-11`, y la pantalla lo advierte. `HU-10`.
    Más adelante, al cobrar, se intenta comprar uno de ellos: la venta se rechaza con
    saldo de sobra y sin forma de forzarla. `HU-60`, `INV-4`.
-8. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
+9. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
    marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
-9. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
-10. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
+10. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
+11. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
-11. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
+12. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
    salir salvo que se marque «Ver retirados». `HU-51`, `HU-52`.
-12. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
-13. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
+13. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
+14. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
    historial, no de un contador. `HU-27`, `INV-3`.
-14. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
+15. **`/login/` como cajero** → `/punto-de-venta/`. Escanear la tarjeta: aparecen la
     fotografía, el saldo y el consumo del día. `HU-15`, `HU-17`, `HU-58`.
-15. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
+16. **Montar la venta** pulsando productos y **cobrar**. El saldo baja, las existencias
     bajan y las dos cifras siguen saliendo del historial. `HU-21`, `HU-54`, `INV-2`,
     `INV-3`.
-16. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
+17. **Volver a cobrar sin saldo suficiente**: la venta se rechaza diciendo cuánto falta y
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
-17. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
+18. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
     inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-Lo que cuelga del control parental (`HU-12`, `HU-13`), los rechazos que dependen del
+Lo que cuelga del control parental (`HU-13`), los rechazos que dependen del
 alérgeno y del cupo (`HU-18`, `HU-20`), la merma y las alertas de inventario
 (`HU-28`, `HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).

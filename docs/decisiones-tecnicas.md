@@ -16,7 +16,7 @@
 | fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15 |
 | decidido_por | Equipo SmartFood |
 | decisiones | 28 (`DT-1` … `DT-28`) |
-| entidades_modelo | 17 |
+| entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
 | version | 1.5 |
@@ -449,7 +449,7 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 
 ## [S2] Modelo de datos núcleo
 
-Diecisiete entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres se ajustarán al implementar; **la forma no**.
+Dieciocho entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres se ajustarán al implementar; **la forma no**.
 
 ### Cuentas e identidad
 
@@ -500,6 +500,7 @@ catálogo. El motivo es obligatorio en la merma, que es **la disminución manual
 | `RestriccionProducto` | estudiante, producto, **únicos juntos** | `HU-10`, `DT-28` |
 | `RestriccionAlergeno` | estudiante, alérgeno, **únicos juntos** · **ningún producto** | `HU-11`, `INV-5`, `DT-28` |
 | `LimiteDiario` | estudiante (uno a uno), monto **positivo** | `HU-09`, `DT-28` |
+| `AsientoDeRestriccion` | estudiante, **actor**, tipo (`bloqueo`/`retiro`), producto **o** alérgeno, **nombre de entonces**, creado_en | `HU-12`, `ALC-IN-19`, `DT-8`, `DT-24` |
 
 Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`) y viven en la app `restricciones` (`DT-28`).
 
@@ -507,7 +508,11 @@ Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`) y viven en
 
 Son dos tablas y no una con un campo «tipo» precisamente por eso: unificarlas convierte «resolver el alérgeno como la lista de los productos que hoy lo llevan» en algo que parece una optimización, y eso es exactamente lo que `INV-5` prohíbe. El fallo sería además silencioso — no rompe nada el día que se introduce, rompe semanas después, en la caja.
 
-`LimiteDiario` existe desde `TT-94`. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
+`AsientoDeRestriccion` es **la entidad dieciocho y la única que no estaba prevista**: la trajo `TT-104` al construir `HU-12`. Es un libro más, con el patrón que `DT-24` fijó para la billetera y el inventario —un único punto de asiento por el que pasan todos los servicios— y con el de `DT-8` para el nombre, que se congela como estaba. No lleva `DT-` propio porque no se desvía de ninguna decisión: la aplica.
+
+Anota el bloqueo además del retiro, aunque `HU-12` solo pedía el segundo. Con solo los retiros no se responde «¿estaba protegido este estudiante el día X?», que es la pregunta por la que la historia existe.
+
+`LimiteDiario` existe desde `TT-94`. **No se puede retirar, solo cambiar**, y eso sale de `[S11]`: «retirar» está en la fila de las restricciones alimentarias, y la del límite dice únicamente «fijar». Si el equipo quiere que un acudiente pueda quitarlo del todo, hace falta una historia. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
 
 ### Venta
 

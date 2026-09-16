@@ -1,0 +1,66 @@
+{% comment %} TT-105. Lo que se hizo con las restricciones de este estudiante (`HU-12`).
+
+   **Un asiento que nadie puede leer no hace auditable nada.** El segundo criterio
+   de `HU-12` pide que el retiro quede asentado porque es una acción sobre la
+   seguridad alimentaria de un menor; enseñarlo es lo que convierte la fila de la
+   base en algo que responde «quién y cuándo».
+
+   Lo incluyen las dos pantallas de restricciones, y por eso el parcial mezcla
+   productos y alérgenos: el acudiente no separa mentalmente sus dos listas — lo
+   que quiere saber es qué tocó y cuándo.
+
+   El retiro va en rojo y el bloqueo no. No es decoración: en este sistema el rojo
+   es «esto deja pasar una venta que antes no pasaba» (`[S1]`, regla 3). Retirar
+   una protección es el hecho que un auditor busca primero.
+{% endcomment %}
+
+<section aria-labelledby="historial-de-restricciones" class="flex flex-col gap-3">
+  <h2 id="historial-de-restricciones" class="text-lg text-texto">Cambios recientes</h2>
+
+  {% if historial %}
+    <ul class="flex flex-col divide-y divide-borde overflow-hidden rounded-md border
+               border-borde bg-superficie">
+      {% for asiento in historial %}
+        <li class="flex flex-col gap-1 px-4 py-3
+                   tablet:flex-row tablet:items-baseline tablet:justify-between tablet:gap-3">
+          <span class="flex min-w-0 items-center gap-2">
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md
+                         {% if asiento.tipo == 'retiro' %}bg-error-suave text-error-fuerte
+                         {% else %}bg-superficie-hover text-texto-suave{% endif %}">
+              <svg class="h-4 w-4" aria-hidden="true">
+                <use href="#{% if asiento.tipo == 'retiro' %}i-cerrar{% else %}i-restriccion{% endif %}"></use>
+              </svg>
+            </span>
+            <span class="min-w-0 text-base text-texto">
+              {% if asiento.tipo == 'retiro' %}
+                Se retiró el bloqueo de
+              {% else %}
+                Se bloqueó
+              {% endif %}
+              {% comment %} El nombre sale del asiento y no del producto: es como se
+                 llamaba **entonces** (`DT-8`). Renombrar el catálogo mañana no puede
+                 reescribir lo que el acudiente vio al decidir. {% endcomment %}
+              <strong class="font-semibold">{{ asiento.nombre }}</strong>
+              {% if asiento.alergeno_id %}
+                <span class="text-texto-suave">(alérgeno)</span>
+              {% endif %}
+            </span>
+          </span>
+
+          <span class="shrink-0 text-sm text-texto-suave tablet:text-right">
+            {{ asiento.creado_en|date:"j" }} de
+            {{ asiento.creado_en|date:"F"|lower }} de
+            {{ asiento.creado_en|date:"Y, H:i" }}
+            · {{ asiento.actor.nombre|default:asiento.actor.email }}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="rounded-md border border-dashed border-borde p-6 text-center text-base
+              font-medium text-texto-suave" role="status">
+      Todavía no has cambiado ninguna restricción. Lo que bloquees o retires quedará
+      anotado aquí, con la fecha.
+    </p>
+  {% endif %}
+</section>

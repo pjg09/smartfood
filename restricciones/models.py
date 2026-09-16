@@ -48,8 +48,14 @@ class LimiteDiario(models.Model):
     La ausencia de límite se representa **sin fila**, nunca con `monto = 0`. Un
     cero es una cifra legítima —«no puede gastar nada»— y usarla para decir «no
     configuré nada» dejaría dos hechos opuestos escritos igual. Por eso el monto
-    lleva `CheckConstraint(monto > 0)`: quien no quiere límite no guarda uno, y
-    `HU-12` retira el suyo borrando la fila, no poniéndola a cero.
+    lleva `CheckConstraint(monto > 0)`.
+
+    **Hoy no hay forma de retirar un límite ya fijado, solo de cambiarlo**, y no
+    es un olvido: `[S11]` ata «retirar» a la fila de las restricciones
+    alimentarias, y la del límite diario dice únicamente «fijar». `HU-12` cubre
+    el producto y el alérgeno, no esto. Si el equipo decide que un acudiente
+    debe poder quitarlo del todo, hace falta una historia — y entonces el camino
+    es borrar la fila, nunca ponerla a cero.
     ─────────────────────────────────────────────────────────────────────────
 
     **No guarda cuánto se lleva gastado hoy, y no es un olvido.** El consumo del
@@ -229,3 +235,120 @@ class RestriccionAlergeno(models.Model):
 
     def __str__(self):
         return f"{self.alergeno.nombre} bloqueado para {self.estudiante.nombre}"
+
+
+class TipoDeAsiento(models.TextChoices):
+    """Qué pasó con una restricción. Dos hechos, y los dos se anotan."""
+
+    BLOQUEO = "bloqueo", "Bloqueo"
+    RETIRO = "retiro", "Retiro"
+
+
+class AsientoDeRestriccion(models.Model):
+    """El libro de lo que se hizo con las restricciones (`TT-104`, `HU-12`).
+
+    Segundo criterio de `HU-12`: **el retiro queda asentado**, por ser una acción
+    auditable sobre la seguridad alimentaria de un menor. Tiene que poder
+    reconstruirse quién la hizo y cuándo.
+
+    **Nunca se edita ni se borra.** Es un libro, como los de `billetera` e
+    `inventario` (`DT-4`, `DT-5`): se le añaden asientos y nada más. Un asiento
+    corregido a posteriori deja un historial que ya no explica lo que pasó, que
+    es justo lo contrario de para lo que existe.
+
+    ── ANOTA TAMBIÉN EL BLOQUEO, Y EL CRITERIO SOLO PEDÍA EL RETIRO ─────────
+    Es una decisión, no un exceso por inercia. Un registro que solo guarda los
+    retiros no permite reconstruir nada: «se retiró el bloqueo de maní el día 3»
+    no dice si el niño estuvo protegido antes, ni desde cuándo. La pregunta que
+    un auditor trae —«¿estaba protegido este estudiante el día X?»— necesita los
+    dos hechos.
+
+    Es además el idioma del proyecto: `INV-2` e `INV-3` no dicen «anota las
+    salidas», dicen que el estado se reconstruya desde el historial. Media
+    historia no reconstruye.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── GUARDA EL NOMBRE ADEMÁS DE LA CLAVE AJENA (`DT-8`) ──────────────────
+    La clave ajena dice **cuál** y sobrevive a los renombres; el nombre dice
+    **cómo se llamaba entonces**. Sin lo segundo, renombrar «Galleta de maní» a
+    «Galleta» reescribe el pasado: el asiento pasaría a decir que se retiró la
+    protección sobre algo que no es lo que el acudiente vio al retirarla.
+
+    Es el mismo criterio con el que `LineaVenta` congela precio y nutrientes: lo
+    que se registró es lo que había, y editar el catálogo mañana no reescribe lo
+    que pasó hoy.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Una fila apunta a un producto o a un alérgeno, nunca a los dos ni a
+    ninguno.** Lo impone una `CheckConstraint` y no un `if` del servicio: un
+    asiento que no dice sobre qué es ruido en un libro que existe para poder
+    leerse (`DT-15`).
+
+    `PROTECT` sobre el actor: borrar la cuenta de quien retiró una protección
+    dejaría el asiento sin la mitad que `HU-12` pide —quién—.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    estudiante = models.ForeignKey(
+        "personas.Estudiante",
+        on_delete=models.PROTECT,
+        related_name="asientos_de_restriccion",
+        verbose_name="estudiante",
+    )
+    # Quién lo hizo. Hoy solo puede ser el acudiente —`[S11]` no da la escritura
+    # a nadie más (`INV-4`)—, y aun así se guarda: el libro tiene que explicarse
+    # solo, sin que haya que saberse la matriz de permisos para leerlo.
+    actor = models.ForeignKey(
+        "cuentas.Usuario",
+        on_delete=models.PROTECT,
+        related_name="asientos_de_restriccion",
+        verbose_name="quién",
+    )
+    tipo = models.CharField("tipo", max_length=10, choices=TipoDeAsiento.choices)
+
+    producto = models.ForeignKey(
+        "catalogo.Producto",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="asientos_de_restriccion",
+        verbose_name="producto",
+    )
+    alergeno = models.ForeignKey(
+        "catalogo.Alergeno",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="asientos_de_restriccion",
+        verbose_name="alérgeno",
+    )
+    # Cómo se llamaba en ese momento (`DT-8`).
+    nombre = models.CharField("nombre en ese momento", max_length=160)
+
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "asiento de restricción"
+        verbose_name_plural = "asientos de restricción"
+        # Del más reciente al más antiguo: es el orden en que se lee un
+        # historial.
+        ordering = ["-creado_en"]
+        indexes = [
+            models.Index(
+                fields=["estudiante", "creado_en"], name="asiento_por_estudiante"
+            ),
+        ]
+        constraints = [
+            # Exactamente uno de los dos. Ni ninguno —un asiento que no dice
+            # sobre qué— ni los dos —un asiento que dice dos cosas a la vez—.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(producto__isnull=False, alergeno__isnull=True)
+                    | models.Q(producto__isnull=True, alergeno__isnull=False)
+                ),
+                name="asiento_sobre_un_producto_o_un_alergeno",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} de {self.nombre} · {self.estudiante.nombre}"
