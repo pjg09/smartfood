@@ -18,8 +18,8 @@ cinco sprints de dos semanas.
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR, **13 de 14 historias** |
 | Historias terminadas | 31 de 59 |
+| **Sprint 3** | 🔨 **en curso**, semanas 10–11: control parental. 37 tareas (`TT-94`…`TT-130`) en 14 PR |
 | Lo siguiente | **Avance 1** (`EVA-3`, 20 % de la nota), semana 10 — se enseña lo que hay en `main` |
-| Sprint 3 | Sin backlog todavía |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
 > **Al cerrar el Sprint 2 el sistema vende.** Un cajero identifica al estudiante con su
@@ -31,7 +31,7 @@ cinco sprints de dos semanas.
 > restricciones vigentes— que depende del Sprint 3. Está declarado, no olvidado.
 
 > El avance de arriba envejece. **La fuente es
-> [`docs/plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md)**, que
+> [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md)**, que
 > es donde vive el estado de cada tarea; esta tabla solo lo resume.
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
@@ -110,8 +110,10 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Las 37 tareas del **último sprint cerrado** (`TT-57`…`TT-93`), con responsable |
-| [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Esas 37 tareas agrupadas en 16 PR. **Es donde vive el estado** |
+| [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | **Las 37 tareas del sprint en curso** (`TT-94`…`TT-130`), con responsable |
+| [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 37 tareas agrupadas en 14 PR. **Es donde vive el estado** |
+| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Sprint 2, cerrado: 37 tareas y 13 de 14 historias |
+| [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Su plan de PR, cerrado: 16 PR |
 | [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El Sprint 1, cerrado: 56 tareas y 18 historias |
 | [`plan-de-pull-requests-sprint-1.md`](./docs/plan-de-pull-requests-sprint-1.md) | Su plan de PR, cerrado: 25 PR |
 | [`definicion-de-terminado.md`](./docs/definicion-de-terminado.md) | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |

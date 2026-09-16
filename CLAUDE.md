@@ -8,9 +8,11 @@ Guía de trabajo para Claude Code en este repositorio.
 trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UPB, 202601).
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
-**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y **13 de 14 historias** el segundo, cerrado el 2026-09-12. La que falta es `HU-17`, a la que le queda un criterio que depende del Sprint 3 — está declarado, no olvidado.
+**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y **13 de 14 historias** el segundo. La que falta es `HU-17`, a la que le queda un criterio que depende de este sprint — está declarado, no olvidado.
 
-**Lo siguiente es el Avance 1** (`EVA-3`, 20 % de la nota), en la semana 10: lo que se enseña es lo que hay en `main`. **El Sprint 3 todavía no tiene backlog ni plan de PR**; hasta que los tenga, no hay `TT-nn` nuevo que trabajar.
+**Estamos en el Sprint 3**, semanas 10 y 11: control parental —restricciones, alérgenos y límite de gasto—. Cierra `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, y salda `HU-17`. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrar el Sprint 4.
+
+El **Avance 1** (`EVA-3`, 20 %) cae en la semana 10, al arrancar este sprint: lo que se enseña es lo que hay en `main`.
 
 ## Antes de escribir código, lee esto
 
@@ -22,9 +24,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-2-backlog.md` | Las 37 tareas del **último sprint cerrado** (`TT-57` … `TT-93`), con responsable |
-| `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y el estado de cada una. **El estado manda aquí** |
-| `docs/sprint-1-backlog.md` y su `plan-de-pull-requests` | El Sprint 1, cerrado. Archivo, consulta histórica |
+| `docs/sprint-3-backlog.md` | **Las 37 tareas del sprint en curso** (`TT-94` … `TT-130`), con responsable |
+| `docs/plan-de-pull-requests-sprint-3.md` | Esas 37 tareas agrupadas en 14 PR, y el estado de cada una. **El estado manda aquí** |
+| `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -297,8 +299,9 @@ automático está desconectado a propósito.
    las dos filas**: no siempre es idéntica, y un reemplazo que sirve en un documento puede no
    alcanzar la fila del otro. Pasó con `TT-87`.
 6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
-   `backlog-historias-de-usuario.md`. **`HU-17` es la excepción viva**: su panel está construido
-   desde `PR-09`, y sigue abierta porque le faltan las restricciones del Sprint 3.
+   `backlog-historias-de-usuario.md`. **Ojo con `PR-06` de este sprint: cierra DOS historias**,
+   `HU-13` y `HU-17` —esta última arrastra abierta desde el Sprint 2 y es la marca más fácil
+   de olvidar del proyecto—.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. El `ANEXO C` del sprint backlog verifica el grafo de
