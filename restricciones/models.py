@@ -1,4 +1,4 @@
-"""Modelos del control parental (`TT-94`, `TT-97`, `HU-09`, `HU-10`, `DT-28`).
+"""Modelos del control parental (`TT-94`, `TT-97`, `TT-100`, `HU-09` … `HU-11`, `DT-28`).
 
 Aquí van la estructura y las invariantes que la base de datos puede imponer:
 `CheckConstraint` y `UniqueConstraint`. **Sin lógica de negocio** (`DT-15`).
@@ -160,3 +160,72 @@ class RestriccionProducto(models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} bloqueado para {self.estudiante.nombre}"
+
+
+class RestriccionAlergeno(models.Model):
+    """Un alérgeno que este estudiante no puede consumir (`HU-11`, `INV-5`).
+
+    ═══════════════════════════════════════════════════════════════════════
+    **ESTA TABLA NO GUARDA PRODUCTOS, Y ESA AUSENCIA ES LA INVARIANTE.**
+
+    `INV-5`: el bloqueo por alérgeno se aplica **sobre la condición**, no sobre
+    una lista fija de productos. Aquí eso significa dos columnas —estudiante y
+    alérgeno— y ninguna más. No hay, ni puede haber, un campo con «los productos
+    que hoy lo llevan».
+
+    Qué productos quedan cubiertos **es el resultado de una consulta**, no un
+    dato: se cruza esta fila con `catalogo.ProductoAlergeno` cada vez que se
+    pregunta (`restricciones.selectors.productos_cubiertos_por_alergeno`). Por
+    eso un producto que la cafetería añada mañana, o uno que hoy existe y mañana
+    declara el alérgeno, quedan cubiertos **sin que nadie recalcule nada** — que
+    es literalmente el segundo criterio de `HU-11`.
+
+    ── LA TENTACIÓN, Y POR QUÉ NO SE CEDE ──────────────────────────────────
+    Materializar la lista consulta más rápido y parece equivalente. No lo es, y
+    el fallo es silencioso: nada se rompe el día que se materializa, se rompe
+    semanas después, cuando la cafetería añade un producto con maní y el
+    estudiante alérgico puede comprarlo. Ninguna prueba de las que existían
+    fallaría, porque todas usan productos creados antes.
+
+    `restricciones/tests_alergeno_bloqueado.py` existe para eso: crea el
+    producto **después** del bloqueo (`TT-103`).
+    ═══════════════════════════════════════════════════════════════════════
+
+    **Es una tabla distinta de `RestriccionProducto`, y no se unifican.** Una es
+    una lista de identificadores; esta es una condición que se evalúa. Juntarlas
+    bajo un campo «tipo» es el primer paso hacia resolver el alérgeno como lista
+    de productos — ver `RestriccionProducto`.
+
+    `PROTECT` en los dos extremos, por lo mismo que en las otras dos: ni dar de
+    baja a un estudiante ni retirar un alérgeno del catálogo pueden borrar en
+    silencio lo que una familia declaró (`INV-4`).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    estudiante = models.ForeignKey(
+        "personas.Estudiante",
+        on_delete=models.PROTECT,
+        related_name="alergenos_bloqueados",
+        verbose_name="estudiante",
+    )
+    alergeno = models.ForeignKey(
+        "catalogo.Alergeno",
+        on_delete=models.PROTECT,
+        related_name="bloqueos",
+        verbose_name="alérgeno",
+    )
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "alérgeno bloqueado"
+        verbose_name_plural = "alérgenos bloqueados"
+        ordering = ["alergeno__nombre"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["estudiante", "alergeno"],
+                name="un_solo_bloqueo_por_estudiante_y_alergeno",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.alergeno.nombre} bloqueado para {self.estudiante.nombre}"
