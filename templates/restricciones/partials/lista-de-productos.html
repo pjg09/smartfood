@@ -1,0 +1,112 @@
+{% load dinero %}
+{% comment %} TT-99. La lista de productos con su interruptor (`HU-10`).
+
+   Fragmento, no página (`DT-16`): lo devuelve el buscador a cada tecla y el
+   bloqueo a cada toque, y lo incluye la página al pintarse por primera vez.
+
+   Llega **entero**, con su recuento: el interruptor cambia la cifra de arriba, y
+   repintar solo el renglón la dejaría diciendo un número viejo.
+{% endcomment %}
+
+<div id="lista-de-productos" class="flex flex-col gap-3">
+
+  <p class="text-base font-medium text-texto-suave" role="status">
+    {% if total_bloqueados %}
+      <strong class="font-semibold text-texto">{{ total_bloqueados }}</strong>
+      producto{{ total_bloqueados|pluralize }} bloqueado{{ total_bloqueados|pluralize }}
+      para {{ estudiante.nombre }}.
+    {% else %}
+      {{ estudiante.nombre }} no tiene ningún producto bloqueado.
+    {% endif %}
+  </p>
+
+  {% if productos %}
+    {% comment %} Una ficha por producto, en dos franjas (`[S2.2]`): arriba lo que
+       identifica al producto y abajo el gesto. A 390 px el nombre, el precio y un
+       botón no caben en una línea, y lo que se recorta siempre es el nombre, que
+       es justo lo que el acudiente lee para saber qué está bloqueando. {% endcomment %}
+    <ul class="grid gap-3 tablet:grid-cols-2 escritorio:grid-cols-3">
+      {% for fila in productos %}
+        <li class="flex flex-col overflow-hidden rounded-md border bg-superficie shadow-sm
+                   transition-colors
+                   {% if fila.bloqueado %}border-error{% else %}border-borde{% endif %}">
+
+          <div class="flex flex-1 flex-col gap-1 p-4">
+            <span class="text-base font-medium text-texto">{{ fila.producto.nombre }}</span>
+            <span class="text-sm text-texto-suave">{{ fila.producto.categoria.nombre }}</span>
+            <span class="mt-auto pt-2 font-display text-lg tabular-nums text-texto">
+              {{ fila.producto.precio|dinero }}
+            </span>
+          </div>
+
+          {% comment %} El rojo aquí **sí significa lo que significa** (`[S1]`, regla 3): un
+             producto bloqueado es una venta que se va a rechazar, igual que el
+             saldo insuficiente. No es decoración.
+
+             El botón dice **la acción**, no el estado: «Desbloquear» sobre uno
+             bloqueado. Un botón que dice el estado deja al que lo lee sin saber
+             qué pasa si lo pulsa. El estado lo dice el borde, el fondo y el
+             texto de al lado. {% endcomment %}
+          <form hx-post="{% url 'bloqueo-de-producto' estudiante.id %}"
+                hx-target="#lista-de-productos"
+                hx-swap="outerHTML"
+                hx-indicator="#guardando-bloqueo"
+                class="flex items-center justify-between gap-3 border-t px-4 py-3
+                       {% if fila.bloqueado %}border-error bg-error-suave
+                       {% else %}border-borde bg-superficie-hover{% endif %}">
+            {% csrf_token %}
+            <input type="hidden" name="producto" value="{{ fila.producto.id }}">
+            <input type="hidden" name="busqueda" value="{{ busqueda }}">
+            <input type="hidden" name="accion"
+                   value="{% if fila.bloqueado %}desbloquear{% else %}bloquear{% endif %}">
+
+            <span class="flex min-w-0 items-center gap-2 text-sm
+                         {% if fila.bloqueado %}text-error-fuerte{% else %}text-texto-suave{% endif %}">
+              <svg class="h-4 w-4 shrink-0" aria-hidden="true">
+                <use href="#{% if fila.bloqueado %}i-restriccion{% else %}i-correcto{% endif %}"></use>
+              </svg>
+              <span class="truncate">
+                {% if fila.bloqueado %}Bloqueado{% else %}Puede comprarlo{% endif %}
+              </span>
+            </span>
+
+            <button type="submit"
+                    class="shrink-0 rounded-md border px-3 py-1.5 text-sm font-semibold
+                           whitespace-nowrap transition-colors
+                           {% if fila.bloqueado %}
+                             border-error bg-superficie text-error-fuerte hover:bg-error-suave
+                           {% else %}
+                             border-borde bg-superficie text-texto hover:border-acento
+                           {% endif %}">
+              {% if fila.bloqueado %}Desbloquear{% else %}Bloquear{% endif %}
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% comment %} `[S2.4]`. Dos huecos distintos y conviene no confundirlos: sin catálogo
+       no hay nada que ofrecer y quien lo llena es la cafetería (`HU-26`); con
+       búsqueda sin resultados lo que falta es cambiar el término. {% endcomment %}
+    <div class="flex flex-col items-center gap-3 rounded-md border border-dashed border-borde
+                p-8 text-center" role="status">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+      </span>
+      {% if busqueda %}
+        <p class="text-base font-medium text-texto">Ningún producto se llama así</p>
+        <p class="max-w-sm text-sm text-texto-suave">
+          No hay nada en el catálogo que coincida con «{{ busqueda }}». Prueba con otra
+          palabra o borra la búsqueda para verlos todos.
+        </p>
+      {% else %}
+        <p class="text-base font-medium text-texto">No hay nada en el catálogo</p>
+        <p class="max-w-sm text-sm text-texto-suave">
+          Lo gestiona la administración de la cafetería
+          (<strong class="text-texto">HU-26</strong>). Cuando haya productos, aparecerán
+          aquí para poder bloquearlos.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
