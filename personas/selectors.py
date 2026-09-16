@@ -6,10 +6,11 @@ devuelven objetos del ORM o datos, nunca respuestas HTTP.
 """
 
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 
 from cuentas.models import Rol
 from personas.codigo import ALFABETO, LONGITUD
-from personas.models import Estudiante
+from personas.models import EstadoDelEstudiante, Estudiante
 
 
 def estudiantes_a_cargo(*, usuario):
@@ -157,3 +158,85 @@ def identificar_por_documento(documento):
         raise Estudiante.DoesNotExist("Ningún estudiante con ese documento.")
 
     return estudiantes.get(documento=sin_separadores)
+
+
+def padron(*, actor, busqueda="", incluir_retirados=False):
+    """El padrón de la institución: quién está matriculado (`HU-44`, `DT-27`).
+
+    **Es una lectura, y solo una lectura.** Administrar estudiantes —dar de alta,
+    editar, dar de baja, reasignar la tarjeta— sigue siendo del admin (`DT-2`):
+    esta pantalla enseña y enlaza, no escribe. Por eso no hay un servicio detrás
+    ni un formulario: si algún día lo hubiera, `INV-4` obligaría a volver a mirar
+    quién puede escribir, y hoy esa respuesta no cambia.
+
+    **Exclusivo de la institución** (`HU-44`, tercer criterio, y `[S11]`). La
+    comprobación va aquí y no en la vista porque `DT-11` lo exige: el control de
+    acceso es de la capa de datos. El padrón lleva el nombre, el documento y el
+    correo de los acudientes de menores matriculados; no es una lista que pueda
+    ver la cafetería.
+
+    ── LOS RETIRADOS NO SALEN POR DEFECTO, Y NO ES LO MISMO QUE BORRARLOS ───
+    Dar de baja es un estado y conserva el historial (`DT-12`, `HU-51`); el saldo
+    sigue congelado y consultable (`HU-52`). Pero el padrón responde a «quién
+    está matriculado **hoy**», y mezclar a los que se fueron obliga a leer una
+    columna de estado en cada fila para saberlo.
+
+    `incluir_retirados` los trae de vuelta, que es lo que hace falta para buscar a
+    alguien que se fue. **Desactivado no es retirado**: un estudiante desactivado
+    —normalmente por tarjeta perdida (`HU-47`, `HU-48`)— sigue matriculado y sale
+    siempre.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `busqueda` cruza nombre, documento, código de tarjeta y los datos del
+    acudiente, que son las cinco formas en que alguien pregunta por un estudiante
+    en secretaría. Sin ella devuelve el padrón entero.
+
+    Una sola consulta: `select_related` sobre el acudiente y su usuario. Sin eso
+    serían dos consultas por fila para pintar el correo y el estado de la cuenta,
+    y el padrón de un colegio no es corto.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar el padrón exige identificarse.")
+    if actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "El padrón es de la institución educativa y de nadie más "
+            "(HU-44, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    estudiantes = Estudiante.objects.select_related("acudiente", "acudiente__usuario")
+
+    if not incluir_retirados:
+        estudiantes = estudiantes.exclude(estado=EstadoDelEstudiante.BAJA)
+
+    busqueda = busqueda.strip()
+    if busqueda:
+        estudiantes = estudiantes.filter(
+            Q(nombre__icontains=busqueda)
+            | Q(documento__icontains=busqueda)
+            | Q(codigo_tarjeta__icontains=busqueda)
+            | Q(acudiente__nombre__icontains=busqueda)
+            | Q(acudiente__usuario__email__icontains=busqueda)
+        )
+
+    return estudiantes.order_by("nombre")
+
+
+def cuentas_sin_activar(estudiantes):
+    """Cuántos de esos estudiantes tienen al acudiente sin activar su cuenta.
+
+    **Es el dato que trae a secretaría a esta pantalla.** La carga masiva genera
+    la invitación pero no la entrega (`DEC-9`), así que alguien tiene que saber
+    quién sigue sin poder entrar — si no, el acudiente descubre que no tiene
+    cuenta el día que su hijo se queda sin saldo.
+
+    Se cuenta sobre la lista ya resuelta y no con otra consulta: la vista acaba
+    de traer los acudientes con `select_related`, y volver a preguntar a la base
+    lo que ya está en memoria es la clase de consulta que nadie ve crecer.
+    """
+    return sum(
+        1
+        for estudiante in estudiantes
+        if not estudiante.acudiente.usuario.tiene_contrasena_definida
+    )

@@ -1,0 +1,27 @@
+{% comment %} DT-27. El estado de la cuenta del acudiente, en una sola pieza.
+
+   Lo pintan la tabla y la ficha de móvil, así que vive aparte: con el bloque
+   escrito dos veces, el día que cambie el texto una de las dos copias se queda
+   vieja.
+
+   **No es el estado del estudiante, es el de la cuenta de su acudiente.** Son
+   cosas distintas y confundirlas manda a secretaría a arreglar lo que no es: un
+   estudiante activo puede tener al acudiente sin activar, y entonces nadie le
+   recarga. `ámbar` porque es exactamente lo que el ámbar significa aquí —algo a
+   punto de quedarse sin—, no un error: la cuenta existe y la invitación está
+   generada (`DEC-9`); lo que falta es que la usen.
+{% endcomment %}
+
+{% if estudiante.acudiente.usuario.tiene_contrasena_definida %}
+  <span class="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-exito-fuerte"
+        data-cuenta-activa>
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+    Activa
+  </span>
+{% else %}
+  <span class="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-aviso-fuerte"
+        data-cuenta-sin-activar>
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    Sin activar
+  </span>
+{% endif %}

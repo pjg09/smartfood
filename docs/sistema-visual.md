@@ -61,7 +61,11 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Seis, y son las que usan dos o más pantallas. No hay más porque no hacen falta más.
+Siete. Seis las usan dos o más pantallas; la séptima, **la barra de filtros, la usa una sola
+por ahora** y se fija igual — no por completitud, sino porque el padrón estrenó a la vez el
+buscador que pide a cada tecla, el interruptor accesible y el orden de los tres controles, y
+esas tres decisiones se toman una vez o se vuelven a discutir en la siguiente pantalla que
+lleve una tabla. Es la única de la tabla con un solo uso, y conviene que se note.
 
 | Composición | Se copia de | En una frase |
 |---|---|---|
@@ -71,6 +75,7 @@ Seis, y son las que usan dos o más pantallas. No hay más porque no hacen falta
 | Encabezado de pantalla | `templates/billetera/recarga.html` | `h1` y frase de apoyo, alineados a la izquierda, dentro del lienzo |
 | Grupo de modos | `templates/partials/grupo-de-tema.html` | Botones con `aria-pressed`; icono **sobre** la etiqueta cuando la columna es estrecha |
 | Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **qué historia lo trae** |
+| Barra de filtros | `templates/personas/padron.html` | Buscador con icono dentro, interruptor y acción **en una fila** desde `tablet`; apilados por debajo |
 
 ### [S2.1] Tarjeta de resumen
 
@@ -153,6 +158,23 @@ sin fotografía en el punto de venta (`TT-77`) lleva el mismo borde discontinuo 
 donde iría la cara, con el rótulo «Sin foto». La alternativa —dibujar la silueta genérica
 de la ficha del acudiente— le diría al cajero que la comprobación de identidad se hizo y
 salió bien. **Un hueco silencioso miente; uno marcado, no.**
+
+---
+
+### [S2.5] Barra de filtros
+
+Buscador, filtro y acción sobre una tabla, **en una sola fila desde `tablet`**: son las tres
+cosas que se hacen sobre los datos de abajo, y leerlas juntas evita bajar la vista dos veces.
+Por debajo se apilan, que es donde una fila de tres estrangula el campo.
+
+**El buscador pide a cada tecla**, con 400 ms de espera, y reemplaza solo la tabla. Pero va
+dentro de un `<form method="get">` de verdad, con su botón de envío en `sr-only`: sin
+JavaScript sigue buscando al pulsar Enter, porque la vista lee el término de la URL venga de
+donde venga. **HTMX acelera lo que ya funcionaba; no lo sustituye.**
+
+El interruptor es un `<input type="checkbox">` con `sr-only` y el carril pintado desde `peer`.
+No es un `<div>` con un `click`: así se enfoca con teclado y se alterna con espacio sin una
+línea de JavaScript, y sin `role` ni `aria-checked` que mantener.
 
 ---
 

@@ -54,6 +54,10 @@ MENU_POR_ROL = {
     # `USR-5` carga el padrón (`HU-01`) y administra estudiantes y personal.
     Rol.INSTITUCION: (
         INICIO,
+        # El padrón va **antes** que la carga y que el admin: es lo que
+        # secretaría abre a diario (`DT-27`). Cargar es de principio de curso y
+        # administrar, de cuando algo cambia.
+        Entrada("padron", "Padrón", "i-estudiantes"),
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
         ADMINISTRACION,
     ),

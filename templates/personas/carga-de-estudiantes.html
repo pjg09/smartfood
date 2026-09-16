@@ -11,7 +11,12 @@
 {% block titulo %}Cargar estudiantes | SmartFood{% endblock %}
 
 {% block contenido %}
-  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+  {% comment %} **Ancho completo y no una columna centrada de 48 rem** (`DT-27`). La
+     referencia usa el lienzo entero, y aquí importa por algo más que el
+     parecido: el reporte de errores de `TT-26` es una tabla de cuatro columnas
+     —fila, columna, valor y qué pasa— y en 48 rem se estrangula justo cuando
+     hace falta leerla. {% endcomment %}
+  <div class="flex w-full flex-col gap-6">
 
     <header class="flex flex-col gap-1">
       <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Cargar estudiantes</h1>
@@ -141,8 +146,11 @@
       </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data"
-          class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+    {% comment %} **El formulario ya no va dentro de una tarjeta con borde.** La zona
+       punteada es su propio contenedor: una caja dentro de otra caja, las dos con
+       borde, es el marco doble que la referencia no tiene, y el título «Archivo de
+       estudiantes» encima repetía lo que la zona ya dice. {% endcomment %}
+    <form method="post" enctype="multipart/form-data" class="flex flex-col gap-4">
       {% csrf_token %}
 
       {% if form.errors %}
@@ -170,14 +178,17 @@
          se quería: no mira una sola clase nuestra —mira `color-scheme`— y era la
          pieza que no encajaba con el resto. {% endcomment %}
       <div class="flex flex-col gap-1">
-        <span class="text-base font-medium text-texto">{{ form.archivo.label }}</span>
+        {% comment %} La etiqueta del campo sigue existiendo para quien navega con lector de
+           pantalla: la zona es un `<label>` y necesita decir de qué. A la vista
+           sobra, porque debajo está escrito con todas las letras. {% endcomment %}
+        <span class="sr-only">{{ form.archivo.label }}</span>
 
         <div data-zona-de-archivo>
           <input type="file" name="{{ form.archivo.html_name }}" id="{{ form.archivo.id_for_label }}"
                  accept=".csv,text/csv" required class="peer sr-only">
           <label for="{{ form.archivo.id_for_label }}"
                  class="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-md
-                        border-2 border-dashed border-borde px-6 py-10 text-center
+                        border-2 border-dashed border-borde px-6 py-14 text-center
                         transition-colors hover:border-acento hover:bg-superficie-hover
                         peer-focus-visible:border-acento peer-focus-visible:bg-superficie-hover
                         data-[arrastrando=si]:border-acento data-[arrastrando=si]:bg-acento-suave">

@@ -15,6 +15,7 @@ from catalogo.views import imagen_del_producto
 from config.salud import salud
 from personas.views import (
     carga_de_estudiantes,
+    padron_de_estudiantes,
     estudiante_seleccionado,
     panel_del_acudiente,
     tarjeta_del_estudiante,
@@ -79,6 +80,18 @@ urlpatterns = [
     ),
     # Carga masiva de estudiantes y acudientes (`TT-24`, `HU-01`).
     path("carga/", carga_de_estudiantes, name="carga-de-estudiantes"),
+    # El padrón de la institución (`DT-27`). **Es la excepción declarada a
+    # `DT-2`**: la única lectura de `INT-3` con pantalla propia, porque es la que
+    # secretaría abre a diario y la que responde «quién está matriculado y quién
+    # sigue sin activar su cuenta». Escribir sobre un estudiante sigue siendo del
+    # admin.
+    #
+    # Dos rutas a la misma vista: la página y su tabla. No es un endpoint que
+    # devuelva a veces una cosa y a veces otra (`DT-16`) — es la misma respuesta
+    # con y sin envoltorio, y la vista lo distingue por el nombre de la ruta, que
+    # resuelve Django y no puede falsear el cliente.
+    path("padron/", padron_de_estudiantes, name="padron"),
+    path("padron/tabla/", padron_de_estudiantes, name="padron-tabla"),
     # Interfaz del acudiente (`TT-29`, `HU-04`, `INT-1`). La primera devuelve la
     # página; la segunda, el fragmento HTMX del estudiante elegido. Son dos
     # rutas y no una con dos comportamientos (`DT-16`).

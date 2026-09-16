@@ -1,0 +1,184 @@
+{% comment %} DT-27. La tabla del padrón y su línea de recuento (`HU-44`).
+
+   Fragmento, no página (`DT-16`): lo devuelve `/padron/tabla/` a cada tecla del
+   buscador y reemplaza solo esta zona. La página lo incluye al pintarse.
+
+   **Tabla de datos** (`[S2.2]` del sistema visual): cabecera tintada con un
+   icono por columna, filas alternas, y **fichas por debajo de `tablet`** —una
+   tabla de seis columnas no se reflujar a 390 px sin volverse ilegible—.
+{% endcomment %}
+
+<div id="padron-tabla" class="flex flex-col gap-3">
+
+  {% comment %} La línea de recuento. **«8 de 20» y no «8»**: quien busca necesita saber
+     que hay más de lo que ve, o creerá que el padrón entero son ocho.
+
+     Las cuentas sin activar van aquí y no en una columna aparte porque son el
+     motivo por el que secretaría abre esta pantalla: la carga genera la
+     invitación pero no la entrega (`DEC-9`), así que alguien tiene que saber
+     quién sigue sin poder entrar. {% endcomment %}
+  <p class="text-base text-texto-suave" data-recuento-del-padron>
+    <strong class="font-semibold text-texto">{{ estudiantes|length }}</strong>
+    de {{ total }}
+    {% if total == 1 %}estudiante{% else %}estudiantes{% endif %}
+    {% if sin_activar %}
+      <span aria-hidden="true" class="px-1 text-borde">·</span>
+      <span class="inline-flex items-center gap-1.5 font-medium text-aviso-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        {{ sin_activar }} sin activar
+      </span>
+    {% endif %}
+  </p>
+
+  {% if estudiantes %}
+    {% comment %} Móvil: una ficha por estudiante, en dos franjas. Arriba lo que se busca
+       de un vistazo —nombre y estado—, abajo el detalle sobre fondo hundido.
+       Misma composición que los movimientos del acudiente. {% endcomment %}
+    <ul class="flex flex-col gap-3 tablet:hidden">
+      {% for estudiante in estudiantes %}
+        <li data-fila-del-padron
+            class="overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
+          <div class="flex items-start justify-between gap-3 px-4 py-3">
+            <div class="flex min-w-0 flex-col">
+              <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
+              <span class="font-mono text-sm tabular-nums text-texto-suave">
+                {{ estudiante.documento }}
+              </span>
+            </div>
+            {% include "personas/partials/padron-estado.html" %}
+          </div>
+          <div class="flex flex-col gap-1 border-t border-borde bg-superficie-hover px-4 py-2">
+            <span class="text-sm text-texto-suave">Tarjeta
+              <span class="font-mono tracking-wider text-texto">{{ estudiante.codigo_tarjeta }}</span>
+            </span>
+            <span class="text-sm text-texto">{{ estudiante.acudiente.nombre }}</span>
+            <span class="text-sm break-all text-texto-suave">{{ estudiante.acudiente.usuario.email }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% comment %} Desde `tablet`, la tabla. Desborda **dentro de su caja** y nunca en la
+       página: un desbordamiento de página movería la barra lateral y la
+       cabecera. {% endcomment %}
+    <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+      <div class="overflow-x-auto">
+        <table class="tabla-datos tabla-md">
+          <thead>
+            <tr class="border-b border-borde bg-primario-suave">
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+                  Estudiante
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-identificacion"></use></svg>
+                  Documento
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+                  Tarjeta
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-personas"></use></svg>
+                  Acudiente
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-texto-suave" aria-hidden="true"><use href="#i-escudo"></use></svg>
+                  Estado de la cuenta
+                </span>
+              </th>
+              {% comment %} La columna de acción no lleva rótulo visible: «Editar» ya dice
+                 qué hace, y un encabezado «Acciones» sobre una sola acción es
+                 ruido. El lector de pantalla sí necesita algo. {% endcomment %}
+              <th scope="col" class="px-4 py-3 text-right">
+                <span class="sr-only">Acciones</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for estudiante in estudiantes %}
+              <tr data-fila-del-padron
+                  class="border-b border-borde transition-colors last:border-b-0
+                         even:bg-superficie-hover hover:bg-primario-suave">
+                <td class="px-4 py-3">
+                  <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
+                  {% comment %} `HU-51`: la baja es un estado, no un borrado. Solo aparece
+                     cuando se piden los retirados, así que decirlo aquí evita
+                     leer la fila entera para saber por qué está. {% endcomment %}
+                  {% if estudiante.esta_de_baja %}
+                    <span class="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-sm
+                                 font-medium whitespace-nowrap text-aviso-fuerte">Retirado</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 font-mono text-base tabular-nums whitespace-nowrap text-texto-suave">
+                  {{ estudiante.documento }}
+                </td>
+                {% comment %} Monoespaciada y con `tracking`: el código de tarjeta se lee
+                   carácter a carácter para compararlo con lo impreso, y en
+                   proporcional la O y el 0 se confunden. {% endcomment %}
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="rounded bg-superficie-hover px-2 py-1 font-mono text-sm
+                               tracking-wider text-texto">{{ estudiante.codigo_tarjeta }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="block font-medium text-texto">{{ estudiante.acudiente.nombre }}</span>
+                  <span class="block text-sm break-all text-texto-suave">
+                    {{ estudiante.acudiente.usuario.email }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">{% include "personas/partials/padron-estado.html" %}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  {% comment %} **Enlaza al admin, no a un formulario propio.** Escribir
+                     sobre un estudiante sigue siendo de `INT-3` (`DT-2`): esta
+                     pantalla es una lectura, y duplicar el formulario sería
+                     duplicar las reglas que lo validan. {% endcomment %}
+                  <a href="{% url 'admin:personas_estudiante_change' estudiante.id %}"
+                     class="inline-flex items-center gap-1.5 text-base font-semibold
+                            text-acento-fuerte hover:underline">
+                    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+                    Editar
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    {% comment %} Vacío, no hueco: no falta ninguna historia. Y dice **cuál de los dos
+       vacíos es**, que no son el mismo problema — no hay nadie matriculado, o la
+       búsqueda no encontró. {% endcomment %}
+    <div class="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-8 text-center" role="status">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                   text-acento-fuerte">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-buscar"></use></svg>
+      </span>
+      {% if busqueda %}
+        <p class="text-base font-medium text-texto">Ningún estudiante coincide</p>
+        <p class="max-w-md text-sm text-texto-suave">
+          Se buscó <span class="font-mono break-all">{{ busqueda }}</span> en nombre,
+          documento, tarjeta y acudiente.
+          {% if not incluir_retirados %}
+            Puede que se haya retirado: marca «Ver retirados».
+          {% endif %}
+        </p>
+      {% else %}
+        <p class="text-base font-medium text-texto">Todavía no hay nadie matriculado</p>
+        <p class="max-w-md text-sm text-texto-suave">
+          El padrón se llena subiendo el archivo en «Cargar estudiantes».
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

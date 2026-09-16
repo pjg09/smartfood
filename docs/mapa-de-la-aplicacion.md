@@ -50,6 +50,8 @@ los mismos colores desde `DT-23`.
 | `/salir/` | Cerrar sesión. **Solo POST**: un `GET` responde `405` | Todos | `TT-56` |
 | `/invitacion/<uid>/<token>/` | Definir la contraseña propia desde la invitación | Quien tenga el enlace | `TT-11` |
 | `/invitacion/lista/` | Confirmación de que quedó definida | — | `TT-11` |
+| `/padron/` | Padrón: quién está matriculado y qué acudientes han activado su cuenta | Institución | `DT-27` |
+| `/padron/tabla/` | Fragmento HTMX de la tabla del padrón, filtrada | Institución | `DT-27` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
@@ -68,6 +70,7 @@ los mismos colores desde `DT-23`.
 | Ruta | Institución | Administración | Cajero | Acudiente | Anónimo |
 |---|---|---|---|---|---|
 | `/` | 200 | 200 | 200 | 200 | 200 |
+| `/padron/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/carga/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/recargar/` | 403 | 403 | 403 | **200** | 302 → acceso |
@@ -154,6 +157,17 @@ conviene no perder:
 ## [S4] Lo que hace cada rol, pantalla por pantalla
 
 ### Institución educativa (`USR-5`)
+
+**`/padron/` es su pantalla de todos los días** (`DT-27`). Dice quién está matriculado y, al
+lado de cada estudiante, **si su acudiente ya activó la cuenta**: la carga masiva genera la
+invitación pero no la entrega (`DEC-9`), así que sin esa columna nadie sabe quién sigue sin
+poder entrar hasta que un niño se queda sin saldo. Se busca por nombre, documento, tarjeta y
+acudiente —las cinco formas en que alguien pregunta en secretaría—, y los retirados no salen
+salvo que se pidan: dar de baja es un estado (`HU-51`), pero el padrón responde «quién está
+matriculado **hoy**».
+
+**El padrón solo lee.** Cada fila enlaza al admin para editar, y ahí sigue estando todo lo que
+escribe. Es la única excepción a `DT-2`, y está declarada.
 
 Carga masiva en `/carga/`. En el admin: *Estudiantes* —listado con estado, código de tarjeta
 y si tiene fotografía; búsqueda por nombre, documento, código o acudiente; alta individual
