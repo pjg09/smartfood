@@ -67,3 +67,26 @@ def identificadores_de_productos_bloqueados(estudiante):
             "producto_id", flat=True
         )
     )
+
+
+def bloqueos_entre(estudiante, productos):
+    """De esos productos, los que este estudiante tiene bloqueados (`HU-60`).
+
+    Devuelve las `RestriccionProducto` que coinciden, con su producto ya traído.
+    Vacío si ninguno lo está.
+
+    **Existe para la venta, y por eso pregunta solo por lo que se está
+    cobrando.** `identificadores_de_productos_bloqueados` trae toda la lista del
+    estudiante, que es lo que necesita la pantalla del acudiente; aquí la
+    pregunta es otra —«¿alguno de estos cuatro?»— y se hace con un `IN` sobre lo
+    que hay en el carrito. Es una consulta, dentro de una transacción con cola
+    delante (`DT-6`).
+
+    **No resuelve el bloqueo por alérgeno**, y no es un olvido: eso no se
+    responde desde una lista sino cruzando la condición con lo que cada producto
+    declara (`INV-5`, `DT-7`), y llega con `TT-100`. Meterlo aquí sería
+    justamente materializar la lista que `INV-5` prohíbe.
+    """
+    return RestriccionProducto.objects.filter(
+        estudiante=estudiante, producto__in=productos
+    ).select_related("producto")
