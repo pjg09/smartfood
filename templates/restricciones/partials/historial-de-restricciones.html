@@ -5,9 +5,9 @@
    seguridad alimentaria de un menor; enseñarlo es lo que convierte la fila de la
    base en algo que responde «quién y cuándo».
 
-   Lo incluyen las dos pantallas de restricciones, y por eso el parcial mezcla
-   productos y alérgenos: el acudiente no separa mentalmente sus dos listas — lo
-   que quiere saber es qué tocó y cuándo.
+   Lo incluyen las **tres** pantallas del control parental, y por eso el parcial
+   mezcla productos, alérgenos y el límite diario: el acudiente no separa
+   mentalmente sus listas — lo que quiere saber es qué tocó y cuándo.
 
    El retiro va en rojo y el bloqueo no. No es decoración: en este sistema el rojo
    es «esto deja pasar una venta que antes no pasaba» (`[S1]`, regla 3). Retirar
@@ -27,12 +27,26 @@
             <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md
                          {% if asiento.tipo == 'retiro' %}bg-error-suave text-error-fuerte
                          {% else %}bg-superficie-hover text-texto-suave{% endif %}">
+            {% comment %} El icono del bloqueo depende de qué se bloqueó: el círculo de
+               prohibición dice «esto no se puede comprar», y para un cupo de gasto
+               eso es falso — ahí el icono es el del límite. El del retiro es el
+               mismo en los tres casos porque el hecho es el mismo. {% endcomment %}
               <svg class="h-4 w-4" aria-hidden="true">
-                <use href="#{% if asiento.tipo == 'retiro' %}i-cerrar{% else %}i-restriccion{% endif %}"></use>
+                <use href="#{% if asiento.tipo == 'retiro' %}i-cerrar{% elif asiento.sobre == 'limite_diario' %}i-limite{% else %}i-restriccion{% endif %}"></use>
               </svg>
             </span>
             <span class="min-w-0 text-base text-texto">
-              {% if asiento.tipo == 'retiro' %}
+              {% comment %} La frase depende de **sobre qué** es el asiento: «se bloqueó el
+                 límite diario» no se dice, y «se retiró el bloqueo de $8.000» menos.
+                 Por eso `sobre` es un campo y no se deduce de qué clave ajena
+                 viene puesta. {% endcomment %}
+              {% if asiento.sobre == 'limite_diario' %}
+                {% if asiento.tipo == 'retiro' %}
+                  Se retiró el límite diario de
+                {% else %}
+                  Se fijó el límite diario en
+                {% endif %}
+              {% elif asiento.tipo == 'retiro' %}
                 Se retiró el bloqueo de
               {% else %}
                 Se bloqueó
@@ -41,7 +55,7 @@
                  llamaba **entonces** (`DT-8`). Renombrar el catálogo mañana no puede
                  reescribir lo que el acudiente vio al decidir. {% endcomment %}
               <strong class="font-semibold">{{ asiento.nombre }}</strong>
-              {% if asiento.alergeno_id %}
+              {% if asiento.sobre == 'alergeno' %}
                 <span class="text-texto-suave">(alérgeno)</span>
               {% endif %}
             </span>
@@ -59,7 +73,7 @@
   {% else %}
     <p class="rounded-md border border-dashed border-borde p-6 text-center text-base
               font-medium text-texto-suave" role="status">
-      Todavía no has cambiado ninguna restricción. Lo que bloquees o retires quedará
+      Todavía no has cambiado ninguna restricción. Lo que configures o retires quedará
       anotado aquí, con la fecha.
     </p>
   {% endif %}
