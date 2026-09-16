@@ -419,7 +419,13 @@ class ElCajeroVeElSaldoSoloAlCobrarTest(TestCase):
         self.assertEqual(cuerpo.count('hx-swap="innerHTML show:top"'), 2)
 
     def test_el_cajero_no_entra_a_la_administracion(self):
-        """`INT-3` es de `USR-4` y `USR-5` (`[S11]`). El cajero no tiene `is_staff`."""
+        """`INT-3` es de `USR-4` y `USR-5` (`[S11]`).
+
+        El cajero **no tiene `is_staff`**: su cuenta nace sin él y la migración
+        `cuentas.0004` se lo quitó a las que ya existían. Antes esta prueba pasaba
+        por otro motivo —entraba, pero el admin no tenía ningún modelo que
+        enseñarle—, así que comprobaba menos de lo que su texto decía.
+        """
         respuesta = self.client.get("/admin/", follow=True)
 
         self.assertNotIn("Movimientos de billetera", respuesta.content.decode())

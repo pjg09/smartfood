@@ -223,8 +223,20 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre="", contrasena_de_desa
         email=email,
         rol=rol,
         nombre=nombre,
-        # `INT-3` es el admin de Django (`DT-2`): el personal opera desde allí.
-        accede_a_administracion=True,
+        # ── SOLO LA ADMINISTRACIÓN DE CAFETERÍA ENTRA AL ADMIN ──────────
+        # `INT-3` es el admin de Django (`DT-2`) y ahí trabaja `USR-4`:
+        # catálogo, precios e inventario. **El cajero no.** `[S11]` le concede
+        # registrar ventas, y eso ocurre entero en `INT-2`.
+        #
+        # Antes se le daba `is_staff` a los dos por igual, y el resultado era
+        # una puerta que no llevaba a ninguna parte: `PERMISOS_POR_ROL` no le
+        # concede ningún modelo, así que el admin le respondía `200` con un
+        # índice vacío. No era un agujero —sin permisos no se toca nada—, pero
+        # `DT-11` pide que el acceso se decida en la capa de datos, y una
+        # cuenta que puede entrar donde no tiene nada que hacer es justo lo
+        # contrario de decidirlo.
+        # ───────────────────────────────────────────────────────────────
+        accede_a_administracion=(rol == Rol.ADMINISTRADOR),
         contrasena_de_desarrollo=contrasena_de_desarrollo,
     )
 

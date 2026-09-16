@@ -63,7 +63,12 @@ MENU_POR_ROL = {
     ),
     # `USR-4` administra el catálogo desde `INT-3`.
     Rol.ADMINISTRADOR: (INICIO, ADMINISTRACION),
-    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, ADMINISTRACION),
+    # `USR-3` cobra, y cobrar ocurre entero en `INT-2`. **Sin entrada a la
+    # administración**: no tiene un solo permiso sobre ningún modelo, así que
+    # el admin le enseñaba un índice vacío. Un enlace a una pantalla sin nada
+    # dentro es peor que no tenerlo — invita a buscar allí lo que está en su
+    # propia caja.
+    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA),
 }
 
 # La barra del punto de venta. **Es una lista aparte y hoy tiene una sola
