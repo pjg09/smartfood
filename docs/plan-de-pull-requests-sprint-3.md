@@ -10,10 +10,10 @@
 | documentos_fuente | `./sprint-3-backlog.md` (`[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md` |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | 3 de 5 · semanas 10 – 11 |
-| tareas cubiertas | 37 de 37 (`TT-94` … `TT-130`) |
-| pull requests | 14 (`PR-01` … `PR-14`) |
+| tareas cubiertas | 40 de 40 (`TT-94` … `TT-133`) |
+| pull requests | 15 (`PR-01` … `PR-15`) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -84,17 +84,17 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **6** de 37 | **2** de 14 |
+| **Finalizadas** | **9** de 40 | **3** de 15 |
 | Pendientes | 31 | 12 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 4 | 16 |
-| Carlos | 2 | 11 |
-| Alejandro | 0 | 7 |
+| Pedro | 5 | 17 |
+| Carlos | 3 | 12 |
+| Alejandro | 1 | 8 |
 | Naomi | 0 | 3 |
 
-### [S3.1] Estado de los 14 Pull Requests
+### [S3.1] Estado de los 15 Pull Requests
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
@@ -112,10 +112,11 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
 | `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
+| `PR-15` | `TT-131`–`TT-133` | `HU-60` · **historia añadida durante el sprint** | ☑ |
 
 ---
 
-## [S4] Los 14 Pull Requests
+## [S4] Los 15 Pull Requests
 
 ### Configuración del control parental — `PR-01` … `PR-04`
 
@@ -471,6 +472,42 @@ Va el último por número, no por fecha: las tres empiezan el primer día.
 
 ---
 
+### Lo que el sprint no había previsto — `PR-15`
+
+#### `PR-15` — `HU-60` Venta rechazada por producto bloqueado
+
+| | |
+|---|---|
+| Título del PR | `feat(ventas): rechazar la venta de un producto bloqueado` |
+| Rama | `feat/TT-131-rechazo-por-producto-bloqueado` |
+| Responsables | Pedro, Carlos y Alejandro |
+| Historia | `HU-60` — **añadida durante el sprint** |
+| Invariantes | **`INV-4`** |
+| Estado | ☑ |
+
+| Tarea | Descripción | Resp. | Estado |
+|---|---|---|---|
+| `TT-131` | Validación del producto bloqueado dentro del bloqueo de la transacción | Pedro | ☑ |
+| `TT-132` | Motivo de rechazo distinguible en el punto de venta | Carlos | ☑ |
+| `TT-133` | Caso de prueba: rechazo con saldo de sobra, sin vía para forzarlo | Alejandro | ☑ |
+
+> **Esta historia no estaba en la planeación, y por qué apareció importa.** Al construir
+> `PR-02` se vio que `ALC-IN-09` pide aplicar las restricciones **en el momento de la
+> venta** y que ninguna historia lo hacía para la lista de `HU-10`: las cuatro de rechazo
+> cubrían alérgeno, saldo, límite y desactivación. Sin esto, el acudiente bloquea la
+> gaseosa y la caja se la cobra igual. Está en el `ANEXO A` del sprint backlog, punto 5.
+
+**Va el último por número y no por orden de construcción**, como `PR-14`. Solo depende de
+`PR-02` y del Sprint 2, así que **puede integrarse en cuanto esté listo**: la propiedad que
+`[S1]` demuestra —que toda dependencia de un PR esté en uno anterior— se cumple igual, y
+así no hay que renumerar de `PR-03` a `PR-14`.
+
+`TT-132` estrena el mecanismo de motivos que reutilizarán `TT-114`, `TT-117` y `TT-126`:
+cada clase de rechazo lleva una etiqueta estable que llega al HTML del ticket. Con cuatro
+motivos por delante, uno por historia habría sido cuatro maneras de decir lo mismo.
+
+---
+
 ## [S5] Qué se puede solapar
 
 | PR | Puede ir en paralelo con | Porque |
@@ -509,5 +546,9 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
 6. **Si el sprint desborda**, los candidatos a mover son `PR-04` (`HU-12`, el único
    `Should`) y `PR-07` (`HU-38`, del que no depende ninguna historia). Quedan 12 PR y 33
    tareas. **No se pueden mover** `PR-08` ni `PR-09`.
-7. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
+7. **El sprint creció de 37 a 40 tareas.** `HU-60` se añadió durante el sprint al
+   descubrirse que ninguna historia hacía cumplir el bloqueo por producto en la venta. Si
+   eso hace desbordar, los candidatos a mover siguen siendo los de arriba — **`HU-60` no
+   es uno de ellos**: sin su rechazo, `HU-10` entrega una protección que no existe.
+8. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.

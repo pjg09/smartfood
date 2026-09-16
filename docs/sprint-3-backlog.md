@@ -14,8 +14,8 @@
 | sprint | 3 de 5 |
 | semanas | 10 – 11 |
 | hito | ninguno propio. El **Avance 2** (`EVA-4`) cae en la semana 14, al cerrar el Sprint 4 |
-| historias | 12 (`HU-09`, `HU-10`, `HU-11`, `HU-12`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-47`, `HU-48`, `HU-49`, `HU-50`) **más el cierre de `HU-17`**, que el Sprint 2 dejó abierta |
-| tareas | 37 (`TT-94` … `TT-130`) |
+| historias | 13 (`HU-09`, `HU-10`, `HU-11`, `HU-12`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-47`, `HU-48`, `HU-49`, `HU-50`, `HU-60`) **más el cierre de `HU-17`**, que el Sprint 2 dejó abierta. `HU-60` se añadió durante el sprint (`ANEXO A`, punto 5) |
+| tareas | 40 (`TT-94` … `TT-133`) |
 | stack | Django + PostgreSQL + HTMX (`DT-2`, `DT-3` de `./decisiones-tecnicas.md`) |
 | idioma | es-CO |
 | version | 1.0 |
@@ -37,7 +37,7 @@
 | S1 | Objetivo del Sprint | `COM-2` |
 | S2 | Definición de Terminado | Puntero a `./definicion-de-terminado.md` (`COM-3`) |
 | S3 | Tareas de habilitación | **Ninguna.** Se explica por qué |
-| S4 | Tareas por historia | `TT-94` … `TT-127` |
+| S4 | Tareas por historia | `TT-94` … `TT-127`, `TT-131` … `TT-133` |
 | S5 | Tareas de gestión del Sprint | `TT-128` … `TT-130` |
 | S6 | Reparto por responsable | Carga de cada integrante |
 | ANEXO A | Riesgos del sprint | Lo que puede salir mal y qué hacer |
@@ -208,7 +208,21 @@ La asimetría es deliberada y tiene un motivo de seguridad: el desbloqueo pasa s
 | `TT-126` | Motivo de rechazo por desactivación, **distinto** de los de saldo, alérgeno y límite | Carlos | ☐ |
 | `TT-127` | Caso de prueba: desactivado no compra, pero **sí recibe recargas** | Alejandro | ☐ |
 
-Al cerrar esta historia, la venta tiene **cuatro motivos de rechazo distintos**: saldo (`HU-19`), alérgeno (`HU-18`), límite diario (`HU-20`) y estudiante desactivado (`HU-50`). Que se distingan no es cosmética: el cajero tiene que poder decirle al estudiante qué pasa, y solo uno de los cuatro se arregla recargando.
+Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: saldo (`HU-19`), alérgeno (`HU-18`), límite diario (`HU-20`), producto bloqueado (`HU-60`) y estudiante desactivado (`HU-50`). Que se distingan no es cosmética: el cajero tiene que poder decirle al estudiante qué pasa, y solo uno de los cinco se arregla recargando.
+
+### `[HU-60]` Venta rechazada por producto bloqueado
+
+| ID | Tarea | Responsable | Estado |
+|---|---|---|---|
+| `TT-131` | Validación del producto bloqueado **dentro** del bloqueo de la transacción (`DT-6`) | Pedro | ☑ |
+| `TT-132` | Motivo de rechazo por producto bloqueado, distinguible en el punto de venta | Carlos | ☑ |
+| `TT-133` | Caso de prueba: venta rechazada con saldo de sobra, **sin vía para forzarla** | Alejandro | ☑ |
+
+> **Historia añadida durante el sprint, no prevista en la planeación.** Se detectó al construir `PR-02`: `ALC-IN-09` pide aplicar las restricciones en el momento de la venta, y la lista de `HU-10` no tenía quién la hiciera cumplir. Las cuatro historias de rechazo cubrían alérgeno, saldo, límite y desactivación. Está explicado en el `ANEXO A`, punto 5.
+
+**Va la última de `[S4]` por número de tarea, no por orden de construcción.** Solo depende de `HU-10` (`TT-97`…`TT-99`) y de `HU-21` (Sprint 2), así que pudo construirse en cuanto la primera estuvo — no espera a `HU-18`. Colocarla aquí conserva las dos propiedades del documento: los `TT-` ascendentes y un orden topológico válido, porque todo lo que la bloquea está antes.
+
+`TT-132` estrena el mecanismo que usarán `TT-114`, `TT-117` y `TT-126`: cada clase de rechazo lleva una etiqueta estable que llega hasta el HTML del ticket, de modo que una prueba pueda exigir **cuál** se enseñó sin buscar una frase dentro del mensaje.
 
 ---
 
@@ -226,12 +240,12 @@ Al cerrar esta historia, la venta tiene **cuatro motivos de rechazo distintos**:
 
 | Integrante | Rol `[S12]` | Tareas | Cuáles |
 |---|---|---|---|
-| **Pedro** | Desarrollador backend | **16** | `TT-94`, `TT-95`, `TT-97`, `TT-98`, `TT-100`, `TT-101`, `TT-104`, `TT-106`, `TT-107`, `TT-111`, `TT-113`, `TT-116`, `TT-119`, `TT-121`, `TT-123`, `TT-125` |
-| **Carlos** | Desarrollador frontend | **11** | `TT-96`, `TT-99`, `TT-102`, `TT-105`, `TT-109`, `TT-112`, `TT-114`, `TT-117`, `TT-120`, `TT-122`, `TT-126` |
-| **Alejandro** | Analista de datos y UX | **7** | `TT-103`, `TT-108`, `TT-110`, `TT-115`, `TT-118`, `TT-124`, `TT-127` |
+| **Pedro** | Desarrollador backend | **17** | `TT-94`, `TT-95`, `TT-97`, `TT-98`, `TT-100`, `TT-101`, `TT-104`, `TT-106`, `TT-107`, `TT-111`, `TT-113`, `TT-116`, `TT-119`, `TT-121`, `TT-123`, `TT-125`, `TT-131` |
+| **Carlos** | Desarrollador frontend | **12** | `TT-96`, `TT-99`, `TT-102`, `TT-105`, `TT-109`, `TT-112`, `TT-114`, `TT-117`, `TT-120`, `TT-122`, `TT-126`, `TT-132` |
+| **Alejandro** | Analista de datos y UX | **8** | `TT-103`, `TT-108`, `TT-110`, `TT-115`, `TT-118`, `TT-124`, `TT-127`, `TT-133` |
 | **Naomi** | Líder de proyecto | **3** | `TT-128`, `TT-129`, `TT-130` |
 
-**Total: 37 tareas.**
+**Total: 40 tareas.**
 
 ---
 
@@ -247,7 +261,9 @@ Al cerrar esta historia, la venta tiene **cuatro motivos de rechazo distintos**:
 
 **5. Ninguna historia rechaza una venta por producto bloqueado.** Encontrado al construir `TT-98` (`PR-02`). Hay cuatro historias de rechazo —`HU-18` alérgeno, `HU-19` saldo, `HU-20` límite diario y `HU-50` desactivado— y **ninguna para la lista de `HU-10`**. `HU-10` cierra con sus dos criterios cumplidos porque ninguno habla de la venta, pero `ALC-IN-09` sí: «aplicación de las restricciones **en el momento de la venta**». Tal como está, el acudiente bloquea la gaseosa y la caja se la cobra igual.
 
-No se corrige aquí: crear una historia es alcance, y el alcance no lo decide un PR. **Queda declarado como punto abierto** para que el equipo lo resuelva en la Sprint Review — o con una historia nueva en el Sprint 4, o añadiendo el criterio a `HU-13`, que ya es la que dice que la cafetería no puede saltarse una restricción. `registrar_venta` valida hoy producto, cantidad, existencias y saldo, y nada más: el sitio donde entraría es el mismo bloqueo que tocan `TT-113`, `TT-116` y `TT-125`.
+**Resuelto el 2026-09-16 con `HU-60`**, historia nueva —`TT-131` … `TT-133`, `PR-15`— en lugar de un criterio añadido a `HU-13`: el backlog tiene **una historia por motivo de rechazo**, la trazabilidad y el `DoD` funcionan por historia, y `ENT-05` organiza el plan de pruebas por escenario. La validación entró en el mismo bloqueo que tocarán `TT-113`, `TT-116` y `TT-125`, y va **la primera de las tres**: «está bloqueado» es el único motivo que no se arregla ni recargando ni reponiendo.
+
+Que el punto llegó a estar abierto es información, y por eso se conserva: la planeación del sprint no lo vio, y lo que lo destapó fue construir la pantalla de `HU-10` y preguntarse qué pasaba al cobrar.
 
 **6. Si el sprint desborda**, los candidatos a mover al Sprint 4 son `HU-12` (`TT-104`, `TT-105`) y `HU-38` (`TT-111`, `TT-112`): `HU-12` es el único `Should` del sprint y de `HU-38` no depende ninguna otra historia. Quedan 33 tareas. **No se pueden mover** `HU-18` ni `HU-20`: son los escenarios críticos `TST-1` y `TST-2` de `ENT-05`.
 
@@ -267,11 +283,11 @@ Los responsables salen de la matriz `[S12]` de `./smartfood.md`. La serie `TT-` 
 
 ## [ANEXO C] Verificación del orden de construcción
 
-El orden de las 37 tareas se comprobó por script contra el grafo de dependencias:
+El orden de las 40 tareas se comprobó por script contra el grafo de dependencias:
 
 | Comprobación | Resultado |
 |---|---|
-| Tareas colocadas | 37 de 37, ninguna repetida |
+| Tareas colocadas | 40 de 40, ninguna repetida |
 | Tareas situadas antes de algo que las bloquea | **0** |
 
 **Se desarrolla de arriba abajo, sin excepciones.**
@@ -288,7 +304,9 @@ El orden de las 37 tareas se comprobó por script contra el grafo de dependencia
 | `TT-111` Consulta por los cuatro roles | `TT-106`, `TT-107` | `HU-13` |
 | `TT-113` Validación de alérgeno en la venta | `TT-101`, `TT-106` | `HU-11`, `HU-13` |
 | `TT-116` Validación del límite en la venta | `TT-95`, `TT-106` | `HU-09`, `HU-13` |
-| `TT-126` Motivo de rechazo distinguible | `TT-113`, `TT-116`, `TT-125` | `HU-18`, `HU-20`, `HU-50` |
+| `TT-126` Motivo de rechazo distinguible | `TT-113`, `TT-116`, `TT-125`, `TT-132` | `HU-18`, `HU-20`, `HU-50`, `HU-60` |
+| `TT-131` Validación de producto bloqueado en la venta | `TT-98` Servicio de bloqueo | `HU-10` |
+| `TT-132` Motivo de rechazo por producto bloqueado | `TT-131` | `HU-60` |
 
 ### Dependencias con sprints anteriores
 
@@ -299,11 +317,13 @@ Todo lo siguiente ya está en `main`:
 | `TT-94` Límite por estudiante | `TT-21` Modelos de estudiante (S1), `TT-59` Billetera (S2) |
 | `TT-97`, `TT-100` Restricciones sobre el catálogo | `TT-43` Catálogo con alérgenos (S1) |
 | `TT-109` Bloque en el panel de cobro | `TT-75` Panel del estudiante (S2) |
-| `TT-113`, `TT-116`, `TT-125` Validaciones | `TT-80` Transacción de venta (S2) |
+| `TT-113`, `TT-116`, `TT-125`, `TT-131` Validaciones | `TT-80` Transacción de venta (S2) |
 | `TT-119`, `TT-121` Transiciones de estado | `TT-41` Estado del estudiante (S1), `TT-44` Padrón (S1) |
 
 ### Trabajo en paralelo
 
 **Cinco raíces** sin dependencia dentro del sprint: `TT-94` (app y límite), `TT-119` (desactivación por la institución) y las tres de gestión.
+
+`TT-131` … `TT-133` se añadieron después de la planeación y **no rompen el orden**: lo único que las bloquea dentro del sprint es `TT-98`, que va muy por delante. Van al final de `[S4]` para no romper los `TT-` ascendentes, y `TT-132` queda además antes que `TT-126`, que ahora lo necesita — el mecanismo de motivos lo estrena el primero que llegó.
 
 `TT-94` y `TT-119` son dos frentes de backend que no se tocan: las restricciones y el estado del estudiante son cosas distintas y solo se encuentran en el punto de venta, al final. Pedro puede abrir los dos; Carlos tiene trabajo desde que `TT-95` esté.

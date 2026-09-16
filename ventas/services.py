@@ -37,6 +37,7 @@ from cuentas.models import Rol
 from inventario.models import TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_por_producto
 from inventario.services import asentar as asentar_en_el_inventario
+from restricciones.selectors import bloqueos_entre
 from ventas.models import LineaVenta, MedioDePago, Venta
 
 
@@ -47,11 +48,28 @@ class VentaRechazada(ValidationError):
     existencias, carrito vacío— porque quien llama hace lo mismo con todos:
     enseñar el motivo y no cobrar. Los motivos concretos son subclases para que
     una prueba pueda exigir **cuál**, no solo que falló.
+
+    ── `motivo`: LA ETIQUETA QUE LLEGA HASTA LA PANTALLA (`TT-132`) ────────
+    La subclase distingue el rechazo **en Python**. `motivo` lo distingue en el
+    HTML: la vista lo pone en el fragmento del ticket y una prueba puede exigir
+    cuál se enseñó sin buscar un texto dentro de otro texto —que es lo que se
+    rompe en cuanto alguien reescribe el mensaje—.
+
+    Se introduce aquí porque `HU-60` es el primer motivo que **no** se distingue
+    por la cifra que lleva, y porque vienen tres más: `TT-114` (alérgeno),
+    `TT-117` (límite diario) y `TT-126` (desactivado). Con un mecanismo por
+    historia acabarían siendo cuatro maneras distintas de decir lo mismo.
+    ─────────────────────────────────────────────────────────────────────────
     """
+
+    #: Etiqueta estable del motivo, para la pantalla y para las pruebas.
+    motivo = "rechazo"
 
 
 class CarritoVacio(VentaRechazada):
     """Cobrar sin líneas no es una venta de cero: no es una venta."""
+
+    motivo = "carrito-vacio"
 
 
 class SaldoInsuficiente(VentaRechazada):
@@ -68,6 +86,8 @@ class SaldoInsuficiente(VentaRechazada):
     exigir la cifra en lugar de buscar un texto dentro de otro texto.
     """
 
+    motivo = "saldo-insuficiente"
+
     def __init__(self, mensaje, *, saldo=None, total=None):
         super().__init__(mensaje)
         self.saldo = saldo
@@ -77,6 +97,8 @@ class SaldoInsuficiente(VentaRechazada):
 
 class ExistenciasInsuficientes(VentaRechazada):
     """No se vende lo que no hay.
+
+    `motivo = "existencias-insuficientes"`.
 
     ── ESTA REGLA NO SALE DE NINGÚN CRITERIO DE ACEPTACIÓN ─────────────────
     Ninguna historia dice «rechaza la venta si no hay existencias». Se aplica
@@ -96,6 +118,8 @@ class ExistenciasInsuficientes(VentaRechazada):
     registra como decisión; lo que no se puede es dejarlo sin decidir.
     ─────────────────────────────────────────────────────────────────────────
     """
+
+    motivo = "existencias-insuficientes"
 
 
 def _solo_el_cajero(actor):
@@ -138,6 +162,33 @@ def _medio_de_pago_de(estudiante, medio_pago):
             "(DEC-1): no hay billetera contra la que cobrar."
         )
     return medio_pago
+
+
+class ProductoBloqueado(VentaRechazada):
+    """`HU-60`, `INV-4`. El acudiente prohibió ese producto a este estudiante.
+
+    ── EL CAJERO NO TIENE CÓMO FORZARLA, Y ESO ES LA HISTORIA ──────────────
+    No hay argumento que la salte, ni una variante del servicio que la omita,
+    ni un permiso que la levante. `INV-4` dice que las restricciones no las
+    desactiva la cafetería, y el primer criterio de `HU-13` precisa que el
+    cajero no dispone de ninguna acción para **omitirlas**. Un aviso descartable
+    sería justamente una acción para omitirla.
+
+    Si algún día hace falta una excepción —el estudiante olvidó el almuerzo y su
+    acudiente autoriza por teléfono—, la salida es que el acudiente retire la
+    restricción desde su interfaz (`HU-12`), que deja asiento. No un botón en la
+    caja.
+    ─────────────────────────────────────────────────────────────────────────
+
+    Lleva `productos`, los nombres de lo bloqueado, para que una prueba pueda
+    exigir **cuál** sin buscar un texto dentro de otro texto.
+    """
+
+    motivo = "producto-bloqueado"
+
+    def __init__(self, mensaje, *, productos=()):
+        super().__init__(mensaje)
+        self.productos = tuple(productos)
 
 
 @transaction.atomic
@@ -233,6 +284,39 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
         )
 
     # ── 2. VALIDAR, DENTRO DEL BLOQUEO ──────────────────────────────────────
+    #
+    # `HU-60`, `INV-4`. **Va la primera de las validaciones, y el orden es una
+    # decisión.** Las tres rechazan, y lo que cambia es qué se le dice al cajero
+    # que tiene la fila delante:
+    #
+    # · «Está bloqueado» es la única respuesta que no cambia por recargar ni por
+    #   reponer: es sobre el mundo, no sobre el estado de hoy.
+    # · «No hay existencias» y «no alcanza el saldo» se arreglan los dos, y
+    #   ofrecen una salida —quitar el renglón, recargar—.
+    #
+    # Con el orden al revés, a un estudiante con la billetera vacía que intenta
+    # comprar algo prohibido se le contestaría «no alcanza», su acudiente
+    # recargaría y volvería a pasar lo mismo. Es el mismo criterio con el que
+    # `billetera.services.asentar` pone `INVD-2` antes que la validación de la
+    # referencia a la venta.
+    #
+    # **Solo cuando hay estudiante.** Una venta a cliente genérico no tiene a
+    # quién consultarle restricciones (`DEC-1`, `HU-53`): no hay persona detrás,
+    # y quien compra sin tarjeta no es un estudiante del padrón.
+    if estudiante is not None:
+        bloqueados = list(bloqueos_entre(estudiante, productos))
+        if bloqueados:
+            nombres = [b.producto.nombre for b in bloqueados]
+            enumerados = ", ".join(f"«{n}»" for n in nombres)
+            raise ProductoBloqueado(
+                f"{enumerados} {'están' if len(nombres) > 1 else 'está'} "
+                f"bloqueado{'s' if len(nombres) > 1 else ''} para "
+                f"{estudiante.nombre} por decisión de su acudiente. Quita "
+                f"{'esos renglones' if len(nombres) > 1 else 'ese renglón'} "
+                "para poder cobrar el resto.",
+                productos=nombres,
+            )
+
     existencias = existencias_por_producto(productos)
     for producto in productos:
         disponibles = existencias.get(producto.id, 0)
