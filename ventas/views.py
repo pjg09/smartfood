@@ -239,11 +239,24 @@ def cobrar(request):
             medio_pago=request.POST.get("medio_pago") or None,
         )
     except (VentaRechazada, EstudianteNoOperativo) as rechazo:
+        # `TT-132`. Además del texto va la **etiqueta** del motivo, que la
+        # plantilla pone en el bloque de rechazo. El texto es para el cajero; la
+        # etiqueta es para que una prueba pueda exigir cuál se enseñó sin buscar
+        # una frase dentro de otra — que es lo que se rompe en cuanto alguien
+        # reescribe el mensaje.
+        #
+        # `EstudianteNoOperativo` no es una `VentaRechazada` y no trae etiqueta:
+        # viene de `personas` y es `INVD-2`. La suya llega con `TT-126`.
         return render(
             request,
             "ventas/partials/ticket.html",
-            _contexto_del_ticket(request, rechazo=" ".join(rechazo.messages)
-                                 if hasattr(rechazo, "messages") else str(rechazo)),
+            _contexto_del_ticket(
+                request,
+                rechazo=" ".join(rechazo.messages)
+                if hasattr(rechazo, "messages")
+                else str(rechazo),
+                motivo=getattr(rechazo, "motivo", "rechazo"),
+            ),
         )
 
     carrito_de_la_venta.vaciar(request.session)
