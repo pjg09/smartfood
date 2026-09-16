@@ -106,16 +106,16 @@ Los dos tipos de restricción se modelan **por separado** y no se unifican en un
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-100` | Modelo de restricción por alérgeno, **sobre la condición** y no sobre una lista de productos (`INV-5`) | Pedro | ☐ |
-| `TT-101` | Servicio de bloqueo y desbloqueo de un alérgeno, solo por el acudiente | Pedro | ☐ |
-| `TT-102` | Selección de alérgenos a bloquear en la interfaz del acudiente | Carlos | ☐ |
-| `TT-103` | Caso de prueba: un producto creado **después** del bloqueo queda cubierto si declara ese alérgeno (`INV-5`) | Alejandro | ☐ |
+| `TT-100` | Modelo de restricción por alérgeno, **sobre la condición** y no sobre una lista de productos (`INV-5`) | Pedro | ☑ |
+| `TT-101` | Servicio de bloqueo y desbloqueo de un alérgeno, solo por el acudiente | Pedro | ☑ |
+| `TT-102` | Selección de alérgenos a bloquear en la interfaz del acudiente | Carlos | ☑ |
+| `TT-103` | Caso de prueba: un producto creado **después** del bloqueo queda cubierto si declara ese alérgeno (`INV-5`) | Alejandro | ☑ |
 
 > **La tarea más delicada del sprint es `TT-100`.** `INV-5` exige que el bloqueo se aplique sobre el alérgeno, de modo que cubra productos futuros. La comprobación en la venta es un cruce entre `restriccion_alergeno` y la tabla `ProductoAlergeno` que ya existe del Sprint 2. Si alguien materializa la lista de productos bloqueados —porque consulta más rápido—, `INV-5` se rompe y no se nota hasta que la cafetería añade un producto.
 >
 > `TT-103` existe exactamente para detectar eso: crea el producto **después** de la restricción.
 
-La dependencia de esta historia es `HU-26` (administración del catálogo, Sprint 1), que es donde los productos declaran sus alérgenos. Su criterio de aceptación cita `HU-25` por error — ver `ANEXO A`.
+La dependencia de esta historia es `HU-26` (administración del catálogo, Sprint 1), que es donde los productos declaran sus alérgenos. Su criterio de aceptación **ya cita `HU-26`**: ver `ANEXO A`, punto 4.
 
 ### `[HU-12]` Retiro de una restricción
 
@@ -257,7 +257,9 @@ Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: 
 
 **3. `HU-17` arrastra desde el Sprint 2 y es fácil que se olvide.** No es una tarea: es una marca en otro documento. `TT-109` la cierra, y quien integre ese PR tiene que acordarse de marcarla en `./backlog-historias-de-usuario.md`. Está anotado en `[S4]` y en el plan de PR.
 
-**4. Un defecto del backlog que conviene corregir.** El tercer criterio de `HU-11` dice «depende de que el catálogo declare alérgenos por producto (`HU-25`)», pero `HU-25` es «Registro de la entrega del pedido», del Sprint 4. La historia del catálogo es **`HU-26`**, que es además lo que declara su tabla de dependencias. Es una referencia obsoleta de la redacción original. **No bloquea el sprint**, pero induce a error a quien la lea y merece un PR de una línea.
+**4. Un defecto del backlog que conviene corregir.** El tercer criterio de `HU-11` decía «depende de que el catálogo declare alérgenos por producto (`HU-25`)», pero `HU-25` es «Registro de la entrega del pedido», del Sprint 4. La historia del catálogo es **`HU-26`**.
+
+**Ya estaba resuelto al escribirse este aviso**, y se comprobó al construir `PR-03`: el mismo commit que planificó el sprint (`1294a69`) corrigió la referencia. El criterio cita `HU-26` desde entonces y no hace falta ningún PR. Se conserva el punto porque el aviso llegó a estar en pie y quien lo leyera iría a buscar un defecto que no existe.
 
 **5. Ninguna historia rechaza una venta por producto bloqueado.** Encontrado al construir `TT-98` (`PR-02`). Hay cuatro historias de rechazo —`HU-18` alérgeno, `HU-19` saldo, `HU-20` límite diario y `HU-50` desactivado— y **ninguna para la lista de `HU-10`**. `HU-10` cierra con sus dos criterios cumplidos porque ninguno habla de la venta, pero `ALC-IN-09` sí: «aplicación de las restricciones **en el momento de la venta**». Tal como está, el acudiente bloquea la gaseosa y la caja se la cobra igual.
 

@@ -84,14 +84,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **9** de 40 | **3** de 15 |
-| Pendientes | 31 | 12 |
+| **Finalizadas** | **13** de 40 | **4** de 15 |
+| Pendientes | 27 | 11 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 5 | 17 |
-| Carlos | 3 | 12 |
-| Alejandro | 1 | 8 |
+| Pedro | 7 | 17 |
+| Carlos | 4 | 12 |
+| Alejandro | 2 | 8 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 15 Pull Requests
@@ -100,7 +100,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 |---|---|---|---|
 | `PR-01` | `TT-94`–`TT-96` | app `restricciones` (`DT-28`) · `HU-09` **salvo su tercer criterio** | ☑ |
 | `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☑ |
-| `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☐ |
+| `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☑ |
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☐ |
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☐ |
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☐ |
@@ -189,16 +189,16 @@ campo «tipo» invita a implementar el alérgeno como lista de productos, que es
 | Título del PR | `feat(restricciones): bloquear un alérgeno sobre la condición` |
 | Rama | `feat/TT-100-bloqueo-por-alergeno` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-11` |
+| Historia | `HU-11` — **cerrada** |
 | Invariantes | **`INV-5`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-100` | Modelo de restricción por alérgeno, sobre la condición y no sobre una lista | Pedro | ☐ |
-| `TT-101` | Servicio de bloqueo y desbloqueo de un alérgeno | Pedro | ☐ |
-| `TT-102` | Selección de alérgenos a bloquear en la interfaz del acudiente | Carlos | ☐ |
-| `TT-103` | Caso de prueba: producto creado **después** del bloqueo queda cubierto | Alejandro | ☐ |
+| `TT-100` | Modelo de restricción por alérgeno, sobre la condición y no sobre una lista | Pedro | ☑ |
+| `TT-101` | Servicio de bloqueo y desbloqueo de un alérgeno | Pedro | ☑ |
+| `TT-102` | Selección de alérgenos a bloquear en la interfaz del acudiente | Carlos | ☑ |
+| `TT-103` | Caso de prueba: producto creado **después** del bloqueo queda cubierto | Alejandro | ☑ |
 
 > 🔴 **El PR de mayor riesgo del sprint.** `INV-5` exige que el bloqueo se aplique sobre el
 > alérgeno, de modo que cubra productos futuros. La comprobación es un cruce con la tabla
@@ -208,6 +208,14 @@ campo «tipo» invita a implementar el alérgeno como lista de productos, que es
 >
 > `TT-103` es la red: crea el producto **después** de la restricción. Revisad `TT-100` con
 > esa prueba delante.
+
+**Cómo quedó.** `RestriccionAlergeno` tiene **dos columnas y ninguna más**: estudiante y
+alérgeno. Qué productos cubre no es un dato, es el resultado de
+`productos_cubiertos_por_alergeno`, que cruza con `ProductoAlergeno` en cada llamada. El
+servicio no recorre el catálogo ni escribe una sola `RestriccionProducto` — hay prueba que
+lo afirma contando filas. `TT-103` ejercita los tres caminos por los que la
+materialización se notaría: producto creado después, producto que declara el alérgeno
+después, y declaración retirada.
 
 ---
 
