@@ -69,6 +69,11 @@ APPS_DEL_PROYECTO = [
     # control de acceso; sus modelos llegan en `TT-78` y el servicio de venta en
     # `TT-80`. Cada app se crea en el sprint que la necesita.
     "ventas",
+    # Control parental (`TT-94`, `HU-09` … `HU-13`). **`DT-15` no la previó y
+    # `DT-28` la declara**: pertenece al estudiante pero referencia el catálogo,
+    # así que no cabe en `personas` ni en `catalogo` sin acoplar dos dominios que
+    # `INV-4` mantiene separados a propósito.
+    "restricciones",
 ]
 
 INSTALLED_APPS = APPS_DE_DJANGO + APPS_DE_TERCEROS + APPS_DEL_PROYECTO
