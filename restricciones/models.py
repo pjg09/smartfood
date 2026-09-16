@@ -244,6 +244,22 @@ class TipoDeAsiento(models.TextChoices):
     RETIRO = "retiro", "Retiro"
 
 
+class RestriccionAsentada(models.TextChoices):
+    """Sobre cuál de las tres restricciones va el asiento (`TT-134`, `DEC-13`).
+
+    **Es un campo explícito y no se deduce de qué clave ajena está puesta.**
+    Cuando solo había producto y alérgeno, «la que no es nula» bastaba; con el
+    límite diario —que no tiene clave ajena a la que apuntar— «ninguna de las
+    dos» pasaría a significar «límite», y eso es exactamente la codificación
+    implícita contra la que este mismo módulo argumenta en `LimiteDiario`: dos
+    hechos distintos escritos igual.
+    """
+
+    PRODUCTO = "producto", "Producto"
+    ALERGENO = "alergeno", "Alérgeno"
+    LIMITE_DIARIO = "limite_diario", "Límite diario"
+
+
 class AsientoDeRestriccion(models.Model):
     """El libro de lo que se hizo con las restricciones (`TT-104`, `HU-12`).
 
@@ -279,10 +295,14 @@ class AsientoDeRestriccion(models.Model):
     que pasó hoy.
     ─────────────────────────────────────────────────────────────────────────
 
-    **Una fila apunta a un producto o a un alérgeno, nunca a los dos ni a
-    ninguno.** Lo impone una `CheckConstraint` y no un `if` del servicio: un
-    asiento que no dice sobre qué es ruido en un libro que existe para poder
-    leerse (`DT-15`).
+    **`sobre` dice de qué restricción habla la fila, y la base exige que cuadre
+    con las claves ajenas.** Producto y alérgeno traen la suya; el límite diario
+    no trae ninguna —no hay una tabla de límites a la que apuntar, hay uno por
+    estudiante—, y por eso hace falta el campo: sin él, «ninguna clave puesta»
+    tendría que significar «límite», que es adivinar en vez de decir.
+
+    Lo impone una `CheckConstraint` y no un `if` del servicio: un asiento que no
+    dice sobre qué es ruido en un libro que existe para poder leerse (`DT-15`).
 
     `PROTECT` sobre el actor: borrar la cuenta de quien retiró una protección
     dejaría el asiento sin la mitad que `HU-12` pide —quién—.
@@ -323,6 +343,13 @@ class AsientoDeRestriccion(models.Model):
         verbose_name="alérgeno",
     )
     # Cómo se llamaba en ese momento (`DT-8`).
+    sobre = models.CharField(
+        "sobre", max_length=20, choices=RestriccionAsentada.choices
+    )
+    # Cómo se llamaba —o cuánto era— en ese momento. Para un producto o un
+    # alérgeno, su nombre; para el límite diario, la cifra ya formateada con el
+    # único formateador del sistema. En los tres casos responde lo mismo: qué vio
+    # el acudiente cuando decidió.
     nombre = models.CharField("nombre en ese momento", max_length=160)
 
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
@@ -343,10 +370,23 @@ class AsientoDeRestriccion(models.Model):
             # sobre qué— ni los dos —un asiento que dice dos cosas a la vez—.
             models.CheckConstraint(
                 condition=(
-                    models.Q(producto__isnull=False, alergeno__isnull=True)
-                    | models.Q(producto__isnull=True, alergeno__isnull=False)
+                    models.Q(
+                        sobre=RestriccionAsentada.PRODUCTO,
+                        producto__isnull=False,
+                        alergeno__isnull=True,
+                    )
+                    | models.Q(
+                        sobre=RestriccionAsentada.ALERGENO,
+                        producto__isnull=True,
+                        alergeno__isnull=False,
+                    )
+                    | models.Q(
+                        sobre=RestriccionAsentada.LIMITE_DIARIO,
+                        producto__isnull=True,
+                        alergeno__isnull=True,
+                    )
                 ),
-                name="asiento_sobre_un_producto_o_un_alergeno",
+                name="asiento_coherente_con_lo_que_restringe",
             ),
         ]
 
