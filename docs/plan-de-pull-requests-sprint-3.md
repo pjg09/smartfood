@@ -84,13 +84,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **3** de 37 | **1** de 14 |
-| Pendientes | 34 | 13 |
+| **Finalizadas** | **6** de 37 | **2** de 14 |
+| Pendientes | 31 | 12 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 2 | 16 |
-| Carlos | 1 | 11 |
+| Pedro | 4 | 16 |
+| Carlos | 2 | 11 |
 | Alejandro | 0 | 7 |
 | Naomi | 0 | 3 |
 
@@ -99,7 +99,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
 | `PR-01` | `TT-94`–`TT-96` | app `restricciones` (`DT-28`) · `HU-09` **salvo su tercer criterio** | ☑ |
-| `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☐ |
+| `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☑ |
 | `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☐ |
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☐ |
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☐ |
@@ -157,19 +157,27 @@ Los cortes se eligieron con tres criterios, en este orden:
 | Título del PR | `feat(restricciones): bloquear un producto del catálogo` |
 | Rama | `feat/TT-97-bloqueo-de-producto` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-10` |
+| Historia | `HU-10` — **cerrada** |
 | Invariantes | ninguna |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-97` | Modelo de restricción por producto, distinto del de alérgeno | Pedro | ☐ |
-| `TT-98` | Servicio de bloqueo y desbloqueo de un producto | Pedro | ☐ |
-| `TT-99` | Selección de productos a bloquear en la interfaz del acudiente | Carlos | ☐ |
+| `TT-97` | Modelo de restricción por producto, distinto del de alérgeno | Pedro | ☑ |
+| `TT-98` | Servicio de bloqueo y desbloqueo de un producto | Pedro | ☑ |
+| `TT-99` | Selección de productos a bloquear en la interfaz del acudiente | Carlos | ☑ |
 
 Los dos tipos de restricción se modelan **por separado**. Unificarlos en una tabla con un
 campo «tipo» invita a implementar el alérgeno como lista de productos, que es lo que
 `INV-5` prohíbe y lo que `PR-03` tiene que evitar.
+
+> ⚠ **Hallazgo de este PR: ninguna historia rechaza una venta por producto bloqueado.**
+> `HU-10` cierra —sus dos criterios se cumplen y ninguno habla de la venta—, pero
+> `ALC-IN-09` pide aplicar las restricciones **en el momento de la venta** y no hay
+> historia que lo haga para esta lista: las cuatro de rechazo son `HU-18` (alérgeno),
+> `HU-19` (saldo), `HU-20` (límite) y `HU-50` (desactivado). Queda declarado en el
+> `ANEXO A` del sprint backlog, punto 5, para que lo resuelva la Sprint Review. **No se
+> corrige en un PR**: crear una historia es alcance.
 
 ---
 
