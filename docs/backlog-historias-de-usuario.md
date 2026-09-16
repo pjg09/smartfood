@@ -785,6 +785,24 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
   - El acudiente que desactivó debe comunicarse con la institución para el desbloqueo.
 - **Origen:** `DEC-5`, `INVD-3`
 
+#### `[HU-60]` Venta rechazada por producto bloqueado
+
+> **Como** acudiente
+> **Quiero** que la caja rechace la venta de un producto que bloqueé
+> **Para** que el bloqueo sea real y no una anotación que nadie hace cumplir
+
+- **Actor:** `USR-2` · **Prioridad:** Must
+- **Criterios de aceptación:**
+  - La venta de un producto bloqueado para ese estudiante **se rechaza**, y no a medias: no se descuenta saldo ni existencias.
+  - La validación ocurre **dentro** de la transacción de venta, junto a las de saldo y existencias (`DT-6`).
+  - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-50`.
+  - El cajero **no dispone de ninguna acción** para omitirla (`INV-4`).
+- **Origen:** `ALC-IN-08`, `ALC-IN-09`, `FUN-3`, `OBJ-E5`, `INV-4`
+
+> **Por qué existe esta historia, y por qué no estaba.** `ALC-IN-09` pide aplicar las restricciones **en el momento de la venta**, y la trazabilidad lo mapeaba a `HU-13`, `HU-17` y `HU-18`: la primera dice que el cajero no puede desactivarlas, la segunda que las ve, y la tercera rechaza **solo por alérgeno**. La lista de `HU-10` se quedaba sin quién la hiciera cumplir. Se detectó al construir `PR-02` del Sprint 3 y se registró entonces.
+>
+> No es una función que faltara: el primer criterio de `HU-13` dice que el cajero no dispone de ninguna acción para **omitir** una restricción, y sin este rechazo el sistema se la omitía solo, sin que el cajero tuviera que hacer nada.
+
 #### `[HU-50]` Venta rechazada por estudiante desactivado
 
 > **Como** acudiente
@@ -796,7 +814,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
   - Un estudiante desactivado o dado de baja no puede comprar.
   - Tampoco puede retirar pedidos anticipados.
   - **Sí puede recibir recargas**, por ser inocuo.
-  - El motivo del rechazo se distingue de los de `HU-18`, `HU-19` y `HU-20`.
+  - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-60`.
 - **Origen:** `DEC-5`, `DEC-7`, `INVD-2`
 
 #### `[HU-51]` Baja lógica del estudiante retirado
@@ -931,53 +949,54 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must | ☐ |
 | 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must | ☑ |
 | 21 | `HU-20` | Venta rechazada por límite diario (`TST-2`) | EPI-5 | USR-2 | Must | ☐ |
-| 22 | `HU-22` | Información nutricional congelada en la venta | EPI-5 | USR-2 | Must | ☑ |
-| 23 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must | ☑ |
-| 24 | `HU-28` | Merma con motivo obligatorio | EPI-7 | USR-4 | Must | ☐ |
-| 25 | `HU-29` | Existencias explicables (`TST-4`) | EPI-7 | USR-4 | Must | ☐ |
-| 26 | `HU-30` | Historial de consumo | EPI-8 | USR-2 | Must | ☐ |
-| 27 | `HU-34` | Aviso de carácter orientativo | EPI-8 | USR-2 | Must | ☐ |
-| 28 | `HU-38` | Consulta de restricciones por los cuatro roles | EPI-8 | USR-3/4/5 | Must | ☐ |
-| 29 | `HU-39` | Alta de la institución por seed | EPI-9 | USR-5 | Must | ☑ |
-| 30 | `HU-40` | Alta de cuentas de cajero y administrador | EPI-9 | USR-5 | Must | ☑ |
-| 31 | `HU-41` | Contraseña por invitación para el personal | EPI-9 | USR-3/4 | Must | ☑ |
-| 32 | `HU-43` | Código de tarjeta asignado en la carga | EPI-10 | USR-5 | Must | ☑ |
-| 33 | `HU-44` | Vista de administración de estudiantes | EPI-10 | USR-5 | Must | ☑ |
-| 34 | `HU-57` | Fotografía del estudiante | EPI-10 | USR-5 | Must | ☑ |
-| 35 | `HU-45` | Consulta del código de tarjeta vigente | EPI-10 | USR-5 | Must | ☑ |
-| 36 | `HU-46` | Reasignación del código de tarjeta | EPI-10 | USR-5 | Must | ☑ |
-| 37 | `HU-47` | Desactivación por la institución | EPI-10 | USR-5 | Must | ☐ |
-| 38 | `HU-48` | Desactivación por el acudiente | EPI-10 | USR-2 | Must | ☐ |
-| 39 | `HU-49` | Reactivación exclusiva de la institución | EPI-10 | USR-5 | Must | ☐ |
-| 40 | `HU-50` | Venta rechazada por estudiante desactivado | EPI-10 | USR-2 | Must | ☐ |
-| 41 | `HU-53` | Venta a cliente genérico | EPI-11 | USR-3 | Must | ☑ |
-| 42 | `HU-54` | Medio de pago en toda venta | EPI-11 | USR-4 | Must | ☑ |
-| 43 | `HU-23` | Reserva y pago anticipado | EPI-6 | USR-2 | Should | ☐ |
-| 44 | `HU-24` | Consulta de reservas pendientes | EPI-6 | USR-3/4 | Should | ☐ |
-| 45 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should | ☐ |
-| 46 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should | ☑ |
-| 47 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☐ |
-| 48 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
-| 49 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
-| 50 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
-| 51 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should | ☐ |
-| 52 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should | ☐ |
-| 53 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
-| 54 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
-| 55 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
-| 56 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☑ |
-| 57 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
-| 58 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
-| 59 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
+| 22 | `HU-60` | Venta rechazada por producto bloqueado | EPI-5 | USR-2 | Must | ☑ |
+| 23 | `HU-22` | Información nutricional congelada en la venta | EPI-5 | USR-2 | Must | ☑ |
+| 24 | `HU-27` | Ingreso de mercancía por ajuste manual | EPI-7 | USR-4 | Must | ☑ |
+| 25 | `HU-28` | Merma con motivo obligatorio | EPI-7 | USR-4 | Must | ☐ |
+| 26 | `HU-29` | Existencias explicables (`TST-4`) | EPI-7 | USR-4 | Must | ☐ |
+| 27 | `HU-30` | Historial de consumo | EPI-8 | USR-2 | Must | ☐ |
+| 28 | `HU-34` | Aviso de carácter orientativo | EPI-8 | USR-2 | Must | ☐ |
+| 29 | `HU-38` | Consulta de restricciones por los cuatro roles | EPI-8 | USR-3/4/5 | Must | ☐ |
+| 30 | `HU-39` | Alta de la institución por seed | EPI-9 | USR-5 | Must | ☑ |
+| 31 | `HU-40` | Alta de cuentas de cajero y administrador | EPI-9 | USR-5 | Must | ☑ |
+| 32 | `HU-41` | Contraseña por invitación para el personal | EPI-9 | USR-3/4 | Must | ☑ |
+| 33 | `HU-43` | Código de tarjeta asignado en la carga | EPI-10 | USR-5 | Must | ☑ |
+| 34 | `HU-44` | Vista de administración de estudiantes | EPI-10 | USR-5 | Must | ☑ |
+| 35 | `HU-57` | Fotografía del estudiante | EPI-10 | USR-5 | Must | ☑ |
+| 36 | `HU-45` | Consulta del código de tarjeta vigente | EPI-10 | USR-5 | Must | ☑ |
+| 37 | `HU-46` | Reasignación del código de tarjeta | EPI-10 | USR-5 | Must | ☑ |
+| 38 | `HU-47` | Desactivación por la institución | EPI-10 | USR-5 | Must | ☐ |
+| 39 | `HU-48` | Desactivación por el acudiente | EPI-10 | USR-2 | Must | ☐ |
+| 40 | `HU-49` | Reactivación exclusiva de la institución | EPI-10 | USR-5 | Must | ☐ |
+| 41 | `HU-50` | Venta rechazada por estudiante desactivado | EPI-10 | USR-2 | Must | ☐ |
+| 42 | `HU-53` | Venta a cliente genérico | EPI-11 | USR-3 | Must | ☑ |
+| 43 | `HU-54` | Medio de pago en toda venta | EPI-11 | USR-4 | Must | ☑ |
+| 44 | `HU-23` | Reserva y pago anticipado | EPI-6 | USR-2 | Should | ☐ |
+| 45 | `HU-24` | Consulta de reservas pendientes | EPI-6 | USR-3/4 | Should | ☐ |
+| 46 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should | ☐ |
+| 47 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should | ☑ |
+| 48 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☐ |
+| 49 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
+| 50 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
+| 51 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
+| 52 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should | ☐ |
+| 53 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should | ☐ |
+| 54 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
+| 55 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
+| 56 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
+| 57 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☑ |
+| 58 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
+| 59 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
+| 60 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**32 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`**, primera del Sprint 3 en cerrarse (`PR-02`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**33 terminadas de 60**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10` y `HU-60`**, las dos primeras del Sprint 3 en cerrarse (`PR-02` y `PR-15`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 > **`HU-10` cerró con `PR-02`** (`TT-97` … `TT-99`): el bloqueo aplica a un producto
 > identificado del catálogo y se distingue del bloqueo por alérgeno **en el
 > comportamiento**, no solo en el nombre — bloquear un producto no arrastra a los que
-> comparten alérgeno, y hay prueba que lo vigila. **Lo que ninguna historia cubre es
-> rechazar la venta de un producto bloqueado**; está declarado en el `ANEXO A` del
-> sprint backlog.
+> comparten alérgeno, y hay prueba que lo vigila. **Y lo que ninguna historia cubría —rechazar la
+> venta de un producto bloqueado— es ahora `HU-60`**, abierta y cerrada a raíz de ese
+> hallazgo.
 
 > **`HU-09` sigue abierta con `PR-01` integrado, y es una marca declarada, no un olvido.**
 > `PR-01` (`TT-94` … `TT-96`) cumple sus dos primeros criterios: el límite se define **por
@@ -1002,7 +1021,7 @@ semanas**, de la semana 6 a la 15. Cumple `CUR-1` (sprints de 1 a 2 semanas) y s
 |---|---|---|---|---|
 | 1 | 6 – 7 | Registro, perfiles, vinculación acudiente–estudiante y catálogo | 18 | **✔ cerrado** |
 | 2 | 8 – 9 | Billetera digital e identificación por tarjeta en el POS | 14 | **Avance 1 · sem. 10** (`EVA-3`) |
-| 3 | 10 – 11 | Control parental: restricciones, alérgenos, límite de gasto | 12 | — |
+| 3 | 10 – 11 | Control parental: restricciones, alérgenos, límite de gasto | 13 | — |
 | 4 | 12 – 13 | Inventario trazable y pedidos anticipados | 5 | **Avance 2 · sem. 14** (`EVA-4`) |
 | 5 | 14 – 15 | Reportes de consumo y ejecución del plan de pruebas | 10 | Entrega final sem. 16 (`EVA-5`) |
 
@@ -1078,7 +1097,7 @@ transacciones ya registradas.
 
 ### Sprint 3 · semanas 10–11 — Control parental: restricciones, alérgenos, límite de gasto
 
-**12 historias.** Al cerrar, el acudiente controla qué y cuánto consume su hijo y el punto de venta lo hace cumplir. Incluye el bloqueo de la tarjeta perdida, que es control parental ejercido sobre el acceso.
+**13 historias.** Al cerrar, el acudiente controla qué y cuánto consume su hijo y el punto de venta lo hace cumplir. Incluye el bloqueo de la tarjeta perdida, que es control parental ejercido sobre el acceso.
 
 | # | ID | Historia | Depende de | Prioridad |
 |---|---|---|---|---|
@@ -1090,13 +1109,15 @@ transacciones ya registradas.
 | 6 | `HU-38` | Consulta de restricciones por los cuatro roles | `HU-10`, `HU-11` | Must |
 | 7 | `HU-18` | Venta rechazada por alérgeno bloqueado (`TST-1`) | `HU-11`, `HU-21` | Must |
 | 8 | `HU-20` | Venta rechazada por límite diario superado (`TST-2`) | `HU-09`, `HU-21` | Must |
-| 9 | `HU-47` | Desactivación de un estudiante por la institución | `HU-44` | Must |
-| 10 | `HU-48` | Desactivación de un estudiante por el acudiente | `HU-47` | Must |
-| 11 | `HU-49` | Reactivación exclusiva de la institución | `HU-47`, `HU-48` | Must |
-| 12 | `HU-50` | Venta rechazada por estudiante desactivado | `HU-47`, `HU-21` | Must |
+| 9 | `HU-60` | Venta rechazada por producto bloqueado | `HU-10`, `HU-21` | Must |
+| 10 | `HU-47` | Desactivación de un estudiante por la institución | `HU-44` | Must |
+| 11 | `HU-48` | Desactivación de un estudiante por el acudiente | `HU-47` | Must |
+| 12 | `HU-49` | Reactivación exclusiva de la institución | `HU-47`, `HU-48` | Must |
+| 13 | `HU-50` | Venta rechazada por estudiante desactivado | `HU-47`, `HU-21` | Must |
 
 Las restricciones se configuran (`HU-09` … `HU-13`) antes de hacerse cumplir (`HU-18`, `HU-20`,
-`HU-50`): no se puede probar un rechazo sin una regla que lo dispare. `HU-48` va después de `HU-47`
+`HU-60`, `HU-50`): no se puede probar un rechazo sin una regla que lo dispare. `HU-60` solo depende
+de `HU-10` y de `HU-21`, así que puede construirse en cuanto la primera esté — no espera a `HU-18`. `HU-48` va después de `HU-47`
 porque comparte el mismo estado del estudiante; lo que cambia es quién puede tocarlo.
 
 ### Sprint 4 · semanas 12–13 — Inventario trazable y pedidos anticipados
@@ -1151,8 +1172,8 @@ Cobertura de los 22 elementos del alcance incluido y de las 7 funciones del prot
 | `ALC-IN-05` Restricción del autorregistro | `HU-05` |
 | `ALC-IN-06` Billetera individual | `HU-06`, `HU-07`, `HU-04` |
 | `ALC-IN-07` Límite diario | `HU-09`, `HU-20` |
-| `ALC-IN-08` Restricciones alimentarias | `HU-10`, `HU-11` |
-| `ALC-IN-09` Restricciones aplicadas en la venta | `HU-13`, `HU-17`, `HU-18` |
+| `ALC-IN-08` Restricciones alimentarias | `HU-10`, `HU-11`, `HU-60` |
+| `ALC-IN-09` Restricciones aplicadas en la venta | `HU-13`, `HU-17`, `HU-18`, `HU-60` |
 | `ALC-IN-10` Pedidos anticipados | `HU-23`, `HU-25` |
 | `ALC-IN-11` Prueba del mecanismo de identificación | `HU-15` |
 | `ALC-IN-12` Código aleatorio no secuencial | `HU-14` |
@@ -1308,6 +1329,7 @@ Las dependencias entre sprints —todas hacia atrás— son:
 | `HU-58` Fotografía visible al cobrar | 2 | `HU-57` Fotografía del estudiante | 1 |
 | `HU-09` Límite diario | 3 | `HU-06` Recarga | 2 |
 | `HU-10` Bloqueo de producto | 3 | `HU-26` Catálogo | 1 |
+| `HU-60` Rechazo por producto bloqueado | 3 | `HU-10` Bloqueo de producto | 3 |
 | `HU-11` Bloqueo por alérgeno | 3 | `HU-26` Catálogo | 1 |
 | `HU-13` Restricciones no desactivables | 3 | `HU-17` Vista de cobro | 2 |
 | `HU-18` Rechazo por alérgeno | 3 | `HU-21` Descuento simultáneo | 2 |

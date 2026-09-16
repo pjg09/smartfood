@@ -339,6 +339,8 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 6. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
    con su interruptor; lo bloqueado se marca en rojo. Bloquear uno **no** arrastra a los
    que comparten alérgeno — eso es `HU-11`, y la pantalla lo advierte. `HU-10`.
+   Más adelante, en el paso 14, se intenta cobrar uno de ellos: la venta se rechaza con
+   saldo de sobra y sin forma de forzarla. `HU-60`, `INV-4`.
 7. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
    marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
@@ -369,12 +371,14 @@ de las restricciones y del cupo (`HU-18`, `HU-20`), la merma y las alertas de in
 (`HU-28`, `HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).
 
-**El control parental se configura pero todavía no se aplica en la caja.** `HU-09` deja el
-cupo escrito y `HU-10` la lista de productos bloqueados, las dos por estudiante y solo por
-su acudiente. Lo que ninguna de las dos hace todavía es frenar una venta: el límite lo
-comprueba `HU-20`, y **para el producto bloqueado no hay historia que lo haga** — un
-hallazgo declarado en el `ANEXO A` del sprint backlog, punto 5. `registrar_venta` valida
-hoy producto, cantidad, existencias y saldo, y nada más.
+**El producto bloqueado ya frena la venta; el límite diario todavía no.** `HU-10` deja la
+lista escrita y `HU-60` la hace cumplir: cobrar algo bloqueado se rechaza dentro de la
+transacción, sin descontar saldo ni existencias, y el cajero no tiene ninguna acción para
+omitirlo (`INV-4`). El cupo de `HU-09` sigue sin comprobarse al cobrar — eso es `HU-20`.
+
+`HU-60` no estaba en la planeación del sprint: se añadió al descubrirse, construyendo
+`HU-10`, que `ALC-IN-09` pide aplicar las restricciones en la venta y ninguna historia lo
+hacía para esa lista.
 
 **El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
 fotografía (`HU-58`), el saldo y el consumo del día (`HU-17`), el medio de pago (`HU-54`), y
