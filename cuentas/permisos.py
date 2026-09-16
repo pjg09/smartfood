@@ -9,11 +9,12 @@ Por eso la matriz vive aquí, en un solo sitio y como estructura de datos, y no
 repartida en decoradores por las vistas. Se puede leer entera, compararla con
 `[S11]` del anteproyecto, y comprobarla con una prueba.
 
-**Lo que hoy se puede conceder es poco, y conviene no disimularlo.** La mayoría
-de las funciones de `[S11]` operan sobre modelos que aún no existen: billetera,
-restricciones, catálogo, inventario y ventas llegan en sprints posteriores. Lo
-que sí queda montado es el mecanismo y la forma de la matriz, de modo que cada
-modelo nuevo entre por aquí y no por un decorador suelto.
+**Lo que hoy se puede conceder es poco, y conviene no disimularlo.** Varias
+funciones de `[S11]` operan sobre modelos a los que ningún rol llega por el
+admin: la billetera y las restricciones son del acudiente, y el acudiente no
+entra a `INT-3` (`DT-2`). Lo que sí queda montado es el mecanismo y la forma de
+la matriz, de modo que cada modelo nuevo entre por aquí y no por un decorador
+suelto.
 """
 
 from cuentas.models import Rol
@@ -80,8 +81,14 @@ PERMISOS_POR_ROL = {
     # índice sin un solo modelo. `crear_personal` se lo da solo a `USR-4`.
     Rol.CAJERO: {},
     # `USR-2`. «Recargar saldo», «fijar límite diario», «configurar y retirar
-    # restricciones» y consultar los reportes de su hijo. Ningún modelo suyo
-    # existe todavía.
+    # restricciones» y consultar los reportes de su hijo.
+    #
+    # **Sus modelos ya existen —`billetera` desde `TT-59`, `restricciones` desde
+    # `TT-94`— y sigue sin tener un solo permiso, que es lo correcto.** El
+    # acudiente no entra al admin: `INT-1` es su interfaz (`DT-2`), y quién puede
+    # escribir lo decide `restricciones.services` con el `actor` que recibe
+    # (`DT-15`). Un permiso aquí no protegería nada y sugeriría un camino por
+    # `INT-3` que no existe.
     Rol.ACUDIENTE: {},
 }
 
@@ -93,6 +100,9 @@ PERMISOS_POR_ROL = {
 
 FUNCIONES_PENDIENTES_DE_MODELO = {
     Rol.ACUDIENTE: [
+        # **Construidas y con modelo desde el Sprint 3** (`TT-94`, `TT-97`,
+        # `TT-100`, `TT-104`), y aun así siguen aquí: lo que no tienen es permiso
+        # de Django, por lo mismo que la recarga. Ver `Rol.ACUDIENTE` arriba.
         # **«Recargar saldo» ya está construida** (`HU-06`, `TT-60`), y aun así
         # sigue en esta lista: lo que no tiene es un permiso de Django, porque el
         # acudiente no entra al admin. `INT-1` es su interfaz (`DT-2`), y quién
@@ -100,8 +110,8 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         # recibe. Un permiso aquí no protegería nada y sugeriría un camino por el
         # admin que no existe.
         "Recargar saldo (hecha en INT-1, sin permiso de admin) y fijar límite diario",
-        "Configurar y retirar restricciones alimentarias",
-        "Consultar restricciones de un estudiante",
+        "Configurar y retirar restricciones alimentarias (hecha en INT-1, sin permiso)",
+        "Consultar restricciones de un estudiante (hecha en INT-1, sin permiso)",
         "Consultar saldo de un estudiante",
         "Consultar reportes de consumo de su hijo",
     ],
@@ -139,7 +149,30 @@ ESCRITURA_PROHIBIDA = {
     # tiene ninguna otra vía (`INV-2`, `DT-24`).
     Rol.CAJERO: ["restricciones alimentarias", "saldo", "límite diario"],
     Rol.ADMINISTRADOR: ["restricciones alimentarias", "saldo", "límite diario"],
+    # **La institución educativa faltaba, y no es un detalle** (`TT-107`).
+    # `INV-4` dice «ni el personal de la cafetería **ni la institución**», y el
+    # tercer criterio de `HU-13` lo repite: «la institución educativa tampoco
+    # puede modificarlas». Este diccionario solo tenía los dos roles de la
+    # cafetería, así que la mitad de la invariante estaba declarada y la otra no.
+    #
+    # La institución sí administra estudiantes (`HU-44`), y eso invita a pensar
+    # que las restricciones de sus estudiantes son suyas. No lo son: el control
+    # parental es del acudiente, y que el colegio pueda levantarlo lo convertiría
+    # en una sugerencia.
+    Rol.INSTITUCION: ["restricciones alimentarias", "límite diario"],
 }
+
+# --- La app entera, cerrada a la escritura por el admin ---------------------
+#
+# `ESCRITURA_PROHIBIDA` nombra conceptos y la prueba los busca por subcadena.
+# Servía mientras los modelos no existían y sigue sirviendo, pero ahora se puede
+# decir algo más fuerte que no depende de acertar con el nombre: **ningún rol
+# tiene escritura sobre ningún modelo de `restricciones`.**
+#
+# No es una lista de modelos, es el prefijo de la app. Un modelo nuevo ahí dentro
+# —el asiento de `TT-104` lo fue— queda cubierto sin que nadie se acuerde de
+# añadirlo, que es la diferencia entre una regla y una foto del momento.
+APPS_SIN_ESCRITURA_PARA_NINGUN_ROL = ["restricciones"]
 
 
 def nombre_del_grupo(rol):
