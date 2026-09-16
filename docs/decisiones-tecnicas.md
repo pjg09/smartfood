@@ -500,7 +500,7 @@ catálogo. El motivo es obligatorio en la merma, que es **la disminución manual
 | `RestriccionProducto` | estudiante, producto, **únicos juntos** | `HU-10`, `DT-28` |
 | `RestriccionAlergeno` | estudiante, alérgeno, **únicos juntos** · **ningún producto** | `HU-11`, `INV-5`, `DT-28` |
 | `LimiteDiario` | estudiante (uno a uno), monto **positivo** | `HU-09`, `DT-28` |
-| `AsientoDeRestriccion` | estudiante, **actor**, tipo (`bloqueo`/`retiro`), producto **o** alérgeno, **nombre de entonces**, creado_en | `HU-12`, `ALC-IN-19`, `DT-8`, `DT-24` |
+| `AsientoDeRestriccion` | estudiante, **actor**, tipo (`bloqueo`/`retiro`), **sobre** (`producto`/`alergeno`/`limite_diario`), producto **o** alérgeno **o** ninguno, **nombre de entonces**, creado_en | `HU-12`, `HU-61`, `ALC-IN-19`, `DT-8`, `DT-24` |
 
 Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`) y viven en la app `restricciones` (`DT-28`).
 
@@ -512,7 +512,9 @@ Son dos tablas y no una con un campo «tipo» precisamente por eso: unificarlas 
 
 Anota el bloqueo además del retiro, aunque `HU-12` solo pedía el segundo. Con solo los retiros no se responde «¿estaba protegido este estudiante el día X?», que es la pregunta por la que la historia existe.
 
-`LimiteDiario` existe desde `TT-94`. **No se puede retirar, solo cambiar**, y eso sale de `[S11]`: «retirar» está en la fila de las restricciones alimentarias, y la del límite dice únicamente «fijar». Si el equipo quiere que un acudiente pueda quitarlo del todo, hace falta una historia. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
+`LimiteDiario` existe desde `TT-94`. **Se puede retirar del todo desde `TT-134`**, y hasta entonces no: `[S11]` ataba «retirar» a la fila de las restricciones alimentarias y la del límite decía únicamente «fijar». `DEC-13` amplió esa fila y `HU-61` lo construyó. Retirar es **borrar la fila**, nunca poner el monto en cero — un cupo de cero significa «no puede gastar nada», que es lo contrario, y la `CheckConstraint` lo impide.
+
+El campo `sobre` del asiento llegó con eso: producto y alérgeno traen su clave ajena, el límite diario no tiene ninguna a la que apuntar, y dejar que «ninguna de las dos puesta» significara «límite» sería adivinar en vez de decir. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
 
 ### Venta
 

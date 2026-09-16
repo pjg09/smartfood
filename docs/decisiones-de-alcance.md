@@ -12,9 +12,9 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 12 (`DEC-1` … `DEC-12`) |
+| decisiones | 13 (`DEC-1` … `DEC-13`) |
 | invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
 | idioma | es-CO |
 | version | 1.4 |
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-12` |
+| S1 | Decisiones | `DEC-1` … `DEC-13` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -265,6 +265,23 @@ El `ANEXO C` de `./sprint-1-backlog.md` no lo detectó porque su grafo relaciona
 > **Lo que NO se decide aquí.** No se añade recuperación de contraseña olvidada («¿olvidaste tu clave?»). El mecanismo existe —es el mismo generador de tokens de `TT-18`—, pero no hay historia que lo pida y exponerlo sin decidirlo sería alcance por la puerta de atrás. Mientras tanto, una contraseña olvidada se resuelve reenviando la invitación desde la vista de cuentas (`TT-17`).
 
 
+### `[DEC-13]` El acudiente puede retirar el límite diario, no solo cambiarlo
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-09-16 al construir el control parental. **Amplía la fila «Recargar saldo y fijar límite diario» de `[S11]`**.*
+
+**El hecho que lo obliga.** `[S11]` concede a `USR-2` «recargar saldo y **fijar** límite diario», y en otra fila «configurar y **retirar** restricciones alimentarias». Retirar quedó atado a las alimentarias, así que `HU-12` alcanzaba al producto y al alérgeno pero no al cupo: un acudiente podía subirlo o bajarlo, **y nunca quitarlo**. Se detectó al delimitar el alcance de `HU-12` en `PR-04`, donde quedó declarado como punto abierto.
+
+No es una carencia teórica. La única salida que dejaba el sistema era fijar una cifra tan alta que equivaliera a no tener cupo, y eso es peor que no tenerlo: la pantalla seguiría diciendo que hay un límite, el panel enseñaría una cifra, y el día que `HU-20` lo haga cumplir el estudiante tendría un tope que su acudiente creía haber quitado.
+
+**Decidido:**
+
+- El acudiente **puede retirar por completo** el límite diario de su estudiante.
+- Retirarlo es **borrar la restricción**, nunca ponerla en cero. Un cupo de cero significa «no puede gastar nada» y es lo contrario de lo que se pide; la `CheckConstraint` de `LimiteDiario` lo impide.
+- El retiro **queda asentado** —quién, cuándo y de cuánto era—, por el mismo motivo que el de las restricciones alimentarias (`HU-12`): quita una protección que el acudiente había puesto.
+- **Solo el acudiente**, como todo el control parental (`INV-4`). La fila de `[S11]` no se abre a ningún otro rol.
+
+**Lo que NO se decide aquí.** Nada sobre quién más puede tocar el cupo: la cafetería y la institución siguen sin poder fijarlo, cambiarlo ni retirarlo. Y nada sobre el saldo: retirar el límite no mueve un peso, solo deja de haber tope.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -300,6 +317,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-10` | **No añade alcance.** Añade un camino alterno de seed para la cuenta institucional, fuera del que describe `HU-39` |
 | `DEC-11` | **No añade alcance.** Extiende ese camino alterno a todas las cuentas del prototipo |
 | `DEC-12` | **No añade alcance.** Habilita el acceso de `USR-2`, que las historias del acudiente daban por supuesto |
+| `DEC-13` | Retiro completo del límite diario por el acudiente, con asiento. Amplía la fila del límite de `[S11]`, que solo decía «fijar» |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

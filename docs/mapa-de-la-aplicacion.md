@@ -57,6 +57,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
+| `/mis-estudiantes/<id>/limite/retirar/` | `POST`. Quita del todo el límite diario | Acudiente, **solo los suyos** | `TT-135` |
 | `/mis-estudiantes/<id>/restricciones/productos/` | Catálogo con un interruptor por producto: qué no puede comprar | Acudiente, **solo los suyos** | `TT-99` |
 | `/mis-estudiantes/<id>/restricciones/productos/lista/` | Fragmento HTMX de esa lista, filtrada por el buscador | Acudiente, **solo los suyos** | `TT-99` |
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` | `POST`. Bloquea o desbloquea un producto y devuelve la lista | Acudiente, **solo los suyos** | `TT-99` |
@@ -81,6 +82,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/recargar/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/limite/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/limite/retirar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/productos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
@@ -218,7 +220,7 @@ actual y el bloqueo no depende de ella (`INV-5`). Se puede bloquear un alérgeno
 todavía no declara ningún producto: el acudiente declara la alergia de su hijo, no el
 menú.
 
-Las dos pantallas de restricciones llevan debajo **el historial de cambios** (`HU-12`,
+Las **tres** pantallas del control parental llevan debajo **el historial de cambios** (`HU-12`,
 `TT-105`): qué se bloqueó, qué se retiró, cuándo y quién. Retirar una protección sobre la
 alimentación de un menor es una acción auditable, y un asiento que nadie puede leer no
 hace auditable nada. El historial mezcla productos y alérgenos porque el acudiente no
@@ -233,8 +235,13 @@ exactamente el malentendido que el control parental no puede permitirse — eso 
 Solo se ofrecen los productos que están en el catálogo; el servicio sí admite bloquear uno
 retirado, para que la restricción siga ahí si el producto vuelve.
 
-Y `limite`, el **cupo diario de gasto** de cada estudiante (`HU-09`,
-`TT-96`). Es por estudiante y no de la cuenta: un acudiente con tres hijos fija tres cupos
+Y `limite`, el **cupo diario de gasto** de cada estudiante (`HU-09`, `TT-96`), que desde
+`HU-61` también se puede **retirar del todo** y no solo cambiar. Retirarlo borra la
+restricción, nunca la pone en cero —un cupo de cero es «no puede gastar nada», lo
+contrario— y queda asentado de cuánto era. La acción vive en su propio formulario y no
+como un segundo botón del de guardar: en un formulario con dos envíos, el primero del DOM
+es el que dispara Enter, y quien teclea una cifra se quedaría sin cupo en vez de
+cambiarlo. Es por estudiante y no de la cuenta: un acudiente con tres hijos fija tres cupos
 distintos. **Lo escribe solo él**, entre por donde entre —`INV-4`—, y la pantalla dice sin
 rodeos que el cupo todavía no rechaza ninguna venta: esa comprobación es `HU-20`, y hasta
 entonces prometerla sería peor que no ofrecer el campo. A un estudiante de baja **sí** se
@@ -361,6 +368,8 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    `HU-11`.
 7. **Retirar uno de los bloqueos** y mirar «Cambios recientes» debajo: queda anotado
    quién lo retiró y cuándo, y el bloqueo anterior también está. `HU-12`.
+   Desde la pantalla del cupo, **Retirar el límite** hace lo mismo con el límite diario y
+   anota de cuánto era. `HU-61`, `DEC-13`.
 8. **Bloquear un par de productos** desde la tarjeta de restricciones. El catálogo aparece
    con su interruptor; lo bloqueado se marca en rojo. Bloquear uno **no** arrastra a los
    que comparten alérgeno — eso es `HU-11`, y la pantalla lo advierte. `HU-10`.

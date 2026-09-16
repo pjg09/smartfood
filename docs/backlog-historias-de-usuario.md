@@ -262,6 +262,23 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
   - El retiro queda asentado, por ser una acción auditable sobre la seguridad del estudiante.
 - **Origen:** `S11` (fila «Configurar y **retirar** restricciones alimentarias»), `ALC-IN-19`
 
+#### `[HU-61]` Retiro del límite diario
+
+> **Como** acudiente
+> **Quiero** retirar por completo el límite diario que fijé
+> **Para** que mi hijo vuelva a gastar su saldo sin tope cuando ya no hace falta
+
+- **Actor:** `USR-2` · **Prioridad:** Should
+- **Criterios de aceptación:**
+  - Solo el acudiente puede retirarlo.
+  - Retirarlo deja al estudiante **sin límite**, que es distinto de un límite de cero.
+  - El retiro queda asentado: quién, cuándo y **de cuánto era**.
+- **Origen:** `DEC-13`, `ALC-IN-07`, `ALC-IN-19`, `S11`
+
+> **Por qué esta historia existe, y por qué no estaba.** `[S11]` daba al acudiente «**fijar** límite diario» y, en otra fila, «configurar y **retirar** restricciones alimentarias». Retirar quedó atado a las alimentarias, así que `HU-12` alcanzaba al producto y al alérgeno pero no al cupo: se podía subir o bajar, nunca quitar. `DEC-13` amplía esa fila.
+>
+> La única salida que dejaba el sistema era fijar una cifra tan alta que equivaliera a no tener cupo, y eso es peor: la pantalla seguiría diciendo que hay un límite y el día que `HU-20` lo haga cumplir el estudiante tendría un tope que su acudiente creía haber quitado.
+
 #### `[HU-13]` Restricciones no desactivables por la cafetería
 
 > **Como** acudiente
@@ -976,20 +993,26 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 46 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should | ☐ |
 | 47 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should | ☑ |
 | 48 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☑ |
-| 49 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
-| 50 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
-| 51 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
-| 52 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should | ☐ |
-| 53 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should | ☐ |
-| 54 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
-| 55 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
-| 56 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
-| 57 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☑ |
-| 58 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
-| 59 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
-| 60 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
+| 49 | `HU-61` | Retiro del límite diario | EPI-3 | USR-2 | Should | ☑ |
+| 50 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
+| 51 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
+| 52 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
+| 53 | `HU-31` | Alertas de frecuencia | EPI-8 | USR-2 | Should | ☐ |
+| 54 | `HU-32` | Comparación con referencia sanitaria | EPI-8 | USR-2 | Should | ☐ |
+| 55 | `HU-33` | Resumen de gasto | EPI-8 | USR-2 | Should | ☐ |
+| 56 | `HU-42` | Desactivación y reactivación de cuentas de personal | EPI-9 | USR-5 | Should | ☑ |
+| 57 | `HU-51` | Baja lógica del estudiante retirado | EPI-10 | USR-5 | Should | ☑ |
+| 58 | `HU-52` | Saldo congelado tras la baja | EPI-10 | USR-2 | Should | ☑ |
+| 59 | `HU-55` | Cierre de caja diario | EPI-11 | USR-3 | Should | ☐ |
+| 60 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
+| 61 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**35 terminadas de 60**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11` y `HU-12`**, las cuatro primeras del Sprint 3 en cerrarse (`PR-02`, `PR-15`, `PR-03` y `PR-04`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**36 terminadas de 61**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11`, `HU-12` y `HU-61`**, las cinco primeras del Sprint 3 en cerrarse (`PR-02`, `PR-15`, `PR-03`, `PR-04` y `PR-16`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 18 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+
+> **`HU-61` cerró con `PR-16`, y no estaba en el backlog.** La trajo `DEC-13`, al verse en
+> `PR-04` que `[S11]` daba al acudiente «fijar» el límite pero no retirarlo: se podía subir
+> o bajar, nunca quitar. Retirarlo borra la restricción —nunca la pone en cero— y deja
+> asiento de cuánto era.
 
 > **`HU-12` cerró con `PR-04`.** Retirar una restricción deja asiento —quién y cuándo—
 > en un libro que no se edita ni se borra, y el acudiente lo ve en sus dos pantallas.
@@ -1035,7 +1058,7 @@ semanas**, de la semana 6 a la 15. Cumple `CUR-1` (sprints de 1 a 2 semanas) y s
 |---|---|---|---|---|
 | 1 | 6 – 7 | Registro, perfiles, vinculación acudiente–estudiante y catálogo | 18 | **✔ cerrado** |
 | 2 | 8 – 9 | Billetera digital e identificación por tarjeta en el POS | 14 | **Avance 1 · sem. 10** (`EVA-3`) |
-| 3 | 10 – 11 | Control parental: restricciones, alérgenos, límite de gasto | 13 | — |
+| 3 | 10 – 11 | Control parental: restricciones, alérgenos, límite de gasto | 14 | — |
 | 4 | 12 – 13 | Inventario trazable y pedidos anticipados | 5 | **Avance 2 · sem. 14** (`EVA-4`) |
 | 5 | 14 – 15 | Reportes de consumo y ejecución del plan de pruebas | 10 | Entrega final sem. 16 (`EVA-5`) |
 
@@ -1111,7 +1134,7 @@ transacciones ya registradas.
 
 ### Sprint 3 · semanas 10–11 — Control parental: restricciones, alérgenos, límite de gasto
 
-**13 historias.** Al cerrar, el acudiente controla qué y cuánto consume su hijo y el punto de venta lo hace cumplir. Incluye el bloqueo de la tarjeta perdida, que es control parental ejercido sobre el acceso.
+**14 historias.** Al cerrar, el acudiente controla qué y cuánto consume su hijo y el punto de venta lo hace cumplir. Incluye el bloqueo de la tarjeta perdida, que es control parental ejercido sobre el acceso.
 
 | # | ID | Historia | Depende de | Prioridad |
 |---|---|---|---|---|
@@ -1119,15 +1142,16 @@ transacciones ya registradas.
 | 2 | `HU-10` | Bloqueo de un producto puntual | `HU-26` | Must |
 | 3 | `HU-11` | Bloqueo por alérgeno | `HU-26` | Must |
 | 4 | `HU-12` | Retiro de una restricción | `HU-10`, `HU-11` | Should |
-| 5 | `HU-13` | Restricciones no desactivables por la cafetería | `HU-10`, `HU-11`, `HU-17` | Must |
-| 6 | `HU-38` | Consulta de restricciones por los cuatro roles | `HU-10`, `HU-11` | Must |
-| 7 | `HU-18` | Venta rechazada por alérgeno bloqueado (`TST-1`) | `HU-11`, `HU-21` | Must |
-| 8 | `HU-20` | Venta rechazada por límite diario superado (`TST-2`) | `HU-09`, `HU-21` | Must |
-| 9 | `HU-60` | Venta rechazada por producto bloqueado | `HU-10`, `HU-21` | Must |
-| 10 | `HU-47` | Desactivación de un estudiante por la institución | `HU-44` | Must |
-| 11 | `HU-48` | Desactivación de un estudiante por el acudiente | `HU-47` | Must |
-| 12 | `HU-49` | Reactivación exclusiva de la institución | `HU-47`, `HU-48` | Must |
-| 13 | `HU-50` | Venta rechazada por estudiante desactivado | `HU-47`, `HU-21` | Must |
+| 5 | `HU-61` | Retiro del límite diario | `HU-09` | Should |
+| 6 | `HU-13` | Restricciones no desactivables por la cafetería | `HU-10`, `HU-11`, `HU-17` | Must |
+| 7 | `HU-38` | Consulta de restricciones por los cuatro roles | `HU-10`, `HU-11` | Must |
+| 8 | `HU-18` | Venta rechazada por alérgeno bloqueado (`TST-1`) | `HU-11`, `HU-21` | Must |
+| 9 | `HU-20` | Venta rechazada por límite diario superado (`TST-2`) | `HU-09`, `HU-21` | Must |
+| 10 | `HU-60` | Venta rechazada por producto bloqueado | `HU-10`, `HU-21` | Must |
+| 11 | `HU-47` | Desactivación de un estudiante por la institución | `HU-44` | Must |
+| 12 | `HU-48` | Desactivación de un estudiante por el acudiente | `HU-47` | Must |
+| 13 | `HU-49` | Reactivación exclusiva de la institución | `HU-47`, `HU-48` | Must |
+| 14 | `HU-50` | Venta rechazada por estudiante desactivado | `HU-47`, `HU-21` | Must |
 
 Las restricciones se configuran (`HU-09` … `HU-13`) antes de hacerse cumplir (`HU-18`, `HU-20`,
 `HU-60`, `HU-50`): no se puede probar un rechazo sin una regla que lo dispare. `HU-60` solo depende
@@ -1185,7 +1209,7 @@ Cobertura de los 22 elementos del alcance incluido y de las 7 funciones del prot
 | `ALC-IN-04` Perfiles vinculados | `HU-01`, `HU-04` |
 | `ALC-IN-05` Restricción del autorregistro | `HU-05` |
 | `ALC-IN-06` Billetera individual | `HU-06`, `HU-07`, `HU-04` |
-| `ALC-IN-07` Límite diario | `HU-09`, `HU-20` |
+| `ALC-IN-07` Límite diario | `HU-09`, `HU-20`, `HU-61` |
 | `ALC-IN-08` Restricciones alimentarias | `HU-10`, `HU-11`, `HU-60` |
 | `ALC-IN-09` Restricciones aplicadas en la venta | `HU-13`, `HU-17`, `HU-18`, `HU-60` |
 | `ALC-IN-10` Pedidos anticipados | `HU-23`, `HU-25` |
@@ -1344,6 +1368,7 @@ Las dependencias entre sprints —todas hacia atrás— son:
 | `HU-09` Límite diario | 3 | `HU-06` Recarga | 2 |
 | `HU-10` Bloqueo de producto | 3 | `HU-26` Catálogo | 1 |
 | `HU-60` Rechazo por producto bloqueado | 3 | `HU-10` Bloqueo de producto | 3 |
+| `HU-61` Retiro del límite diario | 2 | `HU-09` Límite diario | 3 |
 | `HU-11` Bloqueo por alérgeno | 3 | `HU-26` Catálogo | 1 |
 | `HU-13` Restricciones no desactivables | 3 | `HU-17` Vista de cobro | 2 |
 | `HU-18` Rechazo por alérgeno | 3 | `HU-21` Descuento simultáneo | 2 |
