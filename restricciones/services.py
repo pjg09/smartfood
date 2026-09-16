@@ -1,4 +1,4 @@
-"""Escrituras del control parental (`TT-95`, `TT-98`, `HU-09`, `HU-10`).
+"""Escrituras del control parental (`TT-95`, `TT-98`, `TT-101`, `HU-09` … `HU-11`).
 
 **Toda escritura pasa por aquí** (`DT-15`). Reglas que no se negocian:
 
@@ -27,7 +27,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from cuentas.models import Rol
-from restricciones.models import LimiteDiario, RestriccionProducto
+from restricciones.models import (
+    LimiteDiario,
+    RestriccionAlergeno,
+    RestriccionProducto,
+)
 
 # Tope de un límite diario. **No es una regla de negocio disfrazada**: ninguna
 # historia fija un máximo, y un límite altísimo es indistinguible de no tener
@@ -223,5 +227,66 @@ def desbloquear_producto(*, actor, estudiante, producto):
 
     borradas, _ = RestriccionProducto.objects.filter(
         estudiante=estudiante, producto=producto
+    ).delete()
+    return borradas > 0
+
+
+@transaction.atomic
+def bloquear_alergeno(*, actor, estudiante, alergeno):
+    """Bloquea un alérgeno completo para el estudiante (`TT-101`, `HU-11`).
+
+    Devuelve la `RestriccionAlergeno` vigente tras la operación.
+
+    ═══════════════════════════════════════════════════════════════════════
+    **LO QUE ESTE SERVICIO NO HACE ES LA MITAD DE `INV-5`.**
+
+    No recorre el catálogo. No crea una `RestriccionProducto` por cada producto
+    que hoy declara ese alérgeno. No guarda ninguna lista en ninguna parte.
+    Escribe **una fila con dos claves ajenas** y nada más.
+
+    Si algún día alguien añade aquí un bucle que materialice los productos
+    —porque así la venta consulta más rápido—, `INV-5` queda rota en ese mismo
+    commit y ninguna prueba de las que miran productos existentes lo notará. La
+    que sí lo nota es `TT-103`, que crea el producto **después**.
+    ═══════════════════════════════════════════════════════════════════════
+
+    Idempotente, como sus dos hermanas: la pantalla de `TT-102` es un
+    interruptor y el doble toque en un teléfono es lo normal. Lo que impide la
+    fila duplicada es la `UniqueConstraint`.
+
+    **Se puede bloquear un alérgeno que hoy no declara ningún producto**, y es
+    deliberado: el acudiente declara la alergia de su hijo, no el menú de la
+    cafetería. El día que entre un producto con esa condición, ya está cubierto
+    — que es exactamente lo que la historia pide.
+    """
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Bloquear un alérgeno", "HU-11"
+    )
+
+    restriccion, _ = RestriccionAlergeno.objects.get_or_create(
+        estudiante=estudiante, alergeno=alergeno
+    )
+    return restriccion
+
+
+@transaction.atomic
+def desbloquear_alergeno(*, actor, estudiante, alergeno):
+    """Retira el bloqueo de ese alérgeno (`TT-101`, `HU-11`).
+
+    Devuelve `True` si había un bloqueo y se retiró, `False` si no lo había.
+
+    Borra **una fila**. Como no hay lista materializada que deshacer, no hay
+    forma de que el retiro deje productos bloqueados por error: lo que se
+    consulta vuelve a calcularse desde cero en la siguiente pregunta (`INV-5`).
+
+    **El retiro todavía no deja asiento**, igual que el de producto: el segundo
+    criterio de `HU-12` lo exige y lo construye `TT-104`, en `PR-04`.
+    """
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Retirar el bloqueo de un alérgeno", "HU-11"
+    )
+
+    borradas, _ = RestriccionAlergeno.objects.filter(
+        estudiante=estudiante, alergeno=alergeno
     ).delete()
     return borradas > 0
