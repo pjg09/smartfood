@@ -4,7 +4,7 @@ Como los servicios, estos selectores no conocen `request`: reciben lo que
 necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
 """
 
-from restricciones.models import LimiteDiario
+from restricciones.models import LimiteDiario, RestriccionProducto
 
 
 def limite_diario_de(estudiante):
@@ -28,3 +28,42 @@ def limite_diario_de(estudiante):
     es `TT-106` y llega en `PR-05`.
     """
     return LimiteDiario.objects.filter(estudiante=estudiante).first()
+
+
+def productos_bloqueados_de(estudiante):
+    """Las `RestriccionProducto` vigentes del estudiante (`HU-10`).
+
+    Devuelve un `QuerySet` sin evaluar, ordenado por nombre de producto —el
+    orden lo fija el modelo y aquí no se repite porque no cambia—, con el
+    producto y su categoría ya traídos: quien pinta la lista los necesita todos
+    y sin esto serían tantas consultas como productos bloqueados.
+
+    **Es una lista de verdad, y esa es la diferencia con `HU-11`.** Lo que hay
+    aquí son los productos que el acudiente señaló uno a uno. El bloqueo por
+    alérgeno no se responde desde esta función ni desde ninguna lista guardada:
+    se evalúa cruzando la condición con lo que cada producto declara (`INV-5`,
+    `DT-7`), y llega en `TT-100`.
+
+    **No autoriza a nadie**, como el resto de selectores: quien llama decide si
+    puede. `[S11]` concede la **consulta** de restricciones a los cuatro roles
+    (`HU-38`).
+    """
+    return RestriccionProducto.objects.filter(
+        estudiante=estudiante
+    ).select_related("producto", "producto__categoria")
+
+
+def identificadores_de_productos_bloqueados(estudiante):
+    """Solo los `id` de los productos bloqueados, como conjunto.
+
+    Existe para pintar la pantalla de `TT-99`, que recorre el catálogo entero y
+    tiene que saber de cada producto si está bloqueado. Con esto es **una
+    consulta**; preguntando producto a producto serían tantas como productos.
+
+    Un `set` y no una lista: lo que se hace con esto es `in`.
+    """
+    return set(
+        RestriccionProducto.objects.filter(estudiante=estudiante).values_list(
+            "producto_id", flat=True
+        )
+    )

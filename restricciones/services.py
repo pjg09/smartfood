@@ -1,4 +1,4 @@
-"""Escrituras del control parental (`TT-95`, `HU-09`).
+"""Escrituras del control parental (`TT-95`, `TT-98`, `HU-09`, `HU-10`).
 
 **Toda escritura pasa por aquí** (`DT-15`). Reglas que no se negocian:
 
@@ -27,7 +27,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from cuentas.models import Rol
-from restricciones.models import LimiteDiario
+from restricciones.models import LimiteDiario, RestriccionProducto
 
 # Tope de un límite diario. **No es una regla de negocio disfrazada**: ninguna
 # historia fija un máximo, y un límite altísimo es indistinguible de no tener
@@ -41,30 +41,36 @@ from restricciones.models import LimiteDiario
 MONTO_MAXIMO = Decimal("1000000.00")
 
 
-def _comprobar_que_es_su_acudiente(actor, estudiante):
-    """Segundo criterio de `HU-09`: **solo el acudiente fija o modifica el límite**.
+def _comprobar_que_es_su_acudiente(actor, estudiante, accion, historia):
+    """**La única puerta de escritura del control parental.** Es `INV-4`.
 
-    Y no cualquier acudiente: el de ese estudiante. `[S11]` da «fijar límite
-    diario» únicamente a `USR-2`, así que ni el cajero, ni la administración de
-    la cafetería, ni la institución educativa pasan de aquí — no es un olvido, es
-    la matriz, y es literalmente `INV-4`.
+    Segundo criterio de `HU-09` y regla de `HU-10` y `HU-11`: quien escribe una
+    restricción es el acudiente, y no cualquiera: **el de ese estudiante**.
+    `[S11]` da «fijar límite diario» y «configurar y retirar restricciones
+    alimentarias» únicamente a `USR-2`, así que ni el cajero, ni la
+    administración de la cafetería, ni la institución educativa pasan de aquí.
+    No es un olvido: es la matriz.
+
+    **Una sola puerta para las tres restricciones, y ese es el nivel correcto.**
+    `INV-4` no dice «el límite no lo toca la cafetería»: dice que no toca las
+    restricciones, en plural. Con una comprobación por servicio, la tercera se
+    escribe distinta el día que alguien tenga prisa. `accion` e `historia` solo
+    cambian la frase del error; la regla es la misma para todas.
 
     Vive en el servicio y no en la vista porque `DT-15` no admite reglas que
     dependan de por dónde se entre: el admin también es una vista.
 
-    Es el mismo control que `billetera.services._comprobar_que_es_su_acudiente`
-    hace sobre la recarga, y **se escribe otra vez a propósito**. Compartirlo
-    obligaría a que `restricciones` importara de `billetera` —dos dominios que no
-    se tocan— para heredar un mensaje de error sobre recargas. Lo que tienen en
-    común no es la implementación, son tres líneas de `[S11]`; el día que una de
-    las dos filas cambie, la otra no tiene por qué seguirla.
+    **No se comparte con `billetera.services`, que hace este mismo control sobre
+    la recarga, y es deliberado.** Compartirlo obligaría a que `restricciones`
+    importara de `billetera` —dos dominios que no se tocan—. Lo que tienen en
+    común no es la implementación, son tres filas de `[S11]`; el día que una de
+    ellas cambie, la otra no tiene por qué seguirla.
     """
     if actor is None or not actor.is_authenticated:
-        raise PermissionDenied("Fijar un límite diario exige una cuenta identificada.")
+        raise PermissionDenied(f"{accion} exige una cuenta identificada.")
     if actor.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            "Fijar el límite diario de gasto es función exclusiva del acudiente "
-            "(HU-09, INV-4, [S11])."
+            f"{accion} es función exclusiva del acudiente ({historia}, INV-4, [S11])."
         )
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
@@ -73,7 +79,7 @@ def _comprobar_que_es_su_acudiente(actor, estudiante):
     # petición: es la misma regla que sostiene `estudiantes_a_cargo` (`DT-11`).
     if not hasattr(actor, "acudiente") or estudiante.acudiente_id != actor.acudiente.id:
         raise PermissionDenied(
-            "Solo se fija el límite diario de un estudiante a cargo (HU-09, [S11])."
+            f"{accion} solo vale sobre un estudiante a cargo ({historia}, [S11])."
         )
 
 
@@ -135,7 +141,9 @@ def fijar_limite_diario(*, actor, estudiante, monto):
     pantallas lo dicen: prometerle al acudiente una protección que aún no existe
     sería peor que no ofrecerle el campo.
     """
-    _comprobar_que_es_su_acudiente(actor, estudiante)
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Fijar el límite diario de gasto", "HU-09"
+    )
 
     monto = _monto_valido(monto)
 
@@ -143,3 +151,77 @@ def fijar_limite_diario(*, actor, estudiante, monto):
         estudiante=estudiante, defaults={"monto": monto}
     )
     return limite
+
+
+@transaction.atomic
+def bloquear_producto(*, actor, estudiante, producto):
+    """Impide que el estudiante compre ese producto (`TT-98`, `HU-10`).
+
+    Devuelve la `RestriccionProducto` vigente tras la operación.
+
+    Primer criterio de `HU-10`: **el bloqueo aplica a un producto identificado
+    del catálogo**. Por eso recibe un `Producto` y no un nombre ni un texto: lo
+    que queda escrito es una clave ajena, y un producto renombrado mañana sigue
+    bloqueado.
+
+    ── ES IDEMPOTENTE, Y NO ES PEREZA ──────────────────────────────────────
+    Bloquear lo ya bloqueado devuelve la restricción que había, sin error. La
+    pantalla de `TT-99` es un interruptor por producto, y en un teléfono —que es
+    desde donde entra `INT-1`— el doble toque es lo normal, no la excepción. Un
+    error aquí obligaría a la vista a preguntar antes si ya estaba, que es una
+    pregunta sobre la base y no sobre lo que el acudiente quiere.
+
+    Lo que impide de verdad la fila duplicada es la `UniqueConstraint`; esto
+    solo evita que el camino normal choque contra ella (`DT-15`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    **No comprueba `INVD-2`**, por lo mismo que `fijar_limite_diario`:
+    configurar una restricción no mueve dinero ni existencias, y no tiene efecto
+    hasta que haya una venta, que es lo que esa invariante ya impide.
+
+    **Se puede bloquear un producto retirado del catálogo** (`activo=False`).
+    Parece inútil y no lo es: un producto retirado puede volver, y lo que la
+    familia declaró sobre él no debería evaporarse entre tanto. La pantalla no
+    los ofrece; el servicio no los prohíbe.
+    """
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Bloquear un producto", "HU-10"
+    )
+
+    restriccion, _ = RestriccionProducto.objects.get_or_create(
+        estudiante=estudiante, producto=producto
+    )
+    return restriccion
+
+
+@transaction.atomic
+def desbloquear_producto(*, actor, estudiante, producto):
+    """Retira el bloqueo de ese producto (`TT-98`, `HU-10`).
+
+    Devuelve `True` si había un bloqueo y se retiró, `False` si no lo había.
+
+    Idempotente como su pareja, y por el mismo motivo: el interruptor de
+    `TT-99`. Desbloquear lo que no estaba bloqueado no es un error, es el estado
+    que se pedía.
+
+    ═══════════════════════════════════════════════════════════════════════
+    **EL RETIRO TODAVÍA NO DEJA ASIENTO, Y ESO ES UNA DEUDA DECLARADA.**
+
+    El segundo criterio de `HU-12` exige que retirar una restricción quede
+    asentado, por ser una acción auditable sobre la seguridad alimentaria de un
+    menor. Aquí se borra la fila y no queda constancia de que existió.
+
+    Lo construye `TT-104`, en `PR-04`, que es donde el plan del sprint puso la
+    historia del retiro. Hasta entonces hay una ventana en la que un desbloqueo
+    no se puede reconstruir. **No es un olvido: es el reparto del sprint**, y se
+    escribe aquí para que quien llegue a `TT-104` sepa que este es el sitio.
+    ═══════════════════════════════════════════════════════════════════════
+    """
+    _comprobar_que_es_su_acudiente(
+        actor, estudiante, "Retirar el bloqueo de un producto", "HU-10"
+    )
+
+    borradas, _ = RestriccionProducto.objects.filter(
+        estudiante=estudiante, producto=producto
+    ).delete()
+    return borradas > 0
