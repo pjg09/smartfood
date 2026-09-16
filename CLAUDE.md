@@ -20,12 +20,11 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-26`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
 | `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
 | `docs/sprint-2-backlog.md` | Las 37 tareas del **último sprint cerrado** (`TT-57` … `TT-93`), con responsable |
 | `docs/plan-de-pull-requests-sprint-2.md` | Esas 37 tareas agrupadas en 16 PR, y el estado de cada una. **El estado manda aquí** |
-| `docs/sprint-1-backlog.md` | El Sprint 1, cerrado. Consulta histórica |
-| `docs/plan-de-pull-requests-sprint-1.md` | El plan del Sprint 1, cerrado. Documento de archivo |
+| `docs/sprint-1-backlog.md` y su `plan-de-pull-requests` | El Sprint 1, cerrado. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -91,7 +90,9 @@ Tres reglas (`DT-15`):
    `request.user`. El admin **también es una vista**: su `save_model` delega en el servicio.
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
-devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`.
+devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
+**con una sola excepción declarada**: el padrón de la institución tiene pantalla propia
+porque es la que secretaría abre a diario (`DT-27`). Si hace falta una segunda, se registra.
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -122,15 +123,17 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   modelo, no el formulario.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
   sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
-- **`{% now "F" %}` devuelve el mes capitalizado** («Septiembre»), y dentro de una fecha en
-  español va en minúscula. No se le puede aplicar un filtro directamente: `{% now "F" as mes %}`
-  y luego `{{ mes|lower }}`. La inicial de la frase se pone con `first-letter:uppercase`, nunca
-  cortando la cadena — con acentos se rompe.
+- **`{% now "F" %}` devuelve el mes capitalizado** y en español va en minúscula. No admite
+  filtro directo: `{% now "F" as mes %}` y luego `{{ mes|lower }}`. La inicial de una frase se
+  pone con `first-letter:uppercase`, nunca cortando la cadena — con acentos se rompe.
 - **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
   Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
   a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
   la de la hoja y contesta «up to date», que es cierto para la fuente y falso para lo que
   importa —las clases salen de las plantillas, y ésas no las mira—.
+- **Tras tocar `locale/…/django.po` hay que `compilemessages`** (necesita
+  `sudo apt install gettext`): Django lee el `.mo`, así que sin recompilar el cambio no se
+  ve y nada falla.
 - **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
   no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
   `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
@@ -143,10 +146,12 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   una columna. El punto de ruptura va dentro de la propia clase, en `estilos/fuente.css`.
   Si el efecto sí depende de un estado —el botón de cristal de la cabecera pública sobre el
   héroe—, la salida es la contraria: escribirlo con utilidades que Tailwind pueda variar.
-- **Un elemento nunca es su propio contenedor de consulta.** `@container` marca al
-  ANCESTRO, así que ponerlo en la misma caja que la rejilla deja las `@container (...)` de
-  `fuente.css` sin nada contra qué medirse: no fallan, y la pantalla se queda en una
-  columna. Va en el envoltorio (`base-punto-de-venta.html`).
+- **`@container` marca al ANCESTRO más cercano, y las dos formas de fallar son silenciosas.**
+  En la misma caja que la rejilla, las consultas no encuentran contra qué medirse. Demasiado
+  arriba es peor: miden el lienzo entero en vez de la columna. Cada zona que responda a su
+  propio ancho lleva el suyo.
+- **`hx-swap-oob` solo funciona en elementos de primer nivel de la respuesta.** Anidado no
+  da error: no intercambia, y la zona se queda con lo anterior sin ningún aviso.
 - **El dinero se escribe en un solo sitio**, `billetera/templatetags/dinero.py`: `$25.000`,
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
@@ -154,6 +159,13 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 - **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
   van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
   modelo nuevo y nada indica por qué.
+- **`makemigrations` se cuelga al añadir un campo no nulo** a una tabla con filas: abre un
+  prompt que nadie contesta. La salida es poner `default=` en el modelo, generar, quitar el
+  `default` y añadir `preserve_default=False` a mano en la migración.
+- **Una `CheckConstraint` nueva falla la migración si alguna fila la viola**, y la causa
+  casi siempre es una fila escrita a mano. Por eso pgAdmin o `dbshell` sirven para mirar,
+  no para escribir: las reglas de los servicios —`INVD-2`, `asentar()`— no las impone
+  Postgres, y lo que creas ahí es lo que rompe el `migrate` de la semana siguiente.
 
 ## Cómo ejecutar
 
@@ -172,6 +184,10 @@ uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026
   --estudiantes 12
 ```
 
+**`sembrar` no crea existencias ni saldo**, así que el punto de venta no puede cobrar recién
+sembrado: hay que ingresar mercancía (`inventario.services.ingresar_mercancia`) y recargar
+alguna billetera (`billetera.services.recargar`). El atajo está en `docs/desarrollo.md`.
+
 Se entra por `/login/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
@@ -180,6 +196,10 @@ Para mirarla a mano: `uv run python manage.py runserver` en <http://127.0.0.1:80
 
 Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al
 arrancar, falla al abrir la pantalla que la usa.
+
+Para mirar el esquema: `uv run python manage.py dbshell`, y dentro `\dt` o
+`\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
+Postgres, que es donde viven las invariantes—.
 
 Antes de cada PR, los tres tienen que pasar:
 
@@ -193,7 +213,7 @@ uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huér
 ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
 —ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
 
-La suite completa son 533 pruebas y **tarda unos dos minutos**: por encima del tiempo de
+La suite completa pasa de 700 pruebas y **tarda unos dos minutos**: por encima del tiempo de
 espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste.
 
@@ -217,13 +237,13 @@ con `django.test.Client`. Hace falta añadir el host que usa el cliente:
 DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py shell -c '…'
 ```
 
-**Para mirar una pantalla de verdad** sin navegador manual: renderízala con
-`django.test.Client`, guarda el HTML con las rutas de `/static/` reescritas a `file://` y
-dispara `google-chrome --headless --screenshot`. Tres detalles o la captura miente:
-`--allow-file-access-from-files` —si no, el JS no corre— y desactivar transiciones y
-animaciones, que el reloj virtual congela en su estado inicial. Y **`collectstatic` después de
-`tailwind build --force`**: el HTML apunta a `/static/`, que se reescribe a `staticfiles/` —no
-a `assets/`—, así que sin ese paso se fotografía la hoja anterior.
+Si el script lleva comillas dobles, **escríbelo a un fichero** y lánzalo con
+`uv run python fichero.py` (con `sys.path` y `django.setup()` delante): dentro de `-c '…'`
+el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso.
+
+**Para mirar una pantalla de verdad** sin navegador manual: la receta —renderizar con
+`django.test.Client` y fotografiar con Chrome sin interfaz— está en `[S5.2]` de
+`docs/desarrollo.md`, con los tres detalles sin los cuales **la captura miente**.
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
@@ -232,7 +252,7 @@ con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y n
 ## Definición de Terminado
 
 En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
-**Pull Request**, no a la historia, porque cinco de las 37 tareas del sprint no cuelgan de ninguna.
+**Pull Request** y no a la historia, porque hay tareas que no cuelgan de ninguna.
 
 Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (datos ficticios)
 aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se
@@ -281,7 +301,8 @@ automático está desconectado a propósito.
    desde `PR-09`, y sigue abierta porque le faltan las restricciones del Sprint 3.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
-después de lo que la bloquea. `[ANEXO D]` del backlog verifica el grafo de dependencias.
+después de lo que la bloquea. El `ANEXO C` del sprint backlog verifica el grafo de
+dependencias; el `ANEXO D` del backlog de historias hace lo propio entre historias.
 
 **Una tarea que otra ya satisfizo se marca igual, diciendo dónde se hizo.** Pasó dos veces en el
 Sprint 2: `TT-86` llegó con `TT-80` —`INV-1` no admite un commit intermedio en el que una venta
@@ -290,7 +311,7 @@ esconde que el reparto previsto no era el real.
 
 ## Documentación
 
-Estos cinco documentos son ahora **los vigentes**. El corpus de la asignatura conserva una copia
+Los documentos de `docs/` son **los vigentes**. El corpus de la asignatura conserva una copia
 congelada; no la edites. Si una decisión cambia, se actualiza aquí, con su identificador.
 
 Ninguna afirmación de estos documentos se inventa: cada una cita el identificador del que sale. Al

@@ -15,13 +15,22 @@ cinco sprints de dos semanas.
 
 | | |
 |---|---|
-| Sprint | **2 de 5** — billetera, inventario y punto de venta |
-| Avance del sprint | 16 de 37 tareas · 7 de 16 Pull Requests |
-| Historias terminadas | 24 de 59 |
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
+| Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR, **13 de 14 historias** |
+| Historias terminadas | 31 de 59 |
+| Lo siguiente | **Avance 1** (`EVA-3`, 20 % de la nota), semana 10 — se enseña lo que hay en `main` |
+| Sprint 3 | Sin backlog todavía |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
-> El avance de arriba envejece con cada PR. **La fuente es
+> **Al cerrar el Sprint 2 el sistema vende.** Un cajero identifica al estudiante con su
+> tarjeta o su documento, ve su fotografía, su saldo y su consumo del día, y le cobra
+> descontando **a la vez** el saldo y las existencias, sin que ninguna venta pueda dejar la
+> billetera en negativo.
+>
+> La historia que falta es `HU-17`: su panel está construido, pero le queda un criterio —las
+> restricciones vigentes— que depende del Sprint 3. Está declarado, no olvidado.
+
+> El avance de arriba envejece. **La fuente es
 > [`docs/plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md)**, que
 > es donde vive el estado de cada tarea; esta tabla solo lo resume.
 
@@ -62,9 +71,14 @@ la institución, y los listados salen vacíos. Con él quedan sembrados el perso
 cafetería, doce estudiantes con sus acudientes y avatares, y el catálogo con imágenes.
 Todo ficticio (`ALC-OUT-07`) y se puede volver a ejecutar sin duplicar nada.
 
+> **`sembrar` no crea existencias ni saldo**, así que el punto de venta todavía no puede
+> cobrar: los productos salen «Sin existencias» y cualquier venta se rechaza. Es correcto
+> —las dos cifras son la suma de su historial, no un campo— pero hay que darles un primer
+> movimiento. El atajo está en **[`docs/desarrollo.md`](./docs/desarrollo.md)**.
+
 En `http://localhost:8000`. **Se entra por `/login/`**, que es la puerta de los cuatro
-roles; el admin de `/admin/` acepta a la institución y al personal de la cafetería, pero
-nunca al acudiente. Empieza con `institucion@example.com` y la contraseña de arriba.
+roles; el admin de `/admin/` acepta a la institución y a la administración de la cafetería,
+nunca al acudiente ni al cajero —que cobra entero desde el punto de venta—. Empieza con `institucion@example.com` y la contraseña de arriba.
 
 **Qué pantalla hay y quién alcanza cada una está en
 [`docs/mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md).** Los comandos del día
@@ -84,7 +98,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 |---|---|
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
 | [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-23`) |
+| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
 | [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 59 historias con sus criterios de aceptación |
 
 > **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -96,9 +110,9 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Las 37 tareas del sprint en curso (`TT-57`…`TT-93`), con responsable y estado |
-| [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Esas 37 tareas agrupadas en 16 PR, y el estado de cada una |
-| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El sprint anterior, cerrado: 56 tareas y 18 historias |
+| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Las 37 tareas del **último sprint cerrado** (`TT-57`…`TT-93`), con responsable |
+| [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Esas 37 tareas agrupadas en 16 PR. **Es donde vive el estado** |
+| [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El Sprint 1, cerrado: 56 tareas y 18 historias |
 | [`plan-de-pull-requests-sprint-1.md`](./docs/plan-de-pull-requests-sprint-1.md) | Su plan de PR, cerrado: 25 PR |
 | [`definicion-de-terminado.md`](./docs/definicion-de-terminado.md) | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 
