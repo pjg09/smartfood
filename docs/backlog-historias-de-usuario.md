@@ -972,6 +972,15 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 
 **31 terminadas de 59**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2. Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **42 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
+> **`HU-09` sigue abierta con `PR-01` integrado, y es una marca declarada, no un olvido.**
+> `PR-01` (`TT-94` … `TT-96`) cumple sus dos primeros criterios: el límite se define **por
+> estudiante** y **solo su acudiente** lo fija o lo modifica. El tercero —«el límite se evalúa
+> contra el consumo del día en cada venta»— es la validación dentro del bloqueo de la
+> transacción, que es `TT-116` de `PR-09`, y la misma frase es la razón de ser de `HU-20`.
+> **`HU-09` se marca al integrar `PR-09`**, junto con `HU-20`. Es el segundo caso del
+> proyecto en que un PR no cierra la historia entera; el primero fue `HU-17`, y por eso
+> vale la pena que quede escrito y no supuesto.
+
 Sigue sin haber `Could`: todo lo que quedó dentro del alcance está en la ruta que `ENT-01` exige demostrar o la sostiene.
 
 ---

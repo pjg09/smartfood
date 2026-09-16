@@ -10,7 +10,7 @@
 | tipo_documento | Convención de trabajo. No es un artefacto de Scrum |
 | cubre | `TT-01` — Repositorio, estrategia de ramas y convención de commits |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 Este documento es el contrato de cómo entra código a `main`. Lo que aquí se decide lo
 hace cumplir la automatización de `.github/workflows/`, no la buena voluntad.
@@ -121,6 +121,7 @@ El ámbito es **dónde** se hizo el cambio. Minúsculas, kebab-case ASCII, sin a
 | `billetera` | App `billetera`: saldo y movimientos |
 | `inventario` | App `inventario`: existencias |
 | `ventas` | App `ventas`: punto de venta |
+| `restricciones` | App `restricciones`: control parental —límite diario, productos y alérgenos bloqueados (`DT-28`) |
 | `reportes` | App `reportes` |
 | `almacenamiento` | Buckets, `django-storages`, canalización de imágenes (`DT-18`, `DT-20`) |
 | `correo` | Envío de correo |

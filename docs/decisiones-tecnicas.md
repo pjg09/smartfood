@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 27 (`DT-1` … `DT-27`) |
+| decisiones | 28 (`DT-1` … `DT-28`) |
 | entidades_modelo | 17 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.4 |
+| version | 1.5 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-27`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-28`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -180,7 +180,9 @@ Además `select_for_update()` y el manejo de transacciones son de primera clase,
 
 **Razón:** separar dónde vive cada cosa sin añadir capas que no compran nada.
 
-Una app de Django por dominio —`cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas`, `reportes`— y dentro de cada una la misma forma:
+Una app de Django por dominio —`cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas`, `restricciones`, `reportes`— y dentro de cada una la misma forma:
+
+`restricciones` no estaba en la lista original y **se añadió por decisión, no por costumbre**: la razón por la que no cabía en ninguna de las siete está en `DT-28`.
 
 | Archivo | Responsabilidad |
 |---|---|
@@ -421,6 +423,30 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 
 ---
 
+#### `[DT-28]` El control parental vive en una app propia, `restricciones`
+
+**Amplía:** `DT-15`, que enumeró siete apps por dominio. Esta añade la octava y dice qué la obliga, para que la lista no crezca por costumbre.
+
+**Razón:** decisión del equipo, tomada el 2026-09-15 al abrir el Sprint 3. La previó `[S3]` del `./sprint-3-backlog.md`, que pidió expresamente **registrarla con un `DT-` propio en el PR que creara la app** y no darla por supuesta.
+
+**El hecho que lo obliga.** El límite diario, el producto bloqueado y el alérgeno bloqueado (`HU-09`, `HU-10`, `HU-11`) **no caben en ninguna de las siete apps declaradas**, y las dos colocaciones plausibles empeoran el diseño en sentidos opuestos:
+
+- **En `personas`** el control parental cuelga del estudiante, que es donde vive — pero `RestriccionProducto` y `RestriccionAlergeno` referencian el catálogo, así que `personas` pasaría a importar de `catalogo`. El padrón de la institución acabaría dependiendo del menú de la cafetería.
+- **En `catalogo`** ocurre lo simétrico y es peor: el catálogo es el dominio que **administra la cafetería**, y `INV-4` existe precisamente para que la cafetería no toque las restricciones. Meter las restricciones ahí las pone en la misma app cuyos permisos de escritura `[S11]` sí concede a `USR-4`, y la separación pasaría a depender de acordarse de no conceder, en lugar de la estructura.
+
+**Decidido:**
+
+- Una app `restricciones`, con la forma de `DT-15`: `models.py`, `services.py`, `selectors.py`, `views.py`. Depende de `personas` y de `catalogo`; **ninguna de las dos depende de ella**, así que la dirección del grafo de importaciones no cambia.
+- **Ningún modelo suyo se registra en el admin**, y esa ausencia es deliberada. `[S11]` concede escribir restricciones solo a `USR-2`, y el acudiente no entra al admin —`INT-1` es su interfaz (`DT-2`)—. Un registro aquí no serviría a quien sí puede y abriría una puerta a quien no: es la mitad negativa de `INV-4` (`DT-11`).
+- Las tres entidades que `[S2]` ya declaraba bajo «Control parental» —`LimiteDiario`, `RestriccionProducto`, `RestriccionAlergeno`— son las de esta app. **No es una entidad nueva ni un modelo nuevo**: es dónde vive el que ya estaba previsto.
+- El límite diario es un `OneToOneField` sobre el estudiante y **no haber fila es no tener límite**. Un `monto = 0` diría lo contrario —«no puede comprar nada»—, así que una `CheckConstraint` lo impide y `HU-12` retirará la restricción borrando la fila.
+
+**Lo que no cambia.** `DT-15` sigue vigente entero, incluidas sus tres reglas: los servicios reciben `actor` y no leen `request.user`, las invariantes que la base pueda imponer las impone la base, y las vistas no escriben. Y **`reportes` sigue sin existir**: cada app se crea en el sprint que la necesita.
+
+**Lo que esta decisión no autoriza.** Una app nueva por cada historia que no encaje a la primera. El criterio sigue siendo el de `DT-15` —una app por **dominio**—, y aquí el dominio existe: el control parental es de `USR-2`, tiene sus propias reglas de escritura y su propia invariante. La siguiente que se proponga tendrá que traer un argumento del mismo tipo.
+
+---
+
 ## [S2] Modelo de datos núcleo
 
 Diecisiete entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres se ajustarán al implementar; **la forma no**.
@@ -473,9 +499,11 @@ catálogo. El motivo es obligatorio en la merma, que es **la disminución manual
 |---|---|---|
 | `RestriccionProducto` | estudiante, producto | `HU-10` |
 | `RestriccionAlergeno` | estudiante, alérgeno | `HU-11`, `INV-5` |
-| `LimiteDiario` | estudiante, monto | `HU-09` |
+| `LimiteDiario` | estudiante (uno a uno), monto **positivo** | `HU-09`, `DT-28` |
 
-Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`).
+Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`) y viven en la app `restricciones` (`DT-28`).
+
+`LimiteDiario` existe desde `TT-94`. **No hay fila cuando no hay límite**, y por eso el monto lleva una `CheckConstraint` que exige que sea positivo: un cero significaría «no puede comprar nada», que es lo contrario de «no configuré ninguno».
 
 ### Venta
 
@@ -497,7 +525,7 @@ Las tres son escribibles **solo** por el acudiente (`DT-11`, `INV-4`).
 | `INV-1` Sin saldo negativo | `DT-1`, `DT-6` | Validación dentro del bloqueo pesimista |
 | `INV-2` Saldo reconstruible | `DT-4`, `DT-24` | El saldo **es** la suma del historial, y todo movimiento entra por un único asentador |
 | `INV-3` Existencias explicables | `DT-5`, `DT-24` | Las existencias **son** la suma del historial, y todo movimiento entra por un único asentador |
-| `INV-4` Restricciones no desactivables | `DT-11` | Ningún rol tiene permiso de escritura **sobre las restricciones**: la administración escribe su catálogo (`HU-26`) y nada más |
+| `INV-4` Restricciones no desactivables | `DT-11`, `DT-28` | Ningún rol tiene permiso de escritura **sobre las restricciones**: la administración escribe su catálogo (`HU-26`) y nada más. Viven en una app propia y **sin admin**, así que no hay dónde concederlo por descuido |
 | `INV-5` Bloqueo por condición | `DT-7` | Relación evaluada en la venta, no lista materializada |
 | `INV-6` Sin autorregistro | `DT-10` | Las rutas de registro no existen |
 | `INV-7` Código aleatorio | `DT-9` | Generador criptográfico con índice único |
