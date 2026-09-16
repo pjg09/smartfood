@@ -84,13 +84,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **13** de 40 | **4** de 15 |
-| Pendientes | 27 | 11 |
+| **Finalizadas** | **15** de 40 | **5** de 15 |
+| Pendientes | 25 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 7 | 17 |
-| Carlos | 4 | 12 |
+| Pedro | 8 | 17 |
+| Carlos | 5 | 12 |
 | Alejandro | 2 | 8 |
 | Naomi | 0 | 3 |
 
@@ -101,7 +101,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-01` | `TT-94`–`TT-96` | app `restricciones` (`DT-28`) · `HU-09` **salvo su tercer criterio** | ☑ |
 | `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☑ |
 | `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☑ |
-| `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☐ |
+| `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☑ |
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☐ |
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☐ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☐ |
@@ -226,17 +226,31 @@ después, y declaración retirada.
 | Título del PR | `feat(restricciones): retirar una restricción dejando asiento` |
 | Rama | `feat/TT-104-retiro-de-restriccion` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-12` |
+| Historia | `HU-12` — **cerrada** |
 | Invariantes | `ALC-IN-19`: el retiro se asienta |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-104` | Servicio de retiro que deja asiento auditable | Pedro | ☐ |
-| `TT-105` | Acción de retirar en la interfaz del acudiente | Carlos | ☐ |
+| `TT-104` | Servicio de retiro que deja asiento auditable | Pedro | ☑ |
+| `TT-105` | Acción de retirar en la interfaz del acudiente | Carlos | ☑ |
 
 El retiro se asienta porque es una acción sobre la seguridad alimentaria de un menor:
 tiene que poder reconstruirse quién la hizo y cuándo.
+
+**Cómo quedó.** `AsientoDeRestriccion` es un libro más, con el patrón de `DT-24`: un único
+`_asentar` por el que pasan los cuatro servicios. Entra en la misma transacción que el
+cambio que anota —o quedan los dos o no queda ninguno— y guarda el nombre tal como estaba
+(`DT-8`), para que renombrar el catálogo no reescriba el pasado.
+
+**Anota también el bloqueo, y el criterio solo pedía el retiro.** Es una decisión
+declarada: un registro con solo los retiros no reconstruye nada. «Se retiró el bloqueo de
+maní el día 3» no dice si el niño estuvo protegido antes ni desde cuándo, que es justo la
+pregunta que una auditoría trae.
+
+`TT-105` no añadió la acción de retirar —ya existía como el interruptor de `TT-99` y
+`TT-102`—, sino **lo que faltaba para que fuera auditable**: el historial visible en las
+dos pantallas, dentro del fragmento que HTMX intercambia para que no se quede desfasado.
 
 ---
 

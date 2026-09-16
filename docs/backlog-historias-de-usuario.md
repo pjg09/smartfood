@@ -975,7 +975,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 45 | `HU-24` | Consulta de reservas pendientes | EPI-6 | USR-3/4 | Should | ☐ |
 | 46 | `HU-25` | Registro de entrega del pedido | EPI-6 | USR-3 | Should | ☐ |
 | 47 | `HU-16` | Identificación por documento | EPI-4 | USR-3 | Should | ☑ |
-| 48 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☐ |
+| 48 | `HU-12` | Retiro de una restricción | EPI-3 | USR-2 | Should | ☑ |
 | 49 | `HU-35` | Reporte de ventas | EPI-8 | USR-4 | Should | ☐ |
 | 50 | `HU-36` | Reporte de movimientos de inventario | EPI-8 | USR-4 | Should | ☐ |
 | 51 | `HU-37` | Reporte de auditoría | EPI-8 | USR-4 | Should | ☐ |
@@ -989,7 +989,14 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 59 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 60 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**34 terminadas de 60**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60` y `HU-11`**, las tres primeras del Sprint 3 en cerrarse (`PR-02`, `PR-15` y `PR-03`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**35 terminadas de 60**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11` y `HU-12`**, las cuatro primeras del Sprint 3 en cerrarse (`PR-02`, `PR-15`, `PR-03` y `PR-04`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 17 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+
+> **`HU-12` cerró con `PR-04`.** Retirar una restricción deja asiento —quién y cuándo—
+> en un libro que no se edita ni se borra, y el acudiente lo ve en sus dos pantallas.
+> **Se anota también el bloqueo**, que el criterio no pedía: un registro con solo los
+> retiros no reconstruye nada. Cubre el producto y el alérgeno, que es lo que `[S11]`
+> ata a «configurar y **retirar** restricciones alimentarias»; el límite diario está en
+> la otra fila, que dice únicamente «fijar».
 
 > **`HU-11` cerró con `PR-03`, y es la que sostiene `INV-5`.** El bloqueo se guarda como
 > **condición** —dos columnas: estudiante y alérgeno— y qué productos cubre se calcula

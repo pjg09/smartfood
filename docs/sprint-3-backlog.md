@@ -121,8 +121,8 @@ La dependencia de esta historia es `HU-26` (administración del catálogo, Sprin
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-104` | Servicio de retiro que deja asiento auditable (`ALC-IN-19`) | Pedro | ☐ |
-| `TT-105` | Acción de retirar en la interfaz del acudiente | Carlos | ☐ |
+| `TT-104` | Servicio de retiro que deja asiento auditable (`ALC-IN-19`) | Pedro | ☑ |
+| `TT-105` | Acción de retirar en la interfaz del acudiente | Carlos | ☑ |
 
 El retiro **se asienta**: es una acción sobre la seguridad alimentaria de un menor y tiene que poder reconstruirse quién la hizo y cuándo.
 
