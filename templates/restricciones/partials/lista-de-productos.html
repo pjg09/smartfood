@@ -109,4 +109,8 @@
       {% endif %}
     </div>
   {% endif %}
+
+  {% comment %} El historial va dentro del fragmento: el interruptor lo cambia, y
+     fuera de aquí se quedaría enseñando lo de antes (`TT-105`, `HU-12`). {% endcomment %}
+  {% include "restricciones/partials/historial-de-restricciones.html" %}
 </div>

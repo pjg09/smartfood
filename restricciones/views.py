@@ -1,4 +1,4 @@
-"""Vistas del control parental (`TT-96`, `TT-99`, `TT-102`, `HU-09` … `HU-11`).
+"""Vistas del control parental (`TT-96`, `TT-99`, `TT-102`, `TT-105`, `HU-09` … `HU-12`).
 
 Solo HTTP: parsear la petición, delegar en un servicio o un selector, y
 renderizar. **Cero lógica de negocio** (`DT-15`): quién puede fijar el límite y
@@ -27,6 +27,7 @@ from catalogo.selectors import productos_en_el_catalogo
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from restricciones.selectors import (
+    historial_de_restricciones,
     identificadores_de_alergenos_bloqueados,
     identificadores_de_productos_bloqueados,
     limite_diario_de,
@@ -51,6 +52,14 @@ from restricciones.services import (
 # día**. Ofrecer los mismos cuatro importes sugeriría que un cupo diario de
 # cien mil pesos es lo corriente.
 MONTOS_SUGERIDOS = (Decimal("3000"), Decimal("5000"), Decimal("8000"), Decimal("12000"))
+
+# Cuántos cambios de restricción se enseñan bajo cada lista (`TT-105`, `HU-12`).
+#
+# Ocho, y no el historial entero: la pregunta que responde la pantalla es «¿qué
+# toqué últimamente?», no auditar la cuenta. El registro completo sigue estando
+# —`historial_de_restricciones` sin límite lo devuelve— y es el que una auditoría
+# necesita; media lista no reconstruye nada.
+ULTIMOS_CAMBIOS = 8
 
 
 class LimiteDiarioForm(forms.Form):
@@ -235,6 +244,12 @@ def _contexto_de_productos(estudiante, busqueda):
     return {
         "estudiante": estudiante,
         "busqueda": busqueda,
+        # **Va dentro del fragmento que HTMX intercambia, y es a propósito.** El
+        # historial cambia con cada toque del interruptor; fuera del fragmento se
+        # quedaría diciendo lo de antes, y un registro de auditoría desfasado es
+        # peor que no enseñarlo. La alternativa —`hx-swap-oob`— falla en silencio
+        # si el elemento no queda en el primer nivel de la respuesta.
+        "historial": historial_de_restricciones(estudiante, limite=ULTIMOS_CAMBIOS),
         # Se anota en cada producto si está bloqueado, en lugar de dejar que la
         # plantilla lo pregunte: una plantilla no debería poder disparar una
         # consulta por fila.
@@ -318,6 +333,8 @@ def _contexto_de_alergenos(estudiante):
 
     return {
         "estudiante": estudiante,
+        # Dentro del fragmento, por lo mismo que en la lista de productos.
+        "historial": historial_de_restricciones(estudiante, limite=ULTIMOS_CAMBIOS),
         "alergenos": [
             {"alergeno": a, "bloqueado": a.id in bloqueados} for a in alergenos
         ],
