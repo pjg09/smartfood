@@ -1,8 +1,12 @@
 """Lecturas del control parental (`DT-15`).
 
+Cubre `HU-09` … `HU-13` y `HU-61`.
+
 Como los servicios, estos selectores no conocen `request`: reciben lo que
 necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
 """
+
+from dataclasses import dataclass
 
 from catalogo.models import Alergeno, Producto
 from restricciones.models import (
@@ -202,3 +206,75 @@ def historial_de_restricciones(estudiante, limite=None):
     ).select_related("actor", "producto", "alergeno").order_by("-creado_en")
 
     return asientos[:limite] if limite is not None else asientos
+
+
+@dataclass(frozen=True)
+class RestriccionesVigentes:
+    """Todo lo que hoy limita lo que un estudiante puede comprar (`TT-106`).
+
+    Las tres restricciones juntas, porque **juntas es como significan algo**.
+    «Tiene un cupo de $8.000» sin «y el maní está bloqueado» es media respuesta,
+    y quien las lee —el cajero al cobrar (`HU-13`), los cuatro roles al
+    consultar (`HU-38`), la venta al validar (`TT-113`, `TT-116`)— las necesita
+    todas o no necesita ninguna.
+
+    Es un objeto y no tres valores sueltos por lo mismo que `InformacionDeCobro`
+    de `ventas`: el día que haya una cuarta restricción hay **un solo sitio**
+    donde añadirla, y ninguna pantalla se queda enseñando dos de tres sin que
+    nadie lo note.
+
+    ── LOS ALÉRGENOS NO TRAEN SU LISTA DE PRODUCTOS, Y ES `INV-5` ──────────
+    `alergenos` son las condiciones que el acudiente bloqueó, no los productos
+    que hoy las declaran. Meter aquí esa lista la convertiría en un dato —algo
+    que alguien podría guardar, cachear o pasar por ahí— y es exactamente lo que
+    `INV-5` prohíbe. Qué productos quedan fuera se pregunta cuando hace falta,
+    con `productos_cubiertos_por_alergeno` o `alergenos_que_bloquean`.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+
+    #: El `LimiteDiario` del estudiante, o `None` si no tiene cupo. `None` no es
+    #: cero: es «puede gastar lo que tenga» (`HU-09`, `HU-61`).
+    limite: LimiteDiario | None
+    #: `QuerySet` de `RestriccionProducto`, sin evaluar.
+    productos: object
+    #: `QuerySet` de `RestriccionAlergeno`, sin evaluar. **Las condiciones, no
+    #: los productos que hoy las declaran** (`INV-5`).
+    alergenos: object
+
+    @property
+    def hay_alguna(self):
+        """Si el estudiante tiene algo configurado, sea de la clase que sea.
+
+        Existe para que una pantalla no tenga que preguntar por las tres y
+        acordarse de las tres. Un `or` olvidado es una pantalla que dice «sin
+        restricciones» sobre un niño alérgico.
+        """
+        return bool(self.limite or self.productos or self.alergenos)
+
+
+def restricciones_vigentes(estudiante):
+    """Las tres restricciones de un estudiante, de una vez (`TT-106`, `HU-13`).
+
+    **El único sitio por el que se leen juntas.** Lo usan el panel de cobro
+    (`TT-109`), la consulta de los cuatro roles (`TT-111`, `TT-112`) y, en lo que
+    a cada una toca, las validaciones de la venta.
+
+    ── NO AUTORIZA A NADIE, Y ESO TAMBIÉN ES `INV-4` ───────────────────────
+    Un selector no sabe quién pregunta. Parece que aquí debería exigirse el rol
+    —son datos de un menor—, pero `[S11]` concede **consultar** restricciones a
+    los cuatro roles (`HU-38`): no hay a quién negárselo. Lo que `INV-4` prohíbe
+    es **escribirlas**, y eso no se defiende en una lectura: se defiende en los
+    servicios y en los permisos por modelo (`TT-107`, `DT-11`).
+
+    Quien llama decide a qué estudiante puede llegar: `estudiante_a_cargo` en
+    `INT-1`, la identificación por tarjeta en `INT-2`.
+    ─────────────────────────────────────────────────────────────────────────
+
+    Devuelve `QuerySet` sin evaluar en las dos listas: quien solo necesite
+    contarlas no paga por traerlas.
+    """
+    return RestriccionesVigentes(
+        limite=limite_diario_de(estudiante),
+        productos=productos_bloqueados_de(estudiante),
+        alergenos=alergenos_bloqueados_de(estudiante),
+    )

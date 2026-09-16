@@ -84,14 +84,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **18** de 43 | **6** de 16 |
-| Pendientes | 25 | 10 |
+| **Finalizadas** | **21** de 43 | **7** de 16 |
+| Pendientes | 22 | 9 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 9 | 18 |
+| Pedro | 11 | 18 |
 | Carlos | 6 | 13 |
-| Alejandro | 3 | 9 |
+| Alejandro | 4 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -102,7 +102,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-02` | `TT-97`–`TT-99` | `HU-10` | ☑ |
 | `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☑ |
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☑ |
-| `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☐ |
+| `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☑ |
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☐ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☐ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☐ |
@@ -266,17 +266,35 @@ dos pantallas, dentro del fragmento que HTMX intercambia para que no se quede de
 | Responsables | Pedro y Alejandro |
 | Historia | `HU-13` — **no la cierra**, la cierra `PR-06` |
 | Invariantes | **`INV-4`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-106` | Selector de las restricciones vigentes de un estudiante | Pedro | ☐ |
-| `TT-107` | Permisos: ni cajero, ni administración, ni institución escriben restricciones | Pedro | ☐ |
-| `TT-108` | Caso de prueba: los tres roles no tienen escritura sobre restricciones | Alejandro | ☐ |
+| `TT-106` | Selector de las restricciones vigentes de un estudiante | Pedro | ☑ |
+| `TT-107` | Permisos: ni cajero, ni administración, ni institución escriben restricciones | Pedro | ☑ |
+| `TT-108` | Caso de prueba: los tres roles no tienen escritura sobre restricciones | Alejandro | ☑ |
 
 `INV-4` se sostiene **en la capa de datos**, con permisos por modelo (`DT-11`). Ocultar el
 botón en la plantilla no es cumplirla, es aparentarlo: `TT-108` llama al servicio con cada
 rol, no mira la pantalla.
+
+**Cómo quedó.** Dieciocho puertas comprobadas —seis servicios por tres roles— y, además del
+`PermissionDenied` de cada una, que **lo configurado sigue en pie** después de intentarlo:
+es lo que `HU-13` le promete al acudiente. La prohibición del admin se declara ahora **por
+prefijo de app** y no por lista de modelos, así que un modelo nuevo dentro de
+`restricciones` queda cubierto sin que nadie se acuerde de añadirlo.
+
+> **Hallazgo de `TT-107`, con su tamaño exacto.** `ESCRITURA_PROHIBIDA` solo declaraba los
+> dos roles de la cafetería. `INV-4` dice «ni el personal de la cafetería **ni la
+> institución**» y el tercer criterio de `HU-13` lo repite. **Nada estuvo nunca expuesto**:
+> la institución no tenía permiso sobre esos modelos, que además no existían hasta este
+> sprint. Lo que faltaba era la declaración que lo habría detectado si alguien se lo
+> concediera.
+
+**La prueba negativa se verificó introduciendo la violación a propósito**: con un permiso
+de `change` sobre `restricciones.limitediario` concedido al cajero, fallan tres pruebas.
+Sin esa comprobación, una prueba que exige una ausencia pasa sola el día que deja de
+proteger.
 
 ---
 
