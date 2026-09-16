@@ -19,8 +19,31 @@ Un renglón por producto, que es lo que `LineaVenta` admite (`TT-78`): añadir d
 veces el mismo producto **suma cantidades**, no apila líneas.
 """
 
+from uuid import UUID
+
 CLAVE_CARRITO = "carrito"
 CLAVE_ESTUDIANTE = "estudiante_de_la_venta"
+
+
+def _clave(producto_id):
+    """El identificador como texto, o `None` si no es un `UUID`.
+
+    ── EL CARRITO SOLO CONTIENE IDENTIFICADORES VÁLIDOS ────────────────────
+    Es la invariante de este módulo, y se sostiene aquí porque es el único
+    sitio por el que entra algo. Sin ella, un `POST` sin `producto` guardaba la
+    cadena vacía como clave y **la siguiente consulta reventaba**: el selector
+    filtra por `id__in` sobre un `UUIDField`, y Postgres recibe `''`.
+
+    El resultado era un `500` donde tocaba un rechazo tranquilo. No se puede
+    provocar desde la pantalla —todos los botones mandan `producto` por
+    `hx-vals`, y «vaciar» no pasa por aquí—, pero una petición a mano bastaba, y
+    la caja es el peor sitio para una traza de error.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    try:
+        return str(UUID(str(producto_id)))
+    except (ValueError, AttributeError, TypeError):
+        return None
 
 
 def _guardar(sesion, carrito):
@@ -39,15 +62,32 @@ def leer(sesion):
     convertirlas de ida y vuelta: quien necesite el `UUID` lo construye al
     consultar la base, y así no hay dos formas del mismo dato circulando.
     """
-    return dict(sesion.get(CLAVE_CARRITO, {}))
+    # Se filtra también al leer, y no solo al escribir: una sesión abierta antes
+    # de esta comprobación puede traer una clave inválida guardada, y así se cura
+    # sola en lugar de romper la pantalla hasta que alguien borre la cookie.
+    return {
+        clave: cantidad
+        for clave, cantidad in sesion.get(CLAVE_CARRITO, {}).items()
+        if _clave(clave) is not None
+    }
 
 
 def anadir(sesion, producto_id, cantidad=1):
-    """Suma unidades de un producto. Si no estaba, lo pone."""
+    """Suma unidades de un producto. Si no estaba, lo pone.
+
+    Un identificador que no es un `UUID` **se ignora en silencio**: el carrito
+    queda como estaba. Quien llama recibe el carrito y pinta el ticket, así que
+    la pantalla no cambia — que es exactamente lo que debe pasar cuando la
+    petición no pedía nada reconocible.
+    """
+    clave = _clave(producto_id)
+    if clave is None:
+        return leer(sesion)
+
     carrito = leer(sesion)
-    carrito[str(producto_id)] = carrito.get(str(producto_id), 0) + cantidad
-    if carrito[str(producto_id)] <= 0:
-        del carrito[str(producto_id)]
+    carrito[clave] = carrito.get(clave, 0) + cantidad
+    if carrito[clave] <= 0:
+        del carrito[clave]
     _guardar(sesion, carrito)
     return carrito
 
@@ -59,7 +99,7 @@ def quitar(sesion, producto_id):
     «esto no era», que en una caja con cola es el que hace falta de verdad.
     """
     carrito = leer(sesion)
-    carrito.pop(str(producto_id), None)
+    carrito.pop(_clave(producto_id) or "", None)
     _guardar(sesion, carrito)
     return carrito
 

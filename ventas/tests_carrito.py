@@ -140,6 +140,49 @@ class ElCarritoSeMontaDesdeElCatalogoTest(TestCase):
         self.assertNotIn("<html", cuerpo)
         self.assertNotIn("<body", cuerpo)
 
+    def test_un_producto_que_no_es_un_identificador_no_rompe_nada(self):
+        """**Devolvía un `500`.** El carrito guardaba la cadena vacía como clave
+        y la siguiente consulta reventaba al filtrar por `UUID`.
+
+        Desde la pantalla no se puede provocar —todos los botones mandan
+        `producto` por `hx-vals`—, pero una petición a mano bastaba, y la caja es
+        el peor sitio para una traza de error. Ahora se ignora y el ticket vuelve
+        como estaba.
+        """
+        self._anadir(self.empanada)
+
+        for valor in ["", "no-soy-un-uuid", "123"]:
+            with self.subTest(valor=valor):
+                respuesta = self.client.post(
+                    self.carrito, {"producto": valor, "accion": "anadir"}
+                )
+                self.assertEqual(respuesta.status_code, 200)
+                # Y el carrito sigue como estaba: una empanada, ni más ni menos.
+                self.assertEqual(
+                    respuesta.content.decode().count("data-linea-de-venta"), 1
+                )
+
+    def test_sin_el_parametro_producto_tampoco(self):
+        """El caso que lo destapó: un `POST` pelado a la ruta del carrito."""
+        respuesta = self.client.post(self.carrito)
+
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_una_sesion_con_una_clave_invalida_se_cura_sola(self):
+        """Una sesión abierta antes de la corrección puede traerla guardada. Se
+        filtra al leer para que la pantalla no quede rota hasta que alguien borre
+        la cookie."""
+        sesion = self.client.session
+        sesion["carrito"] = {"": 3, str(self.empanada.id): 2}
+        sesion.save()
+
+        cuerpo = self.client.post(
+            self.carrito, {"producto": str(self.empanada.id), "accion": "descontar"}
+        ).content.decode()
+
+        self.assertEqual(cuerpo.count("data-linea-de-venta"), 1)
+        self.assertIn("$3.500 COP", cuerpo)
+
     def test_el_carrito_no_se_toca_por_GET(self):
         """Un `GET` que cambia algo es una URL que el navegador reproduce solo."""
         respuesta = self.client.get(self.carrito, {"producto": str(self.empanada.id)})
