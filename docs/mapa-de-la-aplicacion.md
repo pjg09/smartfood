@@ -419,10 +419,14 @@ omitirlo (`INV-4`). El cupo de `HU-09` sigue sin comprobarse al cobrar — eso e
 hacía para esa lista.
 
 **El punto de venta vende.** Identifica por las dos vías (`HU-15`, `HU-16`), enseña la
-fotografía (`HU-58`), el saldo y el consumo del día (`HU-17`), el medio de pago (`HU-54`), y
-cobra descontando saldo y existencias en una sola transacción (`HU-21`). `HU-17` sigue
-marcada como abierta aun con su panel construido: le falta el bloque de restricciones, que
-es del Sprint 3.
+fotografía (`HU-58`), el medio de pago (`HU-54`), y cobra descontando saldo y existencias
+en una sola transacción (`HU-21`). **`HU-17` quedó cerrada con `TT-109`**: el panel enseña
+los tres datos que su primer criterio pide —saldo, consumo del día y restricciones
+vigentes—, y el tercero no existía hasta este sprint.
+
+El bloque de restricciones nombra cada una y dice **si la caja la hace cumplir**: hoy solo
+el producto bloqueado (`HU-60`). El alérgeno (`HU-18`) y el cupo (`HU-20`) siguen
+pendientes, y callarlo dejaría al cajero creyendo que el sistema frena el maní.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que

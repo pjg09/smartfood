@@ -957,10 +957,10 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 10 | `HU-09` | Límite diario de gasto | EPI-3 | USR-2 | Must | ☐ |
 | 11 | `HU-10` | Bloqueo de un producto puntual | EPI-3 | USR-2 | Must | ☑ |
 | 12 | `HU-11` | Bloqueo por alérgeno | EPI-3 | USR-2 | Must | ☑ |
-| 13 | `HU-13` | Restricciones no desactivables | EPI-3 | USR-2 | Must | ☐ |
+| 13 | `HU-13` | Restricciones no desactivables | EPI-3 | USR-2 | Must | ☑ |
 | 14 | `HU-14` | Código de tarjeta aleatorio | EPI-4 | USR-1 | Must | ☑ |
 | 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☑ |
-| 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☐ |
+| 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☑ |
 | 17 | `HU-58` | Fotografía visible al cobrar | EPI-11 | USR-3 | Must | ☑ |
 | 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☑ |
 | 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must | ☐ |
@@ -1007,7 +1007,13 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 60 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☐ |
 | 61 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**36 terminadas de 61**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11`, `HU-12` y `HU-61`**, las cinco primeras del Sprint 3 en cerrarse (`PR-02`, `PR-15`, `PR-03`, `PR-04` y `PR-16`). Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **Del Sprint 2 solo `HU-17` sigue abierta** —le falta el bloque de restricciones, del Sprint 3—, que es lo que el `ANEXO A` del sprint backlog anticipó: 13 de 14 historias. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` sigue abierta** aunque `PR-09` y `PR-10` estén integrados: su primer criterio pide los tres datos y las restricciones son del Sprint 3. **43 Must · 18 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**38 terminadas de 61**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11`, `HU-12`, `HU-61` y `HU-13`** del Sprint 3 (`PR-02`, `PR-15`, `PR-03`, `PR-04`, `PR-16` y `PR-06`), **y `HU-17`**, que el Sprint 2 dejó abierta y `PR-06` salda. Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **El Sprint 2 queda cerrado del todo**: `HU-17` era la única que arrastraba, le faltaba el bloque de restricciones, y `PR-06` del Sprint 3 se lo dio. Sus 14 de 14 historias, con una de retraso — que es lo que el `ANEXO A` de aquel sprint backlog anticipó. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` se cerró con `PR-06` del Sprint 3**, no con `PR-09` ni `PR-10` del Sprint 2: su primer criterio pide los tres datos al identificar, y el tercero —las restricciones vigentes— no existía hasta que `TT-94`, `TT-97` y `TT-100` lo construyeron. **43 Must · 18 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+
+> **`PR-06` cerró DOS historias: `HU-13` y `HU-17`.** Es la única vez en el proyecto que un
+> PR salda una historia de un sprint anterior, y estaba señalada como la marca más fácil
+> de olvidar. `HU-13`: el cajero ve las restricciones vigentes al cobrar y no tiene con qué
+> desactivarlas —lo segundo lo garantiza `PR-05` en la capa de datos—. `HU-17`: los tres
+> datos al identificar, que es lo que le faltaba desde el Sprint 2.
 
 > **`HU-61` cerró con `PR-16`, y no estaba en el backlog.** La trajo `DEC-13`, al verse en
 > `PR-04` que `[S11]` daba al acudiente «fijar» el límite pero no retirarlo: se podía subir

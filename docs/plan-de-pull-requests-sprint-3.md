@@ -84,14 +84,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **21** de 43 | **7** de 16 |
-| Pendientes | 22 | 9 |
+| **Finalizadas** | **23** de 43 | **8** de 16 |
+| Pendientes | 20 | 8 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 11 | 18 |
-| Carlos | 6 | 13 |
-| Alejandro | 4 | 9 |
+| Carlos | 7 | 13 |
+| Alejandro | 5 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -103,7 +103,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-03` | `TT-100`–`TT-103` | `HU-11` · **`INV-5`** | ☑ |
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☑ |
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☑ |
-| `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☐ |
+| `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☑ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☐ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☐ |
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☐ |
@@ -305,14 +305,14 @@ proteger.
 | Título del PR | `feat(pos): mostrar las restricciones vigentes en el panel de cobro` |
 | Rama | `feat/TT-109-restricciones-al-cobrar` |
 | Responsables | Carlos y Alejandro |
-| Historias | `HU-13` **y `HU-17`** |
+| Historias | `HU-13` **y `HU-17`** — **las dos cerradas** |
 | Invariantes | `INV-4` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-109` | Bloque de restricciones vigentes en el panel de cobro | Carlos | ☐ |
-| `TT-110` | Caso de prueba: `HU-17` completa — saldo, consumo del día y restricciones | Alejandro | ☐ |
+| `TT-109` | Bloque de restricciones vigentes en el panel de cobro | Carlos | ☑ |
+| `TT-110` | Caso de prueba: `HU-17` completa — saldo, consumo del día y restricciones | Alejandro | ☑ |
 
 > ⚠ **Salda la deuda del Sprint 2.** `HU-17` quedó abierta porque su tercer criterio exige
 > mostrar las restricciones vigentes y no existían. Este PR añade ese bloque al panel que
@@ -322,6 +322,20 @@ proteger.
 
 El cajero **ve** las restricciones y no dispone de ninguna acción para desactivarlas. Lo
 segundo ya lo garantiza `PR-05` en la capa de datos.
+
+**Cómo quedó, y una advertencia temporal que hay que retirar a su tiempo.** El bloque
+nombra cada restricción —un recuento no sirve en una caja: el cajero necesita saber
+cuál— y dice, por línea, **si la caja la hace cumplir**. Hoy solo rechaza el producto
+bloqueado (`HU-60`); el alérgeno es `PR-08` y el cupo `PR-09`. Un cajero que crea que el
+sistema frena el maní puede vender el maní, así que el panel se lo dice con todas las
+letras. **Esas dos marcas —y las dos pruebas que las exigen— se retiran al integrar
+`PR-08` y `PR-09`.**
+
+Y una frase que cambió de signo: hasta este PR la pantalla **no podía** escribir «sin
+restricciones», porque el sistema no guardaba ninguna y eso habría sido «no sé»
+disfrazado de «no tiene». Con las tres tablas existiendo, es una afirmación que la base
+sostiene — la prueba del Sprint 2 que exigía lo contrario se invirtió, con su motivo
+escrito.
 
 ---
 
