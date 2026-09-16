@@ -27,7 +27,11 @@ from personas.selectors import (
 from personas.services import cargar_estudiantes_y_acudientes
 from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
-from restricciones.selectors import limite_diario_de, productos_bloqueados_de
+from restricciones.selectors import (
+    alergenos_bloqueados_de,
+    limite_diario_de,
+    productos_bloqueados_de,
+)
 
 
 class ArchivoDeCargaForm(forms.Form):
@@ -106,9 +110,14 @@ def _contexto_del_estudiante(estudiante):
     significa que el acudiente no fijó cupo, que es distinto de un cupo de cero
     (`restricciones.models.LimiteDiario`).
 
-    `TT-99` añade el recuento de productos bloqueados. Es un `count()` y no la
-    lista: la tarjeta solo dice cuántos hay, y traerlos todos para contarlos
-    sería pedirle a la base un trabajo que la pantalla no usa.
+    `TT-99` añade el recuento de productos bloqueados y `TT-102` el de alérgenos.
+    Los dos son `count()` y no la lista: la tarjeta solo dice cuántos hay, y
+    traerlos todos para contarlos sería pedirle a la base un trabajo que la
+    pantalla no usa.
+
+    **Son dos cifras y no una suma**, a propósito: una lista de productos y una
+    condición no se agregan. Sumarlas daría un número que no significa nada y
+    escondería justo la distinción que `HU-10` y `HU-11` existen para marcar.
     """
     return {
         "seleccionado": estudiante,
@@ -116,6 +125,9 @@ def _contexto_del_estudiante(estudiante):
         "limite": limite_diario_de(estudiante) if estudiante is not None else None,
         "productos_bloqueados": (
             productos_bloqueados_de(estudiante).count() if estudiante is not None else 0
+        ),
+        "alergenos_bloqueados": (
+            alergenos_bloqueados_de(estudiante).count() if estudiante is not None else 0
         ),
         "movimientos": (
             historial_de(estudiante, limite=ULTIMOS_MOVIMIENTOS)

@@ -1,0 +1,104 @@
+{% comment %} TT-102. La lista de alérgenos con su interruptor (`HU-11`, `INV-5`).
+
+   Fragmento, no página (`DT-16`): lo devuelve el interruptor a cada toque y lo
+   incluye la página al pintarse. Llega entero, con sus dos recuentos, porque el
+   toque los cambia los dos.
+{% endcomment %}
+
+<div id="lista-de-alergenos" class="flex flex-col gap-3">
+
+  <p class="text-base font-medium text-texto-suave" role="status">
+    {% if total_bloqueados %}
+      <strong class="font-semibold text-texto">{{ total_bloqueados }}</strong>
+      alérgeno{{ total_bloqueados|pluralize }} bloqueado{{ total_bloqueados|pluralize }}.
+      {% comment %} La segunda cifra no es la suma de las de abajo: un producto que
+         declare dos alérgenos bloqueados se contaría dos veces. Y se dice **hoy**
+         a propósito — mañana puede ser otra sin que nadie toque nada. {% endcomment %}
+      Hoy eso deja fuera
+      <strong class="font-semibold text-texto">{{ productos_cubiertos }}</strong>
+      producto{{ productos_cubiertos|pluralize }} del catálogo, y cubrirá también los
+      que la cafetería agregue después.
+    {% else %}
+      {{ estudiante.nombre }} no tiene ningún alérgeno bloqueado.
+    {% endif %}
+  </p>
+
+  <ul class="grid gap-3 tablet:grid-cols-2 escritorio:grid-cols-3">
+    {% for fila in alergenos %}
+      <li class="flex flex-col overflow-hidden rounded-md border bg-superficie shadow-sm
+                 transition-colors
+                 {% if fila.bloqueado %}border-error{% else %}border-borde{% endif %}">
+
+        <div class="flex flex-1 flex-col gap-1 p-4">
+          <span class="text-base font-medium text-texto">{{ fila.alergeno.nombre }}</span>
+          {% comment %} «Hoy» no es relleno: es la diferencia entre esta historia y
+             `HU-10`. La cifra describe el catálogo actual; el bloqueo no depende de
+             ella (`INV-5`). {% endcomment %}
+          <span class="mt-auto pt-2 text-sm text-texto-suave">
+            {% if fila.alergeno.productos_que_lo_declaran %}
+              Hoy lo declaran
+              <span class="tabular-nums">{{ fila.alergeno.productos_que_lo_declaran }}</span>
+              producto{{ fila.alergeno.productos_que_lo_declaran|pluralize }}
+            {% else %}
+              Hoy no lo declara ningún producto
+            {% endif %}
+          </span>
+        </div>
+
+        {% comment %} El rojo significa lo que significa (`[S1]`, regla 3): un alérgeno
+           bloqueado es una venta que se va a rechazar (`INV-5`, `HU-18`). El botón dice
+           la acción y no el estado; el estado lo dicen el borde, el fondo y el texto
+           de al lado. {% endcomment %}
+        <form hx-post="{% url 'bloqueo-de-alergeno' estudiante.id %}"
+              hx-target="#lista-de-alergenos"
+              hx-swap="outerHTML"
+              hx-indicator="#guardando-alergeno"
+              class="flex items-center justify-between gap-3 border-t px-4 py-3
+                     {% if fila.bloqueado %}border-error bg-error-suave
+                     {% else %}border-borde bg-superficie-hover{% endif %}">
+          {% csrf_token %}
+          <input type="hidden" name="alergeno" value="{{ fila.alergeno.id }}">
+          <input type="hidden" name="accion"
+                 value="{% if fila.bloqueado %}desbloquear{% else %}bloquear{% endif %}">
+
+          <span class="flex min-w-0 items-center gap-2 text-sm
+                       {% if fila.bloqueado %}text-error-fuerte{% else %}text-texto-suave{% endif %}">
+            <svg class="h-4 w-4 shrink-0" aria-hidden="true">
+              <use href="#{% if fila.bloqueado %}i-restriccion{% else %}i-correcto{% endif %}"></use>
+            </svg>
+            <span class="truncate">
+              {% if fila.bloqueado %}Bloqueado{% else %}Sin bloquear{% endif %}
+            </span>
+          </span>
+
+          <button type="submit"
+                  class="shrink-0 rounded-md border px-3 py-1.5 text-sm font-semibold
+                         whitespace-nowrap transition-colors
+                         {% if fila.bloqueado %}
+                           border-error bg-superficie text-error-fuerte hover:bg-error-suave
+                         {% else %}
+                           border-borde bg-superficie text-texto hover:border-acento
+                         {% endif %}">
+            {% if fila.bloqueado %}Desbloquear{% else %}Bloquear{% endif %}
+          </button>
+        </form>
+      </li>
+    {% empty %}
+      {% comment %} `[S2.4]`. Aquí el hueco es de datos, no de función: quien declara
+         los alérgenos del catálogo es la administración de la cafetería. {% endcomment %}
+      <li class="flex flex-col items-center gap-3 rounded-md border border-dashed
+                 border-borde p-8 text-center tablet:col-span-2 escritorio:col-span-3"
+          role="status">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-serie-1/10 text-serie-1">
+          <svg class="h-6 w-6" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+        </span>
+        <p class="text-base font-medium text-texto">Todavía no hay alérgenos registrados</p>
+        <p class="max-w-sm text-sm text-texto-suave">
+          Los registra la administración de la cafetería junto con el catálogo
+          (<strong class="text-texto">HU-26</strong>). En cuanto existan, podrás
+          bloquear los que necesites.
+        </p>
+      </li>
+    {% endfor %}
+  </ul>
+</div>

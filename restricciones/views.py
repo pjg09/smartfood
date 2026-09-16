@@ -1,4 +1,4 @@
-"""Vistas del control parental (`TT-96`, `TT-99`, `HU-09`, `HU-10`).
+"""Vistas del control parental (`TT-96`, `TT-99`, `TT-102`, `HU-09` … `HU-11`).
 
 Solo HTTP: parsear la petición, delegar en un servicio o un selector, y
 renderizar. **Cero lógica de negocio** (`DT-15`): quién puede fijar el límite y
@@ -16,22 +16,27 @@ from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import consumo_del_dia
-from catalogo.models import Producto
+from catalogo.models import Alergeno, Producto
 from catalogo.selectors import productos_en_el_catalogo
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from restricciones.selectors import (
+    identificadores_de_alergenos_bloqueados,
     identificadores_de_productos_bloqueados,
     limite_diario_de,
+    productos_cubiertos_por_alergeno,
 )
 from restricciones.services import (
     MONTO_MAXIMO,
+    bloquear_alergeno,
     bloquear_producto,
+    desbloquear_alergeno,
     desbloquear_producto,
     fijar_limite_diario,
 )
@@ -237,4 +242,85 @@ def _contexto_de_productos(estudiante, busqueda):
             {"producto": p, "bloqueado": p.id in bloqueados} for p in productos
         ],
         "total_bloqueados": len(bloqueados),
+    }
+
+
+@login_required
+@require_http_methods(["GET"])
+def alergenos_bloqueados(request, estudiante_id):
+    """Pantalla de selección de alérgenos a bloquear (`TT-102`, `HU-11`).
+
+    **Sin buscador, y no por descuido.** La barra de filtros de `TT-99` existe
+    porque el catálogo tiene decenas de productos; los alérgenos son ocho y caben
+    de un vistazo. Una fila de filtros sobre una lista que no se filtra es la
+    composición vacía.
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    return render(
+        request,
+        "restricciones/alergenos-bloqueados.html",
+        _contexto_de_alergenos(estudiante),
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def bloqueo_de_alergeno(request, estudiante_id):
+    """Bloquea o desbloquea un alérgeno y devuelve la lista repintada (`TT-102`).
+
+    Como su pareja de `TT-99`: `POST` porque escribe, y devuelve la lista entera
+    para que el recuento de la cabecera no quede diciendo una cifra vieja
+    (`DT-16`).
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    try:
+        alergeno = Alergeno.objects.get(pk=request.POST.get("alergeno"))
+    except (Alergeno.DoesNotExist, ValidationError, ValueError):
+        raise Http404("Ese alérgeno no existe.") from None
+
+    if request.POST.get("accion") == "desbloquear":
+        desbloquear_alergeno(actor=request.user, estudiante=estudiante, alergeno=alergeno)
+    else:
+        bloquear_alergeno(actor=request.user, estudiante=estudiante, alergeno=alergeno)
+
+    return render(
+        request,
+        "restricciones/partials/lista-de-alergenos.html",
+        _contexto_de_alergenos(estudiante),
+    )
+
+
+def _contexto_de_alergenos(estudiante):
+    """Lo que la lista necesita, venga de la página o de un toque.
+
+    Cada alérgeno llega con **cuántos productos lo declaran hoy**, anotado en una
+    sola consulta. Esa cifra es informativa y la pantalla lo dice con todas las
+    letras: **hoy**. Lo que el bloqueo cubre no es esa lista, es la condición
+    (`INV-5`), y lo que entre mañana queda dentro sin que nadie haga nada.
+
+    `productos_cubiertos_por_alergeno` se cuenta aparte porque no es la suma de
+    las cifras de arriba: un producto que declare dos alérgenos bloqueados se
+    contaría dos veces.
+    """
+    bloqueados = identificadores_de_alergenos_bloqueados(estudiante)
+
+    alergenos = Alergeno.objects.annotate(
+        productos_que_lo_declaran=Count("declaraciones", distinct=True)
+    ).order_by("nombre")
+
+    return {
+        "estudiante": estudiante,
+        "alergenos": [
+            {"alergeno": a, "bloqueado": a.id in bloqueados} for a in alergenos
+        ],
+        "total_bloqueados": len(bloqueados),
+        "productos_cubiertos": productos_cubiertos_por_alergeno(estudiante).count(),
     }
