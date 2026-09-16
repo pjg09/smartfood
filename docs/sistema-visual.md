@@ -241,4 +241,4 @@ en el punto de venta un intercambio HTMX que no suba su destino es un intercambi
 cajero no ve.
 
 Para mirar una pantalla sin abrir el navegador —y para adjuntar la evidencia a un PR mientras
-`DoD-4` esté suspendido— la receta está en `[S5.1]` de `./desarrollo.md`.
+`DoD-4` esté suspendido— la receta está en `[S5.2]` de `./desarrollo.md`.

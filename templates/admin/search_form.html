@@ -1,0 +1,48 @@
+{% comment %} Copia de `django/contrib/admin/templates/admin/search_form.html` (Django 6.1)
+   con **un solo cambio**: el `alt` del icono de la lupa pasa por `{% templatetag openblock %} translate {% templatetag closeblock %}`.
+
+   ── POR QUÉ HAY QUE COPIARLA ENTERA PARA CAMBIAR UNA PALABRA ────────────
+   Django marca para traducir el botón y el encabezado del buscador, pero **no
+   el `alt` del icono**: está escrito `alt="Search"` a pelo. Y ese `alt` no es
+   decorativo — es el único contenido del `<label for="searchbar">`, así que es
+   **el nombre accesible del campo de búsqueda**. En un admin por lo demás en
+   español, quien use lector de pantalla oye «Search».
+
+   No hay gancho para cambiarlo: ni un ajuste, ni una clase, ni CSS. La única
+   vía es sustituir la plantilla.
+
+   ── EL PRECIO, Y CÓMO SE DETECTA ────────────────────────────────────────
+   Esto **es** sustituir una plantilla de Django, que es justo lo que `DT-2` y
+   `DT-27` dicen que no hacemos. Se acepta por una palabra y con una condición:
+   queda anclada a la versión 6.1. Si Django cambia este fichero, el nuestro se
+   queda viejo **en silencio** — el buscador seguiría funcionando con el marcado
+   antiguo.
+
+   Lo que lo detecta es `cuentas/tests_traducciones.py`, que compara este fichero
+   con el de Django y falla si divergen en algo que no sea el `alt`. Al subir de
+   versión: se vuelve a copiar, se aplica el mismo cambio, y si Django ya lo
+   tradujo, este fichero se borra.
+   ─────────────────────────────────────────────────────────────────────────
+{% endcomment %}
+{% load i18n static %}
+{% if cl.search_fields %}
+<div id="toolbar">
+<h2 id="changelist-search-form" class="visually-hidden">{% blocktranslate with name=cl.opts.verbose_name_plural %}Search {{ name }}{% endblocktranslate %}</h2>
+<form id="changelist-search" method="get" role="search" aria-labelledby="changelist-search-form">
+<div><!-- DIV needed for valid HTML -->
+<label for="searchbar"><img src="{% static "admin/img/search.svg" %}" alt="{% translate 'Search' %}"></label>
+<input type="text" size="40" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar"{% if cl.search_help_text %} aria-describedby="searchbar_helptext"{% endif %}>
+<input type="submit" value="{% translate 'Search' %}">
+{% if show_result_count %}
+    <span class="small quiet">{% blocktranslate count counter=cl.result_count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktranslate %} (<a href="?{% if cl.is_popup %}{{ is_popup_var }}=1{% if cl.add_facets %}&{% endif %}{% endif %}{% if cl.add_facets %}{{ is_facets_var }}{% endif %}">{% if cl.show_full_result_count %}{% blocktranslate with full_result_count=cl.full_result_count %}{{ full_result_count }} total{% endblocktranslate %}{% else %}{% translate "Show all" %}{% endif %}</a>)</span>
+{% endif %}
+{% for pair in cl.params.items %}
+    {% if pair.0 != search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}">{% endif %}
+{% endfor %}
+</div>
+{% if cl.search_help_text %}
+<br class="clear">
+<div class="help" id="searchbar_helptext">{{ cl.search_help_text }}</div>
+{% endif %}
+</form></div>
+{% endif %}

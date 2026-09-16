@@ -261,6 +261,15 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # --- Internacionalización -------------------------------------------------
 
 LANGUAGE_CODE = "es-co"
+
+# Nuestro catálogo va **antes** que el de Django, y solo lleva lo que el suyo deja
+# sin traducir: Django 6.1 estrenó o renombró cuatro cadenas del admin —«Run»,
+# «- Select an option -», «Search»— y su catálogo `es` todavía las devuelve en
+# inglés. Ver `locale/es/LC_MESSAGES/django.po`.
+#
+# **No traduce nada del proyecto.** Lo nuestro se escribe en español desde el
+# principio y no pasa por `gettext`; esto es un parche sobre un catálogo ajeno.
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
