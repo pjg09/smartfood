@@ -85,15 +85,15 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **40** de 43 | **15** de 16 |
-| Pendientes | 3 | 1 |
+| **Finalizadas** | **43** de 43 | **16** de 16 |
+| Pendientes | 0 | 0 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 18 | 18 |
 | Carlos | 13 | 13 |
 | Alejandro | 9 | 9 |
-| Naomi | 0 | 3 |
+| Naomi | 3 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
 
@@ -112,7 +112,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☑ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` · `DT-30` | ☑ |
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☑ |
-| `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
+| `PR-14` | `TT-128`–`TT-130` | Gestión del sprint · **cierra el Sprint 3** | ☑ |
 | `PR-15` | `TT-131`–`TT-133` | `HU-60` · **historia añadida durante el sprint** | ☑ |
 | `PR-16` | `TT-134`–`TT-136` | `HU-61` · `DEC-13` · **historia añadida durante el sprint** | ☑ |
 
@@ -718,15 +718,29 @@ Hay prueba que lo vigila.
 | Rama | `docs/TT-128-gestion-del-sprint-3` |
 | Responsable | Naomi |
 | Historia | ninguna — gestión |
-| Estado | ☐ |
+| Estado | ☑ **Cierra el Sprint 3** |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-128` | Tablero Kanban del Sprint 3 | Naomi | ☐ |
-| `TT-129` | Registro de riesgos del Sprint 3 | Naomi | ☐ |
-| `TT-130` | Preparación de la Sprint Review y la Retrospective | Naomi | ☐ |
+| `TT-128` | Tablero Kanban del Sprint 3 | Naomi | ☑ |
+| `TT-129` | Registro de riesgos del Sprint 3 | Naomi | ☑ |
+| `TT-130` | Preparación de la Sprint Review y la Retrospective | Naomi | ☑ |
 
 Va el último por número, no por fecha: las tres empiezan el primer día.
+
+**Qué queda en el repositorio y qué no**, igual que en `PR-25` del Sprint 2:
+
+- El **tablero de `TT-128` vive en su herramienta**, no aquí. Este documento es el único
+  sitio donde vive el estado de las tareas; el tablero es la vista de la Daily.
+- De `TT-129` queda el **cierre del registro de riesgos**: cómo acabó cada uno de los seis,
+  en el `ANEXO A` de `./sprint-3-backlog.md`. Se anotó tal cual salió, incluidos el que
+  sigue vivo y **los tres que aparecieron construyendo y no estaban en la lista**.
+- El material de `TT-130` —Sprint Review y Retrospective— es de la asignatura y va a
+  `corpus:`, no al repositorio. Lo que la Review enseña sí está aquí: es lo que hay en
+  `main`, y el recorrido está en `[S5]` de `./mapa-de-la-aplicacion.md`.
+
+**Antes de marcar esto se revisó lo construido**, y la revisión encontró cosas. Están en
+`[S7]`.
 
 ---
 
@@ -848,3 +862,57 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
    promete una protección que no cumple.
 8. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.
+
+---
+
+## [S7] Revisión de cierre del Sprint 3
+
+Hecha antes de marcar `PR-14`, sobre `main` con todo integrado. **No es una lista de
+comprobaciones satisfechas: es lo que se miró y lo que salió.**
+
+### Qué se comprobó, y con qué
+
+| Comprobación | Resultado |
+|---|---|
+| `manage.py check` y `makemigrations --check` | Sin incidencias · `No changes detected` |
+| Suite completa | **1047 pruebas, OK** |
+| **Las 32 rutas con los cuatro roles y un anónimo** | Ningún `5xx`. Los códigos coinciden con `[S2]` de `./mapa-de-la-aplicacion.md` |
+| **Los diez modelos del admin con los cuatro roles** | Coinciden con `[S3]` del mapa **tras corregirlo** — ver abajo |
+| `id` de HTML duplicados en nueve pantallas | Ninguno. Importa porque un `id` repetido manda un intercambio de HTMX al elemento equivocado |
+| `manage.py sembrar` dos veces | Idempotente, sin altas nuevas |
+| **Los cinco motivos de rechazo sobre un mismo estudiante** | La precedencia en vivo es la diseñada: estado → alérgeno → producto → existencias → cupo → saldo |
+| Orden `bloqueo → validación → escritura` tras los tres PR que tocaron la venta | Intacto, y con dos pruebas que lo fijan mirando las consultas emitidas |
+| Contadores y marcas de los tres documentos | Cuadran: 43 tareas en los dos, sin discrepancias; 46 historias terminadas de 61 |
+| Numeración `1..N` de las seis tablas del backlog de historias | Correlativa en las seis |
+
+### Qué encontró
+
+**1. Una pantalla anunciaba como pendiente algo que ya existía, y no lo enlazaba.** El aviso
+de *productos bloqueados* le decía al acudiente que el bloqueo por alérgeno «llega con
+`HU-11`» — y `HU-11` cerró en `PR-03`, en este mismo sprint. Peor que la marca vieja es lo
+que faltaba: **ese es el momento en que el acudiente necesita la otra pantalla**, y no había
+forma de llegar a ella. Ahora el aviso enlaza *alérgenos bloqueados* del mismo estudiante, y
+la prueba exige el enlace en vez de exigir el texto viejo.
+
+**2. La tabla `[S3]` del mapa decía `403` en toda la columna del cajero, y el valor real es
+`302`.** Era el código de antes de que `cuentas.0004` le quitara `is_staff`: sin él no llega
+a la comprobación de permisos, el admin lo manda a su pantalla de acceso. El documento
+afirma que cada código se comprobó ejecutando, así que se volvió a medir entero.
+
+**3. Seis comentarios y docstrings decían «todavía no existe» sobre historias ya cerradas.**
+`HU-11`, `HU-15`, `HU-49`, `HU-50`, `HU-51` y `HU-57`. Reescritos en presente, que es la
+regla del proyecto: lo que se queda atrás se reescribe, no se anota.
+
+**4. El docstring de `LimiteDiario` seguía diciendo que no había forma de retirar un
+límite.** `HU-61` la construyó en este sprint, con `DEC-13` delante.
+
+### Qué no encontró
+
+Ningún error de servidor, ninguna ruta accesible por quien no debe, ningún `id` duplicado,
+ningún contador descuadrado y ninguna invariante sin prueba que falle al romperla. Los
+cuatro hallazgos son **documentación dentro del código y una pantalla que no enlazaba**: no
+hay ningún defecto de comportamiento abierto al cerrar el sprint.
+
+**Lo que sí queda anotado como deuda** está en el cierre del registro de riesgos
+(`ANEXO A` de `./sprint-3-backlog.md`): `INV-5` sigue siendo el riesgo vivo del proyecto, y
+la venta acumula ya seis condiciones dentro de la misma transacción.

@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-08; adopción visual completada pantalla por pantalla (`DT-25`) |
+| actualizado | 2026-09-17; Sprint 3 cerrado — control parental, estado del estudiante y consulta en `INT-3`. Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre |
 | idioma | es-CO |
 | version | 1.2 |
 
@@ -152,16 +152,16 @@ coincidir porque dejaría media pantalla en cada tema.
 
 | Modelo | Institución | Administración | Cajero | Acudiente |
 |---|---|---|---|---|
-| `personas.estudiante` | **200** | 403 | 403 | 302 |
-| `personas.acudiente` | **200** (solo consulta) | 403 | 403 | 302 |
-| `personas.institucion` | **200** | 403 | 403 | 302 |
-| `cuentas.usuario` | **200** | 403 | 403 | 302 |
-| `catalogo.producto` | 403 | **200** | 403 | 302 |
-| `catalogo.categoria` | 403 | **200** | 403 | 302 |
-| `catalogo.alergeno` | 403 | **200** | 403 | 302 |
-| `inventario.movimientoinventario` | 403 | **200** | 403 | 302 |
+| `personas.estudiante` | **200** | 403 | 302 | 302 |
+| `personas.acudiente` | **200** (solo consulta) | 403 | 302 | 302 |
+| `personas.institucion` | **200** | 403 | 302 | 302 |
+| `cuentas.usuario` | **200** | 403 | 302 | 302 |
+| `catalogo.producto` | 403 | **200** | 302 | 302 |
+| `catalogo.categoria` | 403 | **200** | 302 | 302 |
+| `catalogo.alergeno` | 403 | **200** | 302 | 302 |
+| `inventario.movimientoinventario` | 403 | **200** | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
-| `auth.group` | **403** | 403 | 403 | 302 |
+| `auth.group` | **403** | 403 | 302 | 302 |
 
 Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Cuatro lecturas que
 conviene no perder:
@@ -176,11 +176,13 @@ conviene no perder:
   catálogo, y desde `UX-6` ya no es superusuario, así que la matriz la vincula de verdad.
 - **Nadie alcanza los grupos de permisos.** Esos grupos **son** la matriz con la que `DT-11`
   sostiene `INV-4`; quien los edita puede concederle al cajero lo que la invariante prohíbe.
-- **El cajero ya no entra al admin.** Su cuenta nace sin `is_staff` y no tiene la entrada en
-  el menú: `[S11]` le concede registrar ventas, y eso ocurre entero en `INT-2`. Antes entraba
-  y veía un índice sin un solo modelo — no era un agujero, porque `PERMISOS_POR_ROL` no le
-  concede nada, pero sí una puerta que no llevaba a ninguna parte. La migración
-  `cuentas.0004` se lo quitó también a las cuentas que ya existían.
+- **El cajero ya no entra al admin, y por eso su columna es `302` y no `403`.** Sin
+  `is_staff` no llega a la comprobación de permisos: el admin lo manda a su pantalla de
+  acceso. Hasta la revisión del Sprint 3 esta tabla decía `403` en toda su columna —era el
+  código de antes de que `cuentas.0004` le quitara `is_staff`, y nadie volvió a medirlo—.
+  `[S11]` le concede registrar ventas, y eso ocurre entero en `INT-2`.
+- **El acudiente responde `302` por el mismo motivo**, y ahí nunca fue de otra forma:
+  `INT-1` no es el admin (`DT-2`).
 
 ---
 
