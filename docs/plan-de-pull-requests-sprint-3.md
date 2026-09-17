@@ -672,22 +672,23 @@ alérgeno, cupo del día, saldo y estudiante que no opera—. Que se distingan n
 cosmética: el cajero tiene que poder decir qué pasa, y solo uno de los cinco se arregla
 recargando.
 
-> 🔴 **`TT-127` encontró que el sistema era más restrictivo que su propia invariante.**
-> Hasta este PR, un estudiante desactivado **tampoco podía recibir recargas**. Eso no salía
-> de ninguna historia: salía de aplicar `INVD-2` más ancha de lo que dice —«no puede
-> comprar ni retirar pedidos anticipados»—, y de un comentario del Sprint 2 que citaba
-> `HU-52` (el saldo congelado del **retirado**) para justificarlo en los dos estados.
+> 🔴 **`TT-127` destapó una contradicción, y el criterio que la causaba acabó cambiando.**
+> El tercer criterio de `HU-50` decía «sí puede recibir recargas, **por ser inocuo**», y el
+> código hacía lo contrario desde el Sprint 2. `PR-13` siguió el criterio y abrió las
+> recargas al desactivado; al verlo funcionando, el equipo concluyó que la premisa no se
+> sostiene —una tarjeta se desactiva porque **se perdió**, y acumular saldo sobre un medio
+> de pago fuera de control no es inocuo cuando el sistema no sabe devolver dinero
+> (`ALC-OUT-01`)— y lo revirtió con **`DEC-14`**, que corrige el criterio y añade `INVD-7`.
 >
-> El tercer criterio de `HU-50` lo zanja: **sí puede recibir recargas, por ser inocuo**. Su
-> tarjeta no compra igualmente, y prohibirlo obligaba al acudiente a esperar a que el
-> colegio reactivara para poder recargar — justo el trámite del que `DEC-5` lo libera.
-> **Tres pruebas afirmaban lo contrario** —dos del Sprint 2 y una de `PR-10`— y se
-> reescribieron con el motivo escrito.
+> **Lo que queda en `main` es lo segundo**: ni compra ni recibe recargas mientras esté
+> desactivado, y el saldo que ya tenía sigue siendo suyo hasta que la institución reactive
+> la tarjeta (`HU-49`). La ida y la vuelta están registradas porque explican por qué el
+> criterio del backlog cambió después de escrito.
 
-**Cómo quedó.** La puerta de `INVD-2` se partió en dos, y la diferencia es la dirección del
-dinero: `comprobar_que_puede_operar` para lo que **sale** —ni desactivado ni de baja— y
-`comprobar_que_puede_recibir_recargas` para lo que **entra**, que solo la baja cierra
-(`HU-52`). Las dos siguen viviendo en `personas`, junto al estado.
+**Cómo quedó.** La puerta de `INVD-2` es **una sola**, y cubre las dos direcciones del
+dinero: `comprobar_que_puede_operar` rechaza tanto la compra (`INVD-2`) como la recarga
+(`INVD-7`), y vive en `personas`, junto al estado. `PR-13` llegó a partirla en dos y
+`DEC-14` la volvió a juntar.
 
 **`TT-125` no reimplementa la regla: la llama.** La venta comprueba `INVD-2` **lo primero**
 —antes de las restricciones y del saldo—, porque con la tarjeta bloqueada da igual lo que

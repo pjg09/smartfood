@@ -241,12 +241,12 @@ movimiento.
 
 `/mis-estudiantes/`, y desde ahí `recargar` la billetera de cada uno (`HU-06`): el pago
 es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad** en el
-historial del que sale el saldo (`INV-2`). **Al estudiante desactivado sí se le recarga**
-(`HU-50`, tercer criterio): su tarjeta no compra igualmente, así que meterle saldo es
-inocuo y el dinero le espera a que la institución la reactive — y la tarjeta lo dice con
-todas las letras, porque decir solo «recargar» sobre una tarjeta bloqueada haría creer que
-la desbloquea. **Al de baja no**: su saldo queda congelado como constancia (`HU-52`) y el
-servicio lo rechaza aunque se escriba la URL.
+historial del que sale el saldo (`INV-2`). **Ni al desactivado ni al de baja se les
+recarga** (`DEC-14`, `INVD-7`, `HU-52`): la tarjeta desactivada está perdida y engordar su
+saldo no es inocuo cuando el sistema no sabe devolver dinero (`ALC-OUT-01`); la del
+retirado queda congelada como constancia. No se les ofrece, y el servicio lo rechaza igual
+aunque se escriba la URL. La ficha dice lo que importa —**el saldo sigue siendo suyo**— para
+que nadie lea el bloqueo como una pérdida.
 
 Y **desactivar la tarjeta de su estudiante** (`HU-48`, `TT-122`), que es la otra vía de
 `DEC-5`: el colegio bloquea de inmediato en mitad de la jornada, y el acudiente sin
