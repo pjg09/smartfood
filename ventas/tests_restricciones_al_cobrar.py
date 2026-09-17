@@ -19,11 +19,12 @@ ninguna acción para desactivarlas ni omitirlas.** Lo segundo no se demuestra
 buscando que no haya botón —eso sería mirar la pantalla, y `PR-05` ya lo probó
 donde importa— pero sí se comprueba que el panel no ofrece ninguna salida.
 
-**Una advertencia que estas pruebas fijan, y que se retira por partes.** De las
-tres restricciones, la caja rechaza el producto bloqueado (`HU-60`) y, desde
-`TT-113`, el alérgeno (`HU-18`). La que sigue sin aplicarse es el cupo diario
-(`HU-20`), y el panel lo dice: un cajero que crea que el sistema frena el cupo
-puede dejar pasar la venta que lo supera.
+**Las advertencias temporales ya no están, y eso también se prueba.** Mientras la
+caja no hacía cumplir una restricción, el panel lo decía —un cajero que crea que
+el sistema frena el maní puede vender el maní—. Con `TT-113` y `TT-116` la caja
+hace cumplir las tres, las dos marcas se retiraron y estas pruebas exigen su
+**ausencia**: una marca que sobrevive a su historia miente igual que mentiría su
+ausencia cuando era cierta.
 """
 
 from decimal import Decimal
@@ -205,21 +206,17 @@ class ElCajeroNoPuedeOmitirlasTest(PanelConRestricciones):
         self.assertNotIn("/restricciones/", cuerpo)
 
 
-class ElPanelNoFingeQueLaCajaLasAplicaTodasTest(PanelConRestricciones):
-    """La advertencia temporal, y por qué merece una prueba.
+class ElPanelDiceSiLaCajaLasHaceCumplirTest(PanelConRestricciones):
+    """Las advertencias temporales, ya retiradas las dos.
 
-    De las tres, la caja rechaza ya el producto bloqueado (`HU-60`) y el
-    alérgeno (`HU-18`). Si el panel enseñara el cupo sin decir que todavía no lo
-    aplica, un cajero podría cobrar por encima confiando en que el sistema lo
-    habría frenado.
+    La caja rechaza las tres: producto bloqueado (`HU-60`), alérgeno (`HU-18`,
+    `TT-113`) y cupo del día (`HU-20`, `TT-116`). Mientras alguna no se aplicaba,
+    su línea lo decía; ahora afirman lo contrario.
 
-    **La que queda se retira cuando entre `HU-20`**, junto con la marca que
-    exige. Que esté aquí es lo que hará que alguien se acuerde.
-
-    La del alérgeno ya se retiró, con `TT-113`: el panel afirma ahora lo
-    contrario —que la caja sí lo rechaza— y `test_el_alergeno_ya_no_avisa…` lo
-    fija, porque una marca vieja que sobreviva a su historia miente igual que
-    mentiría su ausencia.
+    **Estas pruebas exigen que las marcas viejas no estén.** Es la mitad que se
+    olvida: retirar la funcionalidad pendiente es fácil de recordar; retirar el
+    aviso que la anunciaba, no — y un panel que sigue diciendo «esto no lo frena
+    la caja» sobre algo que sí frena enseña al cajero a desconfiar del sistema.
     """
 
     def test_el_alergeno_ya_no_avisa_de_que_la_caja_no_lo_rechaza(self):
@@ -233,18 +230,19 @@ class ElPanelNoFingeQueLaCajaLasAplicaTodasTest(PanelConRestricciones):
         self.assertNotIn("HU-18", cuerpo)
         self.assertNotIn("no se lo vendas", cuerpo)
 
-    def test_el_cupo_avisa_de_que_la_caja_no_lo_aplica_todavia(self):
+    def test_el_cupo_ya_no_avisa_de_que_la_caja_no_lo_aplica(self):
         fijar_limite_diario(
             actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("8000")
         )
 
-        self.assertIn("HU-20", self._panel())
+        cuerpo = self._panel()
 
-    def test_el_producto_bloqueado_no_lleva_esa_advertencia(self):
-        """Porque ése **sí** lo rechaza la caja desde `HU-60`.
+        self.assertIn("data-limite-diario", cuerpo)
+        self.assertNotIn("HU-20", cuerpo)
+        self.assertNotIn("todavía no lo aplica", cuerpo)
 
-        Marcar los tres igual sería tan engañoso como no marcar ninguno.
-        """
+    def test_el_producto_bloqueado_tampoco_lleva_ninguna_advertencia(self):
+        """Nunca la llevó: la caja lo rechaza desde `HU-60`, que entró antes."""
         bloquear_producto(
             actor=self.acudiente, estudiante=self.estudiante, producto=self.gaseosa
         )
