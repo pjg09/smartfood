@@ -10,10 +10,12 @@ catálogo **después** de configurado el bloqueo queda cubierto automáticamente
 declara ese alérgeno». Una lista guardada se calcula una vez; una relación se
 evalúa cada vez.
 
-**La restricción por estudiante es `HU-11`, del Sprint 3, y todavía no existe.**
-Lo que se prueba aquí es lo que hace posible aquello: que la consulta sea una
-consulta, que la respuesta cambie sola cuando cambia el catálogo, y que **no haya
-en ninguna parte un sitio donde guardar la lista**.
+**Lo que se prueba aquí es el cimiento, no la restricción.** La restricción por
+estudiante es `HU-11` y se construyó en el Sprint 3 (`PR-03`), sobre esto: que la
+consulta sea una consulta, que la respuesta cambie sola cuando cambia el
+catálogo, y que **no haya en ninguna parte un sitio donde guardar la lista**. Su
+propia prueba de que un producto creado después queda cubierto vive en
+`restricciones/tests_alergeno_bloqueado.py`.
 """
 
 from decimal import Decimal

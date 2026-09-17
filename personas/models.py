@@ -69,8 +69,9 @@ class EstadoDelEstudiante(models.TextChoices):
 class Estudiante(models.Model):
     """El estudiante. **No tiene cuenta**: `USR-1` no inicia sesión (`[S10.1]`).
 
-    Se identifica en el punto de venta con el código de su tarjeta. El estado de
-    baja llega con `HU-51`, y la clave de la fotografía con `HU-57`.
+    Se identifica en el punto de venta con el código de su tarjeta. Su estado
+    —activo, desactivado o de baja— lo lleva `EstadoDelEstudiante` (`HU-47`,
+    `HU-48`, `HU-51`) y la clave de su fotografía, `foto_clave` (`HU-57`).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)

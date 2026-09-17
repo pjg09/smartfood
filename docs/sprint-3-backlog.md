@@ -248,9 +248,9 @@ Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: 
 
 | ID | Tarea | Responsable | Origen | Estado |
 |---|---|---|---|---|
-| `TT-128` | Tablero Kanban del Sprint 3 con sus tareas y estado | Naomi | `CUR-3` | ☐ |
-| `TT-129` | Registro de riesgos del Sprint 3 y seguimiento en las Daily | Naomi | `ENT-04` | ☐ |
-| `TT-130` | Preparación de la Sprint Review y la Retrospective | Naomi | `EVT-3`, `EVT-4` | ☐ |
+| `TT-128` | Tablero Kanban del Sprint 3 con sus tareas y estado | Naomi | `CUR-3` | ☑ |
+| `TT-129` | Registro de riesgos del Sprint 3 y seguimiento en las Daily | Naomi | `ENT-04` | ☑ |
+| `TT-130` | Preparación de la Sprint Review y la Retrospective | Naomi | `EVT-3`, `EVT-4` | ☑ |
 
 ---
 
@@ -288,6 +288,36 @@ Que el punto llegó a estar abierto es información, y por eso se conserva: la p
 **6. Si el sprint desborda**, los candidatos a mover al Sprint 4 son `HU-12` (`TT-104`, `TT-105`) y `HU-38` (`TT-111`, `TT-112`): `HU-12` es el único `Should` del sprint y de `HU-38` no depende ninguna otra historia. Quedan 33 tareas. **No se pueden mover** `HU-18` ni `HU-20`: son los escenarios críticos `TST-1` y `TST-2` de `ENT-05`.
 
 **Ya no queda ninguno de los dos candidatos**: `HU-12` se integró con `PR-04` y `HU-38` con `PR-07`.
+
+---
+
+### Cierre del registro de riesgos (`TT-129`)
+
+Cómo acabó cada uno, anotado tal cual salió. Es lo que queda en el repositorio del
+seguimiento que se llevó en las Daily; el tablero vive en su herramienta.
+
+| # | Riesgo | Cómo acabó |
+|---|---|---|
+| 1 | `INV-5` es fácil de romper sin enterarse | **No se materializó, y ahora está vigilado por dos lados.** `PR-03` la sostuvo en la consulta y `PR-08` la llevó a la venta: el cruce se evalúa al cobrar. Tres pruebas fallan si alguien guarda la lista, y se comprobó introduciendo esa versión a propósito. **Sigue vivo** para quien toque `restricciones` o la venta |
+| 2 | Las validaciones de venta comparten el mismo bloqueo | **Se cumplió a medias, y el aviso sirvió.** El orden bloqueo → validación → escritura quedó intacto tras los tres PR y hay dos pruebas que lo fijan mirando las consultas emitidas. Pero el riesgo se materializó **en otro sitio**: `PR-12` invirtió autorizar/escribir al compartir el camino de dos vistas del padrón, y lo cazó una prueba de `PR-10` |
+| 3 | `HU-17` arrastra desde el Sprint 2 y es fácil que se olvide | **No se olvidó.** `PR-06` marcó las dos historias, y el mismo patrón se repitió sin fallo en `PR-09` (`HU-20` y `HU-09`) |
+| 4 | Defecto del backlog: `HU-11` citaba `HU-25` en vez de `HU-26` | **Ya estaba corregido** al escribirse el aviso. Se comprobó al construir `PR-03` |
+| 5 | Ninguna historia rechaza la venta por producto bloqueado | **Resuelto con `HU-60`** (`PR-15`), historia nueva registrada antes de construirse |
+| 6 | Si el sprint desborda | **No desbordó**: 43 de 43 tareas y 16 de 16 PR. Y creció dos veces por el camino |
+
+**Tres riesgos que no estaban en la lista y aparecieron construyendo**, porque el registro
+también sirve para eso:
+
+- **El alcance creció dos veces dentro del sprint**, y las dos se registraron antes de
+  construir: `HU-60` —ninguna historia hacía cumplir la lista de `HU-10`— y `HU-61` con
+  `DEC-13` —el cupo se cambiaba pero no se retiraba—. De 37 tareas a 43.
+- **Una decisión técnica chocó con una tarea del plan.** `TT-119` y `TT-120` situaban la
+  desactivación en el padrón y `DT-27` lo había dejado en solo lectura. Se resolvió **antes**
+  de escribir código, con `DT-29`, y `DT-30` lo amplió al llegar la reactivación.
+- **Un criterio de aceptación resultó equivocado al verlo funcionando.** El tercero de
+  `HU-50` daba las recargas al estudiante desactivado «por ser inocuo»; `PR-13` lo construyó
+  así y el equipo lo revirtió con `DEC-14`. Es el único caso del proyecto en que una historia
+  se escribió mal y el código la siguió antes de corregirla.
 
 ---
 

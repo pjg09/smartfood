@@ -55,10 +55,10 @@ def punto_de_venta(request):
     dejaría la pantalla accesible a quien conozca la ruta, que es justo la clase
     de puerta trasera que `INV-4` no admite.
 
-    Todavía no hay nada que cobrar: identificar al estudiante es `HU-15` y
-    `HU-16`, ver su saldo y sus restricciones es `HU-17`, y la venta en sí es
-    `HU-21`. Esta vista habilita las tres —el sitio donde ocurren— y por eso no
-    cierra ninguna historia.
+Esta vista **no cierra ninguna historia**: es el sitio donde ocurren las
+    demás. Identificar al estudiante es `HU-15` y `HU-16`, ver su saldo y sus
+    restricciones es `HU-17`, y la venta en sí es `HU-21` — las cuatro están
+    construidas y viven aquí dentro.
     """
     _solo_el_cajero(request.user)
 

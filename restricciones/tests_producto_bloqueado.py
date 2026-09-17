@@ -392,11 +392,24 @@ class LaPantallaDeProductosBloqueadosTest(TestCase):
         self.assertContains(respuesta, "Empanada de carne")
         self.assertNotContains(respuesta, "Jugo de mora")
 
-    def test_la_pantalla_avisa_de_que_esto_no_cubre_alergenos(self):
+    def test_la_pantalla_avisa_de_que_esto_no_cubre_alergenos_y_enlaza_alli(self):
         """Sin ese aviso, bloquear «Torta de chocolate» se lee como protección
-        frente al maní, que es `HU-11` y todavía no existe."""
+        frente al maní.
+
+        **Y el aviso enlaza la otra pantalla**, que es lo que se corrigió en la
+        revisión del Sprint 3: hasta entonces anunciaba el bloqueo por alérgeno
+        como algo que «llega con `HU-11`», y `HU-11` se cerró en `PR-03`. Un
+        aviso que nombra una historia pendiente que ya llegó manda al acudiente
+        a esperar lo que puede hacer ahora mismo.
+        """
         self._entrar()
-        self.assertContains(self.client.get(self.url), "HU-11")
+        respuesta = self.client.get(self.url)
+
+        self.assertContains(respuesta, "data-enlace-a-alergenos")
+        self.assertContains(
+            respuesta, reverse("alergenos-bloqueados", args=[self.estudiante.id])
+        )
+        self.assertNotContains(respuesta, "HU-11")
 
     def test_la_ficha_del_panel_cuenta_los_bloqueados(self):
         """Se afirma sobre la cifra y la URL, no sobre el texto del botón.
