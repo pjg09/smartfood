@@ -257,8 +257,11 @@ consultables (`HU-51`, `HU-52`). Desde ese momento el estudiante no puede compra
 recargar (`INVD-2`).
 
 **No confundir con la tarjeta perdida.** Eso es reasignar el código (`[S2.6]`), que es
-otro estado y sí tiene vuelta. La baja no se deshace: la reactivación de `HU-49` es de la
-desactivación, que es un tercer estado y llega en el Sprint 2.
+otro estado y sí tiene vuelta. **La baja no se deshace**, y esa es la diferencia con la
+desactivación: el tercer estado, que existe desde el Sprint 3. Se desactiva desde el padrón
+(`HU-47`) o desde el panel del acudiente (`HU-48`), y **solo la institución reactiva**,
+venga de donde venga la desactivación (`HU-49`, `INVD-3`). Desactivado tampoco compra ni
+recibe recargas (`INVD-7`), pero su saldo le espera; el del retirado queda congelado.
 
 ### [S2.8] Cargar la fotografía de un estudiante
 
