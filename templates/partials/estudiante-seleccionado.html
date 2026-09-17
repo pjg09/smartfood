@@ -168,15 +168,26 @@
         <p class="text-base font-medium text-texto-suave">
           {% if seleccionado.esta_de_baja %}
             Congelado desde la baja: se consulta, pero no se recarga ni se gasta.
+          {% elif not seleccionado.puede_operar %}
+            {% comment %} `HU-50`, tercer criterio. **Se le puede recargar y no puede
+               gastarlo**, y decir solo la mitad sería peor que callar: quien lee
+               «recargar» sobre una tarjeta bloqueada necesita saber que el dinero
+               se queda esperando, no que la desbloquea. {% endcomment %}
+            Se le puede recargar, pero no gastarlo: el saldo espera a que la
+            institución reactive la tarjeta.
           {% else %}
             Es la suma de sus movimientos, no una cifra aparte.
           {% endif %}
         </p>
-        {% if seleccionado.puede_operar %}
-          {% comment %} A un estudiante de baja o desactivado no se le recarga (`INVD-2`), así
-             que no se le ofrece. **Esconder el enlace no es lo que lo impide**: el
-             servicio rechaza la recarga entre por donde entre (`DT-11`, `DT-15`).
-             Esto solo evita ofrecer algo que va a fallar. {% endcomment %}
+        {% if not seleccionado.esta_de_baja %}
+          {% comment %} **Al de baja no se le recarga y al desactivado sí** (`HU-52`,
+             `HU-50`). El saldo del que se retiró queda congelado como constancia
+             y el sistema no sabe devolverlo (`ALC-OUT-01`); el del desactivado es
+             suyo y lo usará al volver.
+
+             **Esconder el enlace no es lo que lo impide**: el servicio rechaza la
+             recarga al de baja entre por donde entre (`DT-11`, `DT-15`). Esto
+             solo evita ofrecer algo que va a fallar. {% endcomment %}
           {% comment %} Un enlace de acento y no un botón sólido. En una fila de tarjetas de
              resumen, un botón relleno es la pieza más pesada de la pantalla y se
              lleva la mirada por delante de la cifra, que es lo que se viene a
