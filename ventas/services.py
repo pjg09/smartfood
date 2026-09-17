@@ -37,6 +37,7 @@ from cuentas.models import Rol
 from inventario.models import TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_por_producto
 from inventario.services import asentar as asentar_en_el_inventario
+from personas.services import EstudianteNoOperativo, comprobar_que_puede_operar
 from restricciones.selectors import (
     alergenos_que_bloquean_entre,
     bloqueos_entre,
@@ -228,6 +229,29 @@ class AlergenoBloqueado(VentaRechazada):
         self.alergenos = tuple(alergenos)
 
 
+class EstudianteNoPuedeComprar(VentaRechazada):
+    """`HU-50`, `INVD-2`. Desactivado o de baja: la tarjeta no compra.
+
+    ── POR QUÉ ES UNA `VentaRechazada` Y NO LA EXCEPCIÓN DE `personas` ─────
+    La regla es de `personas` y allí se queda: `comprobar_que_puede_operar` es
+    la puerta única de `INVD-2` y esta clase **no la reimplementa**, la traduce.
+    Lo que aporta es la etiqueta de motivo (`TT-126`): sin ella, el rechazo
+    llegaba al ticket como «rechazo» a secas, mezclado con cualquier otro fallo,
+    y el cajero no podía distinguir «esta tarjeta está bloqueada» de «no alcanza
+    el saldo» — que es el cuarto criterio de la historia.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Una sola etiqueta para los dos estados, y el mensaje dice cuál.** Son dos
+    situaciones distintas para quien está en la caja —una se arregla yendo a
+    secretaría y la otra no se arregla— pero para la venta son lo mismo: no se
+    cobra, y no hay nada que el cajero pueda hacer en el mostrador. Dos etiquetas
+    obligarían a toda pantalla futura a tratar por separado dos casos que se
+    pintan igual.
+    """
+
+    motivo = "estudiante-no-opera"
+
+
 class LimiteDiarioSuperado(VentaRechazada):
     """`HU-20`, `HU-09`, mitad del escenario crítico **`TST-2`**.
 
@@ -311,6 +335,9 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     cupo del día (`TT-116`). Las tres van antes del saldo, que es donde `DT-6`
     pide que vayan y lo que hace que el cajero lea el motivo que de verdad
     explica el rechazo.
+
+    **Y antes que todas ellas, si el estudiante puede comprar** (`TT-125`,
+    `INVD-2`): con la tarjeta bloqueada da igual qué lleve en el carrito.
     """
     _solo_el_cajero(actor)
 
@@ -358,6 +385,23 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
 
     # ── 2. VALIDAR, DENTRO DEL BLOQUEO ──────────────────────────────────────
     #
+    # ── `HU-50`, `INVD-2`. LO PRIMERO: ¿ESTE ESTUDIANTE PUEDE COMPRAR? ──────
+    # Va antes que cualquier restricción y que el saldo, porque con la tarjeta
+    # bloqueada da igual lo que lleve en el carrito: ningún otro motivo describe
+    # lo que pasa. Es además el único que no se arregla en el mostrador — ni
+    # quitando un renglón, ni recargando—: hay que pasar por secretaría (`HU-49`).
+    #
+    # **La regla no se reimplementa aquí.** `comprobar_que_puede_operar` es la
+    # puerta única de `INVD-2` y vive en `personas`, junto al estado; esto la
+    # llama dentro del bloqueo y traduce su excepción a un rechazo de venta con
+    # etiqueta propia (`TT-126`). Antes llegaba igualmente —`asentar` la exige al
+    # escribir—, pero al final de todo y sin motivo distinguible.
+    if estudiante is not None:
+        try:
+            comprobar_que_puede_operar(estudiante)
+        except EstudianteNoOperativo as bloqueado:
+            raise EstudianteNoPuedeComprar(str(bloqueado)) from bloqueado
+
     # **Las restricciones van primero, y el orden es una decisión.** Todas
     # rechazan; lo que cambia es qué se le dice al cajero que tiene la fila
     # delante:

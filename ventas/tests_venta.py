@@ -39,6 +39,7 @@ from personas.services import EstudianteNoOperativo, dar_de_baja
 from ventas.models import LineaVenta, MedioDePago, Venta
 from ventas.services import (
     CarritoVacio,
+    EstudianteNoPuedeComprar,
     ExistenciasInsuficientes,
     SaldoInsuficiente,
     VentaRechazada,
@@ -316,14 +317,20 @@ class LaVentaSeNiegaConMotivoTest(TestCase):
                     )
 
     def test_al_estudiante_de_baja_no_se_le_vende(self):
-        """`INVD-2`, por la puerta única de `DT-24`: lo rechaza `asentar()`, que
-        es por donde pasa todo movimiento."""
+        """`INVD-2`. **Desde `TT-125` lo rechaza la venta, no el libro.**
+
+        Antes llegaba por la puerta única de `asentar()` (`DT-24`), al escribir:
+        la venta no ocurría, pero el motivo llegaba al ticket sin etiqueta. Ahora
+        se comprueba lo primero, dentro del bloqueo, y el rechazo es una
+        `VentaRechazada` con su motivo (`HU-50`, `TT-126`). `asentar()` sigue
+        exigiéndolo: es la red por si algún día alguien escribe por otro camino.
+        """
         institucion = Usuario.objects.crear_usuario(
             email="institucion@example.com", rol=Rol.INSTITUCION, nombre="Colegio"
         )
         dar_de_baja(actor=institucion, estudiante=self.estudiante)
 
-        with self.assertRaises(EstudianteNoOperativo):
+        with self.assertRaises(EstudianteNoPuedeComprar):
             registrar_venta(
                 actor=self.cajero, estudiante=self.estudiante, lineas={self.empanada.id: 1}
             )
