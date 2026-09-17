@@ -220,17 +220,23 @@ class LaAccionDelPanelTest(BaseDelAcudiente):
         self.assertTemplateUsed(respuesta, "partials/estudiante-seleccionado.html")
         self.assertTemplateNotUsed(respuesta, "personas/mis-estudiantes.html")
 
-    def test_la_ficha_sigue_ofreciendo_recargar_y_dice_que_el_saldo_espera(self):
-        """`HU-50`, tercer criterio: al desactivado **sí** se le recarga.
+    def test_la_ficha_deja_de_ofrecer_recargar_y_dice_que_el_saldo_sigue_siendo_suyo(self):
+        """`DEC-14`, `INVD-7`: ni se gasta ni se recarga mientras esté bloqueada.
 
-        Esta prueba exigía lo contrario cuando se escribió (`PR-11`), y era más
-        restrictiva que `INVD-2`. Lo que no puede es gastarlo, y la tarjeta lo
-        dice: decir solo la mitad haría creer que recargar desbloquea.
+        La tarjeta lo dice entero para evitar las dos lecturas falsas —que el
+        dinero se perdió, y que se puede seguir cargando sobre una tarjeta
+        perdida—. Esconder el enlace no es lo que lo impide: el servicio la
+        rechaza entre por donde entre.
         """
+        antes = self.client.get(
+            reverse("estudiante-seleccionado", args=[self.hijo.id])
+        ).content.decode()
+        self.assertIn("Recargar", antes)
+
         despues = self.client.post(self.url).content.decode()
 
-        self.assertIn("Recargar", despues)
-        self.assertIn("espera a que la", despues)
+        self.assertNotIn("Recargar", despues)
+        self.assertIn("Sigue siendo suyo", despues)
 
     def test_un_estudiante_ajeno_es_404_y_no_403(self):
         """Los dos casos —no existe y no es tuyo— se responden igual a propósito:

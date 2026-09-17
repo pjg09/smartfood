@@ -294,16 +294,20 @@ def comprobar_que_puede_operar(estudiante):
     aquí y no en la vista porque `INVD-2` no puede depender de por dónde se entre
     (`DT-15`).
 
-    ── LO QUE ESTA PUERTA **NO** CIERRA: LAS RECARGAS ──────────────────────
-    `INVD-2` dice «no puede comprar ni retirar pedidos anticipados», y no
-    menciona el dinero que entra. El tercer criterio de `HU-50` lo dice con
-    todas las letras: un estudiante desactivado **sí puede recibir recargas, por
-    ser inocuo** — la tarjeta está bloqueada, así que ese saldo no se gasta hasta
-    que la institución lo reactive (`HU-49`).
+    ── TAMPOCO RECIBE RECARGAS, Y ESO SE DECIDIÓ DOS VECES ─────────────────
+    `INVD-2` habla del dinero que sale. El dinero que entra lo cierra `INVD-7`
+    (`DEC-14`): **mientras esté desactivado no se le recarga**, ni por su
+    acudiente ni por nadie.
 
-    Quien tiene el saldo congelado es el **dado de baja**, y eso es `HU-52`, otra
-    historia y otro estado. Por eso hay dos puertas y no una:
-    `comprobar_que_puede_recibir_recargas` es la del dinero que entra.
+    `HU-50` decía lo contrario —«sí puede recibir recargas, por ser inocuo»— y
+    `PR-13` lo construyó así. Al verlo funcionando el equipo concluyó que la
+    premisa no se sostiene: una tarjeta se desactiva porque **se perdió**, y
+    acumular saldo sobre un medio de pago que está fuera de control no es inocuo
+    cuando el sistema no sabe devolver dinero (`ALC-OUT-01`). `DEC-14` corrigió
+    el criterio y esta puerta volvió a cubrir las dos direcciones.
+
+    El **dado de baja** ya lo tenía por su lado (`HU-52`): su saldo queda
+    congelado como constancia. Los dos estados coinciden ahora también en esto.
     ─────────────────────────────────────────────────────────────────────────
     """
     if estudiante.puede_operar:
@@ -317,34 +321,9 @@ def comprobar_que_puede_operar(estudiante):
         )
 
     raise EstudianteNoOperativo(
-        f"{estudiante.nombre} está desactivado: su tarjeta no compra hasta que "
-        "la institución educativa la reactive (INVD-2, HU-49). Recargarle sí se "
-        "puede: ese saldo queda ahí para cuando vuelva a estar activo."
-    )
-
-
-def comprobar_que_puede_recibir_recargas(estudiante):
-    """La otra puerta: quién puede **recibir** dinero (`HU-50`, `HU-52`).
-
-    **Solo la baja lo impide.** El saldo de quien se retiró del colegio queda
-    congelado y consultable —es la constancia de que ese dinero existió— y sobre
-    él no se compra ni se recarga (segundo criterio de `HU-52`). Recargar ahí
-    sería meter dinero en una cuenta que nadie va a poder usar y que el sistema
-    no sabe devolver (`ALC-OUT-01`).
-
-    **Un desactivado sí recibe recargas** (tercer criterio de `HU-50`): su
-    bloqueo es temporal y el dinero le espera. Prohibirlo no protegía de nada
-    —la tarjeta no compra igualmente— y obligaba al acudiente a esperar a que el
-    colegio reactivara para poder recargar, que es justo el trámite del que
-    `DEC-5` lo libera.
-    """
-    if estudiante.estado != EstadoDelEstudiante.BAJA:
-        return
-
-    raise EstudianteNoOperativo(
-        f"{estudiante.nombre} está de baja: se retiró del colegio y su saldo "
-        "queda congelado como constancia. No se recarga sobre él (HU-52, "
-        "INVD-2), y la devolución del dinero no se hace desde el sistema."
+        f"{estudiante.nombre} está desactivado: su tarjeta no compra ni recibe "
+        "recargas hasta que la institución educativa la reactive (INVD-2, "
+        "INVD-7, HU-49). El saldo que ya tenía sigue siendo suyo."
     )
 
 
