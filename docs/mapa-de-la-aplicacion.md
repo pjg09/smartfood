@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las veintiocho rutas
+## [S2] Las veintinueve rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -57,6 +57,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
+| `/mis-estudiantes/<id>/desactivar/` | `POST`. Bloquea la tarjeta de un estudiante a cargo. **No hay ruta para reactivar** (`INVD-3`) | Acudiente, **solo los suyos** | `TT-122` |
 | `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
 | `/mis-estudiantes/<id>/limite/retirar/` | `POST`. Quita del todo el límite diario | Acudiente, **solo los suyos** | `TT-135` |
 | `/mis-estudiantes/<id>/restricciones/productos/` | Catálogo con un interruptor por producto: qué no puede comprar | Acudiente, **solo los suyos** | `TT-99` |
@@ -89,6 +90,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/mis-estudiantes/<id>/desactivar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
@@ -235,6 +237,15 @@ movimiento.
 es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad** en el
 historial del que sale el saldo (`INV-2`). A un estudiante de baja o desactivado no se le
 ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-2`).
+
+Y **desactivar la tarjeta de su estudiante** (`HU-48`, `TT-122`), que es la otra vía de
+`DEC-5`: el colegio bloquea de inmediato en mitad de la jornada, y el acudiente sin
+depender del horario de secretaría. Solo alcanza a los suyos —un identificador ajeno es un
+`404`, como en el resto de `INT-1`—, va con confirmación porque se usa desde el móvil, y
+la ficha pasa a decir que la tarjeta está bloqueada y **a quién hay que pedirle que se
+reactive**: eso es exclusivo de la institución (`INVD-3`) y no hay botón, ni ruta, ni
+servicio que lo haga desde aquí. La asimetría es de seguridad —el desbloqueo pasa por una
+verificación presencial— y es el segundo criterio de la historia.
 
 Y desde ahí los **alérgenos bloqueados** (`HU-11`, `TT-102`), que es lo que hay que usar
 para una alergia: lo que se marca es **la condición**, no los productos que hoy la llevan,

@@ -189,6 +189,59 @@ def estudiante_seleccionado(request, estudiante_id):
 
 
 @login_required
+@require_http_methods(["POST"])
+def desactivacion_por_el_acudiente(request, estudiante_id):
+    """El acudiente bloquea la tarjeta de su estudiante (`TT-122`, `HU-48`).
+
+    **La otra vía de `DEC-5`**, y no es la misma pantalla con otro rol: el
+    colegio desactiva desde el padrón cuando el niño avisa allí (`HU-47`); aquí
+    el acudiente lo hace sin depender del horario de secretaría. Las dos llaman
+    al mismo servicio, que es donde vive la regla (`DT-15`).
+
+    Un estudiante que no está a su cargo es un `404`, igual que uno que no
+    existe: `estudiante_a_cargo` no los distingue a propósito, porque un `403`
+    le confirmaría a un desconocido que ese estudiante existe.
+
+    **Devuelve el fragmento del estudiante, no una página** (`DT-16`): es el
+    mismo que pinta el selector, así que el saldo, el cupo y las restricciones
+    se repintan con el estado nuevo y la tarjeta deja de ofrecer recargar.
+
+    **No hay vista para lo contrario.** Reactivar es exclusivo de la institución
+    (`INVD-3`, `HU-49`) y esa ausencia es el segundo criterio de `HU-48`: no es
+    que el botón esté escondido, es que la ruta no existe.
+    """
+    try:
+        estudiante = estudiante_a_cargo(
+            usuario=request.user, estudiante_id=estudiante_id
+        )
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    try:
+        desactivar(actor=request.user, estudiante=estudiante)
+    except ValidationError as error:
+        # A un estudiante de baja no se le desactiva: no es un fallo del
+        # sistema, es una transición que no existe. Vuelve en `200` con su
+        # motivo dentro del fragmento, porque htmx no intercambia lo que llega
+        # en `4xx` y la pantalla se quedaría igual y sin explicación.
+        return render(
+            request,
+            "partials/estudiante-seleccionado.html",
+            {
+                **_contexto_del_estudiante(estudiante),
+                "error": "; ".join(error.messages),
+            },
+        )
+
+    estudiante.refresh_from_db()
+    return render(
+        request,
+        "partials/estudiante-seleccionado.html",
+        {**_contexto_del_estudiante(estudiante), "recien_desactivado": True},
+    )
+
+
+@login_required
 @require_http_methods(["GET"])
 def tarjeta_del_estudiante(request, estudiante_id):
     """Vista imprimible de la tarjeta de un estudiante (`TT-37`, `HU-45`).

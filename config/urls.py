@@ -15,6 +15,7 @@ from catalogo.views import imagen_del_producto
 from config.salud import salud
 from personas.views import (
     desactivacion_de_estudiante,
+    desactivacion_por_el_acudiente,
     carga_de_estudiantes,
     padron_de_estudiantes,
     estudiante_seleccionado,
@@ -122,6 +123,14 @@ urlpatterns = [
     # Recarga de la billetera (`TT-61`, `HU-06`). Cuelga de la ruta del
     # estudiante porque **la billetera es individual por estudiante**, no de la
     # cuenta del acudiente: recargar sin decir a quién no significa nada.
+    # `TT-122`, `HU-48`. La otra vía de `DEC-5`: el acudiente bloquea la tarjeta
+    # sin depender del horario de secretaría. **No hay ruta para reactivar**, y
+    # esa ausencia es `INVD-3` — reactivar es exclusivo de la institución.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/desactivar/",
+        desactivacion_por_el_acudiente,
+        name="desactivacion-por-el-acudiente",
+    ),
     path(
         "mis-estudiantes/<uuid:estudiante_id>/recargar/",
         recarga,

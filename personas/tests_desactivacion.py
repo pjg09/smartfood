@@ -14,8 +14,9 @@ revierte; la desactivación es de la tarjeta perdida y la revierte la instituci�
 (`HU-49`, que llega después).
 
 `HU-48` —el acudiente desactivando a los suyos— amplía esta misma puerta y tiene
-sus propias pruebas. Aquí se comprueba que **hoy no puede**, que es lo que dice
-`[S11]` mientras esa historia no exista.
+sus propias pruebas (`tests_desactivacion_por_el_acudiente.py`). Aquí se
+comprueba lo que esa ampliación **no** toca: que la cafetería sigue fuera y que
+la vía del padrón es de la institución.
 """
 
 from decimal import Decimal
@@ -125,24 +126,25 @@ class SoloLaInstitucionDesactivaTest(BaseDeDesactivacion):
             self.estado_de(self.estudiante), EstadoDelEstudiante.DESACTIVADO
         )
 
-    def test_ningun_otro_rol_puede(self):
-        """El acudiente tampoco, **todavía**: eso es `HU-48` y aún no existe.
+    def test_la_cafeteria_no_puede(self):
+        """`[S11]` no le da estudiantes a la cafetería, ni para esto.
 
-        Conceder por adelantado un permiso que ninguna pantalla ejerce es dejarlo
-        sin probar el día que se ejerza.
+        **El acudiente no está en esta lista desde `HU-48`**, que amplió la
+        puerta a los estudiantes a su cargo; lo suyo se prueba en
+        `tests_desactivacion_por_el_acudiente.py`. Quienes siguen fuera son los
+        dos roles de la cafetería, y por eso la prueba se reescribió en vez de
+        borrarse.
         """
-        for cuenta in [self.acudiente, self.cajero]:
-            with self.subTest(rol=cuenta.rol):
-                with self.assertRaises(PermissionDenied):
-                    desactivar(actor=cuenta, estudiante=self.estudiante)
-
         administracion = crear_cuenta(
             email="administracion-desact@example.com",
             rol=Rol.ADMINISTRADOR,
             enviar_invitacion=False,
         )
-        with self.assertRaises(PermissionDenied):
-            desactivar(actor=administracion, estudiante=self.estudiante)
+
+        for cuenta in [self.cajero, administracion]:
+            with self.subTest(rol=cuenta.rol):
+                with self.assertRaises(PermissionDenied):
+                    desactivar(actor=cuenta, estudiante=self.estudiante)
 
         self.assertEqual(self.estado_de(self.estudiante), EstadoDelEstudiante.ACTIVO)
 
@@ -323,7 +325,12 @@ class LaAccionDelPadronTest(BaseDeDesactivacion):
         self.assertEqual(self.client.post(ajeno).status_code, 404)
 
     def test_los_demas_roles_reciben_403(self):
-        """`DT-11`: el rol se rechaza en la capa de datos, no escondiendo el botón."""
+        """`DT-11`: el rol se rechaza en la capa de datos, no escondiendo el botón.
+
+        **El acudiente también, y aunque el estudiante sea suyo.** Desde `HU-48`
+        puede desactivarlo, pero por su propia ruta (`INT-1`): esta es la del
+        padrón, y el padrón es de la institución.
+        """
         for cuenta in [self.cajero, self.acudiente]:
             with self.subTest(rol=cuenta.rol):
                 self.client.force_login(cuenta)
