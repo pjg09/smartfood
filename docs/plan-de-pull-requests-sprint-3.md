@@ -85,13 +85,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **31** de 43 | **11** de 16 |
-| Pendientes | 12 | 5 |
+| **Finalizadas** | **33** de 43 | **12** de 16 |
+| Pendientes | 10 | 4 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 14 | 18 |
-| Carlos | 10 | 13 |
+| Pedro | 15 | 18 |
+| Carlos | 11 | 13 |
 | Alejandro | 7 | 9 |
 | Naomi | 0 | 3 |
 
@@ -108,7 +108,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☑ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☑ |
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☑ |
-| `PR-10` | `TT-119`–`TT-120` | `HU-47` | ☐ |
+| `PR-10` | `TT-119`–`TT-120` | `HU-47` · `DT-29` | ☑ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☐ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
@@ -515,17 +515,45 @@ explicar cómo funciona el cupo, que es otra cosa.
 | Título del PR | `feat(personas): desactivar a un estudiante desde el padrón` |
 | Rama | `feat/TT-119-desactivacion-institucion` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-47` |
-| Invariantes | `INVD-2` |
-| Estado | ☐ |
+| Historia | `HU-47` — **cerrada** |
+| Invariantes | `INVD-2` · registra **`DT-29`** |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-119` | Transición a `desactivado` desde el padrón de la institución | Pedro | ☐ |
-| `TT-120` | Acción de desactivar en la ficha del padrón | Carlos | ☐ |
+| `TT-119` | Transición a `desactivado` desde el padrón de la institución | Pedro | ☑ |
+| `TT-120` | Acción de desactivar en la ficha del padrón | Carlos | ☑ |
 
 No hay modelo nuevo: `EstadoDelEstudiante` existe desde `HU-51` (Sprint 1). Hay una
 transición nueva.
+
+> ⚠ **Las dos tareas chocaban con `DT-27`, y se resolvió antes de construir.** `DT-27`
+> había decidido que el padrón **solo lee** y que escribir era del admin; `TT-119` y
+> `TT-120` sitúan la desactivación en el padrón. Se registró **`DT-29`**, que corrige esa
+> parte de `DT-27` **solo para esta acción**: `HU-47` existe por la inmediatez —«bloquear
+> su tarjeta de inmediato cuando se pierde en mitad de la jornada», dice su texto— y
+> llegar al admin desde el padrón son tres pantallas. El alta, la edición, la baja y la
+> reasignación siguen allí, y `POST /padron/` sigue respondiendo `405`: lo que escribe es
+> una ruta propia de la pantalla, no la pantalla.
+
+**Cómo quedó.** El servicio `desactivar` es la regla y la vista solo delega (`DT-15`):
+comprueba el rol —hoy solo la institución; el acudiente llega con `HU-48`, que amplía esta
+misma puerta—, es **idempotente** y **rechaza desactivar a un retirado**, porque de la baja
+no se vuelve y un retirado marcado como desactivado se leería como reactivable.
+
+**El efecto inmediato en la caja no hubo que construirlo**, y comprobarlo era el segundo
+criterio: `INVD-2` se resuelve leyendo el estado y la venta ya pasa por esa puerta. La
+prueba vende **antes** y **después** de desactivar con el mismo carrito. El motivo de
+rechazo propio llega con `HU-50`.
+
+**El rechazo del retirado vuelve en `200`, con su motivo dentro del fragmento.** Es el
+precedente del cobro, y no es comodidad: htmx **no intercambia** lo que llega en `4xx`, así
+que un `400` dejaría la pantalla igual y a secretaría sin saber por qué no pasó nada.
+
+**El hueco de la reactivación se dice, no se deshabilita**: la fila de un desactivado
+declara que reactivar es `HU-49`. Y la acción lleva confirmación del navegador, que hoy
+pesa más que nunca — hasta `PR-12` un clic por error no tiene vuelta desde ninguna
+pantalla.
 
 ---
 

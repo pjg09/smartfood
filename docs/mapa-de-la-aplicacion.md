@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las catorce rutas
+## [S2] Las veintiocho rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -52,6 +52,7 @@ los mismos colores desde `DT-23`.
 | `/invitacion/lista/` | Confirmación de que quedó definida | — | `TT-11` |
 | `/padron/` | Padrón: quién está matriculado y qué acudientes han activado su cuenta | Institución | `DT-27` |
 | `/padron/tabla/` | Fragmento HTMX de la tabla del padrón, filtrada | Institución | `DT-27` |
+| `/padron/<id>/desactivar/` | `POST`. Desactiva a un estudiante: su tarjeta deja de comprar | Institución | `TT-120`, `DT-29` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
@@ -87,6 +88,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
@@ -190,8 +192,13 @@ acudiente —las cinco formas en que alguien pregunta en secretaría—, y los r
 salvo que se pidan: dar de baja es un estado (`HU-51`), pero el padrón responde «quién está
 matriculado **hoy**».
 
-**El padrón solo lee.** Cada fila enlaza al admin para editar, y ahí sigue estando todo lo que
-escribe. Es la única excepción a `DT-2`, y está declarada.
+**El padrón lee, y desactiva.** Cada fila enlaza al admin para editar, y ahí sigue
+estando el alta, la edición, la baja y la reasignación. La desactivación es la única
+escritura de la pantalla y está declarada en `DT-29`, que corrige esa parte de `DT-27`:
+`HU-47` existe por la inmediatez —una tarjeta perdida en mitad de la jornada— y llegar al
+admin desde aquí son tres pantallas. Un clic desactiva; la fila queda marcada en rojo y
+dice que reactivar es de la institución y llega con `HU-49`. `POST /padron/` sigue
+respondiendo `405`: lo que escribe es una ruta propia, no la pantalla.
 
 Carga masiva en `/carga/`. En el admin: *Estudiantes* —listado con estado, código de tarjeta
 y si tiene fotografía; búsqueda por nombre, documento, código o acudiente; alta individual

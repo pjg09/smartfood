@@ -8,7 +8,7 @@ Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -24,7 +24,7 @@ from personas.selectors import (
     estudiantes_a_cargo,
     padron,
 )
-from personas.services import cargar_estudiantes_y_acudientes
+from personas.services import cargar_estudiantes_y_acudientes, desactivar
 from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
 from restricciones.selectors import (
@@ -227,6 +227,93 @@ def tarjeta_del_estudiante(request, estudiante_id):
     )
 
 
+def _contexto_del_padron(actor, *, busqueda="", incluir_retirados=False):
+    """Lo que la tabla del padrón necesita, venga de mirar o de desactivar.
+
+    **La misma función para los dos caminos**, por lo mismo que
+    `_contexto_del_estudiante` en el panel del acudiente: la página, el
+    fragmento del buscador y la respuesta de `TT-120` pintan la misma tabla, y
+    armar el contexto tres veces es cómo acaban enseñando cosas distintas.
+    """
+    estudiantes = list(
+        padron(actor=actor, busqueda=busqueda, incluir_retirados=incluir_retirados)
+    )
+
+    return {
+        "estudiantes": estudiantes,
+        "busqueda": busqueda,
+        "incluir_retirados": incluir_retirados,
+        "sin_activar": cuentas_sin_activar(estudiantes),
+        # El total sin filtrar, para poder decir «8 de 20» y que quien busca sepa
+        # que hay más. Con la búsqueda vacía las dos cifras coinciden y la frase
+        # sigue leyéndose bien.
+        "total": padron(actor=actor, incluir_retirados=incluir_retirados).count(),
+    }
+
+
+@login_required
+@require_http_methods(["POST"])
+def desactivacion_de_estudiante(request, estudiante_id):
+    """Desactiva a un estudiante desde el padrón (`TT-120`, `HU-47`, `DT-29`).
+
+    ── ESTA ES LA PRIMERA ESCRITURA DEL PADRÓN, Y ESTÁ DECLARADA ───────────
+    `DT-27` decidió que el padrón **solo lee** y que escribir era del admin.
+    `DT-29` corrige esa parte para esta acción y solo para ella: `HU-47` existe
+    por la inmediatez —una tarjeta perdida en mitad de la jornada— y el padrón
+    es la pantalla que secretaría tiene abierta. Mandarla al admin añade tres
+    pantallas justo en el escenario que motiva la historia.
+
+    Lo que **no** cambia es dónde vive la regla: esta vista no escribe, llama a
+    `personas.services.desactivar`, que comprueba el rol (`DT-15`, `DT-11`). El
+    resto del padrón sigue leyendo, y el alta, la edición, la baja y la
+    reasignación siguen en el admin.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Devuelve el fragmento de la tabla, no una página** (`DT-16`), y con los
+    mismos filtros que tenía puestos: quien desactiva estaba buscando a alguien,
+    y devolverle el padrón entero le borra la búsqueda. Por eso llegan en el
+    cuerpo del `POST`.
+
+    ── EL RECHAZO VUELVE EN `200`, CON SU MOTIVO DENTRO DEL FRAGMENTO ──────
+    Es el mismo precedente que el cobro (`ventas.views.cobrar`), y no es una
+    comodidad: htmx **no intercambia** lo que llega en `4xx` —lo dice su
+    configuración de `responseHandling`—, así que un `400` dejaría la pantalla
+    exactamente igual y a secretaría sin saber por qué no pasó nada. El estado
+    que devuelve la petición y lo que hay que enseñarle a quien pulsó son dos
+    preguntas distintas.
+
+    Un estudiante que no existe sí es un `404`: ahí no hay nada que pintar.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    try:
+        estudiante = Estudiante.objects.get(pk=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("No hay ningún estudiante con ese identificador.") from None
+
+    contexto = _contexto_del_padron(
+        request.user,
+        busqueda=request.POST.get("busqueda", ""),
+        incluir_retirados=request.POST.get("retirados") == "1",
+    )
+
+    try:
+        desactivar(actor=request.user, estudiante=estudiante)
+    except ValidationError as error:
+        contexto["error"] = "; ".join(error.messages)
+        return render(request, "personas/partials/padron-tabla.html", contexto)
+
+    # El contexto se rearma **después** de escribir: el de arriba se calculó para
+    # poder responder el error sin consultar dos veces, pero la tabla que se
+    # devuelve tiene que traer el estado nuevo.
+    contexto = _contexto_del_padron(
+        request.user,
+        busqueda=contexto["busqueda"],
+        incluir_retirados=contexto["incluir_retirados"],
+    )
+    contexto["desactivado"] = estudiante
+    return render(request, "personas/partials/padron-tabla.html", contexto)
+
+
 @login_required
 @require_http_methods(["GET"])
 def padron_de_estudiantes(request):
@@ -251,31 +338,13 @@ def padron_de_estudiantes(request):
     reemplaza solo esa zona. Sin eso, secretaría teclea, pulsa Enter, espera a
     que repinte la página entera y pierde el foco del campo en cada intento.
     """
-    busqueda = request.GET.get("busqueda", "")
-    # La casilla solo llega cuando está marcada, que es como el navegador manda
-    # los checkbox. Su ausencia significa «no», no «no lo sé».
-    incluir_retirados = request.GET.get("retirados") == "1"
-
-    estudiantes = list(
-        padron(
-            actor=request.user,
-            busqueda=busqueda,
-            incluir_retirados=incluir_retirados,
-        )
+    contexto = _contexto_del_padron(
+        request.user,
+        busqueda=request.GET.get("busqueda", ""),
+        # La casilla solo llega cuando está marcada, que es como el navegador
+        # manda los checkbox. Su ausencia significa «no», no «no lo sé».
+        incluir_retirados=request.GET.get("retirados") == "1",
     )
-
-    contexto = {
-        "estudiantes": estudiantes,
-        "busqueda": busqueda,
-        "incluir_retirados": incluir_retirados,
-        "sin_activar": cuentas_sin_activar(estudiantes),
-        # El total sin filtrar, para poder decir «8 de 20» y que quien busca sepa
-        # que hay más. Con la búsqueda vacía las dos cifras coinciden y la frase
-        # sigue leyéndose bien.
-        "total": padron(
-            actor=request.user, incluir_retirados=incluir_retirados
-        ).count(),
-    }
 
     if request.resolver_match.url_name == "padron-tabla":
         return render(request, "personas/partials/padron-tabla.html", contexto)

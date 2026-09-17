@@ -10,6 +10,35 @@
 
 <div id="padron-tabla" class="flex flex-col gap-3">
 
+  {% comment %} `TT-120`, `HU-47`. **El resultado de desactivar va DENTRO del fragmento**,
+     no al lado: lo que queda fuera no se intercambia y se quedaría enseñando lo
+     de la vez anterior. Es la misma regla que el historial de restricciones.
+
+     Dos avisos y no uno: se hizo, o no se pudo. El segundo no es un fallo del
+     sistema —es una transición que no existe, la de un retirado— y por eso lleva
+     su motivo entero. {% endcomment %}
+  {% if desactivado %}
+    <p role="status" data-estudiante-desactivado
+       class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+              px-3 py-2 text-base text-texto">
+      <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-escudo"></use></svg>
+      <span>
+        <strong class="font-semibold">{{ desactivado.nombre }}</strong> queda desactivado:
+        su tarjeta no compra desde ahora. Reactivarlo es de la institución y llega
+        con <span class="font-mono">HU-49</span>.
+      </span>
+    </p>
+  {% endif %}
+
+  {% if error %}
+    <p role="alert" data-error-del-padron
+       class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+              px-3 py-2 text-base text-error-fuerte">
+      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <span>{{ error }}</span>
+    </p>
+  {% endif %}
+
   {% comment %} La línea de recuento. **«8 de 20» y no «8»**: quien busca necesita saber
      que hay más de lo que ve, o creerá que el padrón entero son ocho.
 
@@ -21,6 +50,12 @@
     <strong class="font-semibold text-texto">{{ estudiantes|length }}</strong>
     de {{ total }}
     {% if total == 1 %}estudiante{% else %}estudiantes{% endif %}
+    {% comment %} El indicador de la desactivación va **en esta línea** y no en una fila
+       propia: `htmx-indicator` oculta con `opacity`, así que en su propio
+       renglón reservaría el alto siempre y dejaría un hueco permanente. {% endcomment %}
+    <span id="desactivando-en-el-padron" class="htmx-indicator text-sm text-texto-suave">
+      · Desactivando…
+    </span>
     {% if sin_activar %}
       <span aria-hidden="true" class="px-1 text-borde">·</span>
       <span class="inline-flex items-center gap-1.5 font-medium text-aviso-fuerte">
@@ -44,6 +79,7 @@
               <span class="font-mono text-sm tabular-nums text-texto-suave">
                 {{ estudiante.documento }}
               </span>
+              {% include "personas/partials/padron-estado-del-estudiante.html" %}
             </div>
             {% include "personas/partials/padron-estado.html" %}
           </div>
@@ -53,6 +89,7 @@
             </span>
             <span class="text-sm text-texto">{{ estudiante.acudiente.nombre }}</span>
             <span class="text-sm break-all text-texto-suave">{{ estudiante.acudiente.usuario.email }}</span>
+            {% include "personas/partials/padron-acciones.html" %}
           </div>
         </li>
       {% endfor %}
@@ -96,9 +133,9 @@
                   Estado de la cuenta
                 </span>
               </th>
-              {% comment %} La columna de acción no lleva rótulo visible: «Editar» ya dice
-                 qué hace, y un encabezado «Acciones» sobre una sola acción es
-                 ruido. El lector de pantalla sí necesita algo. {% endcomment %}
+              {% comment %} La columna no lleva rótulo visible: cada acción dice qué hace y
+                 un encabezado «Acciones» encima repetiría la palabra. El lector
+                 de pantalla sí necesita algo. {% endcomment %}
               <th scope="col" class="px-4 py-3 text-right">
                 <span class="sr-only">Acciones</span>
               </th>
@@ -111,13 +148,7 @@
                          even:bg-superficie-hover hover:bg-primario-suave">
                 <td class="px-4 py-3">
                   <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
-                  {% comment %} `HU-51`: la baja es un estado, no un borrado. Solo aparece
-                     cuando se piden los retirados, así que decirlo aquí evita
-                     leer la fila entera para saber por qué está. {% endcomment %}
-                  {% if estudiante.esta_de_baja %}
-                    <span class="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-sm
-                                 font-medium whitespace-nowrap text-aviso-fuerte">Retirado</span>
-                  {% endif %}
+                  {% include "personas/partials/padron-estado-del-estudiante.html" %}
                 </td>
                 <td class="px-4 py-3 font-mono text-base tabular-nums whitespace-nowrap text-texto-suave">
                   {{ estudiante.documento }}
@@ -137,16 +168,18 @@
                 </td>
                 <td class="px-4 py-3">{% include "personas/partials/padron-estado.html" %}</td>
                 <td class="px-4 py-3 text-right whitespace-nowrap">
-                  {% comment %} **Enlaza al admin, no a un formulario propio.** Escribir
-                     sobre un estudiante sigue siendo de `INT-3` (`DT-2`): esta
-                     pantalla es una lectura, y duplicar el formulario sería
-                     duplicar las reglas que lo validan. {% endcomment %}
-                  <a href="{% url 'admin:personas_estudiante_change' estudiante.id %}"
-                     class="inline-flex items-center gap-1.5 text-base font-semibold
-                            text-acento-fuerte hover:underline">
-                    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
-                    Editar
-                  </a>
+                  <div class="flex items-center justify-end gap-4">
+                    {% comment %} **Editar sigue enlazando al admin** (`DT-2`): duplicar ese
+                       formulario sería duplicar las reglas que lo validan. Lo que
+                       sí vive aquí es desactivar (`DT-29`). {% endcomment %}
+                    <a href="{% url 'admin:personas_estudiante_change' estudiante.id %}"
+                       class="inline-flex items-center gap-1.5 text-base font-semibold
+                              text-acento-fuerte hover:underline">
+                      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+                      Editar
+                    </a>
+                    {% include "personas/partials/padron-acciones.html" %}
+                  </div>
                 </td>
               </tr>
             {% endfor %}

@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 28 (`DT-1` … `DT-28`) |
+| decisiones | 29 (`DT-1` … `DT-29`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-28`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-29`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -444,6 +444,28 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 **Lo que no cambia.** `DT-15` sigue vigente entero, incluidas sus tres reglas: los servicios reciben `actor` y no leen `request.user`, las invariantes que la base pueda imponer las impone la base, y las vistas no escriben. Y **`reportes` sigue sin existir**: cada app se crea en el sprint que la necesita.
 
 **Lo que esta decisión no autoriza.** Una app nueva por cada historia que no encaje a la primera. El criterio sigue siendo el de `DT-15` —una app por **dominio**—, y aquí el dominio existe: el control parental es de `USR-2`, tiene sus propias reglas de escritura y su propia invariante. La siguiente que se proponga tendrá que traer un argumento del mismo tipo.
+
+---
+
+#### `[DT-29]` El padrón desactiva; el resto de la escritura sigue en el admin
+
+**Corrige parcialmente:** `DT-27`, que decidió que el padrón **solo lee** y que dar de alta, editar, dar de baja y reasignar la tarjeta seguían siendo del admin. Sigue siendo cierto para todo menos para **una** acción, y esta decisión declara cuál y por qué, para que la excepción no crezca sola.
+
+**Razón:** decisión del equipo, tomada el 2026-09-16 al construir `PR-10`. `TT-119` y `TT-120` sitúan la desactivación «desde el padrón» y «en la ficha del padrón», y eso contradecía la parte de `DT-27` que reservaba la escritura al admin. El conflicto se resolvió antes de escribir código, no después.
+
+**El hecho que lo obliga.** `HU-47` existe por una razón concreta y está en su propio texto: «bloquear su tarjeta **de inmediato** cuando se pierde en mitad de la jornada». La inmediatez no es un adorno de la historia, es su motivo. Y el padrón es la pantalla que secretaría tiene abierta a diario (`DT-27`): llegar desde ahí al admin son tres pantallas —listado, ficha o acción, confirmación— justo en el escenario que la historia describe, con el estudiante esperando en el mostrador.
+
+**Decidido:**
+
+- **Una sola acción escribe desde el padrón: desactivar** (`POST /padron/<id>/desactivar/`). Devuelve el fragmento de la tabla, como `/padron/tabla/`.
+- **El alta, la edición, la baja y la reasignación siguen en el admin.** Cada fila sigue enlazando allí, y por lo mismo que decía `DT-27`: duplicar ese formulario sería duplicar las reglas que lo validan.
+- **La ruta del padrón en sí no acepta escrituras.** `POST /padron/` sigue respondiendo `405`, y la prueba que lo vigila sigue en pie: lo que escribe es una ruta propia de la pantalla, no la pantalla.
+- **La regla no se mueve de sitio.** La vista no escribe: llama a `personas.services.desactivar`, que comprueba el rol (`DT-15`, `DT-11`). Que la acción esté en una pantalla propia no cambia quién puede ejecutarla.
+- **Lleva confirmación del navegador** (`hx-confirm`). La reactivación es exclusiva de la institución (`INVD-3`) y su pantalla llega con `HU-49`: hasta entonces un clic por error deja al estudiante sin poder comprar y sin vuelta desde ninguna pantalla.
+
+**Qué haría falta para ampliarla otra vez.** El mismo tipo de argumento: una acción cuya **urgencia** sea parte del criterio de aceptación, no una que simplemente resulte cómoda de tener a mano. La edición no lo es —nadie corrige un apellido con el estudiante esperando— y por eso no entra aquí.
+
+**Descartado: la acción en el admin, con el padrón enlazando.** Es lo que `DT-27` mandaba y no cuesta ninguna decisión nueva; se descartó porque convierte la acción urgente en tres pantallas y porque la ficha del admin no dice lo que secretaría necesita ver al desactivar —quién es el acudiente y si su cuenta está activa—, que es justo lo que el padrón sí enseña.
 
 ---
 
