@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from django.core.exceptions import PermissionDenied
 from django.db.models import Prefetch
 
-from catalogo.models import Alergeno, Producto
+from catalogo.models import Alergeno, Producto, ProductoAlergeno
 from cuentas.models import Rol
 from restricciones.models import (
     AsientoDeRestriccion,
@@ -186,6 +186,38 @@ def alergenos_que_bloquean(estudiante, producto):
     return Alergeno.objects.filter(
         declaraciones__producto=producto, bloqueos__estudiante=estudiante
     ).distinct()
+
+
+def alergenos_que_bloquean_entre(estudiante, productos):
+    """De esos productos, cuáles caen por un alérgeno bloqueado, y por cuál (`HU-18`).
+
+    Devuelve las `catalogo.ProductoAlergeno` que cruzan: una fila por pareja
+    producto–alérgeno, con los dos ya traídos. Vacío si ninguno cae.
+
+    **Es la pregunta de la venta, y por eso pregunta solo por lo que se está
+    cobrando** (`TT-113`). `productos_cubiertos_por_alergeno` responde «qué no
+    puede comprar este estudiante», que es la lista entera del catálogo y no
+    cabe en una transacción con cola delante; aquí la pregunta es «¿alguno de
+    estos cuatro?», y se resuelve con un `IN`. Una consulta, dentro del bloqueo
+    (`DT-6`).
+
+    ── SIGUE SIENDO LA CONDICIÓN, NO UNA LISTA (`INV-5`) ───────────────────
+    Lo que se cruza es `RestriccionAlergeno` con `catalogo.ProductoAlergeno`
+    **en el momento de cobrar**. No hay ninguna lista de productos prohibidos
+    guardada en ninguna parte, y por eso un producto que la cafetería agregó
+    esta mañana declarando maní queda rechazado esta misma tarde sin que nadie
+    recalcule nada.
+
+    Devuelve la declaración y no solo el producto porque el cajero necesita
+    **por qué**: «contiene maní» le deja explicarlo y le dice que eso no se
+    arregla quitando el renglón de otra forma. Un producto que declare dos
+    alérgenos bloqueados del mismo estudiante sale dos veces, una por cada
+    motivo, y es correcto: son dos razones distintas.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    return ProductoAlergeno.objects.filter(
+        producto__in=productos, alergeno__bloqueos__estudiante=estudiante
+    ).select_related("producto", "alergeno")
 
 
 def historial_de_restricciones(estudiante, limite=None):
