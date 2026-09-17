@@ -84,13 +84,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **23** de 43 | **8** de 16 |
-| Pendientes | 20 | 8 |
+| **Finalizadas** | **25** de 43 | **9** de 16 |
+| Pendientes | 18 | 7 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 11 | 18 |
-| Carlos | 7 | 13 |
+| Pedro | 12 | 18 |
+| Carlos | 8 | 13 |
 | Alejandro | 5 | 9 |
 | Naomi | 0 | 3 |
 
@@ -104,7 +104,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-04` | `TT-104`–`TT-105` | `HU-12` | ☑ |
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☑ |
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☑ |
-| `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☐ |
+| `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☑ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☐ |
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☐ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` | ☐ |
@@ -346,17 +346,46 @@ escrito.
 | Título del PR | `feat(restricciones): permitir consultar las restricciones a los cuatro roles` |
 | Rama | `feat/TT-111-consulta-de-restricciones` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-38` |
+| Historia | `HU-38` — **cerrada** |
 | Invariantes | `INV-4`, matriz `S11` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-111` | Consulta habilitada a los cuatro roles, sobre el selector de `TT-106` | Pedro | ☐ |
-| `TT-112` | Consulta de restricciones en la interfaz administrativa | Carlos | ☐ |
+| `TT-111` | Consulta habilitada a los cuatro roles, sobre el selector de `TT-106` | Pedro | ☑ |
+| `TT-112` | Consulta de restricciones en la interfaz administrativa | Carlos | ☑ |
 
 `HU-38` y `HU-13` son las dos caras de la misma fila de `S11`: los cuatro **consultan**,
 solo el acudiente **configura**.
+
+**Cómo quedó.** Dos de los cuatro roles ya consultaban antes de este PR: el acudiente en
+su panel (`TT-99`, `TT-102`) y el cajero al identificar (`TT-109`). Lo que faltaba era la
+administración de la cafetería y la institución, que trabajan en el admin (`DT-2`) y no
+tenían dónde verlas. Ahora tienen *Restricciones por estudiante*: el listado con el
+límite, los productos y los alérgenos bloqueados de cada uno, y su ficha.
+
+**Es un proxy de `Estudiante` cuyo único permiso es `view`** (`default_permissions`).
+Django no crea `add_`, `change_` ni `delete_` para él, así que no hay permiso de escritura
+que conceder por error: la matriz solo puede dar lo que existe (`DT-11`). Las tres tablas
+de restricciones siguen **sin registrarse** en el admin. La matriz le da `view` a los dos
+roles, el selector `estudiantes_con_sus_restricciones` exige el rol y el `ModelAdmin` lo
+repite y niega las tres escrituras: la prueba se verificó quitando las dos
+comprobaciones de rol a propósito, y con solo una de ellas el cajero sigue recibiendo
+`403`.
+
+**La consulta enseña restricciones, no la ficha del estudiante.** Ni el documento, ni el
+código de tarjeta —la credencial del saldo (`FUN-4`)—, ni el acudiente. El documento **se
+busca pero no se enseña**, y solo completo: una búsqueda por subcadena dejaría recorrer
+documentos tecleando cifras.
+
+> **Hallazgo de este PR: el `__str__` de `Estudiante` lleva el documento.** El admin lo
+> pinta en el título y en las migas de la ficha, así que con el proxy tal cual la
+> cafetería habría leído el documento del menor en la cabecera de una pantalla que se
+> cuida de no enseñarlo en ninguna columna. El proxy tiene su propio `__str__`, y hay
+> prueba que falla si se hereda el otro.
+
+Tras integrarlo, **`manage.py sincronizar_permisos`**: sin él, los dos roles reciben `403`
+en la consulta nueva y nada indica por qué.
 
 ---
 
@@ -633,8 +662,8 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
    historia rechazaba la venta de un producto bloqueado— y `HU-61` —el cupo se podía
    cambiar pero no retirar—. Las dos se registraron antes de construirse, la segunda con
    `DEC-13` porque amplía `[S11]`.
-7. **Si el sprint desborda**, el candidato a mover es `PR-07` (`HU-38`, del que no depende
-   ninguna historia). `PR-04` ya no lo es: está integrado. **No se pueden mover** `PR-08`
+7. **Si el sprint desborda, ya no queda candidato cómodo.** Los dos que había —`PR-04` y
+   `PR-07`— están integrados. **No se pueden mover** `PR-08`
    ni `PR-09` —son `TST-1` y `TST-2`— ni `PR-15` ni `PR-16`: sin ellas, lo ya construido
    promete una protección que no cumple.
 8. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que

@@ -146,8 +146,8 @@ El retiro **se asienta**: es una acción sobre la seguridad alimentaria de un me
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-111` | Consulta de restricciones habilitada a los cuatro roles, sobre el selector de `TT-106` (`S11`) | Pedro | ☐ |
-| `TT-112` | Consulta de restricciones en la interfaz administrativa | Carlos | ☐ |
+| `TT-111` | Consulta de restricciones habilitada a los cuatro roles, sobre el selector de `TT-106` (`S11`) | Pedro | ☑ |
+| `TT-112` | Consulta de restricciones en la interfaz administrativa | Carlos | ☑ |
 
 La matriz `[S11]` es explícita: los cuatro roles **consultan**, solo el acudiente **configura**. `HU-38` y `HU-13` son las dos caras de la misma fila.
 
@@ -282,6 +282,8 @@ Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: 
 Que el punto llegó a estar abierto es información, y por eso se conserva: la planeación del sprint no lo vio, y lo que lo destapó fue construir la pantalla de `HU-10` y preguntarse qué pasaba al cobrar.
 
 **6. Si el sprint desborda**, los candidatos a mover al Sprint 4 son `HU-12` (`TT-104`, `TT-105`) y `HU-38` (`TT-111`, `TT-112`): `HU-12` es el único `Should` del sprint y de `HU-38` no depende ninguna otra historia. Quedan 33 tareas. **No se pueden mover** `HU-18` ni `HU-20`: son los escenarios críticos `TST-1` y `TST-2` de `ENT-05`.
+
+**Ya no queda ninguno de los dos candidatos**: `HU-12` se integró con `PR-04` y `HU-38` con `PR-07`.
 
 ---
 

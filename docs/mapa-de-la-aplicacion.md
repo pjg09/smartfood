@@ -154,10 +154,17 @@ coincidir porque dejaría media pantalla en cada tema.
 | `catalogo.categoria` | 403 | **200** | 403 | 302 |
 | `catalogo.alergeno` | 403 | **200** | 403 | 302 |
 | `inventario.movimientoinventario` | 403 | **200** | 403 | 302 |
+| `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 403 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Tres lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Cuatro lecturas que
 conviene no perder:
+
+- **Las restricciones se consultan en el admin y no se escriben en él** (`HU-38`, `INV-4`).
+  La única entrada es *Restricciones por estudiante*, un proxy del estudiante **sin más
+  permiso que `view`**: Django no crea los de escritura, así que no hay ninguno que
+  conceder por error. Alta, edición y borrado responden `403` a los dos roles. Las tres
+  tablas de restricciones siguen sin registrarse.
 
 - **El catálogo es de quien lo vende.** La institución recibe `403`: `[S11]` no le da el
   catálogo, y desde `UX-6` ya no es superusuario, así que la matriz la vincula de verdad.
@@ -192,11 +199,21 @@ con autocompletado; acciones de **reasignar el código** y **dar de baja**, las 
 confirmación—, *Acudientes* de solo consulta, y *Usuarios* para dar de alta al personal,
 desactivarlo, reactivarlo y reenviarle la invitación.
 
+Y *Restricciones por estudiante*, **solo consulta** (`HU-38`): la misma pantalla que ve la
+administración de la cafetería. Las restricciones son del acudiente, también para el
+colegio (`INV-4`, `HU-13`).
+
 ### Administración de la cafetería (`USR-4`)
 
 En el admin: productos con precio, categoría, ocho campos nutricionales por porción
 (`./campos-nutricionales.md`), alérgenos declarados e imagen; categorías; alérgenos.
 Acciones de retirar y devolver al catálogo. **Nada se borra**: retirar es un estado.
+
+*Restricciones por estudiante* (`HU-38`, `TT-112`): de cada estudiante, su límite diario,
+los productos bloqueados y los alérgenos bloqueados. **Solo se consultan**: las configura
+y las retira el acudiente (`INV-4`). Enseña el nombre y el estado, **no el documento, ni el
+código de tarjeta, ni el acudiente** — la cafetería consulta restricciones, no administra
+estudiantes. El documento se puede buscar, pero solo completo.
 
 Desde `HU-27`, también el **inventario**: el listado de productos trae una columna de
 existencias —calculada sumando el historial, no guardada (`INV-3`)— y *Movimientos de
@@ -365,7 +382,8 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 6. **Bloquear un alérgeno** desde la tarjeta de restricciones. Luego, como administración,
    **crear un producto nuevo que lo declare**: queda cubierto sin volver a tocar nada. Es
    `INV-5` enseñada en vivo, y el paso que más conviene no saltarse en la Sprint Review.
-   `HU-11`.
+   `HU-11`. Desde el mismo admin, *Restricciones por estudiante* enseña ese alérgeno
+   bloqueado, y la ficha no ofrece guardar nada. `HU-38`.
 7. **Retirar uno de los bloqueos** y mirar «Cambios recientes» debajo: queda anotado
    quién lo retiró y cuándo, y el bloqueo anterior también está. `HU-12`.
    Desde la pantalla del cupo, **Retirar el límite** hace lo mismo con el límite diario y
