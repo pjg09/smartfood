@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 14 (`DEC-1` … `DEC-14`) |
+| decisiones | 15 (`DEC-1` … `DEC-15`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.4 |
+| version | 1.5 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-14` |
+| S1 | Decisiones | `DEC-1` … `DEC-15` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -307,6 +307,33 @@ El argumento de la inmediatez que trae `DEC-5` **no aplica al dinero que entra**
 
 ---
 
+### `[DEC-15]` El prototipo no se despliega: `ENT-01` se demuestra en local
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-09-17. **Recorta `ENT-01`**: retira de ese entregable la condición de estar «desplegado en un entorno de pruebas».*
+
+**El hecho que lo obliga.** El entorno de pruebas quedó congelado el 2026-08-30 por dos fallos que no son del código —la base gestionada se duerme y al despertar rechaza conexiones, y el proveedor **prohíbe** desactivar ese comportamiento en su plan gratuito—, y la única salida técnica era pagar un plan superior. `DoD-4` quedó suspendido desde entonces, con una condición de caducidad escrita en su propia caja: **que Pedro consultara con la docente si la asignatura exige el despliegue**.
+
+Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desaparece la razón por la que se iba a pagar un plan, y con ella la tarea `TT-137`, que preveía restaurarlo.
+
+**Decidido:**
+
+- **El prototipo no se despliega.** No hay entorno de pruebas en internet, ni se contrata ninguno.
+- **`ENT-01` no se retira: se recorta.** Se le quita la condición «desplegado en un entorno de pruebas». Todo lo demás de ese entregable sigue en pie sin cambios —los flujos de extremo a extremo, los datos ficticios, la institución de referencia—, y es lo que se entrega.
+- **`ENT-01` se demuestra ejecutándolo en local**, con el recorrido de `./mapa-de-la-aplicacion.md` y la reconstrucción de `./desarrollo.md`, que no depende de ningún proveedor.
+- **`DoD-4` deja de estar suspendido.** Vuelve a ser exigible, en la forma que se venía aplicando en su lugar desde el 2026-08-30: el PR declara cómo se verificó, con la salida real del comando. La suspensión se cierra en `[S5]` de `./definicion-de-terminado.md`.
+- **`TT-04` queda sin efecto, y no se desmarca.** Esa tarea se hizo y se cerró en el Sprint 1; lo que esta decisión retira es su resultado, no el hecho de haberla hecho. Los sprints cerrados son archivo y no se reescriben.
+- **Se retira del repositorio lo que solo servía en el proveedor**: `railway.json` y el bloque de `config/settings.py` que leía su variable de dominio. Lo que sigue valiendo fuera de él —los ajustes de seguridad de `DEBUG = False` y la sonda `/salud/`— se queda.
+- **El Avance 2 (`EVA-4`) se demuestra desde un portátil del equipo.** Es la decisión que el `ANEXO A` de `./sprint-4-backlog.md` pedía tomar «con tiempo, no la víspera»; se toma ahora, tres semanas antes.
+- **Eliminar el proyecto en la consola del proveedor es una acción externa al repositorio** y queda pendiente de ejecución. Mientras exista, no se despliega nada en él.
+
+**Lo que NO se decide aquí.** No se renuncia a desplegar más adelante: `[S5]` de `./despliegue.md` conserva los pasos de reconstrucción por si el proyecto se retoma. Tampoco cambia nada del almacenamiento: `DT-21` fija un bucket con dos prefijos y en local eso es MinIO, que es lo que había y lo que sigue.
+
+**Consecuencia asumida.** Quien evalúe el prototipo no puede abrirlo por una URL: hay que enseñárselo. A cambio, deja de existir un criterio que ningún trabajo del equipo podía satisfacer y que llevaba dieciocho días bloqueando `DoD-4`, y `ENT-01` pasa a ser algo que el equipo sí controla enteramente.
+
+> **«Retirar `ENT-01`» sería retirar el proyecto, y no es lo que se decide.** `ENT-01` es el prototipo funcional entero: retirarlo dejaría el semestre sin entregable. Lo que se retira es **una condición suya**, la de estar desplegado. La distinción importa al leer `ENT-01` en `[S9.3]` de `./smartfood.md`, que no se puede alterar y sigue pidiéndolo desplegado: el alcance vigente es ese texto **más** esta decisión, leídos juntos.
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -343,6 +370,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-12` | **No añade alcance.** Habilita el acceso de `USR-2`, que las historias del acudiente daban por supuesto |
 | `DEC-13` | Retiro completo del límite diario por el acudiente, con asiento. Amplía la fila del límite de `[S11]`, que solo decía «fijar» |
 | `DEC-14` | **No añade alcance: lo recorta.** Retira la recarga al estudiante desactivado, corrigiendo el tercer criterio de `HU-50` |
+| `DEC-15` | **No añade alcance: lo recorta.** Retira de `ENT-01` la condición de estar desplegado; el prototipo se demuestra en local |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -366,6 +394,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (decisión posterior) Seed de la cuenta institucional | **Decidido** | `DEC-10` | `HU-39` (sin cambios en el texto) |
 | — (decisión posterior) Contraseñas asignadas en el prototipo | **Decidido** | `DEC-11` | `HU-03`, `HU-41` (sin cambios en el texto) |
 | — (hueco detectado) Inicio de sesión del acudiente | **Decidido** | `DEC-12` | `HU-04` y todo `USR-2` (sin cambios en el texto) |
+| — (condición de caducidad de `DoD-4`) Si la asignatura exige entorno desplegado | **Resuelto** | `DEC-15` | ninguna — recorta `ENT-01` |
 
 ---
 
