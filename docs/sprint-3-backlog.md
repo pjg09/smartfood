@@ -199,8 +199,8 @@ Las dos vías cubren tiempos distintos (`DEC-5`): la institución bloquea de inm
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-123` | Reactivación permitida **solo** a la institución, con independencia de quién desactivó (`INVD-3`) | Pedro | ☐ |
-| `TT-124` | Caso de prueba: el acudiente que desactivó **no** puede reactivar | Alejandro | ☐ |
+| `TT-123` | Reactivación permitida **solo** a la institución, con independencia de quién desactivó (`INVD-3`) | Pedro | ☑ |
+| `TT-124` | Caso de prueba: el acudiente que desactivó **no** puede reactivar | Alejandro | ☑ |
 
 La asimetría es deliberada y tiene un motivo de seguridad: el desbloqueo pasa siempre por una verificación presencial, y eso es lo que impide que quien encontró la tarjeta consiga que se reactive.
 
