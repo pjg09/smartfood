@@ -30,6 +30,18 @@
     </p>
   {% endif %}
 
+  {% if reactivado %}
+    <p role="status" data-estudiante-reactivado
+       class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+              px-3 py-2 text-base text-texto">
+      <svg class="mt-0.5 h-4 w-4 shrink-0 text-exito-fuerte" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      <span>
+        <strong class="font-semibold">{{ reactivado.nombre }}</strong> vuelve a estar
+        activo: su tarjeta compra otra vez desde ahora.
+      </span>
+    </p>
+  {% endif %}
+
   {% if error %}
     <p role="alert" data-error-del-padron
        class="flex items-start gap-2 rounded-md border border-error bg-error-suave
@@ -50,11 +62,15 @@
     <strong class="font-semibold text-texto">{{ estudiantes|length }}</strong>
     de {{ total }}
     {% if total == 1 %}estudiante{% else %}estudiantes{% endif %}
-    {% comment %} El indicador de la desactivación va **en esta línea** y no en una fila
-       propia: `htmx-indicator` oculta con `opacity`, así que en su propio
-       renglón reservaría el alto siempre y dejaría un hueco permanente. {% endcomment %}
+    {% comment %} El indicador de las dos transiciones va **en esta línea** y no en una
+       fila propia: `htmx-indicator` oculta con `opacity`, así que en su propio
+       renglón reservaría el alto siempre y dejaría un hueco permanente.
+
+       Uno solo para desactivar y reactivar: dicen lo mismo —que la tabla se está
+       rehaciendo— y el nombre de la acción ya está en el botón que se acaba de
+       pulsar. {% endcomment %}
     <span id="desactivando-en-el-padron" class="htmx-indicator text-sm text-texto-suave">
-      · Desactivando…
+      · Guardando…
     </span>
     {% if sin_activar %}
       <span aria-hidden="true" class="px-1 text-borde">·</span>
