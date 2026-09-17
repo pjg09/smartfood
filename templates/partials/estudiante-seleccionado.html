@@ -14,9 +14,9 @@
    `HU-07`: el saldo mostrado corresponde exactamente al historial, y aquí se
    puede ver.
 
-   El límite diario ya está (`TT-96`, `HU-09`): se fija por estudiante y se ve
-   aquí. Lo que aún no hace es frenar una venta —eso es `HU-20`— y la tarjeta lo
-   dice. Las restricciones también están enteras: productos (`TT-99`, `HU-10`) y
+   El límite diario ya está (`TT-96`, `HU-09`) y **desde `TT-116` frena la
+   venta** (`HU-20`): se fija por estudiante, se ve aquí y la caja lo hace
+   cumplir. Las restricciones también están enteras: productos (`TT-99`, `HU-10`) y
    alérgenos (`TT-102`, `HU-11`). **Ya no queda ningún hueco en esta ficha.**
 {% endcomment %}
 
@@ -136,8 +136,8 @@
         {% if limite %}
           <p class="font-display text-2xl tabular-nums text-texto">{{ limite.monto|dinero:"COP" }}</p>
           <p class="text-base font-medium text-texto-suave">
-            Es de {{ seleccionado.nombre }}, no de la cuenta. Todavía no frena la venta:
-            eso llega con <span class="font-mono">HU-20</span>.
+            Es de {{ seleccionado.nombre }}, no de la cuenta. La caja rechaza la compra
+            que lo pase, aunque tenga saldo.
           </p>
         {% else %}
           <p class="font-display text-2xl text-texto">Sin límite</p>

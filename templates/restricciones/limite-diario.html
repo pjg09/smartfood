@@ -8,16 +8,11 @@
    la derecha desde `escritorio`. No se inventa disposición nueva — es la misma
    pregunta que la recarga —«¿qué cifra pongo?»— con otro significado.
 
-   **Lo que cambia respecto de la recarga es lo que se promete.** Allí el
-   movimiento queda asentado y el saldo sube al instante. Aquí la cifra queda
-   guardada pero **todavía no rechaza ninguna venta**: la comparación contra el
-   consumo del día la construye `TT-116` dentro del bloqueo de la transacción
-   (`PR-09`, `HU-20`, `DT-6`). Decirlo no es un descargo: un acudiente que crea
-   que su hijo ya tiene tope dejará de mirar, y eso es peor que no ofrecerle el
-   campo.
-
-   Ese aviso va en `aviso` y no en `error`: no ha fallado nada, es un estado —el
-   mismo criterio que usa la recarga para decir que el pago es simulado.
+   **Y desde `TT-116` el cupo se cumple en la caja** (`HU-20`, `DT-6`): la venta
+   que lo pase se rechaza dentro del bloqueo de la transacción, aunque haya
+   saldo. Mientras no fue cierto, esta pantalla lo avisaba —un acudiente que
+   crea que su hijo ya tiene tope deja de mirar—; ahora lo que hace falta decir
+   es la otra mitad, que el cupo es por día y vuelve mañana.
 {% endcomment %}
 
 {% block titulo %}Límite diario | {{ estudiante.nombre }} | SmartFood{% endblock %}
@@ -44,14 +39,19 @@
       </p>
     </header>
 
+    {% comment %} `HU-20`, `TT-116`. Aquí decía que el cupo todavía no se aplicaba en la
+       caja, y era ámbar porque avisaba de algo que el acudiente tenía que tener en
+       cuenta. Ahora se aplica, así que ni es un aviso ni va en ámbar: el ámbar
+       significa un límite a punto de agotarse (`[S1]`, regla 3) y gastarlo en
+       decoración se lo quita a donde hace falta. Lo que queda por decir es cómo
+       funciona el cupo, que es distinto de advertir de que no funciona. {% endcomment %}
     <div role="note"
-         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
-      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
-      <p class="text-sm text-aviso-fuerte">
-        <strong class="font-semibold">Todavía no se aplica en la caja.</strong> El límite
-        queda guardado, pero la venta aún no lo comprueba: eso llega con
-        <span class="font-mono">HU-20</span>, en este mismo sprint. Hasta entonces sirve
-        para dejarlo configurado, no para frenar una compra.
+         class="flex items-start gap-3 rounded-md border border-borde bg-superficie p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-limite"></use></svg>
+      <p class="text-sm text-texto-suave">
+        <strong class="font-semibold text-texto">Se aplica al cobrar.</strong> La compra que
+        pase del cupo se rechaza en la caja, aunque tenga saldo. El cupo cuenta lo
+        gastado en el día y vuelve a empezar al día siguiente.
       </p>
     </div>
 
