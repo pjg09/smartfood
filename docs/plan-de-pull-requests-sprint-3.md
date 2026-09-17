@@ -69,14 +69,15 @@ Los cortes se eligieron con tres criterios, en este orden:
 4. Si el PR cierra una historia, se marca también en la tabla `[S4]` de
    `./backlog-historias-de-usuario.md`.
 
-> ⚠ **Dos PR de este sprint cierran dos historias cada uno.**
+> ⚠ **Dos PR de este sprint cierran dos historias cada uno, y los dos están integrados.**
 >
-> - **`PR-06`**: además de `HU-13`, salda `HU-17`, que el Sprint 2 dejó abierta.
-> - **`PR-09`**: además de `HU-20`, salda `HU-09`, que `PR-01` dejó con su tercer
+> - **`PR-06`**: además de `HU-13`, saldó `HU-17`, que el Sprint 2 dejó abierta.
+> - **`PR-09`**: además de `HU-20`, saldó `HU-09`, que `PR-01` dejó con su tercer
 >   criterio pendiente —evaluar el límite contra el consumo del día en cada venta es
 >   `TT-116`—.
 >
-> Son cuatro marcas en el backlog de historias, no dos.
+> Fueron cuatro marcas en el backlog de historias, no dos. Era la omisión más fácil del
+> sprint y por eso queda anotada aquí: quien revise el avance cuenta cuatro.
 
 ---
 
@@ -84,14 +85,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **28** de 43 | **10** de 16 |
-| Pendientes | 15 | 6 |
+| **Finalizadas** | **31** de 43 | **11** de 16 |
+| Pendientes | 12 | 5 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 13 | 18 |
-| Carlos | 9 | 13 |
-| Alejandro | 6 | 9 |
+| Pedro | 14 | 18 |
+| Carlos | 10 | 13 |
+| Alejandro | 7 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -106,7 +107,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☑ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☑ |
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☑ |
-| `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☐ |
+| `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☑ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` | ☐ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☐ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
@@ -128,7 +129,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | Título del PR | `feat(restricciones): fijar el límite diario de gasto del estudiante` |
 | Rama | `feat/TT-94-limite-diario` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-09` — **no la cierra**: su tercer criterio es `TT-116`, en `PR-09` |
+| Historia | `HU-09` — **no la cerró**: su tercer criterio es `TT-116`, y la cerró `PR-09` |
 | Invariantes | ninguna directamente; habilita `HU-20` |
 | Estado | ☑ |
 
@@ -146,9 +147,10 @@ Los cortes se eligieron con tres criterios, en este orden:
 > criterios —el límite se define por estudiante, y solo su acudiente lo fija o lo
 > modifica—, pero el tercero dice «el límite se evalúa contra el consumo del día en cada
 > venta», que es la validación dentro del bloqueo de la transacción: `TT-116`, de `PR-09`.
-> Es la misma frase que da sentido a `HU-20`. **`HU-09` se marca en
-> `./backlog-historias-de-usuario.md` al integrar `PR-09`**, junto con `HU-20`, y hasta
-> entonces queda declarada como abierta. Es el segundo caso del proyecto tras `HU-17`.
+> Es la misma frase que da sentido a `HU-20`. **`HU-09` quedó marcada en
+> `./backlog-historias-de-usuario.md` al integrar `PR-09`**, junto con `HU-20`. Fue el
+> segundo caso del proyecto tras `HU-17`, y el aviso se conserva porque explica por qué
+> una historia del primer PR del sprint se cerró ocho PR más tarde.
 
 ---
 
@@ -323,13 +325,12 @@ proteger.
 El cajero **ve** las restricciones y no dispone de ninguna acción para desactivarlas. Lo
 segundo ya lo garantiza `PR-05` en la capa de datos.
 
-**Cómo quedó, y una advertencia temporal que hay que retirar a su tiempo.** El bloque
-nombra cada restricción —un recuento no sirve en una caja: el cajero necesita saber
-cuál— y dice, por línea, **si la caja la hace cumplir**. Hoy solo rechaza el producto
-bloqueado (`HU-60`); el alérgeno es `PR-08` y el cupo `PR-09`. Un cajero que crea que el
-sistema frena el maní puede vender el maní, así que el panel se lo dice con todas las
-letras. **Esas dos marcas —y las dos pruebas que las exigen— se retiran al integrar
-`PR-08` y `PR-09`.**
+**Cómo quedó.** El bloque nombra cada restricción —un recuento no sirve en una caja: el
+cajero necesita saber cuál— y dice, por línea, **si la caja la hace cumplir**. Cuando se
+escribió, la caja solo rechazaba el producto bloqueado (`HU-60`), así que el alérgeno y el
+cupo llevaban una marca temporal: un cajero que crea que el sistema frena el maní puede
+vender el maní. **Las dos marcas se retiraron**, con `PR-08` y `PR-09`, y las pruebas que
+las exigían ahora exigen su ausencia.
 
 Y una frase que cambió de signo: hasta este PR la pantalla **no podía** escribir «sin
 restricciones», porque el sistema no guardaba ninguna y eso habría sido «no sé»
@@ -455,15 +456,15 @@ de bloquear, comprobado introduciendo esa versión a propósito.
 | Título del PR | `feat(ventas): rechazar la venta cuando se agotó el cupo del día` |
 | Rama | `feat/TT-116-rechazo-por-limite` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historias | `HU-20` **y `HU-09`** |
-| Invariantes | escenario crítico **`TST-2`**, mitad pendiente |
-| Estado | ☐ |
+| Historias | `HU-20` **y `HU-09`** — **las dos cerradas** |
+| Invariantes | escenario crítico **`TST-2`**, ahora completo |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-116` | Validación del límite diario contra el consumo del día, dentro del bloqueo | Pedro | ☐ |
-| `TT-117` | Motivo de rechazo por límite, distinguible del de saldo | Carlos | ☐ |
-| `TT-118` | Caso de prueba `TST-2`: rechazo por cupo aunque haya saldo | Alejandro | ☐ |
+| `TT-116` | Validación del límite diario contra el consumo del día, dentro del bloqueo | Pedro | ☑ |
+| `TT-117` | Motivo de rechazo por límite, distinguible del de saldo | Carlos | ☑ |
+| `TT-118` | Caso de prueba `TST-2`: rechazo por cupo aunque haya saldo | Alejandro | ☑ |
 
 > ⚠ **Salda también `HU-09`.** `PR-01` dejó el cupo configurable por estudiante y
 > escribible solo por su acudiente, pero el tercer criterio de la historia —«el límite se
@@ -475,6 +476,33 @@ Completa `TST-2`, cuya otra mitad cerró `HU-19` en el Sprint 2.
 
 El caso a probar es el contraintuitivo: **hay saldo de sobra y la venta se rechaza igual**.
 Si el mensaje dice «saldo insuficiente», el cajero le da al estudiante una explicación falsa.
+
+**Cómo quedó.** La comprobación va en el paso 2, **antes del saldo y después de las
+existencias**, y las dos cosas son deliberadas: antes del saldo porque «no alcanza»
+mandaría al acudiente a recargar para que la venta se rechazara igual —el cupo no lo
+arregla ninguna recarga—; después de las existencias porque «de eso quedan dos» es sobre
+la vitrina y se resuelve en el acto. El mensaje lo dice con todas las letras: *recargar no
+lo cambia*.
+
+El consumo del día se lee **dentro del bloqueo** y del mismo libro que el saldo (`INV-2`):
+no hay contador diario que pudiera discrepar del historial ni que alguien tenga que poner
+a cero cada medianoche. La billetera está bloqueada desde el paso 1, así que dos cajas
+simultáneas no pueden colar dos ventas que juntas pasan el cupo.
+
+**El borde se decidió a favor de vender**: gastar exactamente el cupo es gastarlo, no
+pasarse. Un límite de $8.000 que rechaza un almuerzo de $8.000 sería un límite de $7.999,
+y nadie lo habría escrito así. Hay dos pruebas en ese filo — el cupo exacto se vende, un
+peso por encima se rechaza— y la comparación `>` frente a `>=` las separa.
+
+**Y se retiraron las tres marcas temporales del cupo**: la del panel de cobro (`PR-06`),
+la de la pantalla del límite del acudiente y la de su tarjeta de resumen, que decían que
+la caja todavía no lo aplicaba. Las pruebas que las exigían ahora exigen su ausencia. Con
+esto **no queda ninguna marca de ese tipo en el sistema**: las tres restricciones se
+configuran y las tres se hacen cumplir.
+
+El aviso de la pantalla del límite dejó de ir en ámbar. El ámbar significa aquí «un límite
+a punto de agotarse» (`[S1]`, regla 3) y ya no hay nada que advertir: lo que queda es
+explicar cómo funciona el cupo, que es otra cosa.
 
 ---
 
@@ -673,10 +701,11 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
 
 ## [S6] Advertencias sobre este plan
 
-1. **`PR-09` cierra dos historias, y una de ellas es de `PR-01`.** `HU-20` y `HU-09`:
+1. **`PR-09` cerró dos historias, y una de ellas era de `PR-01`.** `HU-20` y `HU-09`:
    `PR-01` dejó el cupo configurable pero su tercer criterio —evaluarlo contra el consumo
-   del día en cada venta— es `TT-116`. Está anotado en `[S3.1]`, en el bloque de `PR-01` y
-   en `[S4]` del backlog de historias.
+   del día en cada venta— era `TT-116`. Las dos marcas están puestas, y la advertencia se
+   conserva porque es el patrón que volverá a aparecer: una historia no se cierra donde se
+   construye su pantalla, sino donde se cumple su último criterio.
 2. **`PR-06` cierra dos historias.** `HU-13` y `HU-17`. Es la única vez en el proyecto que
    un PR salda una historia de un sprint anterior, y por eso es la marca más fácil de
    olvidar. Va anotada en `[S2]`, en `[S3.1]` y en el propio PR.
@@ -686,12 +715,14 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
    añaden validaciones dentro del bloqueo que construyó `TT-80` en el Sprint 2. Cada una es
    sencilla; el riesgo es el acumulado. Comprobad que el orden bloqueo → validación →
    escritura sigue intacto **después del tercero**, no solo después de cada uno.
-   **Va el primero de los tres**: `PR-08` dejó en `ventas.services` una prueba que fija ese
-   orden mirando las consultas emitidas, así que `PR-09` y `PR-13` heredan quien lo vigile.
-5. **Este sprint cierra `TST-1` y `TST-2`.** Dos de los cuatro escenarios críticos que
-   `ENT-05` exige demostrar. **`TST-1` ya está cerrado** (`PR-08`); de `TST-2` falta la
-   mitad del cupo diario, que es `PR-09`. `TST-3` cerró en el Sprint 2 y `TST-4` es del
-   Sprint 4: al acabar el 4, el plan de pruebas está completo.
+   **Van dos de tres.** Cada uno dejó su prueba de orden —`PR-08` sobre el cruce de
+   alérgenos, `PR-09` sobre la lectura del consumo del día—, las dos mirando las consultas
+   que la venta emite. `PR-13` hereda quien lo vigile, y con él toca repasar el orden
+   completo: hoy es alérgeno → producto → existencias → cupo → saldo.
+5. **Este sprint cierra `TST-1` y `TST-2`, y los dos están cerrados** (`PR-08` y
+   `PR-09`). Son dos de los cuatro escenarios críticos que `ENT-05` exige demostrar;
+   `TST-3` cerró en el Sprint 2 y `TST-4` es del Sprint 4: al acabar el 4, el plan de
+   pruebas está completo.
 6. **El sprint creció de 37 a 43 tareas, en dos pasos y por el mismo motivo**: construir
    el control parental destapó dos huecos que la planeación no vio. `HU-60` —ninguna
    historia rechazaba la venta de un producto bloqueado— y `HU-61` —el cupo se podía

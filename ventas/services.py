@@ -29,7 +29,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from billetera.models import Billetera, TipoDeMovimiento
-from billetera.selectors import saldo_de
+from billetera.selectors import consumo_del_dia, saldo_de
 from billetera.services import asentar as asentar_en_la_billetera
 from billetera.templatetags.dinero import dinero
 from catalogo.models import Producto
@@ -37,7 +37,11 @@ from cuentas.models import Rol
 from inventario.models import TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_por_producto
 from inventario.services import asentar as asentar_en_el_inventario
-from restricciones.selectors import alergenos_que_bloquean_entre, bloqueos_entre
+from restricciones.selectors import (
+    alergenos_que_bloquean_entre,
+    bloqueos_entre,
+    limite_diario_de,
+)
 from ventas.models import LineaVenta, MedioDePago, Venta
 
 
@@ -224,6 +228,41 @@ class AlergenoBloqueado(VentaRechazada):
         self.alergenos = tuple(alergenos)
 
 
+class LimiteDiarioSuperado(VentaRechazada):
+    """`HU-20`, `HU-09`, mitad del escenario crítico **`TST-2`**.
+
+    El estudiante ya gastó hoy lo que su acudiente le fijó como tope, o esta
+    venta lo pasaría. **Se rechaza aunque haya saldo de sobra**, y eso es
+    exactamente lo que la historia pide: un límite que solo se cumple cuando
+    además falta dinero no es un límite, es una coincidencia.
+
+    ── SE DISTINGUE DEL SALDO, Y NO ES COSMÉTICA ───────────────────────────
+    Es el segundo criterio de `HU-20` y el motivo por el que `TT-117` existe.
+    Las dos cifras son de dinero y las dos rechazan, pero se arreglan de forma
+    opuesta: «no alcanza el saldo» lo resuelve el acudiente recargando; «se
+    acabó el cupo de hoy» **no lo resuelve ninguna recarga** —el cupo vuelve
+    mañana, o lo cambia quien lo puso—. Decir el motivo equivocado manda al
+    acudiente a recargar para que la venta se rechace igual.
+    ─────────────────────────────────────────────────────────────────────────
+
+    Lleva las cuatro cifras con las que se decidió —`limite`, `consumido`,
+    `disponible` y `total`— para que el mensaje las diga sin volver a consultar
+    nada y para que una prueba pueda exigirlas en vez de buscar un texto dentro
+    de otro texto.
+    """
+
+    motivo = "limite-diario"
+
+    def __init__(self, mensaje, *, limite=None, consumido=None, total=None):
+        super().__init__(mensaje)
+        self.limite = limite
+        self.consumido = consumido
+        self.total = total
+        self.disponible = (
+            None if limite is None or consumido is None else limite - consumido
+        )
+
+
 @transaction.atomic
 def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     """Cobra: descuenta saldo y existencias **en la misma operación** (`HU-21`).
@@ -267,9 +306,11 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     habría significado dos caminos de escritura para el mismo libro, que es justo
     lo que `DT-24` evita.
 
-    **Lo que todavía NO evalúa** es el límite diario (`HU-20`, `TT-116`). El
-    alérgeno bloqueado sí, desde `TT-113`: está en el paso 2, junto al producto
-    bloqueado y antes del saldo, que es donde `DT-6` pide que vayan.
+    **Las tres restricciones del control parental se evalúan aquí**, en el paso
+    2 y por este orden: alérgeno (`TT-113`), producto bloqueado (`TT-131`) y
+    cupo del día (`TT-116`). Las tres van antes del saldo, que es donde `DT-6`
+    pide que vayan y lo que hace que el cajero lea el motivo que de verdad
+    explica el rechazo.
     """
     _solo_el_cajero(actor)
 
@@ -392,6 +433,43 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     )
 
     if estudiante is not None:
+        # ── `HU-20`, `HU-09` (tercer criterio), mitad de `TST-2` ─────────────
+        # **Va antes del saldo y después de las existencias, y las dos cosas
+        # son deliberadas.** Antes del saldo, porque «no alcanza» mandaría al
+        # acudiente a recargar para que la venta se rechazara igual: el cupo no
+        # lo arregla ninguna recarga. Después de las existencias, porque «de eso
+        # quedan dos» es sobre la vitrina y se resuelve en el acto.
+        #
+        # El consumo del día se lee **dentro del bloqueo**, como el saldo, y del
+        # mismo libro (`INV-2`): no hay contador de consumo diario que pudiera
+        # discrepar del historial. La billetera está bloqueada desde el paso 1,
+        # así que dos cajas simultáneas no pueden leer las dos el mismo consumo
+        # y colar dos ventas que juntas pasan el cupo.
+        #
+        # **Sin límite fijado no hay nada que comprobar**, y eso es distinto de
+        # un cupo de cero: `limite_diario_de` devuelve `None` cuando el
+        # acudiente no configuró ninguno (`LimiteDiario`, `HU-61`).
+        limite = limite_diario_de(estudiante)
+        if limite is not None:
+            consumido = consumo_del_dia(estudiante)
+            if consumido + total > limite.monto:
+                disponible = limite.monto - consumido
+                raise LimiteDiarioSuperado(
+                    f"Se acabó el cupo de hoy: el límite diario de "
+                    f"{estudiante.nombre} es {dinero(limite.monto)} y ya lleva "
+                    f"{dinero(consumido)}. "
+                    + (
+                        f"Le quedan {dinero(disponible)} y la venta suma "
+                        f"{dinero(total)}."
+                        if disponible > 0
+                        else "No le queda cupo para hoy."
+                    )
+                    + " Recargar no lo cambia: el cupo lo fija su acudiente.",
+                    limite=limite.monto,
+                    consumido=consumido,
+                    total=total,
+                )
+
         # `INV-1`. La resta se hace aquí, con el saldo leído bajo el bloqueo: es
         # el único punto del sistema donde esa comparación es de fiar.
         saldo = saldo_de(estudiante)

@@ -23,11 +23,13 @@
    dejaba `HU-17` abierta. Ahora «sin restricciones» es una frase que el sistema
    puede sostener, y por eso se puede escribir.
 
-   **Lo que este bloque NO puede hacer es dar a entender que la caja las aplica
-   todas.** Hoy rechaza el producto bloqueado (`HU-60`); el alérgeno es `HU-18` y
-   el cupo diario `HU-20`, los dos pendientes. Un cajero que crea que el sistema
-   frena el maní puede vender el maní. Por eso cada línea dice si la caja la hace
-   cumplir — y esas marcas se retiran cuando `HU-18` y `HU-20` entren.
+   **Y desde `TT-116` la caja las aplica las tres**: producto bloqueado
+   (`HU-60`), alérgeno (`HU-18`) y cupo del día (`HU-20`). Cada línea lo dice,
+   que es lo contrario de lo que decía mientras faltaban: entonces avisaba de
+   que el cajero tenía que vigilarlo a mano. Las dos marcas temporales se
+   retiraron con la historia que las hizo falsas, y hay pruebas que exigen que
+   ya no estén — una marca que sobrevive a su historia miente igual que mentiría
+   su ausencia.
 
    **La fotografía está desde `PR-10`** (`HU-58`, `DEC-8`), al lado del nombre, y
    cuando el estudiante no la tiene se dice en su sitio en vez de poner un avatar
@@ -268,8 +270,11 @@
                   · <strong class="font-semibold">agotado</strong>
                 {% endif %}
               </p>
-              <p class="text-sm text-aviso-fuerte">
-                La caja todavía no lo aplica (<span class="font-mono">HU-20</span>).
+              {% comment %} `HU-20`, `TT-116`. **La caja sí lo aplica**, y lo que se dice
+                 aquí es qué significa: la venta que pase del cupo se rechaza
+                 aunque haya saldo, y recargar no lo cambia. {% endcomment %}
+              <p class="text-sm text-error-fuerte">
+                La caja rechaza la venta que pase del cupo, aunque haya saldo.
               </p>
             </div>
           {% endif %}

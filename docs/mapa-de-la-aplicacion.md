@@ -259,18 +259,19 @@ contrario— y queda asentado de cuánto era. La acción vive en su propio formu
 como un segundo botón del de guardar: en un formulario con dos envíos, el primero del DOM
 es el que dispara Enter, y quien teclea una cifra se quedaría sin cupo en vez de
 cambiarlo. Es por estudiante y no de la cuenta: un acudiente con tres hijos fija tres cupos
-distintos. **Lo escribe solo él**, entre por donde entre —`INV-4`—, y la pantalla dice sin
-rodeos que el cupo todavía no rechaza ninguna venta: esa comprobación es `HU-20`, y hasta
-entonces prometerla sería peor que no ofrecer el campo. A un estudiante de baja **sí** se
+distintos. **Lo escribe solo él**, entre por donde entre —`INV-4`—, y **la caja lo hace cumplir**
+desde `HU-20`: la compra que pase del cupo se rechaza aunque haya saldo. La pantalla lo
+dice, y dice también lo que ahora hace falta saber —que el cupo cuenta lo gastado en el día
+y vuelve a empezar al siguiente—; mientras no fue cierto, avisaba de lo contrario. A un estudiante de baja **sí** se
 le puede configurar: fijar un cupo no mueve dinero, así que `INVD-2` no lo alcanza.
 
 `/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno, **el saldo de
 cada uno y sus últimos cinco movimientos** (`HU-07`). El saldo no es un campo guardado: se
 calcula sumando el historial al pedir la página (`INV-2`), y el historial va debajo
-precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). El saldo y el límite diario **son suyos y ya están** (`HU-07`, `HU-09`); las restricciones por
-producto y por alérgeno llegan en este mismo sprint y su tarjeta declara dónde irán y
-**cuándo**, en vez de enseñar un cero —un cupo de cero y un cupo que todavía no existe no
-son lo mismo—.
+precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). En la ficha están las cuatro cifras del estudiante —saldo, cupo diario, productos
+bloqueados y alérgenos bloqueados— (`HU-07`, `HU-09`, `HU-10`, `HU-11`): **ya no queda
+ningún hueco**. Lo que no hay se dice con palabras y nunca con un cero: «sin límite» y un
+cupo de cero son lo contrario el uno del otro.
 
 Entra desde el teléfono (`INT-1`), así que la pantalla se diseña a 390 px primero: la barra
 lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
@@ -360,8 +361,16 @@ nadie recalcule nada (`INV-5`). Se rechaza con saldo de sobra, no se descuenta n
 cajero no tiene ninguna acción para omitirlo** (`INV-4`): la única salida es que el
 acudiente retire la restricción, que deja asiento. Es el escenario crítico **`TST-1`**.
 
-**Lo que todavía no evalúa la venta** es el límite diario (`HU-20`), del Sprint 3. Su
-sitio es el mismo punto donde hoy se lee el saldo.
+**Y rechaza la compra que pase del cupo del día** (`HU-20`, `HU-09`): el consumo de la
+jornada se compara con el límite **dentro del mismo bloqueo** donde se lee el saldo, y sale
+del mismo libro (`INV-2`) — no hay contador diario que alguien tenga que poner a cero. Se
+rechaza aunque haya saldo de sobra, y el motivo se distingue del de saldo porque se
+arreglan de forma opuesta: una recarga no devuelve cupo. Es la otra mitad del escenario
+crítico **`TST-2`**, cuya primera cerró `HU-19` en el Sprint 2.
+
+**La venta evalúa ya las cuatro reglas del control parental y del dinero**: alérgeno,
+producto bloqueado, existencias, cupo del día y saldo, en ese orden y dentro de la misma
+transacción.
 
 ---
 
@@ -384,8 +393,9 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    movimiento debajo: es la suma del historial, no una cifra guardada. `HU-06`, `HU-07`,
    `HU-08`, `INV-2`.
 5. **Fijar su límite diario** desde la misma ficha. Con dos estudiantes a cargo se ve que
-   el cupo es de uno y no del otro. La pantalla avisa de que todavía no frena la caja:
-   eso llega con `HU-20`. `HU-09`.
+   el cupo es de uno y no del otro. `HU-09`. Más adelante, en la caja, se intenta cobrar
+   por encima de ese cupo **con saldo de sobra**: la venta se rechaza y el motivo dice que
+   recargar no lo cambia. Es el escenario crítico **`TST-2`** (`HU-20`).
 6. **Bloquear un alérgeno** desde la tarjeta de restricciones. Luego, como administración,
    **crear un producto nuevo que lo declare**: queda cubierto sin volver a tocar nada. Es
    `INV-5` enseñada en vivo, y el paso que más conviene no saltarse en la Sprint Review.
@@ -429,15 +439,15 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-El rechazo que depende del cupo (`HU-20`), la merma y las alertas de inventario
-(`HU-28`, `HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
-(`HU-55`, `HU-56`).
+La merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y recomendaciones
+(`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
 
-**De las tres restricciones, dos frenan la venta.** El producto bloqueado (`HU-60`) y el
-alérgeno (`HU-18`, escenario crítico `TST-1`) se rechazan dentro de la transacción, sin
-descontar saldo ni existencias y sin ninguna acción que los omita (`INV-4`). El cupo de
-`HU-09` sigue sin comprobarse al cobrar — eso es `HU-20`, y hasta entonces la pantalla lo
-dice en vez de dejarlo suponer.
+**El control parental está completo: las tres restricciones se configuran y las tres
+frenan la venta.** El producto bloqueado (`HU-60`), el alérgeno (`HU-18`, escenario
+crítico `TST-1`) y el cupo del día (`HU-20`, `TST-2`) se rechazan dentro de la
+transacción, sin descontar saldo ni existencias y sin ninguna acción que los omita
+(`INV-4`). **Ya no queda en el sistema ninguna marca de «esto todavía no lo aplica la
+caja»**, y hay pruebas que exigen su ausencia.
 
 **El alérgeno se rechaza por la condición, no por una lista.** Se cruza al cobrar con lo
 que cada producto declara (`INV-5`, `DT-7`): un producto nuevo con maní queda rechazado
@@ -455,11 +465,10 @@ en una sola transacción (`HU-21`). **`HU-17` quedó cerrada con `TT-109`**: el 
 los tres datos que su primer criterio pide —saldo, consumo del día y restricciones
 vigentes—, y el tercero no existía hasta este sprint.
 
-El bloque de restricciones nombra cada una y dice **si la caja la hace cumplir**: el
-producto bloqueado (`HU-60`) y el alérgeno (`HU-18`) sí; el cupo (`HU-20`) sigue
-pendiente, y callarlo dejaría al cajero creyendo que el sistema frena el gasto del día.
-La advertencia del alérgeno se retiró al entrar `HU-18`, y ahora afirma lo contrario —hay
-prueba de que la vieja ya no está—.
+El bloque de restricciones nombra cada una y dice **si la caja la hace cumplir**: las
+tres, desde `HU-20`. Las dos advertencias temporales —alérgeno y cupo— se retiraron con la
+historia que las hizo falsas, y hay pruebas que exigen que ya no estén: una marca que
+sobrevive a su historia miente igual que mentiría su ausencia cuando era cierta.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
