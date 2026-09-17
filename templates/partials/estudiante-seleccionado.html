@@ -52,6 +52,47 @@
          igual que uno activo: el acudiente tiene que saber por qué dejó de poder
          recargarle. Va en `aviso` y no en `error`: no ha fallado nada, es un
          estado. {% endcomment %}
+      {% comment %} `TT-122`, `HU-48`. **La tarjeta se bloquea desde aquí**, y las tres
+         piezas de este bloque son tres estados distintos del mismo hecho: se
+         acaba de desactivar, está desactivado, o se puede desactivar.
+
+         Va en `error` y no en `aviso`: una tarjeta desactivada significa una
+         venta que se va a rechazar (`INVD-2`), que es exactamente lo que el rojo
+         significa en este sistema (`[S1]`, regla 3). La baja de abajo sí es
+         `aviso`: el estudiante se fue del colegio y no hay nada que arreglar.
+
+         **No hay acción de reactivar, y no está escondida: no existe.** Es el
+         segundo criterio de `HU-48` y lo sostiene `INVD-3` — el desbloqueo pasa
+         por una verificación presencial en el colegio, que es lo que impide que
+         quien encontró la tarjeta consiga reactivarla. Por eso la pieza dice a
+         quién hay que pedírselo. {% endcomment %}
+      {% if error %}
+        <p role="alert" data-error-de-la-ficha
+           class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3
+                  text-sm text-error-fuerte tablet:max-w-sm">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <span>{{ error }}</span>
+        </p>
+      {% endif %}
+
+      {% if not seleccionado.puede_operar and not seleccionado.esta_de_baja %}
+        <p role="status" data-tarjeta-desactivada
+           class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3
+                  text-sm text-error-fuerte tablet:max-w-sm">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-escudo"></use></svg>
+          <span class="flex flex-col gap-1">
+            <span>
+              <strong class="font-semibold">Tarjeta desactivada</strong>{% if recien_desactivado %}: queda bloqueada desde ahora{% endif %}.
+              No puede comprar con ella ni recibir recargas.
+            </span>
+            <span>
+              Para volver a activarla hay que pedírselo a la institución educativa:
+              el desbloqueo se hace allí, en persona.
+            </span>
+          </span>
+        </p>
+      {% endif %}
+
       {% if seleccionado.esta_de_baja %}
         <p role="status"
            class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-3
@@ -79,6 +120,33 @@
             </span>
           </span>
         </p>
+      {% endif %}
+
+      {% if seleccionado.puede_operar %}
+        {% comment %} **Con confirmación, y no es celo de más**: quien lo reactiva es el
+           colegio (`INVD-3`), así que un toque por error en el teléfono deja al
+           estudiante sin comprar hasta que alguien vaya a secretaría. `INT-1`
+           se usa desde el móvil, donde el dedo falla más que el ratón.
+
+           Es un enlace de acento y no un botón sólido: en esta cabecera el botón
+           relleno competiría con el nombre del estudiante, que es lo que se viene
+           a mirar. {% endcomment %}
+        <form hx-post="{% url 'desactivacion-por-el-acudiente' seleccionado.id %}"
+              hx-target="#detalle-del-estudiante"
+              hx-swap="innerHTML"
+              hx-confirm="Desactivar la tarjeta de {{ seleccionado.nombre }}. Deja de comprar de inmediato y solo la institución educativa puede volver a activarla. ¿Continuar?"
+              hx-indicator="#desactivando-la-tarjeta">
+          {% csrf_token %}
+          <button type="submit" data-desactivar-la-tarjeta
+                  class="inline-flex items-center gap-1.5 text-base font-semibold
+                         text-error-fuerte hover:underline">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-escudo"></use></svg>
+            Desactivar la tarjeta
+          </button>
+          <span id="desactivando-la-tarjeta" class="htmx-indicator text-sm text-texto-suave">
+            · Desactivando…
+          </span>
+        </form>
       {% endif %}
     </section>
 
