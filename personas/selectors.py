@@ -163,11 +163,11 @@ def identificar_por_documento(documento):
 def padron(*, actor, busqueda="", incluir_retirados=False):
     """El padrón de la institución: quién está matriculado (`HU-44`, `DT-27`).
 
-    **Es una lectura, y solo una lectura.** Administrar estudiantes —dar de alta,
-    editar, dar de baja, reasignar la tarjeta— sigue siendo del admin (`DT-2`):
-    esta pantalla enseña y enlaza, no escribe. Por eso no hay un servicio detrás
-    ni un formulario: si algún día lo hubiera, `INV-4` obligaría a volver a mirar
-    quién puede escribir, y hoy esa respuesta no cambia.
+    **Esta función es una lectura y solo una lectura**, aunque la pantalla ya no
+    lo sea del todo: `DT-29` le dio al padrón una única acción que escribe
+    —desactivar (`HU-47`)—, y esa pasa por `personas.services.desactivar`, no por
+    aquí. El alta, la edición, la baja y la reasignación siguen en el admin
+    (`DT-2`): esta pantalla enseña y enlaza.
 
     **Exclusivo de la institución** (`HU-44`, tercer criterio, y `[S11]`). La
     comprobación va aquí y no en la vista porque `DT-11` lo exige: el control de
