@@ -85,13 +85,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **33** de 43 | **12** de 16 |
-| Pendientes | 10 | 4 |
+| **Finalizadas** | **35** de 43 | **13** de 16 |
+| Pendientes | 8 | 3 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 15 | 18 |
-| Carlos | 11 | 13 |
+| Pedro | 16 | 18 |
+| Carlos | 12 | 13 |
 | Alejandro | 7 | 9 |
 | Naomi | 0 | 3 |
 
@@ -109,7 +109,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☑ |
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☑ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` · `DT-29` | ☑ |
-| `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☐ |
+| `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☑ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
 | `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
@@ -564,17 +564,38 @@ pantalla.
 | Título del PR | `feat(personas): permitir al acudiente desactivar a su estudiante` |
 | Rama | `feat/TT-121-desactivacion-acudiente` |
 | Responsables | Pedro y Carlos |
-| Historia | `HU-48` |
+| Historia | `HU-48` — **cerrada** |
 | Invariantes | `INVD-2`, `INVD-3` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-121` | Transición a `desactivado` por el acudiente, **sin acción de reactivar** | Pedro | ☐ |
-| `TT-122` | Acción de desactivar en la interfaz del acudiente | Carlos | ☐ |
+| `TT-121` | Transición a `desactivado` por el acudiente, **sin acción de reactivar** | Pedro | ☑ |
+| `TT-122` | Acción de desactivar en la interfaz del acudiente | Carlos | ☑ |
 
 Las dos vías cubren tiempos distintos (`DEC-5`): la institución bloquea de inmediato en
 mitad de la jornada; el acudiente bloquea sin depender del horario de la secretaría.
+
+**Cómo quedó.** `TT-121` **amplía la puerta de `PR-10`, no abre una segunda**: el mismo
+servicio `desactivar` y un solo sitio donde se decide quién alcanza a quién. Para el
+acudiente **el alcance es la autorización** —solo los estudiantes a su cargo, como en
+`estudiantes_a_cargo`—, y la vista convierte el ajeno en un `404`: un `403` le confirmaría
+a un desconocido que ese estudiante existe.
+
+**La prueba de `PR-10` que decía «el acudiente tampoco puede» se reescribió, no se
+borró.** Decía la verdad mientras `HU-48` no existía; ahora lo que queda fuera son los dos
+roles de la cafetería, y eso es lo que afirma. Borrarla habría dejado de vigilar algo que
+sigue importando.
+
+**El segundo criterio es una ausencia, y se prueba como tal.** El acudiente no dispone de
+reactivar: no hay servicio —hay una prueba que falla el día que aparezca uno con ese
+nombre—, no hay ruta, y la ficha del estudiante desactivado **dice a quién pedírselo** en
+vez de ofrecer un botón apagado. La asimetría es de seguridad: el desbloqueo pasa por una
+verificación presencial, que es lo que impide que quien encontró la tarjeta consiga
+reactivarla convenciendo al acudiente por teléfono.
+
+La acción lleva confirmación por lo mismo que en el padrón, y aquí pesa más: `INT-1` se usa
+desde el móvil, donde el dedo falla más que el ratón, y quien lo reactiva es el colegio.
 
 ---
 

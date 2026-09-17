@@ -190,8 +190,8 @@ Se apoya en `EstadoDelEstudiante`, que ya existe desde `HU-51` (Sprint 1). No ha
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-121` | Transición a `desactivado` por el acudiente, **sin acción de reactivar** (`INVD-3`) | Pedro | ☐ |
-| `TT-122` | Acción de desactivar en la interfaz del acudiente | Carlos | ☐ |
+| `TT-121` | Transición a `desactivado` por el acudiente, **sin acción de reactivar** (`INVD-3`) | Pedro | ☑ |
+| `TT-122` | Acción de desactivar en la interfaz del acudiente | Carlos | ☑ |
 
 Las dos vías cubren tiempos distintos (`DEC-5`): la institución bloquea de inmediato cuando la tarjeta se pierde en mitad de la jornada; el acudiente bloquea sin depender del horario de la secretaría.
 
