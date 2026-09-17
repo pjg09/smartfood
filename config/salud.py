@@ -1,13 +1,13 @@
-"""Comprobación de salud del entorno desplegado (`TT-04`).
+"""Comprobación de salud del proceso y su base de datos (`TT-04`, `DT-31`).
 
 Vive en `config/` y no en una app de dominio porque no es dominio: es
-infraestructura. El PaaS la consulta en cada despliegue y no lo da por bueno
-hasta que responde.
+infraestructura. La consultaba el PaaS en cada despliegue; `DT-31` retira ese
+despliegue y la sonda se queda, porque lo que comprueba sigue valiendo: que
+**la base de datos contesta**, no solo que el proceso esté vivo.
 
-Comprueba **la conexión a la base de datos**, no solo que el proceso esté
-vivo. Un servicio que arranca pero no alcanza la base gestionada es
-exactamente el fallo que `TT-04` tiene que descartar, y sin esta consulta se
-vería como un despliegue correcto.
+Un servicio que arranca pero no alcanza la base es el fallo que se ve como
+correcto desde fuera, y el único que esta vista existe para descartar. En
+local responde lo mismo contra el PostgreSQL del `docker compose`.
 """
 
 from django.db import connection
