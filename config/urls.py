@@ -14,6 +14,7 @@ from billetera.views import recarga
 from catalogo.views import imagen_del_producto
 from config.salud import salud
 from personas.views import (
+    desactivacion_de_estudiante,
     carga_de_estudiantes,
     padron_de_estudiantes,
     estudiante_seleccionado,
@@ -100,6 +101,15 @@ urlpatterns = [
     # resuelve Django y no puede falsear el cliente.
     path("padron/", padron_de_estudiantes, name="padron"),
     path("padron/tabla/", padron_de_estudiantes, name="padron-tabla"),
+    # `TT-120`, `HU-47`, `DT-29`. **La única escritura del padrón**, y por eso
+    # tiene ruta propia: `DT-27` dejó la pantalla en solo lectura y `DT-29`
+    # corrige esa parte para la desactivación inmediata. Devuelve el fragmento
+    # de la tabla, como `/padron/tabla/`.
+    path(
+        "padron/<uuid:estudiante_id>/desactivar/",
+        desactivacion_de_estudiante,
+        name="desactivacion-de-estudiante",
+    ),
     # Interfaz del acudiente (`TT-29`, `HU-04`, `INT-1`). La primera devuelve la
     # página; la segunda, el fragmento HTMX del estudiante elegido. Son dos
     # rutas y no una con dos comportamientos (`DT-16`).

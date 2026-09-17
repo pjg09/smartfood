@@ -11,7 +11,7 @@ Funciones, no clases.
 
 from dataclasses import dataclass, field
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -344,6 +344,57 @@ def dar_de_baja(*, actor, estudiante):
     estudiante.estado = EstadoDelEstudiante.BAJA
     estudiante.dado_de_baja_en = timezone.now()
     estudiante.save(update_fields=["estado", "dado_de_baja_en"])
+    return estudiante
+
+
+@transaction.atomic
+def desactivar(*, actor, estudiante):
+    """Bloquea la tarjeta de un estudiante, de inmediato (`TT-119`, `HU-47`).
+
+    La institución desactiva **en cualquier momento** —primer criterio— y el
+    efecto es inmediato en el punto de venta —segundo—: `INVD-2` lo sostiene ya,
+    porque `comprobar_que_puede_operar` mira el estado y la venta pasa por ella.
+    Aquí no hace falta avisar a nadie: el estado **es** el bloqueo.
+
+    ── DESACTIVAR NO ES DAR DE BAJA, Y POR ESO SON DOS SERVICIOS ────────────
+    `DEC-7` separa los dos hechos y `EstadoDelEstudiante` los separa en la base.
+    «Perdió la tarjeta» es reversible y la reactivación tiene su propia historia
+    (`HU-49`); «se retiró del colegio» no lo es. Un solo servicio con un
+    argumento `motivo` los habría vuelto a juntar, que es justo lo que `DT-12`
+    evita.
+
+    Por eso **no se desactiva a quien está de baja**: no es un estado
+    intermedio hacia nada —de la baja no se vuelve— y aceptarlo dejaría en el
+    padrón a un retirado marcado como desactivado, que se lee como si pudiera
+    reactivarse.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Hoy solo la institución** (`HU-47`). El acudiente desactiva a los suyos en
+    `HU-48`, que amplía esta misma puerta; hasta entonces no se le concede por
+    adelantado, porque un permiso que nadie ejerce no se prueba.
+
+    **Solo la institución reactiva** (`INVD-3`, `HU-49`), venga la desactivación
+    de donde venga. Ese servicio llega con su historia: aquí no hay ningún
+    argumento que deshaga esto.
+
+    Es **idempotente**: desactivar a quien ya está desactivado no cambia nada y
+    no es un error — en una secretaría con dos personas atendiendo el mismo
+    teléfono, la segunda no tiene por qué recibir un fallo.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Desactivar a un estudiante")
+
+    if estudiante.estado == EstadoDelEstudiante.BAJA:
+        raise ValidationError(
+            f"{estudiante.nombre} está de baja: se retiró del colegio y ya no "
+            "puede comprar (INVD-2). Desactivar es para una tarjeta perdida, y "
+            "de la baja no se vuelve (HU-51, DEC-7)."
+        )
+
+    if estudiante.estado == EstadoDelEstudiante.DESACTIVADO:
+        return estudiante
+
+    estudiante.estado = EstadoDelEstudiante.DESACTIVADO
+    estudiante.save(update_fields=["estado"])
     return estudiante
 
 
