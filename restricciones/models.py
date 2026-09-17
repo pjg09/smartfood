@@ -56,12 +56,11 @@ class LimiteDiario(models.Model):
     configuré nada» dejaría dos hechos opuestos escritos igual. Por eso el monto
     lleva `CheckConstraint(monto > 0)`.
 
-    **Hoy no hay forma de retirar un límite ya fijado, solo de cambiarlo**, y no
-    es un olvido: `[S11]` ata «retirar» a la fila de las restricciones
-    alimentarias, y la del límite diario dice únicamente «fijar». `HU-12` cubre
-    el producto y el alérgeno, no esto. Si el equipo decide que un acudiente
-    debe poder quitarlo del todo, hace falta una historia — y entonces el camino
-    es borrar la fila, nunca ponerla a cero.
+    **Retirarlo borra la fila, nunca la pone en cero** (`HU-61`, `TT-134`). Cuando
+    esto se escribió no había forma de retirarlo: `[S11]` ataba «retirar» a la
+    fila de las restricciones alimentarias y la del límite decía solo «fijar»,
+    así que `HU-12` no lo alcanzaba. `DEC-13` amplió esa fila y `HU-61` construyó
+    el retiro — por el único camino que esta invariante admite, que es borrar.
     ─────────────────────────────────────────────────────────────────────────
 
     **No guarda cuánto se lleva gastado hoy, y no es un olvido.** El consumo del

@@ -217,8 +217,9 @@ class DesactivarNoEsDarDeBajaTest(BaseDeDesactivacion):
 class ElEfectoEsInmediatoEnLaCajaTest(BaseDeDesactivacion):
     """`INVD-2`. No hay nada que propagar: la caja lee el estado.
 
-    El motivo de rechazo propio llega con `HU-50` (`TT-126`); lo que este PR
-    tiene que demostrar es que **la venta no ocurre**, que es el criterio.
+    El motivo de rechazo propio lo puso `HU-50` (`TT-126`, `PR-13`); lo que este
+    PR tenía que demostrar es que **la venta no ocurre**, que es el criterio de
+    `HU-47`, y eso sigue siendo lo que se prueba aquí.
     """
 
     def setUp(self):

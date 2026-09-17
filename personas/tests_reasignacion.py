@@ -8,10 +8,10 @@ escrito allí: si el código anterior siguiera siendo válido, `HU-47` y `HU-48`
 Sprint 2 —desactivar a un estudiante— no protegerían nada. Alguien con la tarjeta
 vieja seguiría comprando.
 
-**La identificación por escaneo es `HU-15`, del Sprint 2, y todavía no existe.**
-Así que «no identifica a nadie» se comprueba donde hoy se puede comprobar de
-verdad: en la base. Cuando el punto de venta llegue, buscará por este mismo campo
-único, así que la propiedad se conserva por construcción.
+**«No identifica a nadie» se comprueba en la base, y no en el punto de venta.**
+Cuando esto se escribió, la identificación por escaneo (`HU-15`) todavía no
+existía; hoy existe y busca por este mismo campo único, así que la propiedad se
+conserva por construcción y la prueba sigue mirando donde de verdad se decide.
 """
 
 from django.core.exceptions import PermissionDenied
