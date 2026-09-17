@@ -8,12 +8,14 @@
    segunda acción que ofrecer, y una fila de tres con dos huecos no es la
    composición, es su esqueleto.
 
-   **La pantalla dice lo que el bloqueo NO es.** `HU-11` —bloquear un alérgeno
-   entero, de modo que cubra lo que la cafetería añada después— es otra cosa y
-   llega en su propia historia. Sin decirlo, un acudiente que bloquee «Torta de
+   **La pantalla dice lo que el bloqueo NO es, y adónde ir.** Bloquear un alérgeno
+   entero —de modo que cubra lo que la cafetería añada después— es otra cosa:
+   `HU-11`, y **ya existe**. Sin decirlo, un acudiente que bloquee «Torta de
    chocolate» puede creer que su hijo queda protegido del maní, y eso es
    exactamente la clase de malentendido que el control parental no puede
-   permitirse.
+   permitirse. Por eso el aviso **enlaza** la otra pantalla: es el momento en que
+   hace falta, y hasta la revisión del Sprint 3 el aviso seguía anunciándola como
+   pendiente en vez de ofrecerla.
 {% endcomment %}
 
 {% block titulo %}Productos bloqueados | {{ estudiante.nombre }} | SmartFood{% endblock %}
@@ -42,8 +44,11 @@
       <p class="text-sm text-aviso-fuerte">
         <strong class="font-semibold">Esto bloquea productos, uno a uno — no alérgenos.</strong>
         Si lo que quieres es que quede fuera todo lo que lleve maní, incluido lo que la
-        cafetería agregue el mes que viene, eso es el bloqueo por alérgeno y llega con
-        <span class="font-mono">HU-11</span>. Marcar aquí los productos que hoy lo llevan
+        cafetería agregue el mes que viene, eso se hace en
+        <a href="{% url 'alergenos-bloqueados' estudiante.id %}"
+           data-enlace-a-alergenos
+           class="font-semibold underline hover:no-underline">alérgenos bloqueados</a>.
+        Marcar aquí los productos que hoy lo llevan
         <strong class="font-semibold">no</strong> cubre los que se añadan después.
       </p>
     </div>
