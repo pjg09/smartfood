@@ -21,7 +21,7 @@ cinco sprints de dos semanas.
 | Historias terminadas | **46 de 61** |
 | **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados. 18 tareas (`TT-137`…`TT-154`) en 7 PR |
 | Lo siguiente | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main` |
-| Entorno desplegado | ⏸ **congelado** — ver abajo |
+| Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
 > **Al cerrar el Sprint 3 el control parental funciona de verdad.** El acudiente fija el
 > cupo diario de su hijo, bloquea productos y bloquea alérgenos —la condición, no una lista:
@@ -39,15 +39,16 @@ cinco sprints de dos semanas.
 > del Sprint 3, con su revisión de cierre, está en
 > [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md).
 
-> **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
-> está desconectado. El plan gratuito del proveedor no lo sostiene: la base de datos se
-> duerme y al despertar rechaza conexiones, y desactivarlo no está permitido en ese plan.
-> No es un fallo del código. El motivo completo y las dos salidas posibles están en
-> [`docs/despliegue.md`](./docs/despliegue.md).
+> **El prototipo no se despliega, por decisión tomada el 2026-09-17.** El entorno de
+> pruebas estuvo congelado desde el 2026-08-30 —el plan gratuito del proveedor no lo
+> sostiene: la base de datos se duerme, al despertar rechaza conexiones y desactivarlo no
+> está permitido en ese plan—, y la única salida era pagar. La consulta con la docente
+> confirmó que **la asignatura no lo exige**, así que se retira en vez de restaurarse.
 >
-> Mientras dure, `DoD-4` —demostrar en el entorno desplegado— está **suspendido**, y cada
-> PR declara cómo se verificó en local. **Todo funciona en local**, así que el desarrollo
-> no está bloqueado.
+> `DEC-15` recorta `ENT-01` para quitarle la condición de estar desplegado; el resto del
+> entregable no cambia y se demuestra **en local**, que es donde el proyecto lleva
+> funcionando todo el semestre. `DoD-4` vuelve a estar vigente pidiendo la salida real del
+> comando. El motivo completo está en [`docs/despliegue.md`](./docs/despliegue.md).
 
 ---
 
@@ -132,7 +133,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`desarrollo.md`](./docs/desarrollo.md) | Reconstrucción local, credenciales y comandos |
 | [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
-| [`despliegue.md`](./docs/despliegue.md) | Estado del entorno desplegado, sus restricciones y sus trampas |
+| [`despliegue.md`](./docs/despliegue.md) | Por qué no hay entorno desplegado, y qué costó el que hubo |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |

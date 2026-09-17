@@ -20,15 +20,15 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | Documento | Para qué |
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
-| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-14`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-30`) |
+| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-15`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-31`) |
 | `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
 | `docs/sprint-4-backlog.md` | **Las 18 tareas del sprint en curso** (`TT-137` … `TT-154`), con responsable |
 | `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas agrupadas en 7 PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero— |
 | `docs/sprint-3-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
-| `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
+| `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
@@ -312,12 +312,15 @@ Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (d
 aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se
 salta**.
 
-**`DoD-4` está suspendido** desde el 2026-08-30: el entorno desplegado se congeló porque el plan
-gratuito del proveedor no lo sostiene (`[S2]` de `docs/despliegue.md`). Mientras dure, cada PR
-declara **cómo se verificó en local, con la salida real del comando**.
+**`DoD-4` está vigente** y pide demostrar lo que el PR entrega **ejecutándolo, con la salida real
+del comando**. No basta «funciona en mi máquina»: hay que pegar el comando y su resultado. Estuvo
+suspendido entre el 2026-08-30 y el 2026-09-17; el rastro está en `[S5]` de
+`docs/definicion-de-terminado.md`.
 
-**No ejecutes ninguna acción sobre Railway** mientras dure el congelamiento. El despliegue
-automático está desconectado a propósito.
+**No hay entorno desplegado y no se va a desplegar** (`DEC-15`, `DT-31`): la asignatura no lo
+exige, el prototipo se demuestra en local y `ENT-01` se recorta para quitarle esa condición.
+**No ejecutes ninguna acción sobre Railway.** Queda un proyecto suyo pendiente de borrar a mano,
+sin código conectado; el porqué está en `docs/despliegue.md`.
 
 ## Convenciones
 

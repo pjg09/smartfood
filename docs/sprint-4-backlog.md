@@ -9,7 +9,7 @@
 | doc_id | SMARTFOOD-TIC1-SPRINT4 |
 | titulo | Sprint Backlog del Sprint 4 — Inventario trazable y pedidos anticipados |
 | archivo_origen | — · documento derivado; no reexpresa ningún original |
-| documentos_fuente | `./backlog-historias-de-usuario.md` (`[S5]`, Sprint 4); `./decisiones-de-alcance.md`; `./decisiones-tecnicas.md`; `./despliegue.md`; `./smartfood.md` (`S11`, `S12`); `corpus:guia-de-scrum-2020.md` (`ART-2`, `COM-2`, `COM-3`) |
+| documentos_fuente | `./backlog-historias-de-usuario.md` (`[S5]`, Sprint 4); `./decisiones-de-alcance.md` (`DEC-15`); `./decisiones-tecnicas.md` (`DT-31`); `./despliegue.md`; `./smartfood.md` (`S11`, `S12`); `corpus:guia-de-scrum-2020.md` (`ART-2`, `COM-2`, `COM-3`) |
 | tipo_documento | Sprint Backlog (`ART-2` de la Guía de Scrum) |
 | sprint | 4 de 5 |
 | semanas | 12 – 13 |
@@ -60,7 +60,7 @@ Es además el sprint que desemboca en el **Avance 2** de la semana 14, que vale 
 
 La misma de todo el semestre: `./definicion-de-terminado.md`. No se relaja.
 
-> ⏸ **`DoD-4` lleva suspendido desde el 2026-08-30.** Este sprint tiene holgura para levantarlo y el Avance 2 lo va a necesitar: ver `TT-137` y el `ANEXO A`.
+> ✅ **`DoD-4` volvió a estar vigente el 2026-09-17**, con otra redacción: pide demostrar ejecutándolo, con la salida real del comando. Lo restableció `TT-137`, retirando el entorno desplegado en vez de restaurarlo (`DEC-15`).
 
 ---
 
@@ -68,15 +68,39 @@ La misma de todo el semestre: `./definicion-de-terminado.md`. No se relaja.
 
 | ID | Tarea | Responsable | Habilita | Estado |
 |---|---|---|---|---|
-| `TT-137` | Restaurar el entorno desplegado y levantar la suspensión de `DoD-4` (`ENT-01`) | Pedro | Todo lo cerrado desde el 2026-08-30, y el Avance 2 | ☐ |
+| `TT-137` | Restaurar el entorno desplegado y levantar la suspensión de `DoD-4` (`ENT-01`) | Pedro | Todo lo cerrado desde el 2026-08-30, y el Avance 2 | ☑ |
 
-> **Esta tarea no sale de ninguna historia y es discutible que entre.** Entra por tres hechos, y el equipo debe decidirlo en el Sprint Planning, no darlo por hecho:
+> **Cerrada el 2026-09-17, con la decisión contraria a la que preveía.** La tarea era
+> restaurar el entorno; lo que se hizo fue **retirarlo**, y `TT-137` se da por terminada
+> porque el asunto que abría quedó resuelto. La decisión es `DEC-15` de
+> `./decisiones-de-alcance.md`, con su consecuencia técnica en `DT-31` de
+> `./decisiones-tecnicas.md`.
 >
-> 1. **`ENT-01` es uno de los siete entregables del proyecto** y pide un «prototipo funcional **desplegado** en un entorno de pruebas». Lleva sin cumplirse desde agosto.
-> 2. **`DoD-4` está suspendido**, así que todo lo cerrado en los Sprints 2 y 3 —87 tareas— se dio por terminado sin demostrarse en el entorno desplegado. Cuanto más tarde se restaure, más hay que volver a revisar.
-> 3. **El Avance 2 es la semana 14**, inmediatamente después de cerrar este sprint, y vale el 20 %. Enseñarlo desde el portátil de alguien es posible, pero es una decisión que hay que tomar con tiempo.
+> **La planeación describió mal el obstáculo, y conviene que quede dicho.** Esta caja
+> presentaba el impedimento como «una restricción de ventana horaria, **no de dinero**».
+> No lo era: `[S1]` de `./despliegue.md` registraba desde agosto que el plan gratuito no
+> sostiene el entorno por dos fallos —la base gestionada se duerme y el proveedor prohíbe
+> desactivarlo, y `/app/staticfiles/` no existe en ejecución—, y que la única salida
+> técnica era pagar. La ventana horaria era la tercera restricción, no la primera. El dato
+> estaba registrado y la planeación no lo leyó.
 >
-> El obstáculo está documentado en `[S2]` de `./despliegue.md`: el plan gratuito no despliega entre las 8:00 y las 20:00 de la región. **Es una restricción de ventana horaria, no de dinero**, y por eso los servicios están en Ámsterdam. Si la decisión es no restaurarlo, hay que decirlo y planear la demostración del Avance 2 en consecuencia.
+> Los tres hechos que hacían entrar la tarea siguen siendo ciertos, y los tres se
+> resolvieron de una vez:
+>
+> 1. **`ENT-01` llevaba sin cumplirse desde agosto.** `DEC-15` le retira la condición de
+>    estar desplegado; lo que queda del entregable —los flujos de extremo a extremo con
+>    datos ficticios— sí se cumple, y se demuestra en local.
+> 2. **`DoD-4` estaba suspendido.** Vuelve a estar vigente, pidiendo la salida real del
+>    comando. Lo cerrado en los Sprints 2 y 3 ya se declaraba así, de modo que **no hay
+>    nada que revisar hacia atrás**.
+> 3. **El Avance 2 es la semana 14.** Se demuestra desde un portátil del equipo. Es la
+>    decisión que el `ANEXO A` pedía tomar «con tiempo, no la víspera»: se toma tres
+>    semanas antes.
+>
+> **La holgura del sprint no se gastó aquí.** Esta tarea costó una decisión y la
+> documentación que la registra, no las dos semanas que preveía restaurar un entorno. El
+> `ANEXO A` proponía tres usos para el margen; con el primero resuelto así, quedan los
+> otros dos.
 
 ---
 
@@ -176,7 +200,7 @@ Tres usos, en el orden en que los recomendaría:
 
 | Opción | Por qué |
 |---|---|
-| **Restaurar el entorno desplegado** (`TT-137`) | `ENT-01` lleva incumplido desde agosto, `DoD-4` suspendido, y el Avance 2 es la semana siguiente |
+| ~~**Restaurar el entorno desplegado** (`TT-137`)~~ | **Ya no consume holgura.** Se resolvió retirándolo, no restaurándolo: `DEC-15`. Quedan los otros dos usos |
 | **Adelantar trabajo del Sprint 5** | Son 10 historias de reportes y el plan de pruebas; el Sprint 5 es el más cargado de los dos que quedan |
 | **Reforzar lo que se enseña en el Avance 2** | Pulir los flujos que se van a demostrar antes que añadir funcionalidad nueva |
 

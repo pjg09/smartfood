@@ -7,13 +7,13 @@
 | doc_id | SMARTFOOD-TIC1-PR-SPRINT4 |
 | plan anterior | `./plan-de-pull-requests-sprint-3.md` — cerrado, documento de archivo |
 | titulo | Agrupación de las 18 tareas del Sprint 4 en Pull Requests, y estado de cada tarea |
-| documentos_fuente | `./sprint-4-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md`; `./despliegue.md` |
+| documentos_fuente | `./sprint-4-backlog.md` (`[S3]`, `[S4]`, `[S5]`, `ANEXO C`); `./convenciones-de-git.md` (`[S1]`); `./definicion-de-terminado.md`; `./despliegue.md`; `./decisiones-de-alcance.md` (`DEC-15`) |
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | 4 de 5 · semanas 12 – 13 · **Avance 2 · semana 14** (`EVA-4`) |
 | tareas cubiertas | 18 de 18 (`TT-137` … `TT-154`) |
 | pull requests | 7 (`PR-01` … `PR-07`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -59,7 +59,8 @@ Los cortes se eligieron con tres criterios, en este orden:
 ## [S2] Cómo se marca una tarea como finalizada
 
 1. Se cumplen los criterios de la Definición de Terminado que aplican al PR.
-   **`DoD-4` está suspendido**; si `PR-01` lo levanta, vuelve a aplicar a partir de ahí.
+   **`DoD-4` volvió a aplicar con `PR-01`**, en su forma nueva: demostrar ejecutándolo,
+   con la salida real del comando. Del `PR-02` en adelante se cumple como cualquier otro.
 2. El PR se integra en `main` por revisión cruzada, nunca por `push` directo.
 3. Se marca `☑` **en los dos documentos**: aquí y en `./sprint-4-backlog.md`.
 4. Si el PR cierra una historia, se marca también en la tabla `[S4]` de
@@ -71,12 +72,12 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **0** de 18 | **0** de 7 |
-| Pendientes | 18 | 7 |
+| **Finalizadas** | **1** de 18 | **1** de 7 |
+| Pendientes | 17 | 6 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 6 |
+| Pedro | 1 | 6 |
 | Carlos | 0 | 5 |
 | Alejandro | 0 | 4 |
 | Naomi | 0 | 3 |
@@ -85,7 +86,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
-| `PR-01` | `TT-137` | Entorno desplegado → `ENT-01`, levanta `DoD-4` | ☐ |
+| `PR-01` | `TT-137` | **Retira** el entorno desplegado → `DEC-15`, `DT-31`; restablece `DoD-4` | ☑ |
 | `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☐ |
 | `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** | ☐ |
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` | ☐ |
@@ -99,33 +100,46 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 ### Habilitación — `PR-01`
 
-#### `PR-01` — Entorno desplegado
+#### `PR-01` — Retirada del entorno desplegado
 
 | | |
 |---|---|
-| Título del PR | `ci(infra): restaurar el entorno de pruebas y levantar DoD-4` |
-| Rama | `ci/TT-137-restaurar-el-entorno` |
+| Título del PR | `docs(infra): retirar el entorno desplegado y restablecer DoD-4` |
+| Rama | `docs/TT-137-retirar-el-entorno-desplegado` |
 | Responsable | Pedro |
 | Historia | ninguna — habilitación |
-| Invariantes | ninguna; cumple `ENT-01` |
-| Estado | ☐ |
+| Invariantes | ninguna; **recorta `ENT-01`** (`DEC-15`) |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-137` | Restaurar el entorno desplegado y levantar la suspensión de `DoD-4` | Pedro | ☐ |
+| `TT-137` | Restaurar el entorno desplegado y levantar la suspensión de `DoD-4` | Pedro | ☑ |
 
-**Qué habilita y cómo se comprueba:** que un flujo completo —identificar, cobrar, rechazar
-por restricción— se ejecute en el entorno desplegado y no solo en local. `DoD-1` exige
-declararlo porque este PR no cierra ninguna historia.
+**Se cerró con la decisión contraria a la que el plan preveía.** La consulta con la
+docente —condición de caducidad escrita en la propia caja de `DoD-4`— se resolvió: la
+asignatura **no exige** entorno desplegado. Restaurarlo habría costado dinero para
+satisfacer un requisito que no existe, así que se retira.
 
-> **Va primero por una razón de calendario, no técnica.** Todo lo cerrado desde el
-> 2026-08-30 se dio por terminado sin `DoD-4`. Cuanto antes vuelva a aplicar, menos hay que
-> revisar hacia atrás — y el Avance 2 es la semana siguiente a este sprint.
->
-> El obstáculo está en `[S2]` de `./despliegue.md`: el plan gratuito no despliega entre las
-> 8:00 y las 20:00 de la región, por eso los servicios están en Ámsterdam. Es una
-> restricción de **ventana horaria**. **Si el equipo decide no restaurarlo, este PR no
-> existe y hay que planear la demostración del Avance 2 de otra forma, con tiempo.**
+**Qué habilita y cómo se comprueba:** desbloquea `DoD-4`, que llevaba suspendido desde el
+2026-08-30 y ningún trabajo del equipo podía satisfacer. `DoD-1` exige declararlo porque
+este PR no cierra ninguna historia. Se comprueba con la suite completa y `check` sobre el
+repositorio ya sin `railway.json` ni el bloque de `config/settings.py` que leía la
+variable de dominio del proveedor: si algo dependía de él, falla ahí.
+
+> **Lo que el plan decía y no era cierto.** Esta ficha presentaba el obstáculo como el
+> bloqueo horario de 8:00 a 20:00 del plan gratuito. `[S1]` de `./despliegue.md` registraba
+> desde agosto que el entorno no se sostenía por otras dos causas —la base gestionada se
+> duerme y desactivarlo está prohibido en ese plan, y `/app/staticfiles/` no existe en
+> ejecución— y que la única salida era pagar. La ventana horaria era la tercera
+> restricción. **El dato estaba escrito y la planeación no lo leyó**; queda anotado porque
+> es el tipo de error que se repite.
+
+**Qué cambia para los seis PR siguientes.** `DoD-4` vuelve a aplicar, en su forma nueva:
+demostrar ejecutándolo, con la salida real del comando. Es lo que los PR venían declarando
+durante la suspensión, así que en la práctica no cambia nada de cómo se trabaja.
+
+**Lo que queda fuera del repositorio:** eliminar el proyecto en la consola del proveedor.
+Es una acción manual, no la hace este PR, y está anotada en `[S0.1]` de `./despliegue.md`.
 
 ---
 
@@ -305,7 +319,8 @@ y las tres de gestión.
    cinco y **no hay retraso que absorber**, porque los tres anteriores cerraron completos.
    La holgura es real. El `ANEXO A` del sprint backlog propone en qué gastarla, en orden:
    entorno desplegado, adelantar Sprint 5, o pulir lo que se enseña en el Avance 2. **Lo que
-   no conviene es no decidirlo**, porque entonces se gasta sola.
+   no conviene es no decidirlo**, porque entonces se gasta sola. El primero de los tres ya
+   no consume nada: `PR-01` lo resolvió retirando el entorno, no restaurándolo.
 2. **`PR-04` es el de mayor riesgo de diseño.** Una reserva tiene que pasar por la
    transacción de venta o el control parental queda con una puerta trasera. La historia no
    lo dice: hay que saberlo.
