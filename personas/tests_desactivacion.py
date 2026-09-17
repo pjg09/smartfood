@@ -253,22 +253,21 @@ class ElEfectoEsInmediatoEnLaCajaTest(BaseDeDesactivacion):
 
         self.assertEqual(Venta.objects.count(), 0)
 
-    def test_pero_se_le_sigue_pudiendo_recargar(self):
-        """`INVD-2` alcanza al dinero que **sale**, no al que entra.
+    def test_tampoco_se_le_recarga(self):
+        """`INVD-7` (`DEC-14`): las dos direcciones del dinero, cerradas.
 
-        Esta prueba afirmaba lo contrario cuando se escribió en `PR-10`, y era
-        más restrictiva que la invariante. El tercer criterio de `HU-50` lo
-        zanjó: un desactivado **sí recibe recargas, por ser inocuo**. Su tarjeta
-        no compra igualmente y el saldo le espera a la reactivación (`HU-49`).
+        `PR-13` llegó a abrirlas, siguiendo el tercer criterio de `HU-50`, y
+        `DEC-14` corrigió el criterio: la tarjeta está perdida, y engordar su
+        saldo no es inocuo cuando el sistema no sabe devolver dinero.
         """
         desactivar(actor=self.institucion, estudiante=self.estudiante)
 
-        recargar(
-            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
-        )
-
-        with self.assertRaises(EstudianteNoPuedeComprar):
-            self._vender()
+        with self.assertRaises(EstudianteNoOperativo):
+            recargar(
+                actor=self.acudiente,
+                estudiante=self.estudiante,
+                monto=Decimal("10000"),
+            )
 
     def test_la_puerta_de_invd_2_lo_reconoce(self):
         desactivar(actor=self.institucion, estudiante=self.estudiante)

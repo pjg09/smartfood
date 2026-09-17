@@ -8,15 +8,18 @@ Los cuatro criterios de `HU-50`:
    misma que rechaza la venta —`comprobar_que_puede_operar`—, así que la
    comprobación llegará sin construir ninguna regla nueva.
    `LaPuertaEsLaMismaParaLoQueVengaTest` deja eso fijado.
-3. **Sí puede recibir recargas, por ser inocuo.** Es el criterio que corrigió al
-   sistema y no al revés: el código era **más restrictivo que `INVD-2`**, que
-   habla de comprar y de retirar pedidos y no del dinero que entra.
-   `NoCompraPeroSiRecibeRecargasTest` es la clase central de este fichero.
+3. **Tampoco puede recibir recargas** (`DEC-14`, `INVD-7`). El criterio decía lo
+   contrario —«sí puede, por ser inocuo»— y así se construyó en `PR-13`; al verlo
+   funcionando, el equipo concluyó que la premisa no se sostiene: una tarjeta se
+   desactiva porque **se perdió**, y acumular saldo sobre un medio de pago fuera
+   de control no es inocuo cuando el sistema no sabe devolver dinero
+   (`ALC-OUT-01`). `DEC-14` corrigió el criterio y estas pruebas con él.
 4. **El motivo se distingue** de los de `HU-18`, `HU-19`, `HU-20` y `HU-60`.
 
-**El de baja es otro caso, y no se junta con este**: su saldo queda congelado y
-tampoco recibe recargas (`HU-52`). Los dos estados coinciden en no comprar y se
-separan en todo lo demás (`DEC-7`).
+**El de baja sigue siendo otro caso** aunque coincidan en esto: su saldo queda
+congelado **para siempre** —no hay reactivación que lo libere (`HU-52`, `DEC-7`)—
+mientras que el del desactivado le espera a que la institución reactive la
+tarjeta (`HU-49`).
 """
 
 from decimal import Decimal
@@ -106,14 +109,17 @@ class BaseDesactivado(TestCase):
 # --- Criterios 1 y 3: no compra, pero sí recibe recargas ------------------
 
 
-class NoCompraPeroSiRecibeRecargasTest(BaseDesactivado):
-    """**La clase que corrige el sistema**, y conviene leer por qué.
+class NiCompraNiRecibeRecargasTest(BaseDesactivado):
+    """Las dos direcciones del dinero, cerradas mientras la tarjeta esté perdida.
 
-    Hasta `PR-13` un estudiante desactivado tampoco podía recibir recargas. No
-    salía de ninguna historia: salía de aplicar `INVD-2` más ancha de lo que
-    dice —«no puede comprar ni retirar pedidos anticipados»—. El tercer criterio
-    de `HU-50` lo zanja: **sí puede, por ser inocuo**, porque su tarjeta no
-    compra igualmente y el dinero le espera a la reactivación (`HU-49`).
+    Esta clase se escribió al revés en `PR-13`, siguiendo el tercer criterio de
+    `HU-50` —«sí puede recibir recargas, por ser inocuo»—. `DEC-14` corrigió el
+    criterio: una tarjeta se desactiva porque **se perdió** (`DEC-5`), y
+    engordar el saldo de un medio de pago que está fuera de control no es inocuo
+    cuando el sistema no sabe devolver dinero (`ALC-OUT-01`).
+
+    **Lo que ya tenía no se toca**, y eso también se prueba aquí: el saldo sigue
+    siendo suyo y lo gasta al reactivarse.
     """
 
     def setUp(self):
@@ -135,29 +141,28 @@ class NoCompraPeroSiRecibeRecargasTest(BaseDesactivado):
         self.assertEqual(saldo_de(self.estudiante), saldo_antes)
         self.assertEqual(existencias_de(self.producto), 50)
 
-    def test_pero_sí_recibe_recargas(self):
-        recargar(
-            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
-        )
+    def test_tampoco_recibe_recargas(self):
+        with self.assertRaises(EstudianteNoOperativo):
+            recargar(
+                actor=self.acudiente,
+                estudiante=self.estudiante,
+                monto=Decimal("10000"),
+            )
 
-        self.assertEqual(saldo_de(self.estudiante), Decimal("60000.00"))
+        self.assertEqual(saldo_de(self.estudiante), Decimal("50000.00"))
 
-    def test_y_recargar_no_lo_desbloquea(self):
-        """El malentendido que hay que evitar: el dinero entra, la tarjeta no abre."""
-        recargar(
-            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
-        )
+    def test_el_saldo_que_ya_tenía_sigue_siendo_suyo(self):
+        """Desactivar bloquea la tarjeta, no confisca el dinero."""
+        self.assertEqual(saldo_de(self.estudiante), Decimal("50000.00"))
 
-        with self.assertRaises(EstudianteNoPuedeComprar):
-            self.vender()
-
-    def test_al_reactivarlo_compra_con_todo_lo_recargado(self):
-        """El recorrido completo: se recarga bloqueado, se reactiva, se compra."""
-        recargar(
-            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
-        )
+    def test_al_reactivarlo_vuelve_a_comprar_y_a_poder_recargar(self):
+        """El recorrido completo, que es el que la familia vive: se bloquea, se
+        va al colegio, se reactiva, y todo vuelve a funcionar (`HU-49`)."""
         reactivar(actor=self.institucion, estudiante=self.estudiante)
 
+        recargar(
+            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
+        )
         venta = self.vender()
 
         self.assertIsNotNone(venta)
@@ -165,11 +170,12 @@ class NoCompraPeroSiRecibeRecargasTest(BaseDesactivado):
 
 
 class ElDeBajaEsOtroCasoTest(BaseDesactivado):
-    """`HU-52`: el saldo del retirado queda congelado, y eso incluye las recargas.
+    """`HU-52`: el saldo del retirado queda congelado **y no vuelve**.
 
-    Los dos estados coinciden en no comprar y se separan aquí. Sin esta clase, la
-    de arriba podría pasar con un sistema que hubiera abierto las recargas a los
-    dos, que es lo que `HU-52` prohíbe.
+    Desde `DEC-14` los dos estados coinciden en no comprar y en no recibir
+    recargas; lo que los separa es que del desactivado se vuelve —la institución
+    lo reactiva (`HU-49`) y su saldo se usa— y de la baja no. Esta clase fija ese
+    lado para que la de arriba no pueda pasar describiendo mal al retirado.
     """
 
     def setUp(self):

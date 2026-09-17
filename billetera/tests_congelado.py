@@ -166,18 +166,18 @@ class SobreElSaldoCongeladoNoSeOperaTest(TestCase):
         self.assertIn("de baja", respuesta.content.decode().lower())
 
 
-class ElDesactivadoNoCompraPeroSiRecibeRecargasTest(TestCase):
-    """`INVD-2` junta los dos estados para comprar; para el dinero que entra, no.
+class ElDesactivadoNiCompraNiRecibeRecargasTest(TestCase):
+    """Las dos direcciones del dinero, cerradas por reglas distintas.
 
-    Esta clase decía antes que un desactivado tampoco podía recibir recargas, y
-    era **más restrictivo que la invariante**: `INVD-2` habla de comprar y de
-    retirar pedidos, no del dinero que entra. El tercer criterio de `HU-50` lo
-    zanjó —«sí puede recibir recargas, **por ser inocuo**»— y aquí se comprueba
-    lo que quedó: su tarjeta no compra, y el saldo le espera a que la institución
-    la reactive (`HU-49`).
+    Lo que sale, `INVD-2`; lo que entra, `INVD-7` (`DEC-14`). El proyecto llegó
+    a abrir las recargas al desactivado durante `PR-13`, porque el tercer
+    criterio de `HU-50` las declaraba «inocuas»; `DEC-14` corrigió el criterio:
+    una tarjeta se desactiva porque **se perdió**, y acumular saldo sobre un
+    medio de pago fuera de control no es inocuo cuando el sistema no sabe
+    devolver dinero (`ALC-OUT-01`).
 
-    Quien tiene el saldo congelado es el **dado de baja** (`HU-52`), y eso lo
-    prueba la clase de arriba.
+    **El saldo que ya tenía sigue siendo suyo** y lo gastará al reactivarse
+    (`HU-49`): esta clase lo comprueba junto a lo demás.
     """
 
     def setUp(self):
@@ -196,18 +196,15 @@ class ElDesactivadoNoCompraPeroSiRecibeRecargasTest(TestCase):
 
         self.assertEqual(saldo_de(self.estudiante), Decimal("4000"))
 
-    def test_pero_sí_se_le_recarga_y_el_saldo_le_espera(self):
-        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("1000"))
-
-        self.assertEqual(saldo_de(self.estudiante), Decimal("5000"))
-
-    def test_y_ese_saldo_sigue_sin_poder_gastarse_mientras_esté_desactivado(self):
-        """La mitad que evita el malentendido: recargar no reactiva nada."""
-        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("1000"))
-
+    def test_tampoco_se_le_recarga(self):
         with self.assertRaises(EstudianteNoOperativo):
-            asentar(
-                estudiante=self.estudiante,
-                tipo=TipoDeMovimiento.VENTA,
-                monto=Decimal("-1000"),
+            recargar(
+                actor=self.usuario, estudiante=self.estudiante, monto=Decimal("1000")
             )
+
+        self.assertEqual(saldo_de(self.estudiante), Decimal("4000"))
+
+    def test_el_saldo_que_ya_tenía_sigue_ahí_y_es_consultable(self):
+        """Bloquear la tarjeta no toca el dinero: lo congela hasta la
+        reactivación (`HU-49`), no lo retira."""
+        self.assertEqual(saldo_de(self.estudiante), Decimal("4000"))

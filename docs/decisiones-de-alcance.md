@@ -12,10 +12,10 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 13 (`DEC-1` … `DEC-13`) |
-| invariantes_nuevas | 6 (`INVD-1` … `INVD-6`) |
+| decisiones | 14 (`DEC-1` … `DEC-14`) |
+| invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
 | version | 1.4 |
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-13` |
+| S1 | Decisiones | `DEC-1` … `DEC-14` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -284,6 +284,29 @@ No es una carencia teórica. La única salida que dejaba el sistema era fijar un
 
 ---
 
+### `[DEC-14]` Un estudiante desactivado tampoco recibe recargas
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-09-17. **Corrige el tercer criterio de `HU-50`**, que decía lo contrario.*
+
+**El hecho que lo obliga.** `HU-50` se escribió con un tercer criterio —«sí puede recibir recargas, **por ser inocuo**»— que `PR-13` implementó al construir la historia. Al verlo funcionando, el equipo concluyó que la premisa no se sostiene: **meter dinero en una tarjeta bloqueada no es inocuo**.
+
+Una tarjeta se desactiva porque **se perdió** (`DEC-5`, `HU-47`, `HU-48`), y mientras lo está no se sabe dónde está ni quién la tiene. Recargarla en ese estado acumula saldo sobre un medio de pago que está fuera de control, y el sistema **no sabe devolver dinero** (`ALC-OUT-01`): si la tarjeta no aparece y el estudiante termina de baja, ese saldo queda congelado como constancia y nadie lo reintegra desde aquí. La familia habría puesto dinero que no puede usar ni recuperar.
+
+El argumento de la inmediatez que trae `DEC-5` **no aplica al dinero que entra**: lo que esa decisión protege es que bloquear no dependa del horario de secretaría. Recargar no es urgente — se puede hacer en cuanto la institución reactive la tarjeta, que es el mismo trámite presencial que ya hace falta para volver a comprar (`INVD-3`, `HU-49`).
+
+**Decidido:**
+
+- **Mientras un estudiante esté desactivado no se le recarga.** Ni por su acudiente ni por nadie.
+- El **tercer criterio de `HU-50` cambia** y pasa a decir lo contrario de lo que decía. Queda registrado aquí y reescrito allí.
+- **El dado de baja sigue igual** (`HU-52`): su saldo queda congelado y consultable, y tampoco entra dinero. Los dos estados coinciden ahora también en esto.
+- **Consultar y ver el saldo no cambian.** Desactivado no es invisible: su ficha sigue enseñando el saldo y su historial.
+
+**Lo que NO se decide aquí.** Nada sobre las devoluciones —siguen fuera del sistema (`ALC-OUT-01`)— ni sobre el saldo que ya tenía: ese dinero sigue siendo suyo y lo gastará cuando la institución reactive la tarjeta.
+
+**Consecuencia asumida.** Un acudiente que quiera recargar tendrá que esperar a la reactivación. Es fricción, y se acepta a cambio de no acumular saldo sobre una tarjeta perdida.
+
+---
+
 ## [S2] Invariantes derivadas
 
 Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, que siguen vigentes sin cambios.
@@ -296,6 +319,7 @@ Reglas que nacen de estas decisiones. Se suman a `INV-1..9` del anteproyecto, qu
 | `INVD-4` | Reasignar el código de tarjeta invalida el anterior de forma inmediata y definitiva | `DEC-4` |
 | `INVD-5` | El efectivo esperado del día debe poder explicarse a partir de las ventas en efectivo registradas | `DEC-6`; misma forma que `INV-2` e `INV-3` |
 | `INVD-6` | Ninguna fotografía almacenada en el prototipo corresponde a una persona real | `DEC-8`; `ALC-OUT-07`, `ALC-OUT-08` |
+| `INVD-7` | Un estudiante desactivado o dado de baja tampoco recibe recargas | `DEC-14`, `DEC-7`; complementa `INVD-2`, que solo cubría lo que sale |
 
 ---
 
@@ -318,6 +342,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-11` | **No añade alcance.** Extiende ese camino alterno a todas las cuentas del prototipo |
 | `DEC-12` | **No añade alcance.** Habilita el acceso de `USR-2`, que las historias del acudiente daban por supuesto |
 | `DEC-13` | Retiro completo del límite diario por el acudiente, con asiento. Amplía la fila del límite de `[S11]`, que solo decía «fijar» |
+| `DEC-14` | **No añade alcance: lo recorta.** Retira la recarga al estudiante desactivado, corrigiendo el tercer criterio de `HU-50` |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

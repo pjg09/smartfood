@@ -212,6 +212,8 @@ La asimetría es deliberada y tiene un motivo de seguridad: el desbloqueo pasa s
 | `TT-126` | Motivo de rechazo por desactivación, **distinto** de los de saldo, alérgeno y límite | Carlos | ☑ |
 | `TT-127` | Caso de prueba: desactivado no compra, pero **sí recibe recargas** | Alejandro | ☑ |
 
+> ⚠ **`TT-127` se escribió contra un criterio que después cambió.** Su enunciado sigue diciendo «pero sí recibe recargas» porque es lo que `HU-50` pedía cuando se planificó el sprint. Al construirlo (`PR-13`) se vio que la premisa —«por ser inocuo»— no se sostiene: una tarjeta se desactiva porque se perdió. **`DEC-14`** corrigió el criterio y añadió `INVD-7`; el caso de prueba comprueba hoy lo contrario: **ni compra ni recibe recargas**, y el saldo que ya tenía sigue siendo suyo.
+
 Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: saldo (`HU-19`), alérgeno (`HU-18`), límite diario (`HU-20`), producto bloqueado (`HU-60`) y estudiante desactivado (`HU-50`). Que se distingan no es cosmética: el cajero tiene que poder decirle al estudiante qué pasa, y solo uno de los cinco se arregla recargando.
 
 ### `[HU-60]` Venta rechazada por producto bloqueado

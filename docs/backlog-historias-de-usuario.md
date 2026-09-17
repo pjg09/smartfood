@@ -830,9 +830,11 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 - **Criterios de aceptación:**
   - Un estudiante desactivado o dado de baja no puede comprar.
   - Tampoco puede retirar pedidos anticipados.
-  - **Sí puede recibir recargas**, por ser inocuo.
+  - **Tampoco puede recibir recargas** mientras esté desactivado (`DEC-14`, `INVD-7`).
   - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-60`.
-- **Origen:** `DEC-5`, `DEC-7`, `INVD-2`
+- **Origen:** `DEC-5`, `DEC-7`, `INVD-2`, `INVD-7`
+
+> **El tercer criterio decía lo contrario, y `DEC-14` lo corrigió.** «Sí puede recibir recargas, por ser inocuo» se construyó así en `PR-13`; al verlo funcionando, el equipo concluyó que la premisa no se sostiene: una tarjeta se desactiva porque **se perdió**, y acumular saldo sobre un medio de pago fuera de control no es inocuo cuando el sistema no sabe devolver dinero (`ALC-OUT-01`). El saldo que ya tenía sigue siendo suyo y lo gastará al reactivarse (`HU-49`).
 
 #### `[HU-51]` Baja lógica del estudiante retirado
 
