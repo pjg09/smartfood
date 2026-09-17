@@ -37,7 +37,7 @@ from cuentas.models import Rol
 from inventario.models import TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_por_producto
 from inventario.services import asentar as asentar_en_el_inventario
-from restricciones.selectors import bloqueos_entre
+from restricciones.selectors import alergenos_que_bloquean_entre, bloqueos_entre
 from ventas.models import LineaVenta, MedioDePago, Venta
 
 
@@ -191,6 +191,39 @@ class ProductoBloqueado(VentaRechazada):
         self.productos = tuple(productos)
 
 
+class AlergenoBloqueado(VentaRechazada):
+    """`HU-18`, `INV-5`, escenario crítico **`TST-1`**.
+
+    ═══════════════════════════════════════════════════════════════════════
+    **ES EL RECHAZO QUE DA SENTIDO AL PROYECTO.** Un niño alérgico no puede
+    comprar lo que le hace daño, y el momento en que eso importa es este.
+
+    No se decide contra ninguna lista de productos prohibidos: se cruza la
+    condición que el acudiente bloqueó con lo que cada producto declara, en el
+    instante del cobro (`INV-5`, `DT-7`). Un producto que la cafetería agregó
+    esta mañana declarando maní se rechaza esta tarde **sin que nadie
+    recalcule nada** — que es literalmente el segundo criterio de `HU-11`.
+    ═══════════════════════════════════════════════════════════════════════
+
+    **El cajero no tiene cómo forzarla**, igual que en `ProductoBloqueado` y por
+    el mismo motivo: `INV-4` y el primer criterio de `HU-13`. No hay argumento
+    que la salte ni permiso que la levante, y un aviso descartable sería una
+    acción para omitirla. La única salida es que el acudiente retire el bloqueo
+    desde su interfaz (`HU-12`), que deja asiento.
+
+    Lleva `productos` y `alergenos` —los nombres— para que el mensaje diga
+    **cuál y por qué**, y para que una prueba pueda exigirlos sin buscar un
+    texto dentro de otro texto.
+    """
+
+    motivo = "alergeno-bloqueado"
+
+    def __init__(self, mensaje, *, productos=(), alergenos=()):
+        super().__init__(mensaje)
+        self.productos = tuple(productos)
+        self.alergenos = tuple(alergenos)
+
+
 @transaction.atomic
 def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     """Cobra: descuenta saldo y existencias **en la misma operación** (`HU-21`).
@@ -234,10 +267,9 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     habría significado dos caminos de escritura para el mismo libro, que es justo
     lo que `DT-24` evita.
 
-    **Lo que todavía NO evalúa**: restricciones alimentarias (`HU-18`) ni límite
-    diario (`HU-20`), que son del Sprint 3. `DT-6` las nombra y su sitio es el
-    paso 2, junto al saldo. No se dejan preparadas con un `pass`: cuando lleguen,
-    se añaden donde se lee el saldo.
+    **Lo que todavía NO evalúa** es el límite diario (`HU-20`, `TT-116`). El
+    alérgeno bloqueado sí, desde `TT-113`: está en el paso 2, junto al producto
+    bloqueado y antes del saldo, que es donde `DT-6` pide que vayan.
     """
     _solo_el_cajero(actor)
 
@@ -285,12 +317,12 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
 
     # ── 2. VALIDAR, DENTRO DEL BLOQUEO ──────────────────────────────────────
     #
-    # `HU-60`, `INV-4`. **Va la primera de las validaciones, y el orden es una
-    # decisión.** Las tres rechazan, y lo que cambia es qué se le dice al cajero
-    # que tiene la fila delante:
+    # **Las restricciones van primero, y el orden es una decisión.** Todas
+    # rechazan; lo que cambia es qué se le dice al cajero que tiene la fila
+    # delante:
     #
-    # · «Está bloqueado» es la única respuesta que no cambia por recargar ni por
-    #   reponer: es sobre el mundo, no sobre el estado de hoy.
+    # · «Está bloqueado» y «contiene maní» no cambian por recargar ni por
+    #   reponer: son sobre el mundo, no sobre el estado de hoy.
     # · «No hay existencias» y «no alcanza el saldo» se arreglan los dos, y
     #   ofrecen una salida —quitar el renglón, recargar—.
     #
@@ -303,7 +335,35 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
     # **Solo cuando hay estudiante.** Una venta a cliente genérico no tiene a
     # quién consultarle restricciones (`DEC-1`, `HU-53`): no hay persona detrás,
     # y quien compra sin tarjeta no es un estudiante del padrón.
+    #
+    # ── Y ENTRE LAS DOS, EL ALÉRGENO ANTES QUE EL PRODUCTO ──────────────────
+    # `HU-18` (`TST-1`) antes que `HU-60`. Un producto puede caer por las dos:
+    # estar en la lista de `HU-10` y además declarar un alérgeno bloqueado.
+    # Cuando pasa, lo que el cajero tiene que poder decir es la alergia. «Lo
+    # bloqueó tu acudiente» invita a pedirle al acudiente que lo quite, y con
+    # una alergia de por medio esa conversación no puede empezar en la caja.
+    # ────────────────────────────────────────────────────────────────────────
     if estudiante is not None:
+        por_alergeno = list(alergenos_que_bloquean_entre(estudiante, productos))
+        if por_alergeno:
+            # Los nombres se recogen en el orden en que llegan y sin repetir:
+            # un producto con dos alérgenos bloqueados sale una vez en la lista
+            # de productos y dos veces en la de motivos, que es lo cierto.
+            productos_afectados = list(
+                dict.fromkeys(d.producto.nombre for d in por_alergeno)
+            )
+            alergenos = list(dict.fromkeys(d.alergeno.nombre for d in por_alergeno))
+            enumerados = ", ".join(f"«{n}»" for n in productos_afectados)
+            raise AlergenoBloqueado(
+                f"{enumerados} {'contienen' if len(productos_afectados) > 1 else 'contiene'} "
+                f"{', '.join(alergenos)}, que {estudiante.nombre} tiene bloqueado. "
+                "La venta no se realiza: quita "
+                f"{'esos renglones' if len(productos_afectados) > 1 else 'ese renglón'} "
+                "para cobrar el resto.",
+                productos=productos_afectados,
+                alergenos=alergenos,
+            )
+
         bloqueados = list(bloqueos_entre(estudiante, productos))
         if bloqueados:
             nombres = [b.producto.nombre for b in bloqueados]

@@ -353,8 +353,15 @@ descuenta nada —ni saldo ni existencias— y **el carrito se queda montado**, 
 cajero necesita es quitar un renglón y volver a pulsar, no montar la venta otra vez con la
 fila esperando.
 
-**Lo que todavía no evalúa la venta** son las restricciones alimentarias y el límite diario
-(`HU-18`, `HU-20`), del Sprint 3. Su sitio es el mismo punto donde hoy se lee el saldo.
+**Y rechaza lo que el acudiente prohibió** (`HU-60`, `HU-18`): el producto bloqueado y
+cualquiera que declare un alérgeno bloqueado. El alérgeno se cruza **al cobrar** con lo
+que cada producto declara, así que cubre lo que la cafetería agregó esta mañana sin que
+nadie recalcule nada (`INV-5`). Se rechaza con saldo de sobra, no se descuenta nada y **el
+cajero no tiene ninguna acción para omitirlo** (`INV-4`): la única salida es que el
+acudiente retire la restricción, que deja asiento. Es el escenario crítico **`TST-1`**.
+
+**Lo que todavía no evalúa la venta** es el límite diario (`HU-20`), del Sprint 3. Su
+sitio es el mismo punto donde hoy se lee el saldo.
 
 ---
 
@@ -384,6 +391,10 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    `INV-5` enseñada en vivo, y el paso que más conviene no saltarse en la Sprint Review.
    `HU-11`. Desde el mismo admin, *Restricciones por estudiante* enseña ese alérgeno
    bloqueado, y la ficha no ofrece guardar nada. `HU-38`.
+   **Y en la caja, intentar cobrar ese producto recién creado**: la venta se rechaza con
+   saldo de sobra, diciendo qué alérgeno lo bloquea, y no hay forma de forzarla. Es el
+   escenario crítico **`TST-1`** (`HU-18`), y es la demostración que cierra el argumento
+   del paso anterior.
 7. **Retirar uno de los bloqueos** y mirar «Cambios recientes» debajo: queda anotado
    quién lo retiró y cuándo, y el bloqueo anterior también está. `HU-12`.
    Desde la pantalla del cupo, **Retirar el límite** hace lo mismo con el límite diario y
@@ -418,19 +429,21 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Lo que cuelga del control parental (`HU-13`), los rechazos que dependen del
-alérgeno y del cupo (`HU-18`, `HU-20`), la merma y las alertas de inventario
+El rechazo que depende del cupo (`HU-20`), la merma y las alertas de inventario
 (`HU-28`, `HU-29`), reportes y recomendaciones (`HU-30`…`HU-34`) y cierre de caja
 (`HU-55`, `HU-56`).
 
-**Las tres restricciones se configuran; solo una frena la venta.** El producto bloqueado
-la rechaza (`HU-60`); el alérgeno lo hará con `HU-18` y el cupo diario con `HU-20`. Hasta
-entonces `HU-11` deja la condición escrita y consultable, pero la caja todavía no la mira.
+**De las tres restricciones, dos frenan la venta.** El producto bloqueado (`HU-60`) y el
+alérgeno (`HU-18`, escenario crítico `TST-1`) se rechazan dentro de la transacción, sin
+descontar saldo ni existencias y sin ninguna acción que los omita (`INV-4`). El cupo de
+`HU-09` sigue sin comprobarse al cobrar — eso es `HU-20`, y hasta entonces la pantalla lo
+dice en vez de dejarlo suponer.
 
-**El producto bloqueado ya frena la venta; el límite diario todavía no.** `HU-10` deja la
-lista escrita y `HU-60` la hace cumplir: cobrar algo bloqueado se rechaza dentro de la
-transacción, sin descontar saldo ni existencias, y el cajero no tiene ninguna acción para
-omitirlo (`INV-4`). El cupo de `HU-09` sigue sin comprobarse al cobrar — eso es `HU-20`.
+**El alérgeno se rechaza por la condición, no por una lista.** Se cruza al cobrar con lo
+que cada producto declara (`INV-5`, `DT-7`): un producto nuevo con maní queda rechazado
+desde el momento en que lo declara, y retirar la declaración lo devuelve a la normalidad.
+Ninguna lista de productos prohibidos existe en ninguna parte, y esa ausencia es la
+invariante.
 
 `HU-60` no estaba en la planeación del sprint: se añadió al descubrirse, construyendo
 `HU-10`, que `ALC-IN-09` pide aplicar las restricciones en la venta y ninguna historia lo
@@ -442,9 +455,11 @@ en una sola transacción (`HU-21`). **`HU-17` quedó cerrada con `TT-109`**: el 
 los tres datos que su primer criterio pide —saldo, consumo del día y restricciones
 vigentes—, y el tercero no existía hasta este sprint.
 
-El bloque de restricciones nombra cada una y dice **si la caja la hace cumplir**: hoy solo
-el producto bloqueado (`HU-60`). El alérgeno (`HU-18`) y el cupo (`HU-20`) siguen
-pendientes, y callarlo dejaría al cajero creyendo que el sistema frena el maní.
+El bloque de restricciones nombra cada una y dice **si la caja la hace cumplir**: el
+producto bloqueado (`HU-60`) y el alérgeno (`HU-18`) sí; el cupo (`HU-20`) sigue
+pendiente, y callarlo dejaría al cajero creyendo que el sistema frena el gasto del día.
+La advertencia del alérgeno se retiró al entrar `HU-18`, y ahora afirma lo contrario —hay
+prueba de que la vieja ya no está—.
 
 **El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que

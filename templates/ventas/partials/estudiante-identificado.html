@@ -234,11 +234,14 @@
                 <strong class="font-semibold">Alérgenos:</strong>
                 {% for r in cobro.restricciones.alergenos %}{{ r.alergeno.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
               </p>
-              {% comment %} **Marca temporal, se retira con `HU-18`.** Si el cajero cree que
-                 la caja frena el maní, puede vender el maní. {% endcomment %}
-              <p class="text-sm text-aviso-fuerte">
-                La caja todavía no los rechaza sola (<span class="font-mono">HU-18</span>):
-                no se lo vendas.
+              {% comment %} `HU-18`, `TT-113`. **La caja sí los rechaza**, y decirlo importa
+                 tanto como decía lo contrario la advertencia que había aquí: el
+                 cajero no tiene que vigilarlo a mano ni puede omitirlo.
+                 El cruce se evalúa al cobrar contra lo que cada producto
+                 declara, así que cubre también lo que se agregó hoy (`INV-5`).
+              {% endcomment %}
+              <p class="text-sm text-error-fuerte">
+                La caja rechaza la venta de cualquier producto que los declare.
               </p>
             </div>
           {% endif %}
