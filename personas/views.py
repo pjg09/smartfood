@@ -24,7 +24,11 @@ from personas.selectors import (
     estudiantes_a_cargo,
     padron,
 )
-from personas.services import cargar_estudiantes_y_acudientes, desactivar
+from personas.services import (
+    cargar_estudiantes_y_acudientes,
+    desactivar,
+    reactivar,
+)
 from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
 from restricciones.selectors import (
@@ -343,27 +347,72 @@ def desactivacion_de_estudiante(request, estudiante_id):
     except Estudiante.DoesNotExist:
         raise Http404("No hay ningún estudiante con ese identificador.") from None
 
-    contexto = _contexto_del_padron(
-        request.user,
-        busqueda=request.POST.get("busqueda", ""),
-        incluir_retirados=request.POST.get("retirados") == "1",
+    return _transicion_desde_el_padron(
+        request, estudiante, desactivar, "desactivado"
     )
 
+
+@login_required
+@require_http_methods(["POST"])
+def reactivacion_de_estudiante(request, estudiante_id):
+    """Devuelve a un estudiante desactivado a la normalidad (`TT-123`, `HU-49`).
+
+    **Es la pareja de la desactivación y vive en la misma pantalla** (`DT-30`),
+    por un motivo que no es la simetría: `INVD-3` reserva el desbloqueo a la
+    institución porque pasa por una **verificación presencial**, y quien la hace
+    es secretaría con la familia delante, mirando el padrón.
+
+    `INVD-3` no se defiende aquí sino en el servicio, que exige el rol: esta
+    vista solo delega (`DT-15`).
+    """
     try:
-        desactivar(actor=request.user, estudiante=estudiante)
+        estudiante = Estudiante.objects.get(pk=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("No hay ningún estudiante con ese identificador.") from None
+
+    return _transicion_desde_el_padron(request, estudiante, reactivar, "reactivado")
+
+
+def _transicion_desde_el_padron(request, estudiante, servicio, resultado):
+    """Lo común a desactivar y reactivar desde el padrón (`DT-29`, `DT-30`).
+
+    Las dos hacen exactamente lo mismo alrededor del servicio: leer los filtros
+    que había puestos, delegar, y devolver la tabla con el estado nuevo. Estaba
+    escrito una vez cuando solo existía la desactivación; con la segunda, o se
+    comparte o el día que cambie una de las dos la otra se queda vieja.
+
+    **El rechazo vuelve en `200`, con su motivo dentro del fragmento.** htmx no
+    intercambia lo que llega en `4xx` —lo dice su configuración de
+    `responseHandling`—, así que un `400` dejaría la pantalla igual y a
+    secretaría sin saber por qué no pasó nada.
+    """
+    filtros = {
+        "busqueda": request.POST.get("busqueda", ""),
+        "incluir_retirados": request.POST.get("retirados") == "1",
+    }
+
+    # ── SE LEE EL PADRÓN ANTES DE ESCRIBIR, Y EL ORDEN ES LA REGLA ──────────
+    # `_contexto_del_padron` llama a `padron()`, que **exige el rol institución**
+    # (`DT-11`): es lo que convierte esta ruta en `403` para todos los demás.
+    # Llamar antes al servicio dejaría pasar al acudiente sobre su propio
+    # estudiante —`desactivar` sí se lo permite desde `HU-48`—, y el `403`
+    # llegaría con el cambio ya escrito: una respuesta que dice «no puedes»
+    # sobre algo que sí pasó. Se descubrió al compartir esta función entre las
+    # dos transiciones, y hay prueba que lo vigila.
+    # ───────────────────────────────────────────────────────────────────────
+    _contexto_del_padron(request.user, **filtros)
+
+    try:
+        servicio(actor=request.user, estudiante=estudiante)
     except ValidationError as error:
+        contexto = _contexto_del_padron(request.user, **filtros)
         contexto["error"] = "; ".join(error.messages)
         return render(request, "personas/partials/padron-tabla.html", contexto)
 
-    # El contexto se rearma **después** de escribir: el de arriba se calculó para
-    # poder responder el error sin consultar dos veces, pero la tabla que se
-    # devuelve tiene que traer el estado nuevo.
-    contexto = _contexto_del_padron(
-        request.user,
-        busqueda=contexto["busqueda"],
-        incluir_retirados=contexto["incluir_retirados"],
-    )
-    contexto["desactivado"] = estudiante
+    # El contexto se rearma **después** de escribir: la tabla que se devuelve
+    # tiene que traer el estado nuevo.
+    contexto = _contexto_del_padron(request.user, **filtros)
+    contexto[resultado] = estudiante
     return render(request, "personas/partials/padron-tabla.html", contexto)
 
 

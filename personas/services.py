@@ -433,6 +433,54 @@ def desactivar(*, actor, estudiante):
     return estudiante
 
 
+@transaction.atomic
+def reactivar(*, actor, estudiante):
+    """Devuelve a un estudiante desactivado a la normalidad (`TT-123`, `HU-49`).
+
+    ═══════════════════════════════════════════════════════════════════════
+    **SOLO LA INSTITUCIÓN, Y CON INDEPENDENCIA DE QUIÉN DESACTIVÓ** (`INVD-3`).
+
+    La asimetría con `desactivar` es deliberada y es de seguridad: bloquear lo
+    puede pedir cualquiera de los dos —el colegio y el acudiente (`DEC-5`)—,
+    pero **desbloquear pasa siempre por una verificación presencial**. Es lo que
+    impide que quien encontró la tarjeta consiga que se reactive: por teléfono
+    podría convencer al acudiente; en el mostrador tiene que ser el estudiante.
+
+    Por eso el acudiente no la tiene **aunque haya sido él quien desactivó**. Es
+    el segundo criterio de `HU-49` y el caso que más cuesta aceptar al leerlo;
+    `tests_reactivacion.py` lo ejercita con las dos procedencias.
+    ═══════════════════════════════════════════════════════════════════════
+
+    **Quién desactivó no se guarda en ninguna parte, y eso no es un olvido.** El
+    criterio dice «con independencia de quién», así que el dato no cambia nada de
+    lo que se decide aquí. Guardarlo invitaría a que alguien escribiera algún día
+    la regla contraria —«si desactivó el acudiente, que reactive él»— sin tener
+    que declararla.
+
+    **De la baja no se vuelve** (`HU-51`, `DEC-7`): reactivar solo revierte una
+    desactivación. Un retirado que se rematricula es un alta, no un cambio de
+    estado, y si algún día hace falta lo contrario hará falta una historia.
+
+    Es **idempotente** sobre quien ya está activo: no es un error reactivar dos
+    veces desde dos mostradores.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Reactivar a un estudiante")
+
+    if estudiante.estado == EstadoDelEstudiante.BAJA:
+        raise ValidationError(
+            f"{estudiante.nombre} está de baja: se retiró del colegio, y de la "
+            "baja no se vuelve (HU-51, DEC-7). Reactivar revierte una "
+            "desactivación, no una baja."
+        )
+
+    if estudiante.estado == EstadoDelEstudiante.ACTIVO:
+        return estudiante
+
+    estudiante.estado = EstadoDelEstudiante.ACTIVO
+    estudiante.save(update_fields=["estado"])
+    return estudiante
+
+
 # Lo único que la institución modifica de un estudiante ya matriculado.
 #
 # **El código de tarjeta no está, y esa ausencia es la regla.** Cambiarlo no es

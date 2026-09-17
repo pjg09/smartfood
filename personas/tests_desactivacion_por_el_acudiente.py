@@ -164,16 +164,21 @@ class ElAcudienteNoReactivaTest(BaseDelAcudiente):
         super().setUp()
         desactivar(actor=self.acudiente, estudiante=self.hijo)
 
-    def test_no_existe_ningun_servicio_de_reactivacion(self):
-        """Se vigila la ausencia, que es lo que se perdería sin darse cuenta.
+    def test_el_servicio_de_reactivacion_no_es_suyo(self):
+        """`HU-49` trajo `reactivar`, y esta prueba avisó el día que apareció.
 
-        `HU-49` construirá uno **para la institución**; el día que exista, esta
-        prueba obliga a mirar de nuevo quién puede llamarlo.
+        Mientras no existía vigilaba la **ausencia** —«ningún nombre con
+        “reactiv” en `personas.services`»— justamente para obligar a mirar quién
+        podría llamarlo en cuanto se escribiera. Ahora vigila lo que importa:
+        que existe, y que el acudiente recibe `PermissionDenied` **aunque haya
+        sido él quien desactivó** (`INVD-3`).
         """
-        from personas import services
+        from personas.services import reactivar
 
-        candidatos = [n for n in dir(services) if "reactiv" in n.lower()]
-        self.assertEqual(candidatos, [])
+        with self.assertRaises(PermissionDenied):
+            reactivar(actor=self.acudiente, estudiante=self.hijo)
+
+        self.assertEqual(self.estado_de(self.hijo), EstadoDelEstudiante.DESACTIVADO)
 
     def test_desactivar_no_admite_un_argumento_que_lo_deshaga(self):
         with self.assertRaises(TypeError):
