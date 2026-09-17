@@ -179,10 +179,12 @@ El caso que hay que probar es el contraintuitivo: **hay saldo de sobra y aun as�
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-119` | Transición a `desactivado` desde el padrón de la institución | Pedro | ☐ |
-| `TT-120` | Acción de desactivar en la ficha del padrón | Carlos | ☐ |
+| `TT-119` | Transición a `desactivado` desde el padrón de la institución | Pedro | ☑ |
+| `TT-120` | Acción de desactivar en la ficha del padrón | Carlos | ☑ |
 
 Se apoya en `EstadoDelEstudiante`, que ya existe desde `HU-51` (Sprint 1). No hay modelo nuevo: hay una transición nueva.
+
+**Las dos tareas sitúan la acción en el padrón, y eso contradecía `DT-27`**, que lo había dejado en solo lectura. Se resolvió antes de escribir código con `DT-29`, que corrige esa parte **solo para la desactivación**: `HU-47` existe por la inmediatez —una tarjeta perdida en mitad de la jornada— y el padrón es la pantalla que secretaría tiene abierta. El alta, la edición, la baja y la reasignación siguen en el admin.
 
 ### `[HU-48]` Desactivación de un estudiante por el acudiente
 
