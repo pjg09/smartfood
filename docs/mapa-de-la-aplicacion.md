@@ -241,8 +241,12 @@ movimiento.
 
 `/mis-estudiantes/`, y desde ahí `recargar` la billetera de cada uno (`HU-06`): el pago
 es simulado y la pantalla lo dice, pero **el movimiento queda asentado de verdad** en el
-historial del que sale el saldo (`INV-2`). A un estudiante de baja o desactivado no se le
-ofrece recargar, y el servicio lo rechaza igual aunque se escriba la URL (`INVD-2`).
+historial del que sale el saldo (`INV-2`). **Al estudiante desactivado sí se le recarga**
+(`HU-50`, tercer criterio): su tarjeta no compra igualmente, así que meterle saldo es
+inocuo y el dinero le espera a que la institución la reactive — y la tarjeta lo dice con
+todas las letras, porque decir solo «recargar» sobre una tarjeta bloqueada haría creer que
+la desbloquea. **Al de baja no**: su saldo queda congelado como constancia (`HU-52`) y el
+servicio lo rechaza aunque se escriba la URL.
 
 Y **desactivar la tarjeta de su estudiante** (`HU-48`, `TT-122`), que es la otra vía de
 `DEC-5`: el colegio bloquea de inmediato en mitad de la jornada, y el acudiente sin
@@ -387,6 +391,12 @@ nadie recalcule nada (`INV-5`). Se rechaza con saldo de sobra, no se descuenta n
 cajero no tiene ninguna acción para omitirlo** (`INV-4`): la única salida es que el
 acudiente retire la restricción, que deja asiento. Es el escenario crítico **`TST-1`**.
 
+**Y no le vende a quien no puede comprar** (`HU-50`, `INVD-2`): un estudiante desactivado
+o de baja se identifica igual —decir «esa tarjeta no es de nadie» sería mentir— pero la
+venta se rechaza **lo primero**, antes de mirar restricciones o saldo, porque con la
+tarjeta bloqueada da igual lo que lleve el carrito. Es el único motivo que no se arregla en
+el mostrador: ni quitando un renglón ni recargando, hay que pasar por secretaría (`HU-49`).
+
 **Y rechaza la compra que pase del cupo del día** (`HU-20`, `HU-09`): el consumo de la
 jornada se compara con el límite **dentro del mismo bloqueo** donde se lee el saldo, y sale
 del mismo libro (`INV-2`) — no hay contador diario que alguien tenga que poner a cero. Se
@@ -394,9 +404,10 @@ rechaza aunque haya saldo de sobra, y el motivo se distingue del de saldo porque
 arreglan de forma opuesta: una recarga no devuelve cupo. Es la otra mitad del escenario
 crítico **`TST-2`**, cuya primera cerró `HU-19` en el Sprint 2.
 
-**La venta evalúa ya las cuatro reglas del control parental y del dinero**: alérgeno,
-producto bloqueado, existencias, cupo del día y saldo, en ese orden y dentro de la misma
-transacción.
+**La venta evalúa ya todas sus reglas, en un orden que es una decisión**: puede comprar,
+alérgeno, producto bloqueado, existencias, cupo del día y saldo — todas dentro de la misma
+transacción. Lo que no se arregla en el mostrador va delante; lo que sí —quitar un renglón,
+recargar— va detrás, para que el cajero lea el motivo que de verdad explica el rechazo.
 
 ---
 
