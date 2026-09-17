@@ -177,17 +177,23 @@ class ElCatalogoNoConfiguraBloqueosTest(BaseDeCatalogo):
         fuente = (services.__doc__ or "") + " ".join(dir(services))
         self.assertNotIn("restriccion", fuente.lower())
 
-    def test_la_matriz_no_le_da_al_administrador_ninguna_restriccion(self):
+    def test_la_matriz_no_le_da_al_administrador_escritura_sobre_restricciones(self):
+        """`INV-4`: la cafetería **consulta** restricciones, no las escribe.
+
+        Esta prueba exigía antes que ninguna entrada del administrador nombrara
+        una restricción. Con `HU-38` eso dejó de ser la regla: `[S11]` le concede
+        consultarlas, y la matriz le da `view` sobre la consulta. Lo que la
+        invariante prohíbe es escribirlas, y eso es lo que se vigila ahora.
+        """
         from cuentas.permisos import PERMISOS_POR_ROL
 
-        for etiqueta in PERMISOS_POR_ROL[Rol.ADMINISTRADOR]:
-            # Su dominio son `catalogo` e `inventario` (`[S11]`, `HU-27`). Lo
-            # que esta prueba vigila no es cuántas apps son, sino que ninguna
-            # de ellas sea una restricción alimentaria.
-            self.assertTrue(
-                etiqueta.startswith(("catalogo.", "inventario.")), etiqueta
-            )
-            self.assertNotIn("restriccion", etiqueta)
+        for etiqueta, acciones in PERMISOS_POR_ROL[Rol.ADMINISTRADOR].items():
+            # Su dominio son `catalogo` e `inventario` (`[S11]`, `HU-27`); fuera
+            # de él solo puede leer.
+            if etiqueta.startswith(("catalogo.", "inventario.")):
+                continue
+            with self.subTest(etiqueta=etiqueta):
+                self.assertEqual(acciones, ["view"], etiqueta)
 
 
 class SoloLaAdministracionGestionaElCatalogoTest(BaseDeCatalogo):
