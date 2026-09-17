@@ -167,9 +167,9 @@ El cajero **no tiene** forma de forzar la venta. No es un aviso que se pueda des
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-116` | Validación del límite diario contra el consumo del día, dentro del bloqueo | Pedro | ☐ |
-| `TT-117` | Motivo de rechazo por límite, **distinguible del de saldo** | Carlos | ☐ |
-| `TT-118` | Caso de prueba `TST-2`: rechazo por cupo del día **aunque haya saldo** | Alejandro | ☐ |
+| `TT-116` | Validación del límite diario contra el consumo del día, dentro del bloqueo | Pedro | ☑ |
+| `TT-117` | Motivo de rechazo por límite, **distinguible del de saldo** | Carlos | ☑ |
+| `TT-118` | Caso de prueba `TST-2`: rechazo por cupo del día **aunque haya saldo** | Alejandro | ☑ |
 
 Completa `TST-2`, cuya otra mitad —rechazo por saldo— cerró `HU-19` en el Sprint 2.
 
