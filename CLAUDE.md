@@ -8,11 +8,10 @@ Guía de trabajo para Claude Code en este repositorio.
 trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UPB, 202601).
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
-**Los Sprints 1 y 2 están cerrados**: 56 de 56 tareas y 18 de 18 historias el primero; 37 de 37 tareas y 14 de 14 el segundo. `HU-17` arrastró abierta hasta que `PR-06` de este sprint le dio el bloque de restricciones que le faltaba — estaba declarado, no olvidado.
 
-**Estamos en el Sprint 3**, semanas 10 y 11: control parental —restricciones, alérgenos y límite de gasto—. Cierra `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, y saldó `HU-17`. **Creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrar el Sprint 4.
+**Los Sprints 1, 2 y 3 están cerrados** —56, 37 y 43 tareas, todas integradas—. El 3 fue el del control parental: cerró `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, saldó `HU-17` del Sprint 2 y **creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El detalle está en los backlogs; su revisión de cierre, en `[S7]` de `./docs/plan-de-pull-requests-sprint-3.md`.
 
-El **Avance 1** (`EVA-3`, 20 %) cae en la semana 10, al arrancar este sprint: lo que se enseña es lo que hay en `main`.
+**Estamos en el Sprint 4**, semanas 12 y 13: inventario trazable y pedidos anticipados. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrarlo: lo que se enseña es lo que hay en `main`.
 
 ## Antes de escribir código, lee esto
 
@@ -21,17 +20,18 @@ El **Avance 1** (`EVA-3`, 20 %) cae en la semana 10, al arrancar este sprint: lo
 | Documento | Para qué |
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
-| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
-| `docs/backlog-historias-de-usuario.md` | Las 59 historias con sus criterios de aceptación |
-| `docs/sprint-3-backlog.md` | **Las tareas del sprint en curso** (`TT-94` … `TT-136`), con responsable |
-| `docs/plan-de-pull-requests-sprint-3.md` | Esas tareas agrupadas en PR, y el estado de cada una. **El estado manda aquí** — no lo repitas en este fichero |
-| `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
+| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-14`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-30`) |
+| `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
+| `docs/sprint-3-backlog.md` | Las tareas del Sprint 3 (`TT-94` … `TT-136`). **El backlog del Sprint 4 todavía no existe**: se planifica al abrirlo, y entonces pasa a ser el vigente |
+| `docs/plan-de-pull-requests-sprint-3.md` | Esas tareas agrupadas en PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero—, más la revisión de cierre (`[S7]`) |
+| `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
+| `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
@@ -47,8 +47,8 @@ están en este repositorio** (material de clase, Guía de Scrum, el DOCX origina
 
 ## Las invariantes no se negocian
 
-Quince reglas que el sistema debe cumplir siempre. Están en `[S10.2]` de `smartfood.md` (`INV-1` …
-`INV-9`) y en `[S2]` de `decisiones-de-alcance.md` (`INVD-1` … `INVD-6`). Las que más
+Dieciséis reglas que el sistema debe cumplir siempre. Están en `[S10.2]` de `smartfood.md` (`INV-1` …
+`INV-9`) y en `[S2]` de `decisiones-de-alcance.md` (`INVD-1` … `INVD-7`). Las que más
 condicionan el código:
 
 | | Regla | Cómo se sostiene |
@@ -62,6 +62,7 @@ condicionan el código:
 | `INV-7` | Código de tarjeta aleatorio y no secuencial | Generador criptográfico. **Nunca UUIDv7**: lleva timestamp y va ordenado (`DT-9`, `DT-17`) |
 | `INV-8` | Toda disminución manual lleva motivo | `CheckConstraint`, no un `if` (`DT-5`) |
 | `INVD-6` | Ninguna fotografía es de una persona real | Avatares generados en el seed (`DT-14`) |
+| `INVD-7` | Desactivado o de baja tampoco **recibe recargas** | Una sola puerta en `personas` para las dos direcciones del dinero (`DEC-14`) |
 
 Si una tarea parece exigir romper una invariante, **no la rompas: dilo.** Es señal de que la tarea
 está mal entendida o de que falta una decisión.
@@ -99,13 +100,15 @@ porque es la que secretaría abre a diario (`DT-27`). Si hace falta una segunda,
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
-inventa aquí. **`estilos/fuente.css` es el único fichero con colores literales**; en las
-plantillas se usan alias de intención (`bg-superficie`, `text-texto`, `border-borde`,
-`text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
+inventa aquí. **Los colores literales viven en tres sitios y solo en tres**:
+`estilos/fuente.css`, más `templates/correo/invitacion.html` —el correo no admite variables
+CSS— y `templates/admin/base_site.html` —el admin no carga Tailwind—. Cambiar la marca son
+los tres. En las plantillas se usan alias de intención (`bg-superficie`, `text-texto`,
+`border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué seis
-composiciones existen y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **nueve**
+composiciones existen —siete con sección propia— y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
 una tarjeta de resumen es un **enlace** de acento abajo, no un botón sólido; y **un hueco
 nunca es un botón deshabilitado** — dice qué falta y qué historia lo trae.
 
@@ -182,6 +185,23 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   casi siempre es una fila escrita a mano. Por eso pgAdmin o `dbshell` sirven para mirar,
   no para escribir: las reglas de los servicios —`INVD-2`, `asentar()`— no las impone
   Postgres, y lo que creas ahí es lo que rompe el `migrate` de la semana siguiente.
+- **htmx no intercambia lo que llega en `4xx`.** Un rechazo con `400` deja la pantalla
+  exactamente igual y a quien pulsó sin saber por qué no pasó nada. El precedente del
+  repositorio es devolver `200` **con el motivo dentro del fragmento** —lo hacen el cobro y
+  el padrón—: el estado de la petición y lo que hay que enseñar son dos preguntas distintas.
+- **`connection.in_atomic_block` no sirve como prueba**: bajo `TestCase` **siempre** es
+  `True`, porque cada prueba va envuelta en una transacción. Para fijar «se validó dentro
+  del bloqueo» hay que mirar el **orden de las consultas** con `CaptureQueriesContext`: el
+  `SELECT … FOR UPDATE` antes de la lectura que decide.
+- **En una vista que escribe, autoriza ANTES de llamar al servicio.** Si quien autoriza es
+  un selector de lectura —`padron()` exige el rol institución—, llámalo primero: al revés,
+  un acudiente puede desactivar a su propio hijo por la ruta del padrón y recibir un `403`
+  **con el cambio ya escrito**. Pasó al compartir el camino de dos transiciones.
+- **Un proxy registrado en el admin hereda el `__str__` del modelo base**, y el admin lo
+  pinta en el título y en las migas: con `Estudiante` eso enseña el documento del menor en
+  una pantalla que se cuida de no enseñarlo en ninguna columna. Dale el suyo. Y
+  `default_permissions = ("view",)` hace que los permisos de escritura **ni existan**, que
+  es más fuerte que no concederlos.
 
 ## Cómo ejecutar
 
@@ -229,9 +249,23 @@ uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huér
 ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
 —ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
 
-La suite completa pasa de 850 pruebas y **tarda entre tres y cinco minutos**: por encima del tiempo de
+La suite completa pasa de 1.000 pruebas y **tarda entre tres y seis minutos**: por encima del tiempo de
 espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste.
+
+**Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
+falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
+servicio»— pasa sola el día que deja de proteger.
+
+**La suite completa, a un fichero y luego `grep`.** Con un pipe, la salida del seed se
+entremezcla con el resumen y se pierde el `Ran N tests`. Y una ejecución interrumpida
+**sigue viva**: retiene `test_smartfood` y la siguiente falla con «is being accessed by
+other users» — que no es un fallo de las pruebas.
+
+**Al cerrar un sprint, cruza cada `HU-nn` citada en el código y en las plantillas con su
+estado `☑`** en el backlog de historias. Caza las marcas de «esto llega con `HU-nn`» que
+sobrevivieron a su historia: en el Sprint 3 había seis, y una de ellas le decía al acudiente
+que esperara una pantalla que ya existía.
 
 Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
 `transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
