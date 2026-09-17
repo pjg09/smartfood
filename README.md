@@ -16,23 +16,27 @@ cinco sprints de dos semanas.
 | | |
 |---|---|
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
-| Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR, **13 de 14 historias** |
-| Historias terminadas | 31 de 59 |
-| **Sprint 3** | 🔨 **en curso**, semanas 10–11: control parental. 37 tareas (`TT-94`…`TT-130`) en 14 PR |
-| Lo siguiente | **Avance 1** (`EVA-3`, 20 % de la nota), semana 10 — se enseña lo que hay en `main` |
+| Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
+| Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
+| Historias terminadas | **46 de 61** |
+| **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados |
+| Lo siguiente | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main` |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
-> **Al cerrar el Sprint 2 el sistema vende.** Un cajero identifica al estudiante con su
-> tarjeta o su documento, ve su fotografía, su saldo y su consumo del día, y le cobra
-> descontando **a la vez** el saldo y las existencias, sin que ninguna venta pueda dejar la
-> billetera en negativo.
+> **Al cerrar el Sprint 3 el control parental funciona de verdad.** El acudiente fija el
+> cupo diario de su hijo, bloquea productos y bloquea alérgenos —la condición, no una lista:
+> lo que la cafetería agregue mañana queda cubierto solo—, y **la caja lo hace cumplir**: la
+> venta se rechaza dentro de la misma transacción que descuenta saldo y existencias, con un
+> motivo distinto para cada causa y **sin ninguna acción que permita omitirla**.
 >
-> La historia que falta es `HU-17`: su panel está construido, pero le queda un criterio —las
-> restricciones vigentes— que depende del Sprint 3. Está declarado, no olvidado.
+> El cajero ve al identificar la fotografía, el saldo, el consumo del día y las restricciones
+> vigentes; la institución bloquea y desbloquea tarjetas desde el padrón, y el acudiente
+> bloquea la suya sin esperar a secretaría —desbloquear, no: eso pasa por el colegio—.
 
-> El avance de arriba envejece. **La fuente es
-> [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md)**, que
-> es donde vive el estado de cada tarea; esta tabla solo lo resume.
+> El avance de arriba envejece. **La fuente es el plan de PR del sprint en curso**, que es
+> donde vive el estado de cada tarea; esta tabla solo lo resume. El del Sprint 3, con su
+> revisión de cierre, está en
+> [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md).
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
 > está desconectado. El plan gratuito del proveedor no lo sostiene: la base de datos se
@@ -97,9 +101,9 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | Documento | Para qué |
 |---|---|
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
-| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-12`) |
-| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-27`) |
-| [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 59 historias con sus criterios de aceptación |
+| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-14`) |
+| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-30`) |
+| [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 61 historias con sus criterios de aceptación |
 
 > **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
 > Ninguna de las decisiones de `[S1]` está incorporada al anteproyecto: para saber qué hace y
@@ -110,9 +114,9 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | **Las 37 tareas del sprint en curso** (`TT-94`…`TT-130`), con responsable |
-| [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 37 tareas agrupadas en 14 PR. **Es donde vive el estado** |
-| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Sprint 2, cerrado: 37 tareas y 13 de 14 historias |
+| [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | Sprint 3, cerrado: 43 tareas (`TT-94`…`TT-136`) y el cierre de su registro de riesgos |
+| [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 43 tareas en 16 PR, con el estado de cada una y la **revisión de cierre** (`[S7]`) |
+| [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Sprint 2, cerrado: 37 tareas y 14 de 14 historias |
 | [`plan-de-pull-requests-sprint-2.md`](./docs/plan-de-pull-requests-sprint-2.md) | Su plan de PR, cerrado: 16 PR |
 | [`sprint-1-backlog.md`](./docs/sprint-1-backlog.md) | El Sprint 1, cerrado: 56 tareas y 18 historias |
 | [`plan-de-pull-requests-sprint-1.md`](./docs/plan-de-pull-requests-sprint-1.md) | Su plan de PR, cerrado: 25 PR |
@@ -129,6 +133,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
+| [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
 | [`prueba-de-concepto-del-lector.md`](./docs/prueba-de-concepto-del-lector.md) | Guion de la validación con tarjetas impresas y lector físico (`ENT-02`) |
 
@@ -145,7 +150,7 @@ un colegio real. Las fotografías son avatares generados.
 un alta hecha por otro actor más una invitación por correo con la que el titular define su
 propia clave. Hay una prueba que recorre el mapa de URL entero y falla si aparece una.
 
-**Quince invariantes.** Están en `[S10.2]` de `smartfood.md` y `[S2]` de
+**Dieciséis invariantes.** Están en `[S10.2]` de `smartfood.md` y `[S2]` de
 `decisiones-de-alcance.md`. Las que más condicionan el código: el saldo y las existencias
 **no son columnas**, se reconstruyen del historial; ninguna venta deja saldo negativo; el
 bloqueo por alérgeno se evalúa sobre la condición y nunca sobre una lista materializada.
