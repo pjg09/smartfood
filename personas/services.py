@@ -347,6 +347,29 @@ def dar_de_baja(*, actor, estudiante):
     return estudiante
 
 
+def _comprobar_que_puede_desactivar(actor, estudiante):
+    """Quién desactiva a quién (`HU-47`, `HU-48`, `[S11]`, `DEC-5`).
+
+    Dos roles y dos alcances, en un solo sitio para que no puedan divergir: la
+    institución alcanza a cualquier estudiante y el acudiente **solo a los
+    suyos**. Ningún otro rol entra, y una cuenta desactivada no opera (`HU-42`).
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Desactivar a un estudiante exige identificarse.")
+
+    if actor.rol == Rol.ACUDIENTE:
+        if estudiante.acudiente.usuario_id != actor.pk:
+            raise PermissionDenied(
+                "Un acudiente solo desactiva a los estudiantes a su cargo "
+                "(HU-48, [S11])."
+            )
+        if not actor.is_active:
+            raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        return
+
+    _comprobar_que_administra_estudiantes(actor, "Desactivar a un estudiante")
+
+
 @transaction.atomic
 def desactivar(*, actor, estudiante):
     """Bloquea la tarjeta de un estudiante, de inmediato (`TT-119`, `HU-47`).
@@ -369,19 +392,31 @@ def desactivar(*, actor, estudiante):
     reactivarse.
     ─────────────────────────────────────────────────────────────────────────
 
-    **Hoy solo la institución** (`HU-47`). El acudiente desactiva a los suyos en
-    `HU-48`, que amplía esta misma puerta; hasta entonces no se le concede por
-    adelantado, porque un permiso que nadie ejerce no se prueba.
+    ── DOS VÍAS, Y CUBREN TIEMPOS DISTINTOS (`DEC-5`) ──────────────────────
+    La institución desactiva a cualquiera (`HU-47`) y **el acudiente solo a los
+    suyos** (`HU-48`). No es la misma función repetida: el colegio bloquea de
+    inmediato en mitad de la jornada, cuando el niño avisa allí; el acudiente
+    bloquea sin depender del horario de secretaría, cuando el niño le avisa a
+    él. Quitar cualquiera de las dos deja un hueco de horas.
+
+    Para el acudiente, **el alcance es la autorización**: solo alcanza a los
+    estudiantes a su cargo, igual que en `estudiantes_a_cargo`. Un estudiante
+    ajeno se rechaza aquí, y la vista lo convierte en un `404` para no
+    confirmarle a un desconocido que ese estudiante existe.
+    ─────────────────────────────────────────────────────────────────────────
 
     **Solo la institución reactiva** (`INVD-3`, `HU-49`), venga la desactivación
-    de donde venga. Ese servicio llega con su historia: aquí no hay ningún
-    argumento que deshaga esto.
+    de donde venga — y esa asimetría es de seguridad: el desbloqueo pasa por una
+    verificación presencial, que es lo que impide que quien encontró la tarjeta
+    consiga reactivarla. Ese servicio llega con su historia: aquí no hay ningún
+    argumento que deshaga esto, y el acudiente **no tiene** la acción de
+    reactivar en ninguna pantalla.
 
     Es **idempotente**: desactivar a quien ya está desactivado no cambia nada y
     no es un error — en una secretaría con dos personas atendiendo el mismo
     teléfono, la segunda no tiene por qué recibir un fallo.
     """
-    _comprobar_que_administra_estudiantes(actor, "Desactivar a un estudiante")
+    _comprobar_que_puede_desactivar(actor, estudiante)
 
     if estudiante.estado == EstadoDelEstudiante.BAJA:
         raise ValidationError(
