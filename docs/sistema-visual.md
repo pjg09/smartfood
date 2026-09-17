@@ -8,10 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima |
+| actualizado | 2026-09-17; el Sprint 3 estrenó dos composiciones —`[S2.6]` y `[S2.7]`— en las pantallas del control parental |
+| cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental añadió |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué responde este documento
 
@@ -76,6 +77,8 @@ lleve una tabla. Es la única de la tabla con un solo uso, y conviene que se not
 | Grupo de modos | `templates/partials/grupo-de-tema.html` | Botones con `aria-pressed`; icono **sobre** la etiqueta cuando la columna es estrecha |
 | Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **qué historia lo trae** |
 | Barra de filtros | `templates/personas/padron.html` | Buscador con icono dentro, interruptor y acción **en una fila** desde `tablet`; apilados por debajo |
+| Lista con interruptor | `templates/restricciones/partials/lista-de-productos.html` | Una fila por elemento, el estado pintado en el borde y el fondo, y un botón que dice **la acción**, no el estado |
+| Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 
 ### [S2.1] Tarjeta de resumen
 
@@ -175,6 +178,40 @@ donde venga. **HTMX acelera lo que ya funcionaba; no lo sustituye.**
 El interruptor es un `<input type="checkbox">` con `sr-only` y el carril pintado desde `peer`.
 No es un `<div>` con un `click`: así se enfoca con teclado y se alterna con espacio sin una
 línea de JavaScript, y sin `role` ni `aria-checked` que mantener.
+
+### [S2.6] Lista con interruptor
+
+Un catálogo donde cada fila se enciende o se apaga: los productos bloqueados (`HU-10`) y los
+alérgenos bloqueados (`HU-11`). **La misma composición en dos pantallas**, y por eso está
+aquí: la segunda se copió de la primera en vez de inventarse.
+
+**El estado se pinta en la fila entera** —borde y fondo en `error` cuando está bloqueado—, no
+en un icono suelto: lo que el acudiente recorre es una lista larga, y el color de la fila se
+lee sin detenerse en cada renglón. El rojo aquí significa lo que significa en todo el
+sistema: una venta que se va a rechazar (`[S1]`, regla 3).
+
+**El botón dice la acción, no el estado.** «Desbloquear» sobre uno bloqueado. Un botón que
+dice el estado deja a quien lo lee sin saber qué pasa si lo pulsa; el estado ya lo dicen el
+borde, el fondo y el texto de al lado.
+
+Cada fila es un `<form>` con `hx-post` que devuelve **la lista entera**, no la fila: el
+recuento de arriba y el historial de abajo cambian con cada gesto, y un intercambio por fila
+los dejaría desfasados.
+
+### [S2.7] Historial de cambios
+
+Lo que se hizo y quién lo hizo, debajo de la pantalla que lo hace: las tres del control
+parental lo llevan (`HU-12`, `TT-105`). Lo último primero, que es como se lee un historial.
+
+**Va DENTRO del fragmento que HTMX intercambia**, nunca al lado. Fuera se queda enseñando lo
+de antes, y en un registro de auditoría eso es peor que no enseñarlo — `hx-swap-oob` tampoco
+sirve: solo funciona en elementos de primer nivel de la respuesta y anidado falla en
+silencio.
+
+**Guarda el nombre tal como estaba** (`DT-8`): renombrar el catálogo no reescribe lo que el
+acudiente vio al decidir. Y anota el bloqueo además del retiro, porque media historia no
+reconstruye nada — «se retiró el bloqueo de maní el día 3» no dice si el niño estuvo
+protegido antes.
 
 ---
 
