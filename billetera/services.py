@@ -19,7 +19,10 @@ from django.db import transaction
 
 from billetera.models import Billetera, MovimientoBilletera, TipoDeMovimiento
 from cuentas.models import Rol
-from personas.services import comprobar_que_puede_operar
+from personas.services import (
+    comprobar_que_puede_operar,
+    comprobar_que_puede_recibir_recargas,
+)
 
 # Tope de una recarga. No lo pide ninguna historia y por eso no es una regla de
 # negocio disfrazada: es la barrera que evita que un cero de más en un formulario
@@ -56,16 +59,24 @@ def _comprobar_que_es_su_acudiente(actor, estudiante):
         )
 
 
-# Los tipos que **operan** sobre la billetera, es decir, los que exigen que el
-# estudiante esté en condiciones de hacerlo (`INVD-2`).
+# Qué puerta le toca a cada tipo de movimiento (`INVD-2`, `HU-50`, `HU-52`).
 #
-# La devolución no está, y es una decisión, no un olvido: devolver es corregir un
-# movimiento anterior, no operar. Un estudiante que se retiró del colegio con una
-# venta mal cobrada tiene derecho a que se le corrija, y bloquear la corrección
-# dejaría su historial diciendo algo que no pasó — justo lo que `INV-2` existe
-# para evitar. `HU-52` prohíbe **comprar y recargar** sobre el saldo congelado, y
-# eso es exactamente lo que aquí se prohíbe.
-TIPOS_QUE_OPERAN = frozenset({TipoDeMovimiento.RECARGA, TipoDeMovimiento.VENTA})
+# **Son dos y no una, y la diferencia es la dirección del dinero.** Comprar saca
+# —ni desactivado ni de baja (`INVD-2`)—; recargar mete, y eso solo lo impide la
+# baja: el tercer criterio de `HU-50` dice que un desactivado **sí recibe
+# recargas, por ser inocuo**, porque su tarjeta no compra igualmente y el dinero
+# le espera a que la institución lo reactive (`HU-49`). Quien tiene el saldo
+# congelado es el retirado (`HU-52`).
+#
+# **La devolución no está en ninguna de las dos**, y es una decisión: devolver es
+# corregir un movimiento anterior, no operar. Un estudiante que se retiró del
+# colegio con una venta mal cobrada tiene derecho a que se le corrija, y bloquear
+# la corrección dejaría su historial diciendo algo que no pasó — justo lo que
+# `INV-2` existe para evitar.
+PUERTA_POR_TIPO = {
+    TipoDeMovimiento.VENTA: comprobar_que_puede_operar,
+    TipoDeMovimiento.RECARGA: comprobar_que_puede_recibir_recargas,
+}
 
 
 @transaction.atomic
@@ -107,11 +118,11 @@ def asentar(*, estudiante, tipo, monto, venta=None):
     podrá dejar esa referencia.
     ─────────────────────────────────────────────────────────────────────────
     """
-    if tipo in TIPOS_QUE_OPERAN:
-        # `INVD-2`: ni desactivado ni de baja se compra ni se recarga. La puerta
-        # es única y vive en `personas` desde el Sprint 1, precisamente para que
-        # el primer servicio que moviera dinero no tuviera que reconstruirla.
-        comprobar_que_puede_operar(estudiante)
+    puerta = PUERTA_POR_TIPO.get(tipo)
+    if puerta is not None:
+        # Las dos viven en `personas`, junto al estado: `INVD-2` no puede
+        # depender de por dónde se entre (`DT-15`).
+        puerta(estudiante)
 
     # **Va después de `INVD-2` a propósito.** Las dos comprobaciones rechazan, y
     # lo que cambia es qué se le dice a quien llama. «Este estudiante no opera»
