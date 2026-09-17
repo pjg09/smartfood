@@ -46,6 +46,11 @@ PERMISOS_POR_ROL = {
         # Ver al acudiente de un estudiante es parte de administrarlo. Escribirlo
         # no: la cuenta del acudiente se gestiona desde `cuentas.usuario`.
         "personas.acudiente": ["view"],
+        # «Consultar restricciones de un estudiante: Sí» (`HU-38`, `TT-111`).
+        # **Solo `view`, y no porque se haya elegido no dar más**: el proxy no
+        # tiene otro permiso que conceder (`default_permissions`). Escribirlas
+        # sigue siendo del acudiente (`INV-4`, `HU-13`).
+        "restricciones.restriccionesdelestudiante": ["view"],
     },
     # `USR-4`. «Gestionar catálogo, precios e inventario» y «Consultar reportes
     # de ventas e inventario». El catálogo ya existe (`TT-43`); el inventario y
@@ -66,9 +71,15 @@ PERMISOS_POR_ROL = {
         # se corrige con otro movimiento —una merma con su motivo (`INV-8`)—,
         # que es como se corrige un libro.
         "inventario.movimientoinventario": ["add", "view"],
+        # «Consultar restricciones de un estudiante: Sí» (`HU-38`, `TT-111`).
+        # Es la única entrada de esta fila fuera de `catalogo` e `inventario`, y
+        # es de lectura: la cafetería **ve** quién es alérgico al maní y no
+        # puede quitárselo (`INV-4`). El proxy no tiene otro permiso que `view`.
+        "restricciones.restriccionesdelestudiante": ["view"],
     },
     # `USR-3`. «Registrar ventas» y «Consultar restricciones» —consultar, no
-    # modificar: ahí está `INV-4`—.
+    # modificar: ahí está `INV-4`—. Las consulta en `INT-2`, al identificar al
+    # estudiante (`TT-109`), no en el admin.
     #
     # **`ventas.Venta` ya existe (`TT-78`) y sigue sin haber permiso, igual que
     # la recarga del acudiente.** El cajero no entra al admin: `INT-2` es su
@@ -111,7 +122,7 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         # admin que no existe.
         "Recargar saldo (hecha en INT-1, sin permiso de admin) y fijar límite diario",
         "Configurar y retirar restricciones alimentarias (hecha en INT-1, sin permiso)",
-        "Consultar restricciones de un estudiante (hecha en INT-1, sin permiso)",
+        "Consultar restricciones de sus estudiantes (hecha en INT-1, sin permiso)",
         "Consultar saldo de un estudiante",
         "Consultar reportes de consumo de su hijo",
     ],
@@ -120,19 +131,22 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         # El modelo existe desde `TT-78` y el cobro llega con `TT-80`; lo que no
         # hay ni habrá es una puerta por `INT-3` para el cajero.
         "Registrar ventas (modelo desde TT-78, sin permiso de admin)",
-        "Consultar restricciones de un estudiante",
+        # Hecha en `INT-2` (`TT-109`, `HU-38`), por el mismo camino que el saldo.
+        # A diferencia del saldo, `[S11]` no la limita al cobro: la ve al
+        # identificar, cobre o no.
+        "Consultar restricciones de un estudiante (hecha en INT-2, al identificar)",
         # Hecha en `INT-2` (`HU-17`, `TT-74`): la concede
         # `ventas.selectors.informacion_de_cobro`, que exige el rol, no un
         # permiso de Django.
         "Consultar saldo de un estudiante (hecha en INT-2, solo al cobrar)",
     ],
+    # «Consultar restricciones de un estudiante» ya no está en ninguno de los dos:
+    # se mudó arriba con `TT-111`, como `view` sobre
+    # `restricciones.restriccionesdelestudiante`.
     Rol.ADMINISTRADOR: [
-        "Consultar restricciones de un estudiante",
         "Consultar reportes de ventas e inventario",
     ],
-    Rol.INSTITUCION: [
-        "Consultar restricciones de un estudiante",
-    ],
+    Rol.INSTITUCION: [],
 }
 
 # --- Lo que NINGÚN rol de la cafetería puede hacer, nunca -------------------

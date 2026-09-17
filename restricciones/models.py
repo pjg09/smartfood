@@ -17,13 +17,17 @@ ese registro, dentro de dos meses nadie sabría si la app nació de una decisió
 de una tarde.
 ═══════════════════════════════════════════════════════════════════════════
 
-**Ningún modelo de esta app se registra en el admin, y esa ausencia es la mitad
-de `INV-4`.** La invariante dice que ni la cafetería ni la institución desactivan
-las restricciones, y `DT-11` precisa cómo: con permisos en la capa de datos. El
-acudiente no entra al admin —`INT-1` es su interfaz (`DT-2`)—, así que un
-`admin.site.register` aquí no serviría a quien sí puede y abriría una puerta a
-quien no. El control de quién escribe vive en `services.py`; los permisos de
-`[S11]` los cierra `TT-107`.
+**Ninguna de las tres restricciones se registra en el admin, y esa ausencia es la
+mitad de `INV-4`.** La invariante dice que ni la cafetería ni la institución
+desactivan las restricciones, y `DT-11` precisa cómo: con permisos en la capa de
+datos. El acudiente no entra al admin —`INT-1` es su interfaz (`DT-2`)—, así que
+registrar `LimiteDiario` o `RestriccionProducto` no serviría a quien sí puede y
+abriría una puerta a quien no. El control de quién escribe vive en `services.py`;
+los permisos de `[S11]` los cierra `TT-107`.
+
+Lo que sí se registra es **`RestriccionesDelEstudiante`**, la consulta de `HU-38`,
+y está hecha para no poder ser otra cosa: un proxy del estudiante cuyo único
+permiso es `view`. Ver su docstring.
 
 La clave primaria es UUIDv7 generado en la aplicación (`DT-17`).
 """
@@ -31,6 +35,8 @@ La clave primaria es UUIDv7 generado en la aplicación (`DT-17`).
 import uuid
 
 from django.db import models
+
+from personas.models import Estudiante
 
 
 class LimiteDiario(models.Model):
@@ -392,3 +398,43 @@ class AsientoDeRestriccion(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} de {self.nombre} · {self.estudiante.nombre}"
+
+
+class RestriccionesDelEstudiante(Estudiante):
+    """El estudiante visto desde sus restricciones: la consulta de `INT-3` (`TT-112`, `HU-38`).
+
+    `[S11]`, fila «Consultar restricciones de un estudiante»: **Sí en las cuatro
+    columnas**. El acudiente las consulta en `INT-1` y el cajero al identificar en
+    `INT-2` (`TT-109`); la administración de la cafetería y la institución trabajan
+    en el admin (`DT-2`), y ahí no tenían dónde verlas.
+
+    ── ES UN PROXY, Y SU ÚNICO PERMISO ES `view` ────────────────────────────
+    No añade ninguna tabla ni ningún dato: es `personas.Estudiante` con otro
+    nombre, para que el admin tenga una entrada **de consulta** que no sea la
+    ficha del estudiante — la administración de la cafetería no debe llegar a
+    esa ficha, que lleva el código de tarjeta y los datos del acudiente
+    (`[S11]`, `HU-44`).
+
+    **`default_permissions = ("view",)` es la mitad de `INV-4` que importa
+    aquí.** Django no crea `add_`, `change_` ni `delete_` para este modelo, así
+    que no hay permiso de escritura que nadie pueda conceder por error: la
+    matriz solo puede dar lo que existe (`DT-11`). El `ModelAdmin` niega además
+    las tres por su cuenta — dos sitios, como en el resto de `INT-3`.
+
+    Y aunque se escribiera, no habría nada que tocar: las restricciones no son
+    campos del estudiante, son filas de las tres tablas de arriba, y a esas solo
+    se llega por `restricciones.services`.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = "restricciones de un estudiante"
+        verbose_name_plural = "restricciones por estudiante"
+        default_permissions = ("view",)
+
+    def __str__(self):
+        """Solo el nombre. **El de `Estudiante` lleva el documento**, y el admin
+        pinta `__str__` en el título y en las migas de la ficha: heredarlo
+        enseñaría a la cafetería el dato que el listado se cuida de no enseñar."""
+        return self.nombre

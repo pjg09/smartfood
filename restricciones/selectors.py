@@ -1,6 +1,6 @@
 """Lecturas del control parental (`DT-15`).
 
-Cubre `HU-09` … `HU-13` y `HU-61`.
+Cubre `HU-09` … `HU-13`, `HU-38` y `HU-61`.
 
 Como los servicios, estos selectores no conocen `request`: reciben lo que
 necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
@@ -8,11 +8,16 @@ necesitan como argumentos y devuelven datos, nunca respuestas HTTP.
 
 from dataclasses import dataclass
 
+from django.core.exceptions import PermissionDenied
+from django.db.models import Prefetch
+
 from catalogo.models import Alergeno, Producto
+from cuentas.models import Rol
 from restricciones.models import (
     AsientoDeRestriccion,
     LimiteDiario,
     RestriccionAlergeno,
+    RestriccionesDelEstudiante,
     RestriccionProducto,
 )
 
@@ -256,8 +261,9 @@ def restricciones_vigentes(estudiante):
     """Las tres restricciones de un estudiante, de una vez (`TT-106`, `HU-13`).
 
     **El único sitio por el que se leen juntas.** Lo usan el panel de cobro
-    (`TT-109`), la consulta de los cuatro roles (`TT-111`, `TT-112`) y, en lo que
-    a cada una toca, las validaciones de la venta.
+    (`TT-109`) y, en lo que a cada una toca, las validaciones de la venta. El
+    admin de `TT-112` lee el mismo objeto armado desde lo ya traído
+    (`restricciones_precargadas`), para no pagar tres consultas por fila.
 
     ── NO AUTORIZA A NADIE, Y ESO TAMBIÉN ES `INV-4` ───────────────────────
     Un selector no sabe quién pregunta. Parece que aquí debería exigirse el rol
@@ -267,7 +273,8 @@ def restricciones_vigentes(estudiante):
     servicios y en los permisos por modelo (`TT-107`, `DT-11`).
 
     Quien llama decide a qué estudiante puede llegar: `estudiante_a_cargo` en
-    `INT-1`, la identificación por tarjeta en `INT-2`.
+    `INT-1`, la identificación por tarjeta en `INT-2` y
+    `estudiantes_con_sus_restricciones` en `INT-3`.
     ─────────────────────────────────────────────────────────────────────────
 
     Devuelve `QuerySet` sin evaluar en las dos listas: quien solo necesite
@@ -277,4 +284,100 @@ def restricciones_vigentes(estudiante):
         limite=limite_diario_de(estudiante),
         productos=productos_bloqueados_de(estudiante),
         alergenos=alergenos_bloqueados_de(estudiante),
+    )
+
+
+# --- `HU-38`. La consulta de los cuatro roles ---------------------------------
+#
+# `[S11]`, fila «Consultar restricciones de un estudiante»: Sí en las cuatro
+# columnas. Cada rol llega por su interfaz y con su propio alcance, y ninguno de
+# los cuatro caminos escribe:
+#
+# | Rol           | Dónde   | A qué estudiantes llega                            |
+# |---------------|---------|----------------------------------------------------|
+# | Acudiente     | `INT-1` | los suyos: `estudiante_a_cargo`                    |
+# | Cajero        | `INT-2` | al que identifica: `informacion_de_cobro` (TT-109) |
+# | Administrador | `INT-3` | todos: `estudiantes_con_sus_restricciones`         |
+# | Institución   | `INT-3` | todos: `estudiantes_con_sus_restricciones`         |
+
+#: Los dos roles que consultan desde el admin. **No son «los que pueden
+#: consultar»** —esos son los cuatro—, sino los que lo hacen por `INT-3`: el
+#: acudiente no entra al admin (`DT-2`) y el cajero tampoco (`cuentas.0004`).
+CONSULTAN_EN_LA_ADMINISTRACION = (Rol.ADMINISTRADOR, Rol.INSTITUCION)
+
+
+def estudiantes_con_sus_restricciones(*, actor):
+    """Todos los estudiantes, cada uno con sus restricciones ya traídas (`TT-111`, `HU-38`).
+
+    La consulta de la administración de la cafetería y de la institución, que
+    trabajan en `INT-3` (`DT-2`). **Solo lee**: no hay servicio detrás, y lo que
+    devuelve es el proxy de `RestriccionesDelEstudiante`, cuyo único permiso es
+    `view`.
+
+    ── POR QUÉ LOS DOS VEN A TODOS ─────────────────────────────────────────
+    La cafetería atiende a cualquier estudiante del colegio, así que necesita
+    saber quién es alérgico al maní antes de que llegue a la caja — no solo el
+    cajero en el momento de cobrar. La institución administra a todos (`HU-44`).
+    Ninguno de los dos tiene un subconjunto natural que filtrar.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Lo que no autoriza es a más que eso.** Devuelve estudiantes para colgarles
+    sus restricciones, no la ficha del estudiante: quien pinta esto decide qué
+    campos enseña, y el admin de `TT-112` no enseña ni el código de tarjeta ni
+    el acudiente. La comprobación del rol va aquí y no en el admin porque es
+    donde vive la regla (`DT-11`, `DT-15`); el admin la repite, como en el resto
+    de `INT-3`.
+
+    Una consulta por tabla y no una por fila: el límite viene con el estudiante
+    y las dos listas prefetcheadas con su producto y su alérgeno. Para leerlas
+    como las lee el resto del sistema, `restricciones_precargadas`.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar restricciones exige identificarse.")
+    if actor.rol not in CONSULTAN_EN_LA_ADMINISTRACION:
+        raise PermissionDenied(
+            "Desde la administración consultan las restricciones la cafetería y "
+            "la institución. El acudiente las ve en su panel y el cajero al "
+            "identificar al estudiante (HU-38, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return (
+        RestriccionesDelEstudiante.objects.select_related("limite_diario")
+        .prefetch_related(
+            Prefetch(
+                "productos_bloqueados",
+                queryset=RestriccionProducto.objects.select_related("producto"),
+            ),
+            Prefetch(
+                "alergenos_bloqueados",
+                queryset=RestriccionAlergeno.objects.select_related("alergeno"),
+            ),
+        )
+        .order_by("nombre")
+    )
+
+
+def restricciones_precargadas(estudiante):
+    """Las `RestriccionesVigentes` de un estudiante de `estudiantes_con_sus_restricciones`.
+
+    **El mismo objeto que `restricciones_vigentes`**, armado con lo que ya se
+    trajo en vez de con tres consultas más. Existe para que el listado del admin
+    no pinte las restricciones de una forma y el panel de cobro de otra: las dos
+    pantallas leen un `RestriccionesVigentes`, y `hay_alguna` significa lo mismo
+    en ambas.
+
+    Sobre un estudiante que no venga precargado **también responde bien**, solo
+    que consultando: los gestores relacionados van a la base cuando no hay nada
+    en caché.
+
+    `getattr` con `None` en el límite no esconde un error: la relación inversa
+    de un `OneToOneField` lanza al leerla cuando no hay fila, y no haber fila es
+    exactamente «sin límite» (`LimiteDiario`).
+    """
+    return RestriccionesVigentes(
+        limite=getattr(estudiante, "limite_diario", None),
+        productos=estudiante.productos_bloqueados.all(),
+        alergenos=estudiante.alergenos_bloqueados.all(),
     )
