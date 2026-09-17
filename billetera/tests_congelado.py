@@ -166,24 +166,48 @@ class SobreElSaldoCongeladoNoSeOperaTest(TestCase):
         self.assertIn("de baja", respuesta.content.decode().lower())
 
 
-class ElDesactivadoTampocoOperaTest(TestCase):
-    """`INVD-2` junta los dos estados para esto, aunque son distintos (`DEC-7`).
+class ElDesactivadoNoCompraPeroSiRecibeRecargasTest(TestCase):
+    """`INVD-2` junta los dos estados para comprar; para el dinero que entra, no.
 
-    La diferencia está en otra parte: la desactivación es reversible y la pide el
-    acudiente (`HU-47`); la baja no vuelve. Para operar, ninguno de los dos.
+    Esta clase decía antes que un desactivado tampoco podía recibir recargas, y
+    era **más restrictivo que la invariante**: `INVD-2` habla de comprar y de
+    retirar pedidos, no del dinero que entra. El tercer criterio de `HU-50` lo
+    zanjó —«sí puede recibir recargas, **por ser inocuo**»— y aquí se comprueba
+    lo que quedó: su tarjeta no compra, y el saldo le espera a que la institución
+    la reactive (`HU-49`).
+
+    Quien tiene el saldo congelado es el **dado de baja** (`HU-52`), y eso lo
+    prueba la clase de arriba.
     """
 
-    def test_ni_recarga_ni_compra(self):
-        usuario, estudiante, _ = familia("3")
-        recargar(actor=usuario, estudiante=estudiante, monto=Decimal("4000"))
-        estudiante.estado = EstadoDelEstudiante.DESACTIVADO
-        estudiante.save(update_fields=["estado"])
+    def setUp(self):
+        self.usuario, self.estudiante, _ = familia("3")
+        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("4000"))
+        self.estudiante.estado = EstadoDelEstudiante.DESACTIVADO
+        self.estudiante.save(update_fields=["estado"])
 
-        with self.assertRaises(EstudianteNoOperativo):
-            recargar(actor=usuario, estudiante=estudiante, monto=Decimal("1000"))
+    def test_no_compra(self):
         with self.assertRaises(EstudianteNoOperativo):
             asentar(
-                estudiante=estudiante, tipo=TipoDeMovimiento.VENTA, monto=Decimal("-1000")
+                estudiante=self.estudiante,
+                tipo=TipoDeMovimiento.VENTA,
+                monto=Decimal("-1000"),
             )
 
-        self.assertEqual(saldo_de(estudiante), Decimal("4000"))
+        self.assertEqual(saldo_de(self.estudiante), Decimal("4000"))
+
+    def test_pero_sí_se_le_recarga_y_el_saldo_le_espera(self):
+        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("1000"))
+
+        self.assertEqual(saldo_de(self.estudiante), Decimal("5000"))
+
+    def test_y_ese_saldo_sigue_sin_poder_gastarse_mientras_esté_desactivado(self):
+        """La mitad que evita el malentendido: recargar no reactiva nada."""
+        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("1000"))
+
+        with self.assertRaises(EstudianteNoOperativo):
+            asentar(
+                estudiante=self.estudiante,
+                tipo=TipoDeMovimiento.VENTA,
+                monto=Decimal("-1000"),
+            )

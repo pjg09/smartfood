@@ -85,14 +85,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **37** de 43 | **14** de 16 |
-| Pendientes | 6 | 2 |
+| **Finalizadas** | **40** de 43 | **15** de 16 |
+| Pendientes | 3 | 1 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 17 | 18 |
-| Carlos | 12 | 13 |
-| Alejandro | 8 | 9 |
+| Pedro | 18 | 18 |
+| Carlos | 13 | 13 |
+| Alejandro | 9 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -111,7 +111,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` · `DT-29` | ☑ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☑ |
 | `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` · `DT-30` | ☑ |
-| `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
+| `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☑ |
 | `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
 | `PR-15` | `TT-131`–`TT-133` | `HU-60` · **historia añadida durante el sprint** | ☑ |
 | `PR-16` | `TT-134`–`TT-136` | `HU-61` · `DEC-13` · **historia añadida durante el sprint** | ☑ |
@@ -657,19 +657,53 @@ apareció esta. Se reescribió para vigilar lo que ahora importa: que el acudien
 | Título del PR | `feat(ventas): rechazar la venta a un estudiante desactivado` |
 | Rama | `feat/TT-125-rechazo-por-desactivacion` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-50` |
+| Historia | `HU-50` — **cerrada** |
 | Invariantes | **`INVD-2`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-125` | Rechazo de venta y de retiro de pedido para desactivado o de baja | Pedro | ☐ |
-| `TT-126` | Motivo de rechazo distinto de los de saldo, alérgeno y límite | Carlos | ☐ |
-| `TT-127` | Caso de prueba: desactivado no compra pero **sí recibe recargas** | Alejandro | ☐ |
+| `TT-125` | Rechazo de venta y de retiro de pedido para desactivado o de baja | Pedro | ☑ |
+| `TT-126` | Motivo de rechazo distinto de los de saldo, alérgeno y límite | Carlos | ☑ |
+| `TT-127` | Caso de prueba: desactivado no compra pero **sí recibe recargas** | Alejandro | ☑ |
 
-Al integrarse, la venta tiene **cuatro motivos de rechazo distintos**. Que se distingan no
-es cosmética: el cajero tiene que poder decir qué pasa, y solo uno de los cuatro se
-arregla recargando.
+Al integrarse, la venta tiene **cinco motivos de rechazo distintos** —producto bloqueado,
+alérgeno, cupo del día, saldo y estudiante que no opera—. Que se distingan no es
+cosmética: el cajero tiene que poder decir qué pasa, y solo uno de los cinco se arregla
+recargando.
+
+> 🔴 **`TT-127` encontró que el sistema era más restrictivo que su propia invariante.**
+> Hasta este PR, un estudiante desactivado **tampoco podía recibir recargas**. Eso no salía
+> de ninguna historia: salía de aplicar `INVD-2` más ancha de lo que dice —«no puede
+> comprar ni retirar pedidos anticipados»—, y de un comentario del Sprint 2 que citaba
+> `HU-52` (el saldo congelado del **retirado**) para justificarlo en los dos estados.
+>
+> El tercer criterio de `HU-50` lo zanja: **sí puede recibir recargas, por ser inocuo**. Su
+> tarjeta no compra igualmente, y prohibirlo obligaba al acudiente a esperar a que el
+> colegio reactivara para poder recargar — justo el trámite del que `DEC-5` lo libera.
+> **Tres pruebas afirmaban lo contrario** —dos del Sprint 2 y una de `PR-10`— y se
+> reescribieron con el motivo escrito.
+
+**Cómo quedó.** La puerta de `INVD-2` se partió en dos, y la diferencia es la dirección del
+dinero: `comprobar_que_puede_operar` para lo que **sale** —ni desactivado ni de baja— y
+`comprobar_que_puede_recibir_recargas` para lo que **entra**, que solo la baja cierra
+(`HU-52`). Las dos siguen viviendo en `personas`, junto al estado.
+
+**`TT-125` no reimplementa la regla: la llama.** La venta comprueba `INVD-2` **lo primero**
+—antes de las restricciones y del saldo—, porque con la tarjeta bloqueada da igual lo que
+lleve el carrito, y traduce la excepción de `personas` a una `VentaRechazada` con etiqueta.
+Antes el rechazo llegaba igual, pero al final y sin motivo distinguible: lo levantaba
+`asentar()` al escribir. Esa red sigue puesta.
+
+**`TT-126` usa una sola etiqueta para los dos estados y un mensaje que los distingue.** Para
+la venta son lo mismo —no se cobra y no hay nada que hacer en el mostrador—; para quien
+está en la caja no, y por eso el mensaje dice cuál es. Dos etiquetas obligarían a toda
+pantalla futura a tratar por separado dos casos que se pintan igual.
+
+**El segundo criterio —los pedidos anticipados— no se puede construir todavía**: `HU-23` …
+`HU-25` son del Sprint 4. Lo que sí queda fijado es que la regla vive en **una sola
+puerta** y que la venta la llama en vez de copiarla, de modo que el retiro nazca cubierto.
+Hay prueba que lo vigila.
 
 ---
 

@@ -208,9 +208,9 @@ La asimetría es deliberada y tiene un motivo de seguridad: el desbloqueo pasa s
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-125` | Rechazo de venta y de retiro de pedido para estudiante desactivado o de baja (`INVD-2`) | Pedro | ☐ |
-| `TT-126` | Motivo de rechazo por desactivación, **distinto** de los de saldo, alérgeno y límite | Carlos | ☐ |
-| `TT-127` | Caso de prueba: desactivado no compra, pero **sí recibe recargas** | Alejandro | ☐ |
+| `TT-125` | Rechazo de venta y de retiro de pedido para estudiante desactivado o de baja (`INVD-2`) | Pedro | ☑ |
+| `TT-126` | Motivo de rechazo por desactivación, **distinto** de los de saldo, alérgeno y límite | Carlos | ☑ |
+| `TT-127` | Caso de prueba: desactivado no compra, pero **sí recibe recargas** | Alejandro | ☑ |
 
 Al cerrar esta historia, la venta tiene **cinco motivos de rechazo distintos**: saldo (`HU-19`), alérgeno (`HU-18`), límite diario (`HU-20`), producto bloqueado (`HU-60`) y estudiante desactivado (`HU-50`). Que se distingan no es cosmética: el cajero tiene que poder decirle al estudiante qué pasa, y solo uno de los cinco se arregla recargando.
 

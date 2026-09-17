@@ -31,7 +31,7 @@ from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, EstadoDelEstudiante, Estudiante
 from personas.services import EstudianteNoOperativo, dar_de_baja, desactivar
 from ventas.models import Venta
-from ventas.services import registrar_venta
+from ventas.services import EstudianteNoPuedeComprar, registrar_venta
 
 CLAVE = "clave-de-prueba-2026"
 DESACTIVAR = "desactivacion-por-el-acudiente"
@@ -139,7 +139,7 @@ class ElAcudienteDesactivaALosSuyosTest(BaseDelAcudiente):
         recargar(actor=self.acudiente, estudiante=self.hijo, monto=Decimal("50000"))
         desactivar(actor=self.acudiente, estudiante=self.hijo)
 
-        with self.assertRaises(EstudianteNoOperativo):
+        with self.assertRaises(EstudianteNoPuedeComprar):
             registrar_venta(
                 actor=self.cajero,
                 estudiante=Estudiante.objects.get(pk=self.hijo.pk),
@@ -220,16 +220,17 @@ class LaAccionDelPanelTest(BaseDelAcudiente):
         self.assertTemplateUsed(respuesta, "partials/estudiante-seleccionado.html")
         self.assertTemplateNotUsed(respuesta, "personas/mis-estudiantes.html")
 
-    def test_la_ficha_deja_de_ofrecer_recargar(self):
-        """`INVD-2`: a un desactivado no se le recarga, así que no se le ofrece."""
-        antes = self.client.get(
-            reverse("estudiante-seleccionado", args=[self.hijo.id])
-        ).content.decode()
-        self.assertIn("Recargar", antes)
+    def test_la_ficha_sigue_ofreciendo_recargar_y_dice_que_el_saldo_espera(self):
+        """`HU-50`, tercer criterio: al desactivado **sí** se le recarga.
 
+        Esta prueba exigía lo contrario cuando se escribió (`PR-11`), y era más
+        restrictiva que `INVD-2`. Lo que no puede es gastarlo, y la tarjeta lo
+        dice: decir solo la mitad haría creer que recargar desbloquea.
+        """
         despues = self.client.post(self.url).content.decode()
 
-        self.assertNotIn("Recargar", despues)
+        self.assertIn("Recargar", despues)
+        self.assertIn("espera a que la", despues)
 
     def test_un_estudiante_ajeno_es_404_y_no_403(self):
         """Los dos casos —no existe y no es tuyo— se responden igual a propósito:

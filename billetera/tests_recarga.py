@@ -229,11 +229,15 @@ class LaBilleteraEsIndividualTest(TestCase):
         self.assertEqual(saldo_de(estudiante), Decimal("3000"))
 
 
-class NoSeRecargaAQuienNoOperaTest(TestCase):
-    """`INVD-2`: ni desactivado ni de baja se compra **ni se recarga**.
+class NoSeRecargaSobreUnSaldoCongeladoTest(TestCase):
+    """`HU-52`: el saldo del estudiante **de baja** queda congelado.
 
-    `HU-52` lo dice del otro lado: el saldo del estudiante de baja queda
-    congelado y consultable. Congelado significa que tampoco entra dinero.
+    Congelado significa que tampoco entra dinero: sería meterlo en una cuenta que
+    nadie va a usar y que el sistema no sabe devolver (`ALC-OUT-01`).
+
+    **Al desactivado sí se le recarga** (`HU-50`, tercer criterio), y esta clase
+    lo comprobaba al revés hasta `PR-13`: era más restrictiva que `INVD-2`, que
+    habla de comprar y de retirar pedidos, no del dinero que entra.
     """
 
     def setUp(self):
@@ -262,8 +266,21 @@ class NoSeRecargaAQuienNoOperaTest(TestCase):
     def test_de_baja_no_se_recarga(self):
         self._no_deja_recargar(EstadoDelEstudiante.BAJA)
 
-    def test_desactivado_no_se_recarga(self):
-        self._no_deja_recargar(EstadoDelEstudiante.DESACTIVADO)
+    def test_al_desactivado_sí_se_le_recarga(self):
+        """Su tarjeta no compra igualmente, así que el dinero le espera.
+
+        Prohibirlo no protegía de nada y obligaba al acudiente a esperar a que el
+        colegio reactivara para poder recargar — justo el trámite del que `DEC-5`
+        lo libera.
+        """
+        self.estudiante.estado = EstadoDelEstudiante.DESACTIVADO
+        self.estudiante.save(update_fields=["estado"])
+
+        recargar(
+            actor=self.usuario, estudiante=self.estudiante, monto=Decimal("5000")
+        )
+
+        self.assertEqual(saldo_de(self.estudiante), Decimal("5000.00"))
 
 
 class ElMontoTieneQueTenerSentidoTest(TestCase):

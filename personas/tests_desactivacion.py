@@ -39,7 +39,7 @@ from personas.services import (
     desactivar,
 )
 from ventas.models import Venta
-from ventas.services import registrar_venta
+from ventas.services import EstudianteNoPuedeComprar, registrar_venta
 
 CLAVE = "clave-de-prueba-2026"
 PADRON = "padron"
@@ -240,23 +240,35 @@ class ElEfectoEsInmediatoEnLaCajaTest(BaseDeDesactivacion):
         self.assertIsNotNone(self._vender())
 
     def test_despues_de_desactivar_la_misma_venta_se_rechaza(self):
+        """Desde `TT-125` el rechazo es una `VentaRechazada` con motivo propio.
+
+        Cuando se escribió esta prueba (`PR-10`) llegaba como
+        `EstudianteNoOperativo`, al escribir en el libro; `HU-50` lo movió al
+        principio de la venta y le puso etiqueta.
+        """
         desactivar(actor=self.institucion, estudiante=self.estudiante)
 
-        with self.assertRaises(EstudianteNoOperativo):
+        with self.assertRaises(EstudianteNoPuedeComprar):
             self._vender()
 
         self.assertEqual(Venta.objects.count(), 0)
 
-    def test_tampoco_se_le_recarga(self):
-        """`INVD-2` alcanza al dinero que entra, no solo al que sale."""
+    def test_pero_se_le_sigue_pudiendo_recargar(self):
+        """`INVD-2` alcanza al dinero que **sale**, no al que entra.
+
+        Esta prueba afirmaba lo contrario cuando se escribió en `PR-10`, y era
+        más restrictiva que la invariante. El tercer criterio de `HU-50` lo
+        zanjó: un desactivado **sí recibe recargas, por ser inocuo**. Su tarjeta
+        no compra igualmente y el saldo le espera a la reactivación (`HU-49`).
+        """
         desactivar(actor=self.institucion, estudiante=self.estudiante)
 
-        with self.assertRaises(EstudianteNoOperativo):
-            recargar(
-                actor=self.acudiente,
-                estudiante=self.estudiante,
-                monto=Decimal("10000"),
-            )
+        recargar(
+            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("10000")
+        )
+
+        with self.assertRaises(EstudianteNoPuedeComprar):
+            self._vender()
 
     def test_la_puerta_de_invd_2_lo_reconoce(self):
         desactivar(actor=self.institucion, estudiante=self.estudiante)
