@@ -381,14 +381,19 @@ class LoQueLaTablaEnsenaTest(BaseDeDesactivacion):
         self.assertIn("data-estudiante-desactivado-marca", cuerpo)
         self.assertNotIn("data-desactivar-estudiante", cuerpo)
 
-    def test_el_hueco_de_la_reactivacion_dice_qué_falta(self):
-        """`[S2.4]` del sistema visual: un hueco declara qué falta y qué historia
-        lo trae; **nunca es un botón deshabilitado**."""
+    def test_donde_habia_un_hueco_ahora_esta_la_accion(self):
+        """El hueco de `PR-10` declaraba que reactivar llegaba con `HU-49`.
+
+        Llegó (`PR-12`), así que la fila ya no anuncia nada: ofrece la acción.
+        Un hueco que sobrevive a la historia que lo iba a llenar es tan falso
+        como un botón deshabilitado, que es lo que `[S2.4]` prohíbe.
+        """
         desactivar(actor=self.institucion, estudiante=self.estudiante)
 
         cuerpo = self._tabla()
 
-        self.assertIn("data-reactivar-pendiente", cuerpo)
+        self.assertIn("data-reactivar-estudiante", cuerpo)
+        self.assertNotIn("data-reactivar-pendiente", cuerpo)
         self.assertNotIn("disabled", cuerpo)
 
     def test_un_retirado_no_ofrece_desactivar_ni_reactivar(self):
@@ -401,7 +406,7 @@ class LoQueLaTablaEnsenaTest(BaseDeDesactivacion):
 
         self.assertIn("data-estudiante-retirado", cuerpo)
         self.assertNotIn("data-desactivar-estudiante", cuerpo)
-        self.assertNotIn("data-reactivar-pendiente", cuerpo)
+        self.assertNotIn("data-reactivar-estudiante", cuerpo)
 
     def test_el_desactivado_sigue_saliendo_en_el_padron(self):
         """Desactivado no es retirado: sigue matriculado y sale sin marcar nada.

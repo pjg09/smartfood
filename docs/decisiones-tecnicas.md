@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` el 2026-09-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 29 (`DT-1` … `DT-29`) |
+| decisiones | 30 (`DT-1` … `DT-30`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-29`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-30`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -466,6 +466,25 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 **Qué haría falta para ampliarla otra vez.** El mismo tipo de argumento: una acción cuya **urgencia** sea parte del criterio de aceptación, no una que simplemente resulte cómoda de tener a mano. La edición no lo es —nadie corrige un apellido con el estudiante esperando— y por eso no entra aquí.
 
 **Descartado: la acción en el admin, con el padrón enlazando.** Es lo que `DT-27` mandaba y no cuesta ninguna decisión nueva; se descartó porque convierte la acción urgente en tres pantallas y porque la ficha del admin no dice lo que secretaría necesita ver al desactivar —quién es el acudiente y si su cuenta está activa—, que es justo lo que el padrón sí enseña.
+
+---
+
+#### `[DT-30]` La reactivación también se hace desde el padrón
+
+**Amplía:** `DT-29`, que abrió el padrón a **una sola** escritura —desactivar— y pidió que la siguiente trajera su razón. Esta es la siguiente, y la trae.
+
+**Razón:** decisión del equipo, tomada el 2026-09-17 al construir `PR-12`. `PR-12` no tiene tarea de pantalla: sus dos tareas son el servicio (`TT-123`) y su caso de prueba (`TT-124`). Pero `PR-10` dejó en la fila del estudiante desactivado un hueco que declaraba «Reactivar: `HU-49`», y cerrar la historia sin llenarlo convertiría ese hueco en una afirmación falsa —anunciaría algo que ya llegó—. O se llena, o hay que quitarlo y dejar la reactivación sin ninguna pantalla.
+
+**El hecho que lo obliga.** `DT-29` pedía «una acción cuya **urgencia** sea parte del criterio de aceptación». La de `HU-49` no es la urgencia sino la **presencia**: «el desbloqueo pasa siempre por una verificación presencial» (`INVD-3`). Y eso apunta al mismo sitio con más fuerza todavía: la familia está en el mostrador, y el padrón es lo que secretaría tiene delante. Mandarla al admin para desbloquear a alguien que está esperando de pie es el mismo error que `DT-29` evitó.
+
+**Decidido:**
+
+- **Dos acciones escriben desde el padrón, y son las dos caras del mismo estado**: desactivar y reactivar (`POST /padron/<id>/desactivar/` y `…/reactivar/`). Las dos devuelven el fragmento de la tabla y las dos pasan por su servicio.
+- **La reactivación no existe en `INT-1`.** No hay ruta, ni servicio que el acudiente pueda llamar, ni botón: es `INVD-3`, y el acudiente que desactivó tiene que ir al colegio. Hay una prueba que recorre el mapa de rutas y falla si aparece una segunda ruta con «reactiv» en el nombre.
+- **Reactivar no lleva confirmación y desactivar sí.** Una desactivación por error deja al estudiante sin comprar hasta que alguien vaya al colegio; una reactivación por error se deshace con el botón de al lado. Pedir confirmación donde no hace falta enseña a confirmarlo todo sin leer.
+- El alta, la edición, la baja y la reasignación **siguen en el admin**, y `POST /padron/` sigue respondiendo `405`.
+
+**Lo que esta decisión no autoriza.** Que el padrón acabe siendo el admin. Las dos acciones que tiene son las dos transiciones del mismo campo, las dos las ejecuta secretaría con alguien delante, y las dos caben en un botón sin formulario. Lo que necesite un formulario sigue al otro lado.
 
 ---
 

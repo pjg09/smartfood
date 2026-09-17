@@ -85,14 +85,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **35** de 43 | **13** de 16 |
-| Pendientes | 8 | 3 |
+| **Finalizadas** | **37** de 43 | **14** de 16 |
+| Pendientes | 6 | 2 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 16 | 18 |
+| Pedro | 17 | 18 |
 | Carlos | 12 | 13 |
-| Alejandro | 7 | 9 |
+| Alejandro | 8 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -110,7 +110,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☑ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` · `DT-29` | ☑ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☑ |
-| `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` | ☐ |
+| `PR-12` | `TT-123`–`TT-124` | `HU-49` · `INVD-3` · `DT-30` | ☑ |
 | `PR-13` | `TT-125`–`TT-127` | `HU-50` · `INVD-2` | ☐ |
 | `PR-14` | `TT-128`–`TT-130` | Gestión del sprint | ☐ |
 | `PR-15` | `TT-131`–`TT-133` | `HU-60` · **historia añadida durante el sprint** | ☑ |
@@ -606,17 +606,47 @@ desde el móvil, donde el dedo falla más que el ratón, y quien lo reactiva es 
 | Título del PR | `feat(personas): reservar la reactivación a la institución` |
 | Rama | `feat/TT-123-reactivacion-exclusiva` |
 | Responsables | Pedro y Alejandro |
-| Historia | `HU-49` |
-| Invariantes | **`INVD-3`** |
-| Estado | ☐ |
+| Historia | `HU-49` — **cerrada** |
+| Invariantes | **`INVD-3`** · registra **`DT-30`** |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-123` | Reactivación solo por la institución, con independencia de quién desactivó | Pedro | ☐ |
-| `TT-124` | Caso de prueba: el acudiente que desactivó no puede reactivar | Alejandro | ☐ |
+| `TT-123` | Reactivación solo por la institución, con independencia de quién desactivó | Pedro | ☑ |
+| `TT-124` | Caso de prueba: el acudiente que desactivó no puede reactivar | Alejandro | ☑ |
 
 La asimetría tiene un motivo de seguridad: el desbloqueo pasa por una verificación
 presencial, y eso impide que quien encontró la tarjeta consiga que se reactive.
+
+> ⚠ **Este PR no tenía tarea de pantalla, y aun así la trae.** `PR-10` dejó en la fila del
+> estudiante desactivado un hueco que declaraba «Reactivar: `HU-49`». Cerrar la historia
+> sin llenarlo habría convertido ese hueco en una afirmación falsa —anuncia algo que ya
+> llegó— y habría dejado la reactivación sin ninguna pantalla, es decir, sin forma de
+> enseñarla en la Sprint Review. Se registró **`DT-30`**, que amplía `DT-29`: el padrón
+> pasa a tener **dos** escrituras, las dos caras del mismo estado.
+
+**Cómo quedó.** `TT-123` es un servicio con una sola regla y muy poca ceremonia: solo la
+institución, idempotente, y **a un retirado no se le reactiva** —de la baja no se vuelve—.
+Lo que hace la historia no es el servicio sino lo que **no** existe a su lado: el acudiente
+no tiene ruta, ni botón, ni forma de llamarlo, y una prueba recorre el mapa de rutas para
+que no aparezca una segunda con «reactiv» en el nombre.
+
+**Quién desactivó no se guarda en ninguna parte**, y eso hace el criterio trivialmente
+cierto. Es deliberado: guardarlo invitaría a que alguien escribiera algún día la regla
+contraria —«si desactivó el acudiente, que reactive él»— sin tener que declararla.
+
+**La prueba que `PR-11` dejó vigilando una ausencia hizo su trabajo.** Decía que en
+`personas.services` no había ninguna función con «reactiv» en el nombre, y falló en cuanto
+apareció esta. Se reescribió para vigilar lo que ahora importa: que el acudiente recibe
+`PermissionDenied` aunque haya sido él quien desactivó.
+
+> 🔴 **Una regresión que este PR introdujo y su propia prueba cazó.** Al compartir el
+> camino de las dos transiciones, la vista pasó a llamar al servicio **antes** de leer el
+> padrón — y leer el padrón es lo que exige el rol institución. Con ese orden, un acudiente
+> podía desactivar a su propio hijo por la ruta del padrón y recibir un `403` **con el
+> cambio ya escrito**: una respuesta que dice «no puedes» sobre algo que sí pasó. La cazó
+> `test_los_demas_roles_reciben_403`, de `PR-10`. El orden correcto —autorizar, luego
+> escribir— quedó escrito en la función, con su motivo.
 
 ---
 

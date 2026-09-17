@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las veintinueve rutas
+## [S2] Las treinta rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -53,6 +53,7 @@ los mismos colores desde `DT-23`.
 | `/padron/` | Padrón: quién está matriculado y qué acudientes han activado su cuenta | Institución | `DT-27` |
 | `/padron/tabla/` | Fragmento HTMX de la tabla del padrón, filtrada | Institución | `DT-27` |
 | `/padron/<id>/desactivar/` | `POST`. Desactiva a un estudiante: su tarjeta deja de comprar | Institución | `TT-120`, `DT-29` |
+| `/padron/<id>/reactivar/` | `POST`. Lo devuelve a activo. **Solo la institución**, venga la desactivación de donde venga (`INVD-3`) | Institución | `TT-123`, `DT-30` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
@@ -90,6 +91,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/<id>/reactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/<id>/desactivar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
@@ -198,9 +200,13 @@ matriculado **hoy**».
 estando el alta, la edición, la baja y la reasignación. La desactivación es la única
 escritura de la pantalla y está declarada en `DT-29`, que corrige esa parte de `DT-27`:
 `HU-47` existe por la inmediatez —una tarjeta perdida en mitad de la jornada— y llegar al
-admin desde aquí son tres pantallas. Un clic desactiva; la fila queda marcada en rojo y
-dice que reactivar es de la institución y llega con `HU-49`. `POST /padron/` sigue
-respondiendo `405`: lo que escribe es una ruta propia, no la pantalla.
+admin desde aquí son tres pantallas. Un clic desactiva y la fila queda marcada en rojo;
+otro la reactiva (`HU-49`, `DT-30`), y esa es la segunda escritura de la pantalla: el
+desbloqueo pasa por una verificación presencial (`INVD-3`), así que ocurre con la familia
+en el mostrador y el padrón delante. **Desactivar pide confirmación y reactivar no**: lo
+primero deja al estudiante sin comprar hasta que alguien vaya al colegio, lo segundo se
+deshace con el botón de al lado. `POST /padron/` sigue respondiendo `405`: lo que escribe
+son dos rutas propias, no la pantalla.
 
 Carga masiva en `/carga/`. En el admin: *Estudiantes* —listado con estado, código de tarjeta
 y si tiene fotografía; búsqueda por nombre, documento, código o acudiente; alta individual
@@ -245,7 +251,9 @@ depender del horario de secretaría. Solo alcanza a los suyos —un identificado
 la ficha pasa a decir que la tarjeta está bloqueada y **a quién hay que pedirle que se
 reactive**: eso es exclusivo de la institución (`INVD-3`) y no hay botón, ni ruta, ni
 servicio que lo haga desde aquí. La asimetría es de seguridad —el desbloqueo pasa por una
-verificación presencial— y es el segundo criterio de la historia.
+verificación presencial— y es el segundo criterio de la historia. Quién desactivó **no se
+guarda**: el criterio de `HU-49` dice «con independencia de quién», así que el dato no
+cambiaría ninguna decisión y guardarlo invitaría a escribir algún día la regla contraria.
 
 Y desde ahí los **alérgenos bloqueados** (`HU-11`, `TT-102`), que es lo que hay que usar
 para una alergia: lo que se marca es **la condición**, no los productos que hoy la llevan,

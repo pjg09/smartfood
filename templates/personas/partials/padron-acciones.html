@@ -16,8 +16,16 @@
    desde ninguna pantalla. `hx-confirm` es el diálogo del navegador: aquí sí
    cabe —esto no es el punto de venta, donde el foco es del lector—.
 
-   **El hueco de la reactivación se dice, no se deshabilita** (`[S2.4]` del
-   sistema visual): un botón apagado no explica qué falta ni cuándo llega.
+   **Y desde `HU-49` la pareja: reactivar** (`DT-30`), que aquí ya no es un hueco.
+   Es de la institución y de nadie más (`INVD-3`) **venga la desactivación de
+   donde venga**, porque el desbloqueo pasa por una verificación presencial: la
+   familia está en el mostrador, y esta es la pantalla que secretaría tiene
+   delante. El acudiente no tiene esta acción en `INT-1` ni ruta que la haga.
+
+   Reactivar **no lleva confirmación y desactivar sí**, y no es un descuido: una
+   desactivación por error deja al estudiante sin comprar hasta que alguien vaya
+   al colegio; una reactivación por error se deshace con el botón de al lado.
+   Pedir confirmación donde no hace falta enseña a confirmarlo todo sin leer.
 {% endcomment %}
 
 {% if estudiante.puede_operar %}
@@ -38,8 +46,19 @@
     </button>
   </form>
 {% elif not estudiante.esta_de_baja %}
-  <span class="mt-1 inline-flex text-sm text-texto-suave tablet:mt-0"
-        data-reactivar-pendiente>
-    Reactivar: <span class="font-mono">HU-49</span>
-  </span>
+  <form hx-post="{% url 'reactivacion-de-estudiante' estudiante.id %}"
+        hx-target="#padron-tabla"
+        hx-swap="outerHTML"
+        hx-indicator="#desactivando-en-el-padron"
+        class="mt-1 inline-flex tablet:mt-0">
+    {% csrf_token %}
+    <input type="hidden" name="busqueda" value="{{ busqueda }}">
+    {% if incluir_retirados %}<input type="hidden" name="retirados" value="1">{% endif %}
+    <button type="submit" data-reactivar-estudiante
+            class="inline-flex items-center gap-1.5 text-base font-semibold
+                   text-acento-fuerte hover:underline">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      Reactivar
+    </button>
+  </form>
 {% endif %}

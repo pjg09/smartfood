@@ -16,6 +16,7 @@ from config.salud import salud
 from personas.views import (
     desactivacion_de_estudiante,
     desactivacion_por_el_acudiente,
+    reactivacion_de_estudiante,
     carga_de_estudiantes,
     padron_de_estudiantes,
     estudiante_seleccionado,
@@ -110,6 +111,14 @@ urlpatterns = [
         "padron/<uuid:estudiante_id>/desactivar/",
         desactivacion_de_estudiante,
         name="desactivacion-de-estudiante",
+    ),
+    # `TT-123`, `HU-49`, `DT-30`. La pareja de la anterior, y **solo aquí**:
+    # `INVD-3` reserva el desbloqueo a la institución porque pasa por una
+    # verificación presencial. El acudiente no tiene ruta equivalente en `INT-1`.
+    path(
+        "padron/<uuid:estudiante_id>/reactivar/",
+        reactivacion_de_estudiante,
+        name="reactivacion-de-estudiante",
     ),
     # Interfaz del acudiente (`TT-29`, `HU-04`, `INT-1`). La primera devuelve la
     # página; la segunda, el fragmento HTMX del estudiante elegido. Son dos
