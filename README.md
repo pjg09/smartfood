@@ -19,7 +19,7 @@ cinco sprints de dos semanas.
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
 | Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
 | Historias terminadas | **46 de 61** |
-| **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados |
+| **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados. 18 tareas (`TT-137`…`TT-154`) en 7 PR |
 | Lo siguiente | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main` |
 | Entorno desplegado | ⏸ **congelado** — ver abajo |
 
@@ -34,8 +34,9 @@ cinco sprints de dos semanas.
 > bloquea la suya sin esperar a secretaría —desbloquear, no: eso pasa por el colegio—.
 
 > El avance de arriba envejece. **La fuente es el plan de PR del sprint en curso**, que es
-> donde vive el estado de cada tarea; esta tabla solo lo resume. El del Sprint 3, con su
-> revisión de cierre, está en
+> donde vive el estado de cada tarea; esta tabla solo lo resume. El del sprint en curso es
+> [`docs/plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md); el
+> del Sprint 3, con su revisión de cierre, está en
 > [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md).
 
 > **El entorno desplegado está congelado desde el 2026-08-30** y su despliegue automático
@@ -114,6 +115,8 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
+| [`sprint-4-backlog.md`](./docs/sprint-4-backlog.md) | **Las 18 tareas del sprint en curso** (`TT-137`…`TT-154`), con responsable |
+| [`plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md) | Esas 18 tareas en 7 PR. **Es donde vive el estado** |
 | [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | Sprint 3, cerrado: 43 tareas (`TT-94`…`TT-136`) y el cierre de su registro de riesgos |
 | [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 43 tareas en 16 PR, con el estado de cada una y la **revisión de cierre** (`[S7]`) |
 | [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Sprint 2, cerrado: 37 tareas y 14 de 14 historias |

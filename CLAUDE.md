@@ -23,8 +23,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-14`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-30`) |
 | `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
-| `docs/sprint-3-backlog.md` | Las tareas del Sprint 3 (`TT-94` … `TT-136`). **El backlog del Sprint 4 todavía no existe**: se planifica al abrirlo, y entonces pasa a ser el vigente |
-| `docs/plan-de-pull-requests-sprint-3.md` | Esas tareas agrupadas en PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero—, más la revisión de cierre (`[S7]`) |
+| `docs/sprint-4-backlog.md` | **Las 18 tareas del sprint en curso** (`TT-137` … `TT-154`), con responsable |
+| `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas agrupadas en 7 PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero— |
+| `docs/sprint-3-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | Estado real del entorno desplegado, sus restricciones y sus trampas |
