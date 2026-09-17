@@ -84,14 +84,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **25** de 43 | **9** de 16 |
-| Pendientes | 18 | 7 |
+| **Finalizadas** | **28** de 43 | **10** de 16 |
+| Pendientes | 15 | 6 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 12 | 18 |
-| Carlos | 8 | 13 |
-| Alejandro | 5 | 9 |
+| Pedro | 13 | 18 |
+| Carlos | 9 | 13 |
+| Alejandro | 6 | 9 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 16 Pull Requests
@@ -105,7 +105,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-05` | `TT-106`–`TT-108` | Permisos de `HU-13` · **`INV-4`** | ☑ |
 | `PR-06` | `TT-109`–`TT-110` | `HU-13` **y `HU-17`** | ☑ |
 | `PR-07` | `TT-111`–`TT-112` | `HU-38` | ☑ |
-| `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☐ |
+| `PR-08` | `TT-113`–`TT-115` | `HU-18` · **`TST-1`** | ☑ |
 | `PR-09` | `TT-116`–`TT-118` | `HU-20` **y `HU-09`** · **`TST-2`** | ☐ |
 | `PR-10` | `TT-119`–`TT-120` | `HU-47` | ☐ |
 | `PR-11` | `TT-121`–`TT-122` | `HU-48` | ☐ |
@@ -398,21 +398,53 @@ en la consulta nueva y nada indica por qué.
 | Título del PR | `feat(ventas): rechazar la venta de un producto con alérgeno bloqueado` |
 | Rama | `feat/TT-113-rechazo-por-alergeno` |
 | Responsables | Pedro, Carlos y Alejandro |
-| Historia | `HU-18` |
+| Historia | `HU-18` — **cerrada** |
 | Invariantes | `INV-4`, `INV-5` · escenario crítico **`TST-1`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-113` | Validación del alérgeno **dentro** del bloqueo de la transacción | Pedro | ☐ |
-| `TT-114` | Motivo de rechazo por alérgeno, distinguible en el punto de venta | Carlos | ☐ |
-| `TT-115` | Caso de prueba `TST-1`: venta rechazada, sin vía para forzarla | Alejandro | ☐ |
+| `TT-113` | Validación del alérgeno **dentro** del bloqueo de la transacción | Pedro | ☑ |
+| `TT-114` | Motivo de rechazo por alérgeno, distinguible en el punto de venta | Carlos | ☑ |
+| `TT-115` | Caso de prueba `TST-1`: venta rechazada, sin vía para forzarla | Alejandro | ☑ |
 
 **`TST-1` es el escenario que da sentido al proyecto**: un niño alérgico no puede comprar
 lo que le hace daño. La validación va dentro del bloqueo que ya monta `registrar_venta`,
 junto a las de saldo y existencias.
 
 El cajero **no tiene** forma de forzar la venta: no es un aviso descartable.
+
+**Cómo quedó, y `INV-5` es lo que decide la forma.** El rechazo no consulta ninguna lista
+de productos prohibidos: cruza la condición que el acudiente bloqueó con lo que cada
+producto declara, **en el momento de cobrar**. `alergenos_que_bloquean_entre` pregunta
+solo por lo que hay en el carrito —un `IN`, una consulta, dentro del bloqueo— y devuelve
+la pareja producto–alérgeno, porque el cajero necesita el **porqué**: «contiene maní» es
+lo que le deja explicarlo.
+
+De ahí salen las tres pruebas que de verdad vigilan la invariante en la caja: un producto
+creado **después** del bloqueo se rechaza, uno que declara el alérgeno después también, y
+retirar la declaración devuelve la venta a la normalidad. Con la lista materializada las
+tres fallan y el resto del fichero sigue pasando — que es exactamente el fallo silencioso
+contra el que avisa `PR-03`.
+
+> **Decisión: el alérgeno se comprueba ANTES que el producto bloqueado.** Un producto
+> puede caer por las dos. Cuando pasa, lo que el cajero tiene que poder decir es la
+> alergia: «lo bloqueó tu acudiente» invita a pedirle al acudiente que lo quite, y con una
+> alergia de por medio esa conversación no puede empezar en la caja. Hay prueba que lo fija.
+
+**Se retiró la marca temporal del panel de cobro.** `PR-06` la puso porque la caja no
+frenaba el maní y callarlo era peor; ahora afirma lo contrario, y una prueba exige que la
+advertencia vieja ya **no** esté — una marca que sobrevive a su historia miente igual que
+mentiría su ausencia. La del cupo sigue en pie hasta `PR-09`.
+
+`TT-114` no estrenó mecanismo: reutiliza la etiqueta de motivo que montó `TT-132`
+(`data-motivo="alergeno-bloqueado"`), que es para lo que se hizo.
+
+**Y una prueba que se escribió mal y se corrigió.** La primera versión de «se valida dentro
+de la transacción» miraba `connection.in_atomic_block`, que bajo `TestCase` es `True`
+siempre: no podía fallar. La que quedó mira el orden real de las consultas —el
+`SELECT … FOR UPDATE` antes del cruce— y falla si alguien consulta las restricciones antes
+de bloquear, comprobado introduciendo esa versión a propósito.
 
 ---
 
@@ -654,9 +686,12 @@ defecto de `HU-11` que señala el `ANEXO A` del sprint backlog.
    añaden validaciones dentro del bloqueo que construyó `TT-80` en el Sprint 2. Cada una es
    sencilla; el riesgo es el acumulado. Comprobad que el orden bloqueo → validación →
    escritura sigue intacto **después del tercero**, no solo después de cada uno.
+   **Va el primero de los tres**: `PR-08` dejó en `ventas.services` una prueba que fija ese
+   orden mirando las consultas emitidas, así que `PR-09` y `PR-13` heredan quien lo vigile.
 5. **Este sprint cierra `TST-1` y `TST-2`.** Dos de los cuatro escenarios críticos que
-   `ENT-05` exige demostrar. `TST-3` cerró en el Sprint 2 y `TST-4` es del Sprint 4: al
-   acabar el 4, el plan de pruebas está completo.
+   `ENT-05` exige demostrar. **`TST-1` ya está cerrado** (`PR-08`); de `TST-2` falta la
+   mitad del cupo diario, que es `PR-09`. `TST-3` cerró en el Sprint 2 y `TST-4` es del
+   Sprint 4: al acabar el 4, el plan de pruebas está completo.
 6. **El sprint creció de 37 a 43 tareas, en dos pasos y por el mismo motivo**: construir
    el control parental destapó dos huecos que la planeación no vio. `HU-60` —ninguna
    historia rechazaba la venta de un producto bloqueado— y `HU-61` —el cupo se podía

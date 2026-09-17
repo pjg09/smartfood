@@ -155,9 +155,9 @@ La matriz `[S11]` es explícita: los cuatro roles **consultan**, solo el acudien
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-113` | Validación del alérgeno **dentro** del bloqueo de la transacción de venta (`DT-6`) | Pedro | ☐ |
-| `TT-114` | Motivo de rechazo por alérgeno, distinguible en el punto de venta | Carlos | ☐ |
-| `TT-115` | Caso de prueba `TST-1`: venta rechazada por alérgeno bloqueado, sin vía para forzarla | Alejandro | ☐ |
+| `TT-113` | Validación del alérgeno **dentro** del bloqueo de la transacción de venta (`DT-6`) | Pedro | ☑ |
+| `TT-114` | Motivo de rechazo por alérgeno, distinguible en el punto de venta | Carlos | ☑ |
+| `TT-115` | Caso de prueba `TST-1`: venta rechazada por alérgeno bloqueado, sin vía para forzarla | Alejandro | ☑ |
 
 **`TST-1` es el primero de los cuatro escenarios críticos de `ENT-05`** y el que da sentido al proyecto: un niño alérgico no puede comprar lo que le hace daño. La validación va **dentro** del bloqueo que ya monta `registrar_venta`, junto a las de saldo y existencias: fuera de él, dos ventas simultáneas podrían colarse.
 
