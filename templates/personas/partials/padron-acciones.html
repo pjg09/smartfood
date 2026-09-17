@@ -1,0 +1,45 @@
+{% comment %} `TT-120`, `HU-47`, `DT-29`. Desactivar, desde el padrón.
+
+   **Es la única escritura de esta pantalla y está declarada.** `DT-27` la dejó
+   en solo lectura; `DT-29` corrige esa parte para esta acción porque `HU-47`
+   existe por la inmediatez —una tarjeta perdida en mitad de la jornada— y el
+   padrón es la pantalla que secretaría tiene abierta. Lo que no cambia es dónde
+   vive la regla: el botón llama al servicio, que comprueba el rol (`DT-15`).
+
+   **Devuelve la tabla entera y por eso lleva los filtros dentro.** Quien
+   desactiva estaba buscando a alguien; responderle el padrón completo le
+   borraría la búsqueda que tenía puesta.
+
+   **Lleva confirmación, y hoy más que nunca**: la reactivación es de la
+   institución (`INVD-3`) y su pantalla llega con `HU-49`, así que hasta
+   entonces un clic por error deja al estudiante sin poder comprar y sin vuelta
+   desde ninguna pantalla. `hx-confirm` es el diálogo del navegador: aquí sí
+   cabe —esto no es el punto de venta, donde el foco es del lector—.
+
+   **El hueco de la reactivación se dice, no se deshabilita** (`[S2.4]` del
+   sistema visual): un botón apagado no explica qué falta ni cuándo llega.
+{% endcomment %}
+
+{% if estudiante.puede_operar %}
+  <form hx-post="{% url 'desactivacion-de-estudiante' estudiante.id %}"
+        hx-target="#padron-tabla"
+        hx-swap="outerHTML"
+        hx-confirm="Desactivar a {{ estudiante.nombre }}. Su tarjeta deja de comprar de inmediato y solo la institución puede reactivarlo. ¿Continuar?"
+        hx-indicator="#desactivando-en-el-padron"
+        class="mt-1 inline-flex tablet:mt-0">
+    {% csrf_token %}
+    <input type="hidden" name="busqueda" value="{{ busqueda }}">
+    {% if incluir_retirados %}<input type="hidden" name="retirados" value="1">{% endif %}
+    <button type="submit" data-desactivar-estudiante
+            class="inline-flex items-center gap-1.5 text-base font-semibold
+                   text-error-fuerte hover:underline">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-escudo"></use></svg>
+      Desactivar
+    </button>
+  </form>
+{% elif not estudiante.esta_de_baja %}
+  <span class="mt-1 inline-flex text-sm text-texto-suave tablet:mt-0"
+        data-reactivar-pendiente>
+    Reactivar: <span class="font-mono">HU-49</span>
+  </span>
+{% endif %}

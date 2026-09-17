@@ -1,0 +1,34 @@
+{% comment %} `HU-47`, `HU-51`. El estado **del estudiante**, en una sola pieza.
+
+   No es el de la cuenta de su acudiente (`padron-estado.html`), y confundirlos
+   manda a secretaría a arreglar lo que no es: un estudiante desactivado puede
+   tener la cuenta de su acudiente perfectamente activa.
+
+   Lo pintan la tabla y la ficha de móvil, así que vive aparte: escrito dos
+   veces, el día que cambie una de las dos copias se queda vieja.
+
+   **Activo no se marca.** Es lo normal y una etiqueta en cada fila convertiría
+   la columna en ruido; lo que hay que ver de un vistazo es la excepción.
+
+   Los dos estados no son el mismo hecho y por eso no comparten color:
+   «Retirado» es `aviso` —se fue del colegio, no hay nada que arreglar— y
+   «Desactivado» es `error`, porque es exactamente lo que el rojo significa
+   aquí: una venta que se va a rechazar (`INVD-2`, `[S1]` regla 3).
+{% endcomment %}
+
+{% if estudiante.esta_de_baja %}
+  <span data-estudiante-retirado
+        class="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-aviso-suave
+               px-2 py-0.5 text-sm font-medium whitespace-nowrap text-aviso-fuerte
+               tablet:mt-0 tablet:ml-2">
+    Retirado
+  </span>
+{% elif not estudiante.puede_operar %}
+  <span data-estudiante-desactivado-marca
+        class="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-error-suave
+               px-2 py-0.5 text-sm font-medium whitespace-nowrap text-error-fuerte
+               tablet:mt-0 tablet:ml-2">
+    <svg class="h-3.5 w-3.5" aria-hidden="true"><use href="#i-escudo"></use></svg>
+    Desactivado
+  </span>
+{% endif %}
