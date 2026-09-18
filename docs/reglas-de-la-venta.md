@@ -149,6 +149,12 @@ conviene que quede escrito por qué:
 Si el equipo prefiere permitir la venta sin existencias, esto se quita y se registra como
 decisión. Lo que no se puede es dejarlo sin decidir.
 
+> **La merma aplica la misma regla, por el mismo motivo** (`TT-138`, `HU-28`).
+> `registrar_merma` rechaza la que dejaría el inventario en negativo, y también lee **dentro
+> del bloqueo**. Tampoco sale de ninguna historia: los dos criterios de `HU-28` son sobre el
+> motivo. Si algún día se decide permitir una de las dos, conviene mirar la otra — el
+> argumento es el mismo y las dos deberían moverse juntas.
+
 ---
 
 ## [S5] Qué pasa al escribir

@@ -278,6 +278,29 @@ punto de venta tendría que volver a pedir el catálogo entero solo para renovar
 La URL lleva la clave y no el identificador del producto: al reemplazar la imagen cambia
 la clave, así que cambia la URL y no hay nada que invalidar.
 
+### [S2.10] Dar de baja unidades que se perdieron
+
+En el admin, entrada **Mermas** → *Añadir merma*. Tres campos: producto, **unidades
+perdidas** —en positivo— y **motivo**, que es obligatorio (`HU-28`, `INV-8`).
+
+Es una entrada distinta de *Movimientos de inventario*, donde se registran los ingresos.
+Las dos escriben en el mismo libro: la merma es un proxy, no otra tabla.
+
+**Se pregunta en positivo y se asienta en negativo.** El servicio pone el signo, no quien
+registra: un «3» donde iba «-3» **sumaría** existencias que nadie ingresó, y el libro lo
+aceptaría como un ingreso cualquiera.
+
+**No se puede mermar más de lo que hay.** El sistema rechaza la merma que dejaría las
+existencias en negativo. Si de verdad había más de lo que dice el sistema, primero se
+registra el ingreso que falta —que también tiene una explicación— y después la merma. Es la
+misma regla con la que la venta rechaza por existencias insuficientes
+(`[S4]` de `./reglas-de-la-venta.md`).
+
+**Una merma registrada no se edita ni se borra**, y no es que el permiso esté sin conceder:
+`change` y `delete` no existen para este modelo. Un asiento corregido a posteriori deja unas
+existencias que ya no explican lo que pasó (`INV-3`). Un error se corrige con otro
+movimiento.
+
 ---
 
 ## [S3] Comandos del día a día

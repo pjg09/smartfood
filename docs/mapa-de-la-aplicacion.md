@@ -160,12 +160,18 @@ coincidir porque dejaría media pantalla en cada tema.
 | `catalogo.categoria` | 403 | **200** | 302 | 302 |
 | `catalogo.alergeno` | 403 | **200** | 302 | 302 |
 | `inventario.movimientoinventario` | 403 | **200** | 302 | 302 |
+| `inventario.merma` | 403 | **200** | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Cuatro lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Cinco lecturas que
 conviene no perder:
 
+- **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
+  un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
+  es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
+  exigirlo únicamente a veces. Sus permisos son `add` y `view`; `change` y `delete` **no
+  existen**, así que un asiento no se reescribe (`INV-3`).
 - **Las restricciones se consultan en el admin y no se escriben en él** (`HU-38`, `INV-4`).
   La única entrada es *Restricciones por estudiante*, un proxy del estudiante **sin más
   permiso que `view`**: Django no crea los de escritura, así que no hay ninguno que

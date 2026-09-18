@@ -114,9 +114,9 @@ La misma de todo el semestre: `./definicion-de-terminado.md`. No se relaja.
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-138` | Servicio de registro de merma, sobre el primitivo `asentar` que ya existe | Pedro | ☐ |
-| `TT-139` | Registro de merma desde la interfaz administrativa | Carlos | ☐ |
-| `TT-140` | Caso de prueba: una merma sin motivo la rechaza **la base de datos**, no el formulario (`INV-8`) | Alejandro | ☐ |
+| `TT-138` | Servicio de registro de merma, sobre el primitivo `asentar` que ya existe | Pedro | ☑ |
+| `TT-139` | Registro de merma desde la interfaz administrativa | Carlos | ☑ |
+| `TT-140` | Caso de prueba: una merma sin motivo la rechaza **la base de datos**, no el formulario (`INV-8`) | Alejandro | ☑ |
 
 `INV-8` ya está sostenida por una `CheckConstraint` desde `TT-67`. `TT-140` lo comprueba saltándose el formulario: si la prueba pasa llamando al ORM directamente, la invariante está donde debe.
 
