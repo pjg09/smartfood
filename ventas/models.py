@@ -52,6 +52,24 @@ class MedioDePago(models.TextChoices):
     TRANSFERENCIA = "transferencia", "Transferencia"
 
 
+class OrigenDeLaVenta(models.TextChoices):
+    """De dónde sale una venta (`TT-143`, `DT-32`, `HU-23`).
+
+    **Una reserva es una venta anticipada, no un apartado.** Pasa por el mismo
+    servicio de cobro, deja los mismos asientos y hereda las mismas reglas de
+    rechazo. Lo único que cambia es quién la origina y cuándo: el punto de venta
+    con un cajero delante, o el acudiente desde su aplicación la noche anterior.
+
+    Ese «quién» es lo que obliga a nombrar el origen. `cajero` es obligatorio en
+    una venta del mostrador y **no existe** en una reserva, y sin un campo que
+    diga cuál es cuál, «venta sin cajero» no significaría nada: nada impediría
+    que una venta del punto de venta se guardara sin él.
+    """
+
+    PUNTO_DE_VENTA = "punto_de_venta", "Punto de venta"
+    RESERVA = "reserva", "Reserva anticipada"
+
+
 class Venta(models.Model):
     """Una venta del punto de venta. **Nunca se edita ni se borra.**
 
@@ -89,11 +107,23 @@ class Venta(models.Model):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    # `null=True` **solo para las reservas** (`DT-32`, `HU-23`): las cobra el
+    # acudiente desde su aplicación y no hay cajero que las registre. Cuál es
+    # cuál lo dice `origen`, y la restricción de abajo no admite la combinación
+    # que no debería existir.
     cajero = models.ForeignKey(
         "cuentas.Usuario",
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="ventas_registradas",
         verbose_name="cajero",
+    )
+    origen = models.CharField(
+        "origen",
+        max_length=20,
+        choices=OrigenDeLaVenta.choices,
+        default=OrigenDeLaVenta.PUNTO_DE_VENTA,
     )
     # `null=True` **y** `blank=True`: una venta a cliente genérico no tiene
     # estudiante ni en la base ni en el formulario (`DEC-1`, `HU-53`).
@@ -140,11 +170,43 @@ class Venta(models.Model):
                 ),
                 name="venta_medio_de_pago_segun_el_cliente",
             ),
+            # `DT-32`. El origen y el cajero se implican mutuamente, y por eso
+            # es una restricción y no un `if`: una venta del mostrador **tiene**
+            # cajero, y una reserva **no**, porque la cobra el acudiente.
+            #
+            # La reserva exige además estudiante: no hay reserva anticipada de
+            # un cliente genérico (`DEC-1`) — nadie a quien asociarla, y `HU-23`
+            # pide justamente que se asocie al perfil del estudiante.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        origen=OrigenDeLaVenta.PUNTO_DE_VENTA, cajero__isnull=False
+                    )
+                    | models.Q(
+                        origen=OrigenDeLaVenta.RESERVA,
+                        cajero__isnull=True,
+                        estudiante__isnull=False,
+                    )
+                ),
+                name="venta_cajero_segun_su_origen",
+            ),
         ]
 
     def __str__(self):
         quien = self.estudiante.nombre if self.estudiante_id else "cliente genérico"
+        if self.origen == OrigenDeLaVenta.RESERVA:
+            return f"Reserva de {quien}"
         return f"Venta a {quien} ({self.get_medio_pago_display()})"
+
+    @property
+    def es_reserva(self):
+        """`DT-32`. Una venta con origen `reserva` **es** un pedido anticipado.
+
+        Se pregunta aquí y no repitiendo la comparación por ahí, igual que
+        `es_generica`: el origen significa algo y nombrarlo evita que alguien lo
+        lea como un campo de clasificación sin consecuencias.
+        """
+        return self.origen == OrigenDeLaVenta.RESERVA
 
     @property
     def es_generica(self):
@@ -301,3 +363,121 @@ class LineaVenta(models.Model):
         es —un valor derivable de otros dos de la misma fila (`DT-19`)—.
         """
         return self.precio_unitario * self.cantidad
+
+
+class EstadoDelPedido(models.TextChoices):
+    """Los dos estados de un pedido anticipado (`TT-143`, `HU-23`, `HU-25`).
+
+    **No hay un tercero.** Ninguna historia pide anular una reserva, y el
+    sistema no sabe devolver dinero (`ALC-OUT-01`): un estado «anulado» sin
+    quién reintegre el saldo sería una promesa que nadie cumple. Si alguna vez
+    hace falta, se registra como decisión y llega con su historia.
+    """
+
+    PENDIENTE = "pendiente", "Pendiente de entrega"
+    ENTREGADO = "entregado", "Entregado"
+
+
+class PedidoAnticipado(models.Model):
+    """Un pedido reservado y pagado por adelantado (`HU-23`, `TT-143`).
+
+    ── NO GUARDA NI LO QUE SE PIDIÓ NI LO QUE COSTÓ ────────────────────────
+    Eso vive en la `Venta` y en sus `LineaVenta`, que es donde vive para
+    cualquier otra venta. Copiarlo aquí sería una segunda fuente de verdad del
+    mismo dato, que es lo que `DT-4` y `DT-5` evitan en los dos libros y
+    `DT-19` en el modelo entero.
+
+    Lo que este modelo añade sobre la venta es **una sola cosa**: en qué estado
+    está la entrega. Por eso es tan corto — y por eso es una tabla aparte y no
+    dos columnas más en `Venta`: una venta del mostrador se entrega en el acto
+    y no tiene estado de entrega que seguir.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LA VENTA ES UNO A UNO Y ES DE ORIGEN `reserva` ──────────────────────
+    `OneToOneField`: un pedido es una venta y una venta anticipada es un
+    pedido. Que esa venta tenga `origen = reserva` no lo puede imponer esta
+    tabla —una `CheckConstraint` no cruza tablas—, así que lo impone el
+    servicio, que es el único que las crea a la vez (`DT-15`).
+
+    `PROTECT`: borrar la venta dejaría el pedido sin lo que se pidió, sin lo que
+    costó y sin a quién. Y un asiento no se borra (`INV-2`, `INV-3`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LOS CAMPOS DE LA ENTREGA SE DECLARAN AHORA, AUNQUE LOS USE `HU-25` ──
+    Es el mismo razonamiento con el que `TT-67` creó la restricción de `INV-8`
+    antes de que `HU-28` la ejercitara, y con el que el medio de pago llegó
+    antes que la venta: **es más barato declarar el campo con el modelo que
+    añadirlo sobre datos ya escritos**. El servicio que los rellena es `TT-149`.
+    ─────────────────────────────────────────────────────────────────────────
+
+    La clave primaria es UUIDv7 generado en la aplicación (`DT-17`).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    venta = models.OneToOneField(
+        "ventas.Venta",
+        on_delete=models.PROTECT,
+        related_name="pedido_anticipado",
+        verbose_name="venta",
+    )
+    estado = models.CharField(
+        "estado",
+        max_length=20,
+        choices=EstadoDelPedido.choices,
+        default=EstadoDelPedido.PENDIENTE,
+    )
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+    # `null=True` mientras está pendiente. Qué combinación es legítima lo dice
+    # la restricción de abajo, no la buena voluntad de quien escriba la entrega.
+    entregado_en = models.DateTimeField("entregado en", null=True, blank=True)
+    entregado_por = models.ForeignKey(
+        "cuentas.Usuario",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="pedidos_entregados",
+        verbose_name="entregado por",
+    )
+
+    class Meta:
+        verbose_name = "pedido anticipado"
+        verbose_name_plural = "pedidos anticipados"
+        # Del más reciente al más antiguo, como la venta.
+        ordering = ["-creado_en"]
+        indexes = [
+            # La consulta de `HU-24`: qué hay pendiente, para tenerlo preparado
+            # antes de que lleguen los estudiantes. Empieza por el estado.
+            models.Index(fields=["estado", "creado_en"], name="pedido_por_estado"),
+        ]
+        constraints = [
+            # `HU-25`, segundo criterio, en la capa donde no se olvida. Un
+            # pedido entregado dice cuándo y quién; uno pendiente no puede
+            # decirlo, porque todavía no ha pasado.
+            #
+            # Es además lo que impide **entregar dos veces sin darse cuenta**:
+            # la entrega de `TT-149` solo puede pasar de `pendiente` a
+            # `entregado`, y un pedido ya entregado no vuelve a estar pendiente
+            # porque perdería la fecha y el cajero que lo atendió.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        estado=EstadoDelPedido.PENDIENTE,
+                        entregado_en__isnull=True,
+                        entregado_por__isnull=True,
+                    )
+                    | models.Q(
+                        estado=EstadoDelPedido.ENTREGADO,
+                        entregado_en__isnull=False,
+                        entregado_por__isnull=False,
+                    )
+                ),
+                name="pedido_entrega_completa_o_ninguna",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Pedido de {self.venta.estudiante.nombre} ({self.get_estado_display()})"
+
+    @property
+    def esta_pendiente(self):
+        return self.estado == EstadoDelPedido.PENDIENTE

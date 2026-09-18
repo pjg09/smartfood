@@ -108,8 +108,8 @@ los tres. En las plantillas se usan alias de intención (`bg-superficie`, `text-
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **nueve**
-composiciones existen —siete con sección propia— y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **diez**
+composiciones existen —ocho con sección propia— y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
 una tarjeta de resumen es un **enlace** de acento abajo, no un botón sólido; y **un hueco
 nunca es un botón deshabilitado** — dice qué falta y qué historia lo trae.
 

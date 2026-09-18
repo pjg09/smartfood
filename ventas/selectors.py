@@ -162,3 +162,103 @@ def lineas_del_carrito(carrito):
 
     lineas.sort(key=lambda linea: linea["producto"].nombre)
     return lineas, total
+
+
+def unidades_reservadas_pendientes(productos=None):
+    """`{id_de_producto: unidades}` apartadas por reservas sin entregar.
+
+    `TT-144`, `HU-23`. Un pedido anticipado **cobra al reservarse pero no
+    descuenta inventario hasta que se entrega** (`HU-25`), así que entre las dos
+    cosas hay unidades pagadas que todavía están en el libro.
+
+    ── POR QUÉ ESTA FUNCIÓN EXISTE ─────────────────────────────────────────
+    Sin ella, dos reservas del último paquete pasarían las dos: las existencias
+    dicen «queda 1» las dos veces, porque ninguna lo ha descontado. El acudiente
+    que reservó segundo habría pagado por algo que no va a recibir.
+
+    No es una columna ni una caché: se cuenta desde las líneas de las ventas de
+    origen `reserva` cuyo pedido sigue pendiente. `INV-3` no se toca — las
+    existencias siguen siendo la suma del historial, y esto es otra cifra que se
+    lee al lado.
+    ─────────────────────────────────────────────────────────────────────────
+
+    Los productos sin nada reservado no aparecen en el resultado, así que quien
+    lo use debe leerlo con `.get(id, 0)` — igual que `existencias_por_producto`.
+    """
+    from django.db.models import Sum
+
+    from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta
+
+    lineas = LineaVenta.objects.filter(
+        venta__origen=OrigenDeLaVenta.RESERVA,
+        venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
+    )
+    if productos is not None:
+        lineas = lineas.filter(producto__in=productos)
+
+    return {
+        fila["producto"]: fila["total"]
+        for fila in lineas.values("producto").annotate(total=Sum("cantidad"))
+    }
+
+
+def existencias_sin_reservar(productos=None):
+    """Lo que de verdad se puede comprometer: existencias menos lo apartado.
+
+    `TT-144`. Es lo que mira la reserva en lugar de las existencias a secas, y
+    la única diferencia entre validar una reserva y validar una venta del
+    mostrador (`_bloquear_y_validar`).
+
+    **La venta del mostrador sigue mirando las existencias reales**, y eso deja
+    un hueco conocido: el cajero puede vender unidades que están apartadas para
+    una reserva pagada. Está anotado en `[S6]` de `./docs/reglas-de-la-venta.md`
+    y lo decide `HU-25`, que es quien tiene que saber qué hacer cuando llega el
+    estudiante y no hay lo suyo. Cambiarlo aquí sería añadir una condición a la
+    venta sin historia que la pida.
+    """
+    existencias = existencias_por_producto(productos)
+    reservadas = unidades_reservadas_pendientes(productos)
+
+    return {
+        producto_id: cuantas - reservadas.get(producto_id, 0)
+        for producto_id, cuantas in existencias.items()
+    }
+
+
+def catalogo_para_reservar():
+    """Lo que hoy se puede reservar, con lo que queda **sin apartar** (`TT-145`).
+
+    Gemelo de `catalogo_de_venta` con una diferencia: la cifra que acompaña a
+    cada producto es `existencias_sin_reservar`, no las existencias a secas. Es
+    la misma que valida `reservar`, así que la pantalla no ofrece lo que el
+    servicio va a rechazar.
+
+    **Lo que devuelve es informativo, no autorizante**, igual que en el punto de
+    venta: entre este pintado y el envío del formulario puede haber otra reserva.
+    La cifra que decide se lee **dentro** del bloqueo (`DT-6`).
+    """
+    productos = list(productos_en_el_catalogo().order_by("categoria__nombre", "nombre"))
+    disponibles = existencias_sin_reservar(productos)
+
+    for producto in productos:
+        producto.disponibles = disponibles.get(producto.id, 0)
+
+    return productos
+
+
+def pedidos_pendientes_de(estudiante):
+    """Las reservas de un estudiante que todavía no se han entregado.
+
+    `TT-145`. La pantalla de reserva las enseña para que el acudiente no
+    reserve dos veces lo mismo por no acordarse de la anterior — el mismo
+    motivo por el que la recarga enseña las últimas recargas (`TT-61`).
+    """
+    from ventas.models import EstadoDelPedido, PedidoAnticipado
+
+    return (
+        PedidoAnticipado.objects.filter(
+            venta__estudiante=estudiante, estado=EstadoDelPedido.PENDIENTE
+        )
+        .select_related("venta")
+        .prefetch_related("venta__lineas__producto")
+    )

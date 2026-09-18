@@ -1,0 +1,159 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} TT-145. Pantalla de reserva anticipada (`HU-23`, `INT-1`).
+
+   Tercer criterio: se gestiona desde la aplicación del acudiente. Encabezado de
+   pantalla copiado de `billetera/recarga.html` y filas de producto copiadas de
+   `restricciones/partials/lista-de-productos.html` (`DT-25`), cambiando el
+   interruptor por un campo de cantidad — es la misma fila y el mismo recorrido.
+
+   **El pago es simulado y la pantalla lo dice, arriba del todo**, igual que la
+   recarga: `ALC-OUT-01` y `ALC-OUT-02` excluyen la pasarela y el dinero real. Lo
+   que sí es real es el cobro contra la billetera, que se asienta al reservar y
+   no al entregar (segundo criterio de `HU-23`).
+
+   **No hay carrito**: un solo formulario que se envía una vez. El carrito de
+   servidor es del punto de venta (`DT-26`), donde el cajero monta la venta gesto
+   a gesto con una fila delante; aquí no hay fila.
+
+   La cifra de cada producto es lo que queda **sin apartar** por otras reservas
+   pendientes, que es lo mismo que valida el servicio: la pantalla no ofrece lo
+   que el cobro va a rechazar.
+{% endcomment %}
+
+{% block titulo %}Reservar | {{ estudiante.nombre }} | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Reservar consumo</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Elige lo que quieres que
+        <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong> reciba y
+        págalo ahora. Lo recoge en la cafetería con su tarjeta, sin depender de lo que elija
+        en la fila.
+      </p>
+    </header>
+
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <p class="text-sm text-aviso-fuerte">
+        <strong class="font-semibold">Se cobra al reservar, no al recoger.</strong>
+        El importe sale de la billetera de {{ estudiante.nombre }} en el momento en que
+        confirmas, y queda asentado en su historial. El pago es simulado: no se pide ningún
+        dato de tarjeta ni se mueve dinero real.
+      </p>
+    </div>
+
+    {% if error %}
+      {% comment %} El rechazo llega en `200` con el motivo dentro de la pantalla, no en un
+         `400`: el estado de la petición y lo que hay que enseñar son dos preguntas
+         distintas, y es lo que ya hacen el cobro y el padrón. {% endcomment %}
+      <div role="alert" data-reserva-rechazada
+           class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        <p class="text-sm text-error-fuerte">{{ error }}</p>
+      </div>
+    {% endif %}
+
+    <div class="flex flex-col gap-6 escritorio:flex-row escritorio:items-start">
+
+      <form method="post" class="flex w-full flex-col gap-3">
+        {% csrf_token %}
+
+        <div class="flex items-baseline justify-between gap-3">
+          <h2 class="font-display text-lg text-texto">Catálogo</h2>
+          <p class="text-sm text-texto-suave">
+            Saldo disponible: <strong class="font-semibold text-texto">{{ saldo|dinero:"COP" }}</strong>
+          </p>
+        </div>
+
+        <ul class="flex flex-col gap-2" data-catalogo-reservable>
+          {% for producto in productos %}
+            <li class="flex flex-wrap items-center justify-between gap-3 rounded-md
+                       border border-borde bg-superficie p-3">
+              <div class="flex min-w-0 flex-col">
+                <span class="truncate text-base font-medium text-texto">{{ producto.nombre }}</span>
+                <span class="text-sm text-texto-suave">
+                  {{ producto.precio|dinero }}
+                  {% if producto.disponibles > 0 %}
+                    · quedan {{ producto.disponibles }}
+                  {% else %}
+                    · <span class="text-error-fuerte">sin existencias</span>
+                  {% endif %}
+                </span>
+              </div>
+
+              <label class="flex items-center gap-2 text-sm text-texto-suave">
+                <span class="sr-only">Unidades de {{ producto.nombre }}</span>
+                {% comment %} `|unlocalize` no hace falta aquí —la cantidad es un entero y
+                   no un `Decimal`—, pero el `max` sí: ofrecer más de lo que queda sin
+                   apartar es enseñar algo que el servicio va a rechazar. {% endcomment %}
+                <input type="number" name="cantidad-{{ producto.id }}"
+                       min="0" max="{{ producto.disponibles }}" step="1"
+                       value="{{ producto.cantidad_pedida }}"
+                       {% if producto.disponibles == 0 %}disabled{% endif %}
+                       placeholder="0"
+                       class="h-11 w-20 rounded-md border border-borde bg-superficie px-3
+                              text-center text-base text-texto transition-colors
+                              hover:border-acento focus:border-acento focus:outline-none
+                              disabled:opacity-50">
+              </label>
+            </li>
+          {% empty %}
+            <li class="rounded-md border border-dashed border-borde p-6 text-center
+                       text-sm text-texto-suave">
+              No hay productos en el catálogo todavía.
+            </li>
+          {% endfor %}
+        </ul>
+
+        <button type="submit"
+                class="h-12 w-full rounded-md bg-acento px-6 text-base font-semibold
+                       text-sobre-acento transition-colors hover:bg-acento-fuerte
+                       escritorio:w-fit">
+          Reservar y pagar
+        </button>
+      </form>
+
+      <aside class="flex w-full flex-col gap-3 escritorio:max-w-sm">
+        <h2 class="font-display text-lg text-texto">Reservas pendientes</h2>
+
+        {% comment %} Responde a «¿no acabo de reservar esto?», que es la pregunta que evita
+           la reserva repetida por no acordarse de la anterior. Es el mismo motivo por el que
+           la recarga enseña las últimas recargas (`TT-61`). {% endcomment %}
+        {% for pedido in pendientes %}
+          <article data-pedido-pendiente
+                   class="flex flex-col gap-1 rounded-md border border-borde bg-superficie p-3">
+            <span class="text-sm text-texto-suave">
+              {{ pedido.creado_en|date:"j" }} de
+              {{ pedido.creado_en|date:"F"|lower }}, {{ pedido.creado_en|date:"H:i" }}
+            </span>
+            <ul class="flex flex-col gap-0.5">
+              {% for linea in pedido.venta.lineas.all %}
+                <li class="text-base text-texto">
+                  {{ linea.cantidad }} × {{ linea.producto.nombre }}
+                </li>
+              {% endfor %}
+            </ul>
+            <span class="text-sm text-texto-suave">Pagado. Pendiente de recoger.</span>
+          </article>
+        {% empty %}
+          <p class="rounded-md border border-dashed border-borde p-6 text-center
+                    text-sm text-texto-suave">
+            No hay nada reservado ahora mismo.
+          </p>
+        {% endfor %}
+      </aside>
+    </div>
+  </div>
+{% endblock %}

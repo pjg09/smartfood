@@ -36,6 +36,7 @@ from restricciones.selectors import (
     limite_diario_de,
     productos_bloqueados_de,
 )
+from ventas.selectors import pedidos_pendientes_de
 
 
 class ArchivoDeCargaForm(forms.Form):
@@ -137,6 +138,11 @@ def _contexto_del_estudiante(estudiante):
             historial_de(estudiante, limite=ULTIMOS_MOVIMIENTOS)
             if estudiante is not None
             else []
+        ),
+        # `TT-145`, `HU-23`. Un `count()` y no la lista, por lo mismo que los dos
+        # recuentos de arriba: la tarjeta solo dice cuántas hay pendientes.
+        "pedidos_pendientes": (
+            pedidos_pendientes_de(estudiante).count() if estudiante is not None else 0
         ),
     }
 

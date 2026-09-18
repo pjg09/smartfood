@@ -278,6 +278,26 @@ punto de venta tendría que volver a pedir el catálogo entero solo para renovar
 La URL lleva la clave y no el identificador del producto: al reemplazar la imagen cambia
 la clave, así que cambia la URL y no hay nada que invalidar.
 
+### [S2.9.1] Reservar y pagar por adelantado
+
+Como acudiente, en el panel de un estudiante: tarjeta **Reservas** → *Reservar consumo*. Se
+escriben las cantidades y se envía una vez. **El saldo baja al confirmar**, no al recoger
+(`HU-23`, `DT-33`), y el movimiento queda en el historial de la billetera como cualquier
+venta.
+
+La cifra que acompaña a cada producto es lo que queda **sin apartar** por otras reservas
+pendientes, no las existencias: la pantalla no ofrece lo que el servicio va a rechazar.
+
+**La reserva pasa por la misma validación que el cobro del mostrador.** Si el estudiante está
+desactivado, si el producto lleva un alérgeno bloqueado, si está bloqueado, si se pasa del
+cupo del día o si no alcanza el saldo, la reserva se rechaza igual que la venta — y sin que
+`HU-23` mencione ninguna de esas reglas. Para verlo, bloquea un producto en
+*Restricciones → Productos* e intenta reservarlo.
+
+**El inventario no se mueve hasta la entrega** (`HU-25`, pendiente). Mientras tanto las
+unidades siguen en el libro pero apartadas: las existencias reales no cambian y
+`existencias_sin_reservar` sí.
+
 ### [S2.10] Averiguar de dónde salen unas existencias
 
 En el listado de productos del admin, **la cifra de la columna «existencias» es un enlace**.

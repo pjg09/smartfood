@@ -193,6 +193,40 @@ Lo que hay que preguntarse, en este orden:
 
 ---
 
+## [S7] La reserva valida por aquí, y lo que eso deja abierto
+
+`HU-23` añadió un segundo camino que llega a estas seis comprobaciones: la reserva
+anticipada del acudiente. **No las reimplementa** — `reservar` y `registrar_venta` llaman a
+la misma función, `_bloquear_y_validar` (`TT-144`).
+
+Que sea la misma no es higiene: `HU-23` **no menciona ninguna de las seis**. Con un flujo
+propio, un acudiente no podría comprarle a su hijo en la caja algo con un alérgeno
+bloqueado, pero sí reservárselo la noche anterior — y el control parental entero tendría una
+puerta trasera. `ventas/tests_reserva.py` ejercita las seis sobre la reserva.
+
+**Lo único que cambia es qué cuenta como disponible.** La venta del mostrador mira las
+existencias; la reserva mira `existencias_sin_reservar`, que les resta lo apartado por
+pedidos pendientes. Es consecuencia de `DT-33`: la reserva cobra pero no descuenta
+inventario hasta la entrega, así que sin restar lo apartado dos reservas del último paquete
+pasarían las dos.
+
+> ### ⚠ Hueco conocido, y le toca a `HU-25` cerrarlo
+>
+> **La caja sigue mirando las existencias reales, así que puede vender unidades apartadas
+> para una reserva ya pagada.** Cuando pase, el estudiante llegará a recoger algo que no
+> está, con el dinero ya cobrado.
+>
+> No se cierra aquí por dos motivos. Uno: sería **la séptima comprobación**, y este
+> documento existe para que no se añada ninguna sin pensarla — ninguna historia la pide hoy.
+> Dos: quien tiene el problema delante es `HU-25`, que es la que decide qué hace la entrega
+> cuando no hay lo suyo, y esa decisión manda sobre cómo se evita.
+>
+> Las dos salidas obvias son restar lo reservado también en la caja —séptima comprobación,
+> con su etiqueta y su prueba— o descontar el inventario al reservar, que es la alternativa
+> que `DT-33` descartó. La segunda no añade comprobaciones: las quita.
+
+---
+
 ## [ANEXO A] De dónde salió cada comprobación
 
 | Comprobación | Tarea | PR | Sprint |

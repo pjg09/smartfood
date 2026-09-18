@@ -72,14 +72,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **6** de 18 | **3** de 7 |
-| Pendientes | 12 | 4 |
+| **Finalizadas** | **10** de 18 | **4** de 7 |
+| Pendientes | 8 | 3 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 2 | 6 |
-| Carlos | 2 | 5 |
-| Alejandro | 2 | 4 |
+| Pedro | 4 | 6 |
+| Carlos | 3 | 5 |
+| Alejandro | 3 | 4 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 7 Pull Requests
@@ -89,7 +89,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-01` | `TT-137` | **Retira** el entorno desplegado → `DEC-15`, `DT-31`; restablece `DoD-4` | ☑ |
 | `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☑ |
 | `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** — cierra `ENT-05` | ☑ |
-| `PR-04` | `TT-143`–`TT-146` | `HU-23` | ☐ |
+| `PR-04` | `TT-143`–`TT-146` | `HU-23` · `DT-32`, `DT-33` | ☑ |
 | `PR-05` | `TT-147`–`TT-148` | `HU-24` | ☐ |
 | `PR-06` | `TT-149`–`TT-151` | `HU-25` | ☐ |
 | `PR-07` | `TT-152`–`TT-154` | Gestión del sprint y Avance 2 | ☐ |
@@ -252,14 +252,14 @@ la segunda fuente de verdad que `DT-5` evita.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-23` |
 | Invariantes | hereda `INV-1`, `INV-2`, `INV-5`, `INVD-2` de la transacción de venta |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-143` | Modelo de pedido anticipado, con su estado y su vínculo a la venta | Pedro | ☐ |
-| `TT-144` | Servicio de reserva que cobra **al reservar**, dentro de la transacción | Pedro | ☐ |
-| `TT-145` | Pantalla de reserva en la interfaz del acudiente | Carlos | ☐ |
-| `TT-146` | Caso de prueba: la reserva descuenta saldo al reservarse, no al entregarse | Alejandro | ☐ |
+| `TT-143` | Modelo de pedido anticipado, con su estado y su vínculo a la venta | Pedro | ☑ |
+| `TT-144` | Servicio de reserva que cobra **al reservar**, dentro de la transacción | Pedro | ☑ |
+| `TT-145` | Pantalla de reserva en la interfaz del acudiente | Carlos | ☑ |
+| `TT-146` | Caso de prueba: la reserva descuenta saldo al reservarse, no al entregarse | Alejandro | ☑ |
 
 > 🔴 **Una reserva es una venta anticipada, no un apartado.** `TT-144` debe pasar por la
 > **misma transacción con bloqueo** que `registrar_venta`. Si se implementa como un flujo
@@ -271,6 +271,35 @@ la segunda fuente de verdad que `DT-5` evita.
 > no mencionan ninguna de las cuatro reglas.
 
 Única historia del sprint que construye desde cero: no hay nada de pedidos en el código.
+
+**El aviso se cumplió, y así se sostiene.** `reservar` y `registrar_venta` llaman a la misma
+función, `_bloquear_y_validar`, extraída de la segunda al construir la primera. Las seis
+comprobaciones viven ahí y en ningún otro sitio; `ventas/tests_reserva.py` las ejercita las
+seis sobre la reserva, y una prueba estructural comprueba además que **ninguno de los dos
+servicios las tiene escritas aparte** — una copia es como uno de los dos caminos se queda sin
+el arreglo de la próxima.
+
+**Dos cosas se decidieron al construirlo, y las dos están registradas:**
+
+1. **`DT-32`: una reserva es una `Venta` con `origen = reserva`**, no otra tabla. Cobrar al
+   reservar obliga a crear la venta entonces, porque un movimiento de billetera de tipo
+   `venta` tiene que señalar una (`TT-78`). `cajero` pasa a opcional y una `CheckConstraint`
+   le da sentido: la del mostrador lo exige, la reserva exige que no lo haya y que sí haya
+   estudiante. `PedidoAnticipado` guarda **solo** el estado de la entrega.
+2. **`DT-33`: la reserva cobra saldo y no descuenta inventario**; eso lo hace la entrega.
+   Es una decisión del equipo entre dos lecturas del plan que se contradecían — `PR-04` pedía
+   pasar por la misma transacción que el cobro, que descuenta las dos cosas, y `PR-06` decía
+   que la entrega descuenta existencias.
+
+> ⚠ **`DT-33` deja un hueco, y le toca a `PR-06` cerrarlo.** Como las unidades reservadas
+> siguen en el libro hasta la entrega, **la caja puede vender lo que está apartado para una
+> reserva ya pagada**, y el estudiante llegaría a recoger algo que no está.
+>
+> La reserva se protege a sí misma —valida contra `existencias_sin_reservar`, así que dos
+> reservas del último paquete no pasan las dos—, pero la venta del mostrador sigue mirando
+> las existencias reales. Cerrarlo ahí sería la **séptima comprobación** de la venta, y
+> ninguna historia la pide: quien tiene el problema delante es `HU-25`, que decide qué hace
+> la entrega cuando no hay lo suyo. Está anotado en `[S7]` de `./reglas-de-la-venta.md`.
 
 ---
 
@@ -309,11 +338,16 @@ la segunda fuente de verdad que `DT-5` evita.
 | `TT-150` | Registro de la entrega en el punto de venta | Carlos | ☐ |
 | `TT-151` | Caso de prueba: entregar no descuenta saldo, y no se entrega dos veces | Alejandro | ☐ |
 
-> ⚠ **El error a evitar es cobrar dos veces.** El pedido ya se pagó al reservarse: la
-> entrega solo cambia su estado y descuenta existencias. Si reutiliza `registrar_venta` sin
+> ⚠ **El error a evitar es cobrar dos veces.** El pedido ya se pagó al reservarse (`DT-33`):
+> la entrega cambia su estado y descuenta existencias, y **no vuelve a tocar el saldo**. Si reutiliza `registrar_venta` sin
 > más, el estudiante paga dos veces e **`INV-2` sigue cuadrando** —el historial es
 > consistente— pero el sistema está mal. Es el único fallo del sprint que no detecta
 > ninguna invariante: solo lo detecta `TT-151`.
+>
+> **Y hereda un hueco de `PR-04`.** `DT-33` dejó que la caja pueda vender unidades apartadas
+> para una reserva pagada. `TT-149` tiene que decidir qué hace la entrega cuando llega el
+> estudiante y no hay lo suyo — está en `[S7]` de `./reglas-de-la-venta.md`, con las dos
+> salidas posibles.
 
 ---
 

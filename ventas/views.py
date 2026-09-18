@@ -6,14 +6,18 @@ renderizar. **Cero lógica de negocio** (`DT-15`).
 Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
 """
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render
+from django.http import Http404
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
+from billetera.selectors import saldo_de
 from cuentas.models import Rol
 from personas.models import Estudiante
 from personas.selectors import (
+    estudiante_a_cargo,
     identificar_por_codigo_de_tarjeta,
     identificar_por_documento,
 )
@@ -21,10 +25,12 @@ from personas.services import EstudianteNoOperativo
 from ventas import carrito as carrito_de_la_venta
 from ventas.selectors import (
     catalogo_de_venta,
+    catalogo_para_reservar,
     informacion_de_cobro,
     lineas_del_carrito,
+    pedidos_pendientes_de,
 )
-from ventas.services import VentaRechazada, registrar_venta, total_de
+from ventas.services import VentaRechazada, registrar_venta, reservar, total_de
 
 
 def _solo_el_cajero(usuario):
@@ -299,3 +305,92 @@ def cliente_generico(request):
     carrito_de_la_venta.fijar_estudiante(request.session, None)
 
     return render(request, "ventas/partials/cliente-generico.html")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def reserva(request, estudiante_id):
+    """Pantalla de reserva anticipada de un estudiante a cargo (`TT-145`, `HU-23`).
+
+    Tercer criterio de la historia: **se gestiona desde la aplicación del
+    acudiente** (`INT-1`), así que vive aquí y no en el admin.
+
+    **La autorización la hace el selector**, no un `if` de esta vista: un
+    estudiante que no está a cargo de quien pregunta es un 404, igual que uno
+    que no existe. Los dos casos se responden igual a propósito — distinguirlos
+    confirmaría a un desconocido que ese estudiante existe. Es el mismo patrón
+    que la recarga (`TT-61`).
+
+    El servicio vuelve a comprobar quién reserva, y esa repetición no sobra: la
+    vista corta antes para no enseñar un formulario que va a fallar, y el
+    servicio corta siempre, entre por donde entre (`DT-15`).
+
+    ── NO HAY CARRITO EN SESIÓN, Y NO ES UN OLVIDO ────────────────────────
+    El punto de venta lo tiene (`DT-26`) porque el cajero monta la venta gesto a
+    gesto con una fila delante. Aquí no hay fila: el acudiente rellena las
+    cantidades que quiere y envía una vez. Un carrito de servidor añadiría
+    estado que nadie necesita y una segunda forma de que la reserva quede a
+    medias.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    try:
+        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+    productos = catalogo_para_reservar()
+    error = None
+    cantidades = {}
+
+    if request.method == "POST":
+        # Las cantidades llegan como `cantidad-<id>`. Se parsean aquí —es
+        # trabajo de HTTP— y el servicio recibe `{id: entero}` ya limpio, que es
+        # lo que sabe validar (`DT-15`).
+        for producto in productos:
+            crudo = (request.POST.get(f"cantidad-{producto.id}") or "").strip()
+            if not crudo:
+                continue
+            try:
+                cuantas = int(crudo)
+            except ValueError:
+                error = "Las cantidades se escriben en números enteros."
+                break
+            if cuantas > 0:
+                cantidades[producto.id] = cuantas
+
+        if error is None:
+            try:
+                pedido = reservar(
+                    actor=request.user, estudiante=estudiante, lineas=cantidades
+                )
+            except (VentaRechazada, EstudianteNoOperativo) as rechazo:
+                # Se devuelve `200` con el motivo dentro de la pantalla, no un
+                # `400`: el estado de la petición y lo que hay que enseñar son
+                # dos preguntas distintas, y es el precedente del repositorio.
+                error = "; ".join(rechazo.messages) if hasattr(rechazo, "messages") else str(rechazo)
+            else:
+                messages.success(
+                    request,
+                    f"Reserva pagada: {estudiante.nombre} la recoge en la "
+                    f"cafetería con su tarjeta.",
+                )
+                return redirect("reserva", estudiante_id=estudiante.id)
+
+    # Lo que se escribió se devuelve escrito. Se adjunta al producto, como las
+    # disponibles: una plantilla no sabe indexar un diccionario por una clave
+    # que sale de una variable, y quien acaba de ver un rechazo no debería tener
+    # que teclear otra vez lo que ya tecleó.
+    for producto in productos:
+        producto.cantidad_pedida = cantidades.get(producto.id, "")
+
+    return render(
+        request,
+        "ventas/reserva.html",
+        {
+            "estudiante": estudiante,
+            "productos": productos,
+            "saldo": saldo_de(estudiante),
+            "pendientes": pedidos_pendientes_de(estudiante),
+            "error": error,
+        },
+    )

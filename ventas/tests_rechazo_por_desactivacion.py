@@ -207,22 +207,37 @@ class ElDeBajaEsOtroCasoTest(BaseDesactivado):
 class LaPuertaEsLaMismaParaLoQueVengaTest(BaseDesactivado):
     """Segundo criterio: tampoco retira pedidos anticipados.
 
-    **Los pedidos son del Sprint 4** (`HU-23` … `HU-25`) y hoy no existen. Lo que
-    se puede comprobar —y es lo que de verdad hará que el criterio se cumpla
-    entonces— es que la regla vive en **una sola puerta**, y que la venta la
-    llama en vez de reimplementarla: quien construya el retiro llamará a la misma
-    y no tendrá que acordarse de ninguna regla.
+    Esta clase se escribió en el Sprint 3, cuando los pedidos no existían, para
+    fijar que la regla vive en **una sola puerta** y que quien construyera el
+    retiro la heredaría sin acordarse de nada. Los pedidos llegaron con `HU-23`
+    y la apuesta salió: `reservar` no menciona `INVD-2` por ninguna parte y la
+    cumple, porque valida por la misma función que la venta (`TT-144`).
+
+    Que la reserva **de verdad** rechace a un estudiante desactivado se
+    comprueba ejecutándola, en `./tests_reserva.py`. Aquí se fija lo estructural
+    que hace que eso siga siendo cierto mañana.
     """
 
-    def test_la_venta_no_reimplementa_la_regla(self):
-        """Si alguien copiara la condición en `ventas`, esto seguiría pasando y
-        la del retiro nacería sin ella. Por eso se comprueba la llamada."""
+    def test_ni_la_venta_ni_la_reserva_reimplementan_la_regla(self):
+        """La condición vive en `_bloquear_y_validar` y en ningún otro sitio.
+
+        Si alguien la copiara dentro de `registrar_venta` o de `reservar`, esto
+        fallaría: lo que se exige no es solo que la llamen, es que **no la
+        tengan escrita aparte** — una copia es como uno de los dos caminos se
+        queda sin el arreglo de la próxima.
+        """
         import inspect
 
         from ventas import services
 
-        fuente = inspect.getsource(services.registrar_venta)
-        self.assertIn("comprobar_que_puede_operar", fuente)
+        compartida = inspect.getsource(services._bloquear_y_validar)
+        self.assertIn("comprobar_que_puede_operar", compartida)
+
+        for servicio in [services.registrar_venta, services.reservar]:
+            with self.subTest(servicio=servicio.__name__):
+                fuente = inspect.getsource(servicio)
+                self.assertIn("_bloquear_y_validar", fuente)
+                self.assertNotIn("comprobar_que_puede_operar", fuente)
 
     def test_la_puerta_rechaza_los_dos_estados(self):
         for transicion, estado in [

@@ -37,6 +37,7 @@ from ventas.views import (
     cobrar,
     identificacion,
     punto_de_venta,
+    reserva,
 )
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
@@ -144,6 +145,19 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/recargar/",
         recarga,
         name="recarga",
+    ),
+    # Reserva anticipada (`TT-145`, `HU-23`). Cuelga del estudiante por lo mismo
+    # que la recarga y el límite: **se reserva PARA alguien**, y la restricción
+    # `venta_cajero_segun_su_origen` no admite una reserva sin estudiante.
+    #
+    # Una sola ruta, no dos: la pantalla se envía entera y responde entera. No
+    # hay fragmento HTMX que separar (`DT-16`), porque no hay carrito que montar
+    # gesto a gesto — eso es el punto de venta (`DT-26`), donde hay una fila
+    # esperando.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/reservar/",
+        reserva,
+        name="reserva",
     ),
     # Límite diario de gasto (`TT-96`, `HU-09`). Cuelga de la ruta del
     # estudiante por el mismo motivo que la recarga: **el límite es por
