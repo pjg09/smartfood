@@ -73,6 +73,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: catálogo con cantidades, cobro al confirmar y reservas pendientes | **Solo su acudiente** | `TT-145` |
+| `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente | **Cajero y administración** | `TT-148` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
@@ -166,7 +167,7 @@ coincidir porque dejaría media pantalla en cada tema.
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Seis lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Siete lecturas que
 conviene no perder:
 
 - **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
@@ -179,6 +180,10 @@ conviene no perder:
   es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
   exigirlo únicamente a veces. Sus permisos son `add` y `view`; `change` y `delete` **no
   existen**, así que un asiento no se reescribe (`INV-3`).
+- **La cola de reservas no está en el admin, y es la segunda excepción declarada** (`HU-24`,
+  `DT-34`). La comparten el cajero —que no tiene `is_staff`— y la administración —que recibe
+  `403` en el punto de venta—, así que vive en `/reservas/`, sobre el armazón de la
+  aplicación, con la entrada en los dos menús. La primera excepción es el padrón (`DT-27`).
 - **Las restricciones se consultan en el admin y no se escriben en él** (`HU-38`, `INV-4`).
   La única entrada es *Restricciones por estudiante*, un proxy del estudiante **sin más
   permiso que `view`**: Django no crea los de escritura, así que no hay ninguno que

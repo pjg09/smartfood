@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 33 (`DT-1` … `DT-33`) |
+| decisiones | 34 (`DT-1` … `DT-34`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.7 |
+| version | 1.8 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-33`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-34`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -546,6 +546,36 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 **La alternativa que se descartó** era descontar existencias al reservar. Cierra ese hueco por construcción —lo apartado sale del libro y la caja no puede venderlo— y hace la entrega trivial. Se descartó porque el inventario físico no se mueve hasta que el producto sale del mostrador, y el equipo prefirió que el libro dijera eso.
 
 **Lo que no cambia:** la reserva pasa por la misma validación que el cobro (`_bloquear_y_validar`), así que hereda las cuatro reglas de rechazo de los Sprints 2 y 3. Eso no es negociable y no depende de esta decisión.
+
+---
+
+#### `[DT-34]` La cola de reservas tiene pantalla propia: segunda excepción a `INT-3`
+
+**Amplía:** `DT-27`, que abrió **una** excepción al admin —el padrón de la institución— y pidió que la siguiente se registrara. Esta es la siguiente, y la trae.
+
+**Obliga:** `HU-24` —«las reservas pendientes son consultables desde la cafetería»— con sus **dos actores**, `USR-3` y `USR-4`, y `FUN-5`, que separa a quien prepara de quien entrega.
+
+**El hecho que lo obliga.** Los dos actores de esta historia **no comparten interfaz**:
+
+| Rol | Dónde trabaja | Qué pasa en la otra |
+|---|---|---|
+| `USR-3` cajero | `INT-2`, el punto de venta | **No tiene `is_staff`**: el admin lo manda a su pantalla de acceso |
+| `USR-4` administración | `INT-3`, el admin | **`403`** en el punto de venta |
+
+Dejar la cola solo en el admin deja fuera al cajero, que es quien la prepara y quien va a entregarla. Dejarla solo en el punto de venta deja fuera a la administración. Y construir las dos es mantener **dos pantallas del mismo dato**, que es como acaban divergiendo.
+
+**Decidido:**
+
+- **Una sola pantalla**, `/reservas/`, sobre el armazón de la aplicación (`base-aplicacion.html`), que es el que los dos roles pueden abrir.
+- **La entrada aparece en los dos menús**: en `MENU_POR_ROL` para cajero y administración, y en la columna de iconos del punto de venta, que es lo que el cajero tiene delante mientras cobra.
+- **La autorización vive en el selector**, `reservas_pendientes`, no en la vista: es el único camino por el que la cola llega a una pantalla, y así la regla se aplica entre por donde entre (`DT-11`, `DT-15`).
+- **`PedidoAnticipado` no se registra en el admin.** Con la pantalla compartida, hacerlo sería la segunda copia que esta decisión evita.
+
+**Por qué no dentro de `INT-2`.** El punto de venta es una pantalla de tres columnas sin scroll, dimensionada para cobrar en 1024 × 600 con una fila delante (`base-punto-de-venta.html`). Una lista que crece con el día no cabe ahí sin quitarle sitio a lo que se pulsa en cada venta. Y no hace falta que esté: la cola se consulta **antes** del descanso; durante, lo que el cajero necesita es el pedido del estudiante que tiene delante, y eso llega al identificar (`HU-25`).
+
+**Lo que esta decisión no amplía.** `INT-3` sigue siendo el admin para todo lo demás de la administración de la cafetería: catálogo, inventario y mermas. Lo que sale del admin es **una consulta**, no una escritura, y sale porque la comparte un rol que no puede entrar allí.
+
+> **Van dos excepciones y conviene contarlas.** `DT-27` el padrón, `DT-34` la cola de reservas. Las dos por la misma razón de fondo: un rol que no vive en el admin necesita ese dato a diario. Una tercera tendría que explicar por qué no es ya un patrón en vez de una excepción.
 
 ---
 

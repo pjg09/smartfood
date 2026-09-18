@@ -72,13 +72,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **10** de 18 | **4** de 7 |
-| Pendientes | 8 | 3 |
+| **Finalizadas** | **12** de 18 | **5** de 7 |
+| Pendientes | 6 | 2 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 4 | 6 |
-| Carlos | 3 | 5 |
+| Pedro | 5 | 6 |
+| Carlos | 4 | 5 |
 | Alejandro | 3 | 4 |
 | Naomi | 0 | 3 |
 
@@ -90,7 +90,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☑ |
 | `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** — cierra `ENT-05` | ☑ |
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` · `DT-32`, `DT-33` | ☑ |
-| `PR-05` | `TT-147`–`TT-148` | `HU-24` | ☐ |
+| `PR-05` | `TT-147`–`TT-148` | `HU-24` · `DT-34` | ☑ |
 | `PR-06` | `TT-149`–`TT-151` | `HU-25` | ☐ |
 | `PR-07` | `TT-152`–`TT-154` | Gestión del sprint y Avance 2 | ☐ |
 
@@ -312,12 +312,28 @@ el arreglo de la próxima.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-24` |
 | Invariantes | ninguna |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-147` | Selector de reservas pendientes | Pedro | ☐ |
-| `TT-148` | Consulta de reservas pendientes desde la cafetería | Carlos | ☐ |
+| `TT-147` | Selector de reservas pendientes | Pedro | ☑ |
+| `TT-148` | Consulta de reservas pendientes desde la cafetería | Carlos | ☑ |
+
+**Una pantalla y no dos, y eso es `DT-34`.** `HU-24` nombra dos actores que **no comparten
+interfaz**: el cajero no tiene `is_staff` y la administración recibe `403` en el punto de
+venta. Dejarla solo en el admin deja fuera a quien la prepara; dejarla solo en `INT-2` deja
+fuera a la administración; construir las dos es mantener dos pantallas del mismo dato. Se
+resuelve con una sola, en el armazón de la aplicación, con la entrada en los dos menús.
+
+Es la **segunda excepción a `DT-27`** y va registrada, que es lo que aquella decisión pidió
+para la siguiente. Una tercera tendría que explicar por qué no es ya un patrón.
+
+**La cola va del más antiguo al más reciente**, al revés que todos los historiales del
+proyecto. No es un historial: es una cola de trabajo, y lo que el personal necesita saber es
+qué lleva más tiempo esperando.
+
+**No lleva el importe.** Para preparar un pedido hace falta quién y qué, no cuánto costó — ya
+está pagado y nadie va a cobrarlo otra vez.
 
 ---
 
