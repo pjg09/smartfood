@@ -262,3 +262,57 @@ def pedidos_pendientes_de(estudiante):
         .select_related("venta")
         .prefetch_related("venta__lineas__producto")
     )
+
+
+def reservas_pendientes(*, actor):
+    """Las reservas pagadas que nadie ha recogido todavía (`TT-147`, `HU-24`).
+
+    Devuelve los `PedidoAnticipado` en estado `pendiente`, del más antiguo al más
+    reciente, con el estudiante y las líneas ya traídos.
+
+    ── EL ORDEN ES DEL MÁS ANTIGUO AL MÁS RECIENTE, Y ES AL REVÉS QUE TODO ─
+    Un historial se lee empezando por lo último, y por eso el de la billetera,
+    el del inventario y el de restricciones llegan así. **Esto no es un
+    historial: es una cola de trabajo.** Lo que el personal necesita saber es
+    qué lleva más tiempo esperando, no qué acaba de entrar.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── QUIÉN PUEDE, Y POR QUÉ SON DOS ROLES ───────────────────────────────
+    `HU-24` los nombra a los dos: `USR-3` y `USR-4`. `FUN-5` explica por qué —«el
+    personal de la cafetería consulta las reservas pendientes y registra su
+    entrega»—: quien prepara y quien entrega no tienen que ser la misma persona.
+
+    La autorización vive aquí y no en la vista, como en `informacion_de_cobro`:
+    este es el único camino por el que la cola de reservas llega a una pantalla,
+    y exige el rol aunque alguien escriba la URL a mano (`DT-11`, `INV-4`).
+
+    **El acudiente no entra por aquí.** Las suyas las ve en su pantalla de
+    reserva, filtradas por su estudiante (`pedidos_pendientes_de`). Esta función
+    devuelve las de todo el colegio, que no es asunto suyo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **No filtra por día.** Ninguna historia dice hasta cuándo vale una reserva, y
+    el sistema no sabe anularlas (`EstadoDelPedido` tiene dos estados y ninguno
+    es «caducado»). Una reserva de anteayer sin recoger **sigue pendiente**, y
+    esconderla la dejaría pagada y olvidada. Si algún día se decide que caducan,
+    eso es una decisión de alcance con su historia, no un `filter` aquí.
+    """
+    from cuentas.models import Rol
+    from ventas.models import EstadoDelPedido, PedidoAnticipado
+
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar las reservas exige identificarse.")
+    if actor.rol not in (Rol.CAJERO, Rol.ADMINISTRADOR):
+        raise PermissionDenied(
+            "Consultar las reservas pendientes es del personal de la cafetería "
+            "—cajero y administración— y de ningún otro rol ([S11], HU-24)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return (
+        PedidoAnticipado.objects.filter(estado=EstadoDelPedido.PENDIENTE)
+        .select_related("venta", "venta__estudiante")
+        .prefetch_related("venta__lineas__producto")
+        .order_by("creado_en")
+    )
