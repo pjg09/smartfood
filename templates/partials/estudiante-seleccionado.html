@@ -285,6 +285,45 @@
           </a>
         </p>
       </article>
+
+      {% comment %} `TT-145`, `HU-23`. Tarjeta de resumen (`[S2.1]`), como las tres de
+         arriba: franja de una serie —nunca un color de estado—, icono en pastilla,
+         cifra en `font-display` y **enlace** de acento abajo con `mt-auto`. {% endcomment %}
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-2 to-serie-2/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-2/10 text-serie-2">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Reservas</h3>
+        {% if pedidos_pendientes %}
+          <p class="font-display text-2xl tabular-nums text-texto">
+            {{ pedidos_pendientes }}<span class="text-base font-medium text-texto-suave"> pendiente{{ pedidos_pendientes|pluralize }}</span>
+          </p>
+          <p class="text-base font-medium text-texto-suave">
+            Ya están pagadas. {{ seleccionado.nombre }} las recoge en la cafetería con su
+            tarjeta.
+          </p>
+        {% else %}
+          <p class="font-display text-2xl text-texto">Ninguna</p>
+          <p class="text-base font-medium text-texto-suave">
+            Reservar y pagar por adelantado asegura que reciba lo que decidiste, sin
+            depender de lo que elija en la fila.
+          </p>
+        {% endif %}
+        {% if seleccionado.puede_operar %}
+          {% comment %} **Esconder el enlace no es lo que lo impide**: `reservar` valida por la
+             misma función que el cobro y rechaza al desactivado por `INVD-2` entre por
+             donde entre (`DT-15`). Esto solo evita ofrecer algo que va a fallar, igual
+             que hace la tarjeta del saldo con la recarga. {% endcomment %}
+          <a href="{% url 'reserva' seleccionado.id %}"
+             data-enlace-a-reserva
+             class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
+            Reservar consumo
+          </a>
+        {% endif %}
+      </article>
     </section>
 
     {% comment %} `TT-64`, `HU-07` segundo criterio. Los últimos movimientos, que es lo que
