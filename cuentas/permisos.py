@@ -71,6 +71,14 @@ PERMISOS_POR_ROL = {
         # se corrige con otro movimiento —una merma con su motivo (`INV-8`)—,
         # que es como se corrige un libro.
         "inventario.movimientoinventario": ["add", "view"],
+        # `HU-28`, `TT-139`. La merma es un proxy del mismo libro con su propia
+        # entrada en el admin, porque el motivo es obligatorio en ella y opcional
+        # en el ingreso (`INV-8`). **Solo `add` y `view` existen**: `Merma.Meta`
+        # declara `default_permissions = ("add", "view")`, así que Django no crea
+        # `change_` ni `delete_` y esta matriz no podría concederlos ni queriendo
+        # (`DT-11`). No amplía `[S11]`: cae dentro de «gestionar catálogo,
+        # precios e inventario», igual que el ingreso.
+        "inventario.merma": ["add", "view"],
         # «Consultar restricciones de un estudiante: Sí» (`HU-38`, `TT-111`).
         # Es la única entrada de esta fila fuera de `catalogo` e `inventario`, y
         # es de lectura: la cafetería **ve** quién es alérgico al maní y no

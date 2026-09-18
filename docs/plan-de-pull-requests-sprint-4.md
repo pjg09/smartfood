@@ -72,14 +72,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **1** de 18 | **1** de 7 |
-| Pendientes | 17 | 6 |
+| **Finalizadas** | **4** de 18 | **2** de 7 |
+| Pendientes | 14 | 5 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 1 | 6 |
-| Carlos | 0 | 5 |
-| Alejandro | 0 | 4 |
+| Pedro | 2 | 6 |
+| Carlos | 1 | 5 |
+| Alejandro | 1 | 4 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 7 Pull Requests
@@ -87,7 +87,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
 | `PR-01` | `TT-137` | **Retira** el entorno desplegado → `DEC-15`, `DT-31`; restablece `DoD-4` | ☑ |
-| `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☐ |
+| `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☑ |
 | `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** | ☐ |
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` | ☐ |
 | `PR-05` | `TT-147`–`TT-148` | `HU-24` | ☐ |
@@ -154,13 +154,13 @@ Es una acción manual, no la hace este PR, y está anotada en `[S0.1]` de `./des
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-28` |
 | Invariantes | **`INV-8`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-138` | Servicio de registro de merma, sobre el primitivo `asentar` que ya existe | Pedro | ☐ |
-| `TT-139` | Registro de merma desde la interfaz administrativa | Carlos | ☐ |
-| `TT-140` | Caso de prueba: la merma sin motivo la rechaza la **base de datos** | Alejandro | ☐ |
+| `TT-138` | Servicio de registro de merma, sobre el primitivo `asentar` que ya existe | Pedro | ☑ |
+| `TT-139` | Registro de merma desde la interfaz administrativa | Carlos | ☑ |
+| `TT-140` | Caso de prueba: la merma sin motivo la rechaza la **base de datos** | Alejandro | ☑ |
 
 > **Ojo: esto es menos trabajo del que parece.** `TT-67` del Sprint 2 ya dejó el tipo
 > `MERMA`, la `CheckConstraint` de motivo obligatorio y el primitivo `asentar`, que además
@@ -169,6 +169,28 @@ Es una acción manual, no la hace este PR, y está anotada en `[S0.1]` de `./des
 
 `TT-140` comprueba `INV-8` **saltándose el formulario**: si la prueba pasa llamando al ORM
 directamente, la invariante está donde `DT-5` dice que debe estar.
+
+**Dos cosas se decidieron al construirlo, y ninguna estaba en el plan:**
+
+1. **La restricción de `INV-8` tenía un agujero y se endureció.** `~Q(motivo="")` rechazaba
+   la cadena vacía y dejaba pasar «   »: tres espacios no son un motivo, pero tampoco son la
+   cadena vacía. Pasa a ser `Q(motivo__regex=r"\S")`. El servicio nunca escribía eso —`asentar`
+   hace `strip()`—, y esa es justamente la razón de subirlo a la base: una restricción que solo
+   rechaza lo que el servicio ya rechazaba no protege ningún camino nuevo, y `DT-5` la pone
+   para los caminos que todavía no existen.
+2. **La merma no deja existencias negativas.** No sale de `HU-28` —sus dos criterios son sobre
+   el motivo— y se aplica por el mismo razonamiento con el que la venta rechaza por existencias
+   insuficientes: `[S4]` de `./reglas-de-la-venta.md`, que registró aquella como regla sin
+   historia. Mermar diez de las tres que hay deja el inventario en −7; `INV-3` seguiría
+   cumpliéndose y lo que explicaría sería un disparate. Se lee **dentro del bloqueo** (`DT-6`),
+   como en la venta.
+
+**La merma tiene entrada propia en el admin**, un proxy de `MovimientoInventario` (`Merma`).
+No es una segunda pantalla fuera del admin —`DT-27` sigue siendo la única excepción—: es el
+admin con dos entradas. El motivo es obligatorio en la merma y opcional en el ingreso, y un
+único formulario tendría que exigirlo **solo a veces**, según lo que el usuario eligiera arriba.
+Sus permisos son `add` y `view`; `change` y `delete` **no existen** (`default_permissions`), que
+es más fuerte que no concederlos.
 
 ---
 
