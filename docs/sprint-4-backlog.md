@@ -137,10 +137,10 @@ El criterio de la historia dice «aplica a **toda** disminución manual, no solo
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-143` | Modelo de pedido anticipado, con su estado y su vínculo a la venta | Pedro | ☐ |
-| `TT-144` | Servicio de reserva que cobra **en el momento de reservar**, dentro de la transacción (`DT-6`) | Pedro | ☐ |
-| `TT-145` | Pantalla de reserva en la interfaz del acudiente | Carlos | ☐ |
-| `TT-146` | Caso de prueba: la reserva descuenta saldo al reservarse, **no** al entregarse | Alejandro | ☐ |
+| `TT-143` | Modelo de pedido anticipado, con su estado y su vínculo a la venta | Pedro | ☑ |
+| `TT-144` | Servicio de reserva que cobra **en el momento de reservar**, dentro de la transacción (`DT-6`) | Pedro | ☑ |
+| `TT-145` | Pantalla de reserva en la interfaz del acudiente | Carlos | ☑ |
+| `TT-146` | Caso de prueba: la reserva descuenta saldo al reservarse, **no** al entregarse | Alejandro | ☑ |
 
 Es la única historia del sprint que construye algo desde cero: no hay nada de pedidos anticipados en el código.
 

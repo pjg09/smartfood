@@ -62,11 +62,15 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Siete. Seis las usan dos o más pantallas; la séptima, **la barra de filtros, la usa una sola
-por ahora** y se fija igual — no por completitud, sino porque el padrón estrenó a la vez el
-buscador que pide a cada tecla, el interruptor accesible y el orden de los tres controles, y
-esas tres decisiones se toman una vez o se vuelven a discutir en la siguiente pantalla que
-lleve una tabla. Es la única de la tabla con un solo uso, y conviene que se note.
+Diez, y ocho tienen sección propia porque llevan una decisión o una trampa que hay que
+conocer antes de copiarlas.
+
+**Dos las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
+porque el padrón estrenó a la vez el buscador que pide a cada tecla, el interruptor accesible
+y el orden de los tres controles, y esas tres decisiones se toman una vez o se vuelven a
+discutir en la siguiente pantalla que lleve una tabla. Y la **lista con cantidad**, porque es
+una variante de la lista con interruptor y lo que la separa de ella —un solo envío en vez de
+un gesto por fila— es justo lo que habría que volver a razonar en la próxima.
 
 | Composición | Se copia de | En una frase |
 |---|---|---|
@@ -78,6 +82,7 @@ lleve una tabla. Es la única de la tabla con un solo uso, y conviene que se not
 | Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **qué historia lo trae** |
 | Barra de filtros | `templates/personas/padron.html` | Buscador con icono dentro, interruptor y acción **en una fila** desde `tablet`; apilados por debajo |
 | Lista con interruptor | `templates/restricciones/partials/lista-de-productos.html` | Una fila por elemento, el estado pintado en el borde y el fondo, y un botón que dice **la acción**, no el estado |
+| Lista con cantidad | `templates/ventas/reserva.html` | La fila de `[S2.6]` con un campo numérico en vez del interruptor; **un solo envío**, no un gesto por fila |
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 
 ### [S2.1] Tarjeta de resumen
@@ -197,6 +202,27 @@ borde, el fondo y el texto de al lado.
 Cada fila es un `<form>` con `hx-post` que devuelve **la lista entera**, no la fila: el
 recuento de arriba y el historial de abajo cambian con cada gesto, y un intercambio por fila
 los dejaría desfasados.
+
+### [S2.6.1] Lista con cantidad
+
+La variante de `[S2.6]` para cuando lo que se elige no es sí o no, sino cuántos: la reserva
+anticipada (`HU-23`). **Misma fila** —nombre y precio a la izquierda, control a la derecha,
+borde y fondo de superficie— cambiando el botón por un `<input type="number">`.
+
+**Un solo envío, no un gesto por fila.** La lista con interruptor pide a cada clic porque
+cada bloqueo es una decisión que vale por sí sola y hay que asentarla. Aquí no: las
+cantidades son un único acto de compra, y enviarlas una a una cobraría por partes algo que
+el acudiente piensa entero. Por eso el formulario es clásico y no lleva HTMX — no hay nada
+que refrescar entre gesto y gesto.
+
+**No es el carrito del punto de venta.** Aquel vive en la sesión (`DT-26`) porque el cajero
+monta la venta gesto a gesto con una fila delante; aquí no hay fila y no hace falta estado
+de servidor.
+
+**El `max` de cada campo es lo que queda sin apartar**, no las existencias: ofrecer más de lo
+que el servicio va a aceptar es enseñar un rechazo antes de tiempo. Y lo que se escribió se
+devuelve escrito cuando hay un rechazo — quien acaba de leer un motivo no debería teclear
+otra vez lo mismo.
 
 ### [S2.7] Historial de cambios
 

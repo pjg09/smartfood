@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 31 (`DT-1` … `DT-31`) |
+| decisiones | 33 (`DT-1` … `DT-33`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.6 |
+| version | 1.7 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-31`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-33`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -510,6 +510,45 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 
 ---
 
+#### `[DT-32]` Una reserva es una `Venta` con otro origen, no otra tabla
+
+**Obliga:** `HU-23` —«se paga en el momento de reservarse»— más las restricciones que ya existían: un movimiento de billetera de tipo `venta` **tiene** que señalar una `Venta` (`TT-78`, `INV-2`). Cobrar al reservar exige, por tanto, crear la venta al reservar.
+
+**Decidido:**
+
+- **La reserva se asienta como una `Venta` normal**, con sus `LineaVenta` y su instantánea de precios (`DT-8`). No hay una segunda tabla que guarde lo que se pidió y lo que costó.
+- `Venta` estrena **`origen`**, con dos valores: `punto_de_venta` y `reserva`.
+- **`cajero` pasa a ser opcional**, y una `CheckConstraint` le da sentido: origen `punto_de_venta` **exige** cajero; origen `reserva` **exige** que no lo haya, y además exige estudiante.
+- `PedidoAnticipado` es una tabla aparte con **una sola cosa que la venta no tiene**: el estado de la entrega. Es `OneToOne` con la venta.
+
+**Por qué el campo `origen` y no solo un cajero nulo.** Sin él, «venta sin cajero» no significaría nada: nada impediría que una venta del mostrador se guardara sin cajero por un error de código, y el cierre de caja de `HU-55` contaría mal sin que nada avisara. Con el origen declarado, la base rechaza las dos combinaciones que no deberían existir.
+
+**Descartado: guardar al acudiente en `cajero`.** No cambia el modelo, y por eso es tentador. Pero el campo mentiría sobre quién cobró, y `HU-55` —cierre de caja por cajero y medio de pago— contaría como caja de alguien lo que nadie cobró en un mostrador.
+
+**Descartado: una tabla de pedidos con sus propias líneas.** Duplicaría `LineaVenta` y su instantánea, y entonces habría dos definiciones de «lo que se pidió y a qué precio». Es lo que `DT-19` evita en el modelo y `DT-4` y `DT-5` en los dos libros.
+
+---
+
+#### `[DT-33]` La reserva cobra al reservarse; el inventario se mueve al entregar
+
+**Obliga:** `HU-23` (segundo criterio) y `HU-25` (segundo criterio), y una decisión del equipo entre dos lecturas posibles del plan del Sprint 4, que se contradecían.
+
+**Decidido:**
+
+- **Al reservar** se descuenta **saldo** y no existencias.
+- **Al entregar** (`HU-25`, `TT-149`) se descuentan las **existencias** y no se vuelve a tocar el saldo.
+- La reserva valida contra **`existencias_sin_reservar`** —existencias menos lo apartado por pedidos pendientes— y no contra las existencias a secas.
+
+**El hecho que obliga a lo tercero.** Como las unidades reservadas siguen en el libro hasta la entrega, dos reservas del último paquete pasarían las dos: las existencias dicen «queda 1» las dos veces, porque ninguna lo ha descontado. Quien reservó segundo habría pagado por algo que no va a recibir. `existencias_sin_reservar` lo cierra **sin tocar `INV-3`**: no hay columna ni caché, las existencias siguen siendo la suma del historial y esto es otra cifra que se lee al lado.
+
+**Lo que esta decisión deja abierto, y hay que decidir en `HU-25`.** La venta del mostrador sigue mirando las existencias reales, así que **el cajero puede vender unidades apartadas para una reserva ya pagada**. Cuando eso pase, el estudiante llegará a recoger algo que no está. `HU-25` es quien tiene que decidir qué hace la entrega en ese caso, porque es la historia que tiene el problema delante. Está anotado en `[S6]` de `./reglas-de-la-venta.md`.
+
+**La alternativa que se descartó** era descontar existencias al reservar. Cierra ese hueco por construcción —lo apartado sale del libro y la caja no puede venderlo— y hace la entrega trivial. Se descartó porque el inventario físico no se mueve hasta que el producto sale del mostrador, y el equipo prefirió que el libro dijera eso.
+
+**Lo que no cambia:** la reserva pasa por la misma validación que el cobro (`_bloquear_y_validar`), así que hereda las cuatro reglas de rechazo de los Sprints 2 y 3. Eso no es negociable y no depende de esta decisión.
+
+---
+
 ## [S2] Modelo de datos núcleo
 
 Dieciocho entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres se ajustarán al implementar; **la forma no**.
@@ -583,12 +622,16 @@ El campo `sobre` del asiento llegó con eso: producto y alérgeno traen su clave
 
 | Entidad | Campos clave | Sostiene |
 |---|---|---|
-| `Venta` | cajero, **estudiante (opcional)**, medio_pago (`billetera`/`efectivo`/`transferencia`), creado_en | `DEC-1`, `HU-53`, `HU-54` |
+| `Venta` | **cajero (solo si es del mostrador)**, **estudiante (opcional)**, medio_pago (`billetera`/`efectivo`/`transferencia`), **origen** (`punto_de_venta`/`reserva`), creado_en | `DEC-1`, `HU-53`, `HU-54`, `DT-32` |
 | `LineaVenta` | venta, producto, cantidad, **precio e información nutricional copiados** | `DT-8`, `HU-22` |
-| `PedidoAnticipado` | estudiante, estado, venta | `ALC-IN-10`, `HU-23` |
+| `PedidoAnticipado` | **venta (uno a uno)**, estado (`pendiente`/`entregado`), entregado_en, entregado_por | `ALC-IN-10`, `HU-23`, `HU-25`, `DT-32` |
 | `CierreCaja` | fecha, cajero, base, efectivo_contado, ventas_efectivo, diferencia, motivo | `DEC-6`, `INVD-5`, `HU-55` |
 
 `Venta.estudiante` **opcional** es lo que habilita la venta a cliente genérico de `DEC-1`: una venta sin estudiante es una venta a `USR-6`.
+
+`Venta.origen` y `Venta.cajero` se implican mutuamente y lo impone una `CheckConstraint` (`DT-32`): la del mostrador **tiene** cajero; la reserva **no** —la cobra el acudiente— y exige estudiante, porque no hay reserva de un cliente genérico.
+
+**`PedidoAnticipado` no guarda ni lo que se pidió ni lo que costó**: eso vive en la `Venta` y sus `LineaVenta`, como en cualquier otra venta. Lo único que añade es el estado de la entrega, y por eso es tan corto.
 
 ---
 
