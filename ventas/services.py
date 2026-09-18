@@ -43,7 +43,15 @@ from restricciones.selectors import (
     bloqueos_entre,
     limite_diario_de,
 )
-from ventas.models import LineaVenta, MedioDePago, Venta
+from ventas.models import (
+    EstadoDelPedido,
+    LineaVenta,
+    MedioDePago,
+    OrigenDeLaVenta,
+    PedidoAnticipado,
+    Venta,
+)
+from ventas.selectors import existencias_sin_reservar
 
 
 class VentaRechazada(ValidationError):
@@ -287,62 +295,16 @@ class LimiteDiarioSuperado(VentaRechazada):
         )
 
 
-@transaction.atomic
-def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
-    """Cobra: descuenta saldo y existencias **en la misma operación** (`HU-21`).
+def _normalizar_lineas(lineas, *, vacio="No hay nada que cobrar."):
+    """Deja `lineas` como `{UUID: entero positivo}`, o rechaza (`TT-144`).
 
-    Devuelve la `Venta` creada.
-
-    `lineas` es `{producto_id: cantidad}` — un renglón por producto, que es lo
-    que `LineaVenta` admite (`TT-78`). Cantidades enteras y positivas.
-
-    ── EL ORDEN ES LA INVARIANTE ───────────────────────────────────────────
-    `DT-6`, y se lee de arriba abajo en el cuerpo de esta función:
-
-    1. **Se bloquea.** `select_for_update()` sobre la billetera y sobre los
-       productos implicados. Desde aquí hasta el `COMMIT`, ninguna otra venta
-       toca esas filas: espera.
-    2. **Se valida** —existencias y saldo— leyendo **dentro** del bloqueo. Es lo
-       único que hace cierta `INV-1`: la cifra que se lee ya no puede cambiar
-       debajo.
-    3. **Se escribe**: la venta, sus líneas y los movimientos de los dos libros.
-
-    Todo dentro de **una** `transaction.atomic()`. Si cualquier validación falla
-    —o falla la escritura a medio camino— no queda nada: ni venta, ni líneas, ni
-    movimientos. Eso es literalmente el primer criterio de `HU-21`, «ambos
-    descuentos ocurren en la misma operación: no puede quedar uno sin el otro».
-
-    Validar antes del bloqueo daría el mismo resultado en una prueba secuencial y
-    rompería `INV-1` en producción, que es la peor clase de error: el que pasa
-    las pruebas. `ventas/tests_concurrencia.py` existe para detectarlo.
-    ─────────────────────────────────────────────────────────────────────────
-
-    ── LOS PRODUCTOS SE BLOQUEAN ORDENADOS POR IDENTIFICADOR ───────────────
-    Dos ventas simultáneas que compartan dos productos podrían bloquearlos en
-    orden distinto y quedarse esperando la una a la otra para siempre. Un orden
-    total y fijo —el del identificador— hace imposible el ciclo. La billetera va
-    primero, y no entra en el ciclo porque cada venta toca como mucho una.
-    ─────────────────────────────────────────────────────────────────────────
-
-    **`estudiante=None` es una venta a cliente genérico** (`DEC-1`): descuenta
-    inventario como cualquier otra y no toca ninguna billetera. La pantalla que
-    la emite es `HU-53` (`PR-15`); el servicio ya la sabe hacer porque separarla
-    habría significado dos caminos de escritura para el mismo libro, que es justo
-    lo que `DT-24` evita.
-
-    **Las tres restricciones del control parental se evalúan aquí**, en el paso
-    2 y por este orden: alérgeno (`TT-113`), producto bloqueado (`TT-131`) y
-    cupo del día (`TT-116`). Las tres van antes del saldo, que es donde `DT-6`
-    pide que vayan y lo que hace que el cajero lea el motivo que de verdad
-    explica el rechazo.
-
-    **Y antes que todas ellas, si el estudiante puede comprar** (`TT-125`,
-    `INVD-2`): con la tarjeta bloqueada da igual qué lleve en el carrito.
+    **Compartida por la venta y la reserva** desde `TT-144`. Estaba dentro de
+    `registrar_venta` y se extrajo tal cual: la reserva necesita exactamente las
+    mismas comprobaciones, y dos copias de esto es como una de las dos se queda
+    sin el arreglo de la próxima.
     """
-    _solo_el_cajero(actor)
-
     if not lineas:
-        raise CarritoVacio("No hay nada que cobrar.")
+        raise CarritoVacio(vacio)
 
     # Las claves se normalizan a `UUID`. El carrito vive en la sesión, que se
     # serializa a JSON y devuelve los identificadores como **texto**; las pruebas
@@ -358,7 +320,41 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
         if not isinstance(cantidad, int) or cantidad <= 0:
             raise VentaRechazada("Cada renglón se vende por unidades enteras y positivas.")
 
-    medio_pago = _medio_de_pago_de(estudiante, medio_pago)
+    return lineas
+
+
+def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los=None):
+    """Los pasos 1 y 2 de `DT-6`, **compartidos por la venta y la reserva**.
+
+    Devuelve `(productos, total)`, con los productos ya bloqueados.
+
+    ── POR QUÉ ESTO ES UNA FUNCIÓN Y NO ESTÁ COPIADO EN LOS DOS SITIOS ─────
+    Es **el riesgo de diseño que el plan del Sprint 4 marcó en rojo**. Aquí
+    dentro viven las cuatro reglas de rechazo que construyeron los Sprints 2 y 3
+    —estudiante desactivado, alérgeno bloqueado, producto bloqueado y cupo del
+    día— más las existencias y el saldo.
+
+    Si la reserva tuviera su propio flujo, esas reglas **no se le aplicarían**, y
+    quedaría una puerta trasera para saltarse el control parental entero: el
+    acudiente no podría comprarle a su hijo algo con un alérgeno bloqueado en la
+    caja, pero sí reservárselo la noche anterior. Que haya una sola copia no es
+    higiene, es la invariante.
+
+    `HU-23` no menciona ninguna de las cuatro. Hay que saberlo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── `existencias_de_los` ────────────────────────────────────────────────
+    Qué cuenta como disponible. La venta del mostrador mira las existencias
+    reales; la reserva mira las que quedan **descontando lo ya reservado y no
+    entregado** (`existencias_sin_reservar`, `TT-144`), porque no descuenta
+    inventario al cobrar y dos reservas del último paquete pasarían las dos.
+
+    Es lo único que cambia entre las dos, y por eso es un argumento y no una
+    rama dentro de la función: una rama invita a añadir la segunda.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    if existencias_de_los is None:
+        existencias_de_los = existencias_por_producto
 
     # ── 1. BLOQUEAR ─────────────────────────────────────────────────────────
     # `list()` no es decorativo: sin evaluar el `QuerySet` no se emite ningún
@@ -462,7 +458,7 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
                 productos=nombres,
             )
 
-    existencias = existencias_por_producto(productos)
+    existencias = existencias_de_los(productos)
     for producto in productos:
         disponibles = existencias.get(producto.id, 0)
         if disponibles < lineas[producto.id]:
@@ -536,6 +532,69 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
                 total=total,
             )
 
+    return productos, total
+
+
+@transaction.atomic
+def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
+    """Cobra: descuenta saldo y existencias **en la misma operación** (`HU-21`).
+
+    Devuelve la `Venta` creada.
+
+    `lineas` es `{producto_id: cantidad}` — un renglón por producto, que es lo
+    que `LineaVenta` admite (`TT-78`). Cantidades enteras y positivas.
+
+    ── EL ORDEN ES LA INVARIANTE ───────────────────────────────────────────
+    `DT-6`, y se lee de arriba abajo en el cuerpo de esta función:
+
+    1. **Se bloquea.** `select_for_update()` sobre la billetera y sobre los
+       productos implicados. Desde aquí hasta el `COMMIT`, ninguna otra venta
+       toca esas filas: espera.
+    2. **Se valida** —existencias y saldo— leyendo **dentro** del bloqueo. Es lo
+       único que hace cierta `INV-1`: la cifra que se lee ya no puede cambiar
+       debajo.
+    3. **Se escribe**: la venta, sus líneas y los movimientos de los dos libros.
+
+    Todo dentro de **una** `transaction.atomic()`. Si cualquier validación falla
+    —o falla la escritura a medio camino— no queda nada: ni venta, ni líneas, ni
+    movimientos. Eso es literalmente el primer criterio de `HU-21`, «ambos
+    descuentos ocurren en la misma operación: no puede quedar uno sin el otro».
+
+    Validar antes del bloqueo daría el mismo resultado en una prueba secuencial y
+    rompería `INV-1` en producción, que es la peor clase de error: el que pasa
+    las pruebas. `ventas/tests_concurrencia.py` existe para detectarlo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LOS PRODUCTOS SE BLOQUEAN ORDENADOS POR IDENTIFICADOR ───────────────
+    Dos ventas simultáneas que compartan dos productos podrían bloquearlos en
+    orden distinto y quedarse esperando la una a la otra para siempre. Un orden
+    total y fijo —el del identificador— hace imposible el ciclo. La billetera va
+    primero, y no entra en el ciclo porque cada venta toca como mucho una.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **`estudiante=None` es una venta a cliente genérico** (`DEC-1`): descuenta
+    inventario como cualquier otra y no toca ninguna billetera. La pantalla que
+    la emite es `HU-53` (`PR-15`); el servicio ya la sabe hacer porque separarla
+    habría significado dos caminos de escritura para el mismo libro, que es justo
+    lo que `DT-24` evita.
+
+    **Las tres restricciones del control parental se evalúan aquí**, en el paso
+    2 y por este orden: alérgeno (`TT-113`), producto bloqueado (`TT-131`) y
+    cupo del día (`TT-116`). Las tres van antes del saldo, que es donde `DT-6`
+    pide que vayan y lo que hace que el cajero lea el motivo que de verdad
+    explica el rechazo.
+
+    **Y antes que todas ellas, si el estudiante puede comprar** (`TT-125`,
+    `INVD-2`): con la tarjeta bloqueada da igual qué lleve en el carrito.
+    """
+    _solo_el_cajero(actor)
+
+    lineas = _normalizar_lineas(lineas)
+
+    medio_pago = _medio_de_pago_de(estudiante, medio_pago)
+
+    productos, total = _bloquear_y_validar(estudiante=estudiante, lineas=lineas)
+
     # ── 3. ESCRIBIR ─────────────────────────────────────────────────────────
     venta = Venta.objects.create(
         cajero=actor, estudiante=estudiante, medio_pago=medio_pago
@@ -603,3 +662,129 @@ def total_de(venta):
     se movió por debajo, que es lo que hacía esta función antes de `TT-84`.
     """
     return sum((linea.importe for linea in venta.lineas.all()), Decimal("0.00"))
+
+
+def _solo_su_acudiente(actor, estudiante):
+    """`[S11]`: el acudiente opera sobre **sus** estudiantes y sobre ningún otro.
+
+    `TT-144`, `HU-23` —«se gestiona desde la aplicación del acudiente»—. Vive en
+    el servicio y no en la vista porque `DT-15` no admite reglas que dependan de
+    por dónde se entre.
+
+    **Que sean suyos es la mitad que se olvida.** Un acudiente identificado es
+    un actor legítimo; reservarle a un estudiante que no es su hijo es pagar con
+    su billetera el consumo de otro. La comprobación va sobre el vínculo, no
+    sobre el rol.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Reservar exige identificarse.")
+    if actor.rol != Rol.ACUDIENTE:
+        raise PermissionDenied(
+            "Reservar el consumo por adelantado es del acudiente, y de ningún "
+            "otro rol ([S11], HU-23)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+    if estudiante is None or estudiante.acudiente.usuario_id != actor.id:
+        raise PermissionDenied(
+            "Solo se reserva para los estudiantes a cargo de quien reserva."
+        )
+
+
+@transaction.atomic
+def reservar(*, actor, estudiante, lineas):
+    """Reserva y **cobra en el momento** el consumo de un estudiante (`HU-23`).
+
+    Devuelve el `PedidoAnticipado` creado.
+
+    Los tres criterios de la historia, y dónde se cumple cada uno:
+
+    1. **El pedido se asocia al perfil del estudiante.** La `Venta` lo lleva, y
+       la restricción `venta_cajero_segun_su_origen` no admite una reserva sin
+       él: no hay reserva de un cliente genérico.
+    2. **Se paga en el momento de reservarse.** El movimiento de billetera se
+       asienta aquí, no al entregar. Es lo que `TT-146` comprueba.
+    3. **Se gestiona desde la aplicación del acudiente.** `_solo_su_acudiente`.
+
+    ── ES UNA VENTA ANTICIPADA, NO UN APARTADO ────────────────────────────
+    Valida por **la misma función** que el cobro del mostrador,
+    `_bloquear_y_validar`, y por eso hereda las cuatro reglas de rechazo que
+    construyeron los Sprints 2 y 3: estudiante desactivado (`INVD-2`), alérgeno
+    bloqueado (`INV-5`), producto bloqueado y cupo del día.
+
+    **Ninguna de las cuatro aparece en `HU-23`.** Si esto tuviera su propio
+    flujo, un acudiente no podría comprarle a su hijo en la caja algo con un
+    alérgeno bloqueado, pero sí reservárselo la noche anterior — y el control
+    parental entero tendría una puerta trasera. Es el riesgo de diseño que el
+    plan del sprint marcó en rojo, y la única defensa es que no haya dos copias.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LO QUE SÍ CAMBIA: NO DESCUENTA INVENTARIO ──────────────────────────
+    El libro de inventario se mueve **al entregar** (`HU-25`, `TT-149`), no
+    aquí. Decisión del equipo, registrada en `DT-33`.
+
+    Tiene una consecuencia que hay que sostener: como las unidades no salen del
+    libro, dos reservas del último paquete pasarían las dos. Por eso la reserva
+    valida contra `existencias_sin_reservar` —existencias menos lo apartado por
+    pedidos pendientes— y no contra las existencias a secas.
+
+    **El hueco que queda es la caja**, que sigue mirando las existencias reales
+    y puede vender lo apartado. Está anotado en `[S6]` de
+    `./docs/reglas-de-la-venta.md` y lo decide `HU-25`, que es quien tiene que
+    saber qué hacer cuando el estudiante llega y no hay lo suyo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **El medio de pago es la billetera y no se pregunta.** Hay estudiante, así
+    que `HU-54` y `DEC-1` no dejan otro: el efectivo y la transferencia son de
+    la venta genérica, y una reserva pagada en efectivo sería alguien poniendo
+    billetes en una aplicación, que es lo que `ALC-OUT-01` deja fuera.
+    """
+    _solo_su_acudiente(actor, estudiante)
+
+    lineas = _normalizar_lineas(lineas, vacio="No hay nada que reservar.")
+
+    productos, total = _bloquear_y_validar(
+        estudiante=estudiante,
+        lineas=lineas,
+        existencias_de_los=existencias_sin_reservar,
+    )
+
+    venta = Venta.objects.create(
+        cajero=None,
+        estudiante=estudiante,
+        medio_pago=MedioDePago.BILLETERA,
+        origen=OrigenDeLaVenta.RESERVA,
+    )
+
+    # La instantánea, igual que en el mostrador (`DT-8`, `HU-22`): el precio y
+    # los nutrientes se copian de la fila bloqueada. Importa más aquí todavía —
+    # entre reservar y entregar puede pasar una noche, y lo que se cobró no lo
+    # puede reescribir una edición del catálogo de mañana.
+    LineaVenta.objects.bulk_create(
+        [
+            LineaVenta(
+                venta=venta,
+                producto=producto,
+                cantidad=lineas[producto.id],
+                precio_unitario=producto.precio,
+                **{
+                    campo: getattr(producto, campo)
+                    for campo in LineaVenta.CAMPOS_DE_LA_INSTANTANEA
+                },
+            )
+            for producto in productos
+        ]
+    )
+
+    # **El cobro, ahora.** Por el único punto de asiento del libro (`DT-24`).
+    # El de inventario no se toca: lo mueve la entrega (`DT-33`).
+    asentar_en_la_billetera(
+        estudiante=estudiante,
+        tipo=TipoDeMovimiento.VENTA,
+        monto=-total,
+        venta=venta,
+    )
+
+    return PedidoAnticipado.objects.create(
+        venta=venta, estado=EstadoDelPedido.PENDIENTE
+    )
