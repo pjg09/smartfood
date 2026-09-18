@@ -29,6 +29,7 @@ from ventas.selectors import (
     informacion_de_cobro,
     lineas_del_carrito,
     pedidos_pendientes_de,
+    reservas_pendientes,
 )
 from ventas.services import VentaRechazada, registrar_venta, reservar, total_de
 
@@ -392,5 +393,40 @@ def reserva(request, estudiante_id):
             "saldo": saldo_de(estudiante),
             "pendientes": pedidos_pendientes_de(estudiante),
             "error": error,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def reservas(request):
+    """La cola de reservas pendientes del personal de la cafetería (`TT-148`).
+
+    `HU-24`, y su único criterio: **las reservas pendientes son consultables
+    desde la cafetería**. Para tenerlas preparadas antes de que lleguen los
+    estudiantes, que es el «para qué» de la historia.
+
+    **La autorización la hace el selector**, no un `if` de esta vista: es el
+    único camino por el que la cola llega a una pantalla, y así la regla se
+    aplica entre por donde entre (`DT-15`, `DT-11`).
+
+    ── POR QUÉ NO ESTÁ DENTRO DEL PUNTO DE VENTA ──────────────────────────
+    `INT-2` es una pantalla de tres columnas sin scroll, dimensionada para cobrar
+    en 1024 × 600 con una fila delante. Una lista que crece con el día no cabe
+    ahí sin quitarle sitio a lo que se pulsa en cada venta.
+
+    Y no hace falta que esté: se consulta **antes** del descanso, no durante.
+    Durante, lo que el cajero necesita es el pedido del estudiante que tiene
+    delante, y eso llega al identificar — es `HU-25`.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    pendientes = reservas_pendientes(actor=request.user)
+
+    return render(
+        request,
+        "ventas/reservas-pendientes.html",
+        {
+            "pendientes": pendientes,
+            "cuantas": pendientes.count(),
         },
     )

@@ -1,0 +1,118 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} TT-148. La cola de reservas pendientes (`HU-24`, `FUN-5`).
+
+   **Es una cola de trabajo, no un historial**, y por eso lo más antiguo va
+   arriba: lo que el personal necesita saber es qué lleva más tiempo esperando.
+   Todo lo demás del proyecto —billetera, inventario, restricciones— se lee al
+   revés, así que conviene que se note.
+
+   Composición de tabla de datos (`[S2.2]`): desde `tablet` una tabla con la
+   cabecera tintada; por debajo, una ficha de dos franjas por reserva. Se copia
+   de `personas/partials/padron-tabla.html`.
+
+   **No lleva el importe**, y no es un olvido: lo que hace falta para preparar un
+   pedido es quién y qué, no cuánto costó. Ya está pagado y nadie va a cobrarlo
+   otra vez. Una columna más en una tabla que se consulta de pie, antes del
+   descanso, es una columna que se salta la vista.
+
+   **La pantalla la comparten el cajero y la administración** (`USR-3` y `USR-4`),
+   que no comparten interfaz: por eso vive en el armazón de la aplicación y no
+   dentro de `INT-2`, y por eso no está en el admin. Está razonado en `DT-34`.
+{% endcomment %}
+
+{% block titulo %}Reservas pendientes | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Reservas pendientes</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Ya están pagadas: el estudiante solo viene a recogerlas. Lo que lleva más tiempo
+        esperando va primero.
+      </p>
+    </header>
+
+    {% if pendientes %}
+      <p class="text-base font-medium text-texto-suave" data-cuantas-reservas>
+        <strong class="font-semibold text-texto">{{ cuantas }}</strong>
+        reserva{{ cuantas|pluralize }} por entregar.
+      </p>
+
+      {% comment %} Móvil: una ficha por reserva, en dos franjas. Arriba a quién y desde
+         cuándo, que es lo que se busca de un vistazo; abajo, qué lleva. {% endcomment %}
+      <ul class="flex flex-col gap-3 tablet:hidden">
+        {% for pedido in pendientes %}
+          <li data-reserva class="overflow-hidden rounded-md border border-borde bg-superficie">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 p-3">
+              <span class="text-base font-semibold text-texto">
+                {{ pedido.venta.estudiante.nombre }}
+              </span>
+              <span class="text-sm text-texto-suave">
+                {{ pedido.creado_en|date:"j" }} de
+                {{ pedido.creado_en|date:"F"|lower }}, {{ pedido.creado_en|date:"H:i" }}
+              </span>
+            </div>
+            <ul class="flex flex-col gap-0.5 bg-superficie-hover p-3">
+              {% for linea in pedido.venta.lineas.all %}
+                <li class="text-base text-texto">{{ linea.cantidad }} × {{ linea.producto.nombre }}</li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+        <table class="w-full border-collapse text-left">
+          <thead class="bg-superficie-hover">
+            <tr>
+              <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Estudiante</th>
+              <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Reservado</th>
+              <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Qué lleva</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pedido in pendientes %}
+              <tr data-reserva class="border-t border-borde bg-superficie align-top">
+                <td class="p-3 text-base font-medium text-texto">
+                  {{ pedido.venta.estudiante.nombre }}
+                </td>
+                <td class="p-3 text-base text-texto-suave">
+                  {{ pedido.creado_en|date:"j" }} de
+                  {{ pedido.creado_en|date:"F"|lower }}, {{ pedido.creado_en|date:"H:i" }}
+                </td>
+                <td class="p-3">
+                  <ul class="flex flex-col gap-0.5">
+                    {% for linea in pedido.venta.lineas.all %}
+                      <li class="text-base text-texto">
+                        {{ linea.cantidad }} × {{ linea.producto.nombre }}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% comment %} Un hueco dice qué falta y qué historia lo trae, nunca un botón
+         deshabilitado (`[S2.4]`). Registrar la entrega es `HU-25`. {% endcomment %}
+      <div role="note"
+           class="flex items-start gap-3 rounded-md border border-dashed border-borde p-4">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+        <p class="text-sm text-texto-suave">
+          <strong class="font-semibold text-texto">Registrar la entrega llega con HU-25.</strong>
+          Por ahora esta pantalla dice qué hay que preparar; marcar un pedido como entregado
+          —y que no se pueda entregar dos veces— es la siguiente historia.
+        </p>
+      </div>
+    {% else %}
+      <p class="rounded-md border border-dashed border-borde p-8 text-center text-base
+                text-texto-suave">
+        No hay ninguna reserva por entregar. Las que el acudiente pague aparecerán aquí.
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}
