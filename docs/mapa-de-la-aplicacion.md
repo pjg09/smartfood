@@ -73,6 +73,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
+| `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
 **Comprobado ejecutando**, con cada rol identificado y con un anónimo:
@@ -164,9 +165,14 @@ coincidir porque dejaría media pantalla en cada tema.
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Cinco lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Seis lecturas que
 conviene no perder:
 
+- **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
+  `/admin/catalogo/producto/<id>/historial/`, que enseña la cifra y debajo los movimientos
+  que la suman, con una columna de existencias tras cada uno. Es una vista propia del admin
+  registrada en `get_urls()`, como la baja y la reasignación de `personas`: **no es una
+  segunda excepción a `DT-27`**, que sigue siendo solo el padrón.
 - **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
   un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
   es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
