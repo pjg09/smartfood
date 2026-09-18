@@ -10,10 +10,14 @@ así que el registro del ingreso vive aquí y no en una plantilla propia.
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import Http404
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
+from django.utils.html import format_html
 
 from cuentas.models import Rol
 from inventario.models import Merma, MovimientoInventario, TipoDeMovimientoDeInventario
-from inventario.selectors import existencias_por_producto
+from inventario.selectors import existencias_de, existencias_por_producto, historial_de
 from inventario.services import ingresar_mercancia, registrar_merma
 
 
@@ -221,16 +225,15 @@ class MermaAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
 
 
 class ExistenciasEnElCatalogo:
-    """Mixin que añade la columna de existencias al listado de productos.
+    """Mixin que añade al listado de productos las existencias y su explicación.
 
     **No hereda de `ModelAdmin`**, igual que el mixin de permisos: se mezcla con
     el `ModelAdmin` de `catalogo` y heredar de él dos veces complica el MRO sin
     aportar nada.
 
-    Se calcula **al pintar el listado y en una sola consulta**
-    (`existencias_por_producto`), no fila a fila: con un `existencias_de` por
-    producto serían tantas consultas como filas, y el catálogo de un colegio no
-    es corto.
+    Vive en `inventario` y no en `catalogo` aunque se cuelgue del admin del
+    producto: las existencias son del libro de inventario, no un atributo del
+    catálogo. Esa separación es la misma que `DT-5` sostiene en el modelo.
     """
 
     def get_queryset(self, request):
@@ -247,5 +250,97 @@ class ExistenciasEnElCatalogo:
         Un producto sin movimientos da cero, y eso no es un caso especial: es la
         suma de una lista vacía. Se enseña «0» y no un hueco, porque un hueco se
         lee como «no se sabe».
+
+        **La cifra es un enlace a su explicación** (`TT-141`, `HU-29`). Es el
+        gesto que la historia pide: quien ve un número que no cuadra pincha el
+        número, no busca en un menú otra pantalla que quizá hable del mismo
+        producto.
         """
-        return getattr(self, "_existencias", {}).get(obj.pk, 0)
+        cuantas = getattr(self, "_existencias", {}).get(obj.pk, 0)
+        return format_html(
+            '<a href="{}" title="Ver de dónde sale esta cifra">{}</a>',
+            reverse("admin:catalogo_producto_historial", args=[obj.pk]),
+            cuantas,
+        )
+
+    def get_urls(self):
+        """`TT-141`. La pantalla que explica una cifra de existencias.
+
+        Va antes de las de Django: las suyas incluyen `<path:object_id>/change/`
+        y una ruta propia declarada después nunca llegaría a resolverse.
+        """
+        propias = [
+            path(
+                "<path:object_id>/historial/",
+                self.admin_site.admin_view(self.vista_historial),
+                name="catalogo_producto_historial",
+            ),
+        ]
+        return propias + super().get_urls()
+
+    def vista_historial(self, request, object_id):
+        """El desglose de una cifra de existencias (`HU-29`, `INV-3`).
+
+        ── QUÉ HACE ESTA PANTALLA QUE NO HICIERA YA EL LISTADO ────────────────
+        El listado de movimientos existe desde `TT-69` y se puede filtrar. Lo
+        que no daba es lo que `HU-29` pide literalmente: **poder auditar un
+        descuadre**. Para eso no basta ver los asientos; hace falta seguirlos
+        hasta la cifra y encontrar en qué renglón se torció.
+
+        Por eso la tabla lleva una columna de **existencias tras cada
+        movimiento**, calculada aquí, en Python, recorriendo el historial de la
+        más antigua a la más reciente. La cifra grande de arriba sale de
+        `existencias_de`, que es un `SUM` de la base.
+
+        **Las dos cifras salen de caminos distintos a propósito.** Si algún día
+        divergieran, esta pantalla lo enseña sin que nadie tenga que buscarlo:
+        el último renglón de la columna no coincidiría con el total. Es `TST-4`
+        puesto donde lo ve un humano, y `TT-142` es el mismo escenario puesto
+        donde lo ve la suite.
+
+        **No se guarda ningún acumulado.** Se calcula al pintar y se tira. Un
+        acumulado almacenado sería la segunda fuente de verdad que `DT-5`
+        evita.
+        ─────────────────────────────────────────────────────────────────────
+
+        **Autoriza antes de leer nada**: la matriz `[S11]` da el inventario a la
+        administración de la cafetería y a nadie más, y esta pantalla enseña el
+        libro entero de un producto.
+        """
+        producto = self.get_object(request, object_id)
+        if producto is None:
+            raise Http404("Ese producto no está en el catálogo.")
+        if not self.has_view_permission(request, producto):
+            raise PermissionDenied(
+                "Consultar el inventario es función de la administración de la "
+                "cafetería ([S11])."
+            )
+
+        movimientos = list(
+            historial_de(producto).select_related("venta")
+        )
+
+        # `historial_de` llega del más reciente al más antiguo, que es el orden
+        # en que se lee un extracto. El acumulado necesita el contrario, así que
+        # se recorre al revés y se vuelve a invertir para pintar.
+        corridas = []
+        acumulado = 0
+        for movimiento in reversed(movimientos):
+            acumulado += movimiento.cantidad
+            corridas.append((movimiento, acumulado))
+        corridas.reverse()
+
+        return TemplateResponse(
+            request,
+            "admin/catalogo/producto/historial.html",
+            {
+                **self.admin_site.each_context(request),
+                "title": f"Existencias de {producto.nombre}",
+                "producto": producto,
+                "existencias": existencias_de(producto),
+                "corridas": corridas,
+                "cuantos": len(movimientos),
+                "volver": reverse("admin:catalogo_producto_changelist"),
+                "ficha": reverse("admin:catalogo_producto_change", args=[producto.pk]),
+            },
+        )

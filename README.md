@@ -18,8 +18,9 @@ cinco sprints de dos semanas.
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
 | Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
-| Historias terminadas | **46 de 61** |
+| Historias terminadas | **48 de 61** |
 | **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados. 18 tareas (`TT-137`…`TT-154`) en 7 PR |
+| Plan de pruebas | ✅ **completo**: los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`, demostrados |
 | Lo siguiente | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main` |
 | Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
@@ -32,6 +33,11 @@ cinco sprints de dos semanas.
 > El cajero ve al identificar la fotografía, el saldo, el consumo del día y las restricciones
 > vigentes; la institución bloquea y desbloquea tarjetas desde el padrón, y el acudiente
 > bloquea la suya sin esperar a secretaría —desbloquear, no: eso pasa por el colegio—.
+
+> **El plan de pruebas de `ENT-05` queda completo con el Sprint 4.** `TST-4` —las existencias
+> de un producto coinciden exactamente con la suma de su historial— era el último de los
+> cuatro escenarios críticos: `TST-3` se demostró en el Sprint 2, `TST-1` y `TST-2` en el 3.
+> Los cuatro se ejercitan en la suite y fallan si la invariante que protegen se rompe.
 
 > El avance de arriba envejece. **La fuente es el plan de PR del sprint en curso**, que es
 > donde vive el estado de cada tarea; esta tabla solo lo resume. El del sprint en curso es

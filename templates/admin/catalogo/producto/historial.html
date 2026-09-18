@@ -1,0 +1,97 @@
+{% extends "admin/base_site.html" %}
+
+{% comment %}
+TT-141. El desglose de una cifra de existencias (`HU-29`, `INV-3`).
+
+La historia pide poder **auditar un descuadre en lugar de tener que aceptarlo**,
+y para eso no basta con listar los asientos: hace falta seguirlos hasta la cifra
+y ver en qué renglón se torció. De ahí la columna «Existencias» de la derecha.
+
+Esa columna se calcula en Python al pintar, y el total de arriba es un `SUM` de
+la base. **Salen de caminos distintos a propósito**: si divergieran, el último
+renglón no coincidiría con el total y se vería sin buscarlo. Es `TST-4` puesto
+donde lo ve un humano.
+
+Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus propias clases y los
+colores literales que ya usa `admin/base_site.html`.
+{% endcomment %}
+
+{% block title %}Existencias de {{ producto.nombre }} | {{ site_title }}{% endblock %}
+
+{% comment %}
+Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado, y
+añadir uno aquí lo enseña dos veces. Lo hacía, y se vio en la captura.
+{% endcomment %}
+
+{% block content %}
+  <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:baseline;
+              margin:1rem 0 1.5rem">
+    <p style="margin:0">
+      <strong style="font-size:2.5rem;line-height:1"
+              data-existencias-totales>{{ existencias }}</strong>
+      <span style="font-size:1rem"> unidades</span>
+    </p>
+    <p style="margin:0;max-width:60ch">
+      Es la suma de
+      {% if cuantos == 1 %}el único movimiento{% else %}los {{ cuantos }} movimientos{% endif %}
+      de abajo, y no hay ninguna columna que la guarde. Sigue la última columna
+      hasta arriba: tiene que terminar en esta cifra.
+    </p>
+  </div>
+
+  {% if corridas %}
+    <table style="width:100%">
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Tipo</th>
+          <th scope="col" style="text-align:right">Cantidad</th>
+          <th scope="col">Qué lo explica</th>
+          <th scope="col" style="text-align:right">Existencias</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for movimiento, acumulado in corridas %}
+          <tr>
+            <td>{{ movimiento.creado_en|date:"Y-m-d H:i" }}</td>
+            <td>{{ movimiento.get_tipo_display }}</td>
+            <td style="text-align:right;font-variant-numeric:tabular-nums">
+              {% if movimiento.cantidad > 0 %}+{% endif %}{{ movimiento.cantidad }}
+            </td>
+            <td>
+              {% if movimiento.venta_id %}
+                {% comment %}
+                  El motivo de una salida por venta **es** la venta (`TT-78`), y
+                  por eso ese movimiento no lleva motivo escrito. La venta no se
+                  administra —no hay admin de `ventas`—, así que se identifica y
+                  no se enlaza.
+                {% endcomment %}
+                Venta
+                <code title="{{ movimiento.venta_id }}"
+                      >{{ movimiento.venta_id|stringformat:"s"|slice:":8" }}</code>
+              {% elif movimiento.motivo %}
+                {{ movimiento.motivo }}
+              {% else %}
+                <span style="opacity:.6">—</span>
+              {% endif %}
+            </td>
+            <td style="text-align:right;font-variant-numeric:tabular-nums"
+                data-existencias-tras-el-movimiento>{{ acumulado }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <ul class="messagelist">
+      <li class="info">
+        Este producto no tiene ningún movimiento todavía, así que sus existencias
+        son cero. No es un caso especial: es la suma de una lista vacía.
+      </li>
+    </ul>
+  {% endif %}
+
+  <p style="margin-top:1.5rem">
+    <a href="{{ ficha }}" class="button">Ficha del producto</a>
+    <a href="{{ volver }}" class="button cancel-link">Volver al catálogo</a>
+  </p>
+{% endblock %}

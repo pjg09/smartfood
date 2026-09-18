@@ -278,7 +278,22 @@ punto de venta tendría que volver a pedir el catálogo entero solo para renovar
 La URL lleva la clave y no el identificador del producto: al reemplazar la imagen cambia
 la clave, así que cambia la URL y no hay nada que invalidar.
 
-### [S2.10] Dar de baja unidades que se perdieron
+### [S2.10] Averiguar de dónde salen unas existencias
+
+En el listado de productos del admin, **la cifra de la columna «existencias» es un enlace**.
+Lleva a una pantalla con esa misma cifra y, debajo, los movimientos que la suman: fecha,
+tipo, cantidad con su signo, qué lo explica —el motivo, o la venta si salió por una— y las
+**existencias que quedaban tras cada movimiento**.
+
+Esa última columna es la que sirve para auditar (`HU-29`): se sigue de abajo arriba y tiene
+que terminar en la cifra grande. Si no terminara, el renglón donde se tuerce es el problema.
+
+**Las dos cifras salen de caminos distintos a propósito.** La de arriba es un `SUM` de
+PostgreSQL; la columna se calcula en Python al pintar. No se guarda ningún acumulado: un
+acumulado almacenado sería la segunda fuente de verdad que `DT-5` evita, y la que acabaría
+discrepando del historial.
+
+### [S2.11] Dar de baja unidades que se perdieron
 
 En el admin, entrada **Mermas** → *Añadir merma*. Tres campos: producto, **unidades
 perdidas** —en positivo— y **motivo**, que es obligatorio (`HU-28`, `INV-8`).

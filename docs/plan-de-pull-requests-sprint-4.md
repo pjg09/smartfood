@@ -72,14 +72,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **4** de 18 | **2** de 7 |
-| Pendientes | 14 | 5 |
+| **Finalizadas** | **6** de 18 | **3** de 7 |
+| Pendientes | 12 | 4 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 2 | 6 |
-| Carlos | 1 | 5 |
-| Alejandro | 1 | 4 |
+| Carlos | 2 | 5 |
+| Alejandro | 2 | 4 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 7 Pull Requests
@@ -88,7 +88,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 |---|---|---|---|
 | `PR-01` | `TT-137` | **Retira** el entorno desplegado → `DEC-15`, `DT-31`; restablece `DoD-4` | ☑ |
 | `PR-02` | `TT-138`–`TT-140` | `HU-28` · `INV-8` | ☑ |
-| `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** | ☐ |
+| `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** — cierra `ENT-05` | ☑ |
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` | ☐ |
 | `PR-05` | `TT-147`–`TT-148` | `HU-24` | ☐ |
 | `PR-06` | `TT-149`–`TT-151` | `HU-25` | ☐ |
@@ -203,12 +203,12 @@ es más fuerte que no concederlos.
 | Responsables | Carlos y Alejandro |
 | Historia | `HU-29` |
 | Invariantes | `INV-3` · escenario crítico **`TST-4`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-141` | Vista del historial de movimientos de un producto, con tipo y motivo | Carlos | ☐ |
-| `TT-142` | Caso de prueba `TST-4`: existencias = suma del historial, tras ingreso, venta y merma | Alejandro | ☐ |
+| `TT-141` | Vista del historial de movimientos de un producto, con tipo y motivo | Carlos | ☑ |
+| `TT-142` | Caso de prueba `TST-4`: existencias = suma del historial, tras ingreso, venta y merma | Alejandro | ☑ |
 
 **No lleva tarea de backend.** `existencias_de` e `historial_de` existen desde `TT-67`, e
 `INV-3` se cumple por construcción porque no hay columna de existencias (`DT-5`). Lo que
@@ -219,7 +219,25 @@ falta es que un humano pueda **ver** la explicación, y la prueba que la ejercit
 > completo**. Merece decirse en la Sprint Review.
 
 `TT-142` depende de `PR-02` aunque sean historias distintas: `TST-4` exige ejercitar el
-historial **con una merma**.
+historial **con una merma**. Se ejercita con los tres tipos y los tres por su camino real
+—`ingresar_mercancia`, `registrar_venta` y `registrar_merma`—, no fabricando asientos: lo que
+se compara es lo que el sistema escribe cuando funciona.
+
+**La pantalla es del admin y cuelga del producto**, no del libro: `/admin/catalogo/producto/
+<id>/historial/`, y **la cifra de existencias del listado es el enlace que lleva a ella**. Es
+el gesto que la historia pide — quien ve un número que no cuadra pincha el número, no busca
+en un menú otra pantalla que quizá hable del mismo producto. No es una segunda excepción a
+`DT-27`: es el admin, con una vista propia registrada en `get_urls()`, como ya hacen la baja
+y la reasignación en `personas`.
+
+**Lo que esa pantalla añade sobre el listado de movimientos que ya existía** (`TT-69`) es la
+columna de **existencias tras cada movimiento**, y es lo que convierte «ver los asientos» en
+«auditar un descuadre», que es lo que `HU-29` pide literalmente. Se calcula en Python al
+pintar; el total de arriba es un `SUM` de la base. **Salen de caminos distintos a propósito**:
+si divergieran, el último renglón no coincidiría con el total y se vería sin buscarlo. Es
+`TST-4` puesto donde lo ve un humano, y `TT-142` el mismo escenario donde lo ve la suite.
+**No se guarda ningún acumulado**: se calcula y se tira, porque un acumulado almacenado sería
+la segunda fuente de verdad que `DT-5` evita.
 
 ---
 

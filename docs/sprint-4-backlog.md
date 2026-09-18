@@ -126,8 +126,8 @@ El criterio de la historia dice «aplica a **toda** disminución manual, no solo
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-141` | Vista del historial de movimientos de un producto, con su tipo y su motivo | Carlos | ☐ |
-| `TT-142` | Caso de prueba `TST-4`: las existencias coinciden exactamente con la suma del historial tras ingreso, venta y merma | Alejandro | ☐ |
+| `TT-141` | Vista del historial de movimientos de un producto, con su tipo y su motivo | Carlos | ☑ |
+| `TT-142` | Caso de prueba `TST-4`: las existencias coinciden exactamente con la suma del historial tras ingreso, venta y merma | Alejandro | ☑ |
 
 **No hay tarea de backend.** `existencias_de` e `historial_de` existen desde `TT-67`, y `INV-3` se cumple por construcción porque no hay columna de existencias (`DT-5`). Lo que falta es que un humano pueda **ver** esa explicación, que es lo que la historia pide, y la prueba que lo ejercita.
 
