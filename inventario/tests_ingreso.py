@@ -13,12 +13,13 @@ Los tres criterios de `HU-27`:
 Y la decisión que sostiene el sprint entero, la misma de `PR-02` aplicada al otro
 libro: **no existe una columna `existencias`**. Son la suma de los movimientos
 (`INV-3`), así que la correspondencia con el historial es cierta por
-construcción. `TST-4` la ejercitará en el Sprint 4 con la merma; aquí se
-comprueba lo que ya se puede.
+construcción. `TST-4` la ejercita `TT-142` con la merma; aquí se comprueba lo
+que ya se puede.
 
-`INV-8` —toda disminución manual exige motivo— se crea con el modelo aunque
-`HU-28` la ejercite más adelante: **es más barato poner la restricción ahora que
-añadirla sobre datos ya escritos**.
+`INV-8` —toda disminución manual exige motivo— se creó con el modelo antes de
+que hubiera quien la ejercitara: **es más barato poner la restricción entonces
+que añadirla sobre datos ya escritos**. Quien la ejercita es `HU-28`, y sus
+pruebas están en `./tests_merma.py`.
 """
 
 from decimal import Decimal
@@ -253,9 +254,10 @@ class LaInterfazAdministrativaTest(TestCase):
     def test_el_formulario_no_ofrece_elegir_el_tipo(self):
         """Solo ingresos desde aquí.
 
-        La venta la asienta el punto de venta (`TT-80`) y la merma es `HU-28`.
-        Ofrecer los tres tipos dejaría descontar existencias a mano saltándose la
-        venta, que es lo que `INV-3` no admite.
+        La venta la asienta el punto de venta (`TT-80`) y la merma tiene su
+        propia entrada (`Merma`, `TT-139`). Ofrecer los tres tipos dejaría
+        descontar existencias a mano saltándose la venta, que es lo que `INV-3`
+        no admite.
         """
         cuerpo = self.client.get(
             reverse("admin:inventario_movimientoinventario_add")
