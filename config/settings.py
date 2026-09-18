@@ -26,16 +26,6 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
-# El PaaS publica el dominio del servicio en una variable propia (TT-04). Se
-# añade solo si existe, para no obligar a declararla en local.
-DOMINIO_PUBLICO = env("RAILWAY_PUBLIC_DOMAIN", default="")
-if DOMINIO_PUBLICO:
-    # `healthcheck.railway.app` es la cabecera Host que envía la sonda de salud
-    # del PaaS. Sin ella, la sonda recibe un 400 y el despliegue se marca como
-    # fallido aunque la aplicación esté perfectamente viva.
-    ALLOWED_HOSTS = [*ALLOWED_HOSTS, DOMINIO_PUBLICO, "healthcheck.railway.app"]
-    CSRF_TRUSTED_ORIGINS = [f"https://{DOMINIO_PUBLICO}"]
-
 # --- Aplicaciones ---------------------------------------------------------
 
 # Una app por dominio. Aquí están solo las tres que toca el Sprint 1; billetera,
@@ -185,7 +175,7 @@ LOGOUT_REDIRECT_URL = "inicio"
 # no puede ser relativo: se abre desde el cliente de correo, no desde el sitio.
 URL_BASE = env(
     "DJANGO_URL_BASE",
-    default=f"https://{DOMINIO_PUBLICO}" if DOMINIO_PUBLICO else "http://localhost:8000",
+    default="http://localhost:8000",
 )
 
 # --- Registro (logging) ---------------------------------------------------
@@ -302,10 +292,11 @@ TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
 # La base guarda la CLAVE del objeto, nunca el binario (DT-18).
 #
 # Dos almacenamientos lógicos, `privado` y `publico`, sobre UN bucket con dos
-# prefijos. No son dos buckets porque los de Railway son privados sin excepción
-# —no existe modo público en ningún plan— y el plan gratuito además permite uno
-# por proyecto (DT-21). Como en el código son dos alias distintos, pasar a dos
-# buckets el día que haga falta es cambiar estas rutas, no rediseñar nada.
+# prefijos. La forma viene de lo que permitía el PaaS que DT-31 retiró: sus
+# buckets eran privados sin excepción y el plan gratuito permitía uno por
+# proyecto (DT-21). Se conserva porque la paridad con local es el argumento de
+# DT-18, y en local esto es MinIO. Como en el código son dos alias distintos,
+# pasar a dos buckets el día que haga falta es cambiar estas rutas.
 #
 # `publico` no significa accesible sin credenciales: significa «no sensible».
 # Las imágenes de producto se sirven a través de la aplicación con caché larga;
@@ -368,18 +359,21 @@ IMAGEN_TAMANO_MAXIMO_BYTES = env.int("IMAGEN_TAMANO_MAXIMO_BYTES", default=5 * 1
 IMAGEN_LADO_MAXIMO = env.int("IMAGEN_LADO_MAXIMO", default=1600)
 IMAGEN_CALIDAD = env.int("IMAGEN_CALIDAD", default=82)
 
-# --- Seguridad en el entorno desplegado (TT-04) ---------------------------
+# --- Seguridad fuera de desarrollo (DT-31) --------------------------------
 
 # Solo fuera de DEBUG. En local no hay HTTPS y activarlas rompería el
 # desarrollo con redirecciones a https://localhost.
+#
+# DT-31 retira el despliegue, pero estos ajustes no son del proveedor: valen en
+# cualquier ejecución que no sea de desarrollo y se quedan.
 if not DEBUG:
-    # El PaaS termina el TLS y reenvía por HTTP; sin esto Django cree que la
-    # petición no es segura y entra en un bucle de redirección.
+    # Detrás de un proxy que termina el TLS y reenvía por HTTP, sin esto Django
+    # cree que la petición no es segura y entra en un bucle de redirección.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
-    # La sonda de salud llega por HTTP interno, sin pasar por el proxy que
-    # añade X-Forwarded-Proto. Sin esta excepción recibiría un 301 y el PaaS
-    # daría el despliegue por fallido con la aplicación funcionando.
+    # Una sonda de salud que llegue por HTTP interno no pasa por el proxy que
+    # añade X-Forwarded-Proto. Sin esta excepción recibiría un 301 y quien la
+    # consulte dará el servicio por caído con la aplicación funcionando.
     SECURE_REDIRECT_EXEMPT = [r"^salud/$"]
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

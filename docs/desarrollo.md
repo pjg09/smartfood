@@ -7,14 +7,14 @@
 | doc_id | SMARTFOOD-TIC1-DESARROLLO |
 | titulo | Reconstrucción del entorno local, credenciales y comandos del día a día |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
-| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9`, `DEC-10`, `DEC-11`, `DEC-12`) |
-| actualizado | 2026-08-31 |
+| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`) |
+| actualizado | 2026-09-17 |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 Es la libreta del desarrollo: **cómo levantar el entorno desde cero, con qué se entra y
-qué comandos hacen falta a diario.** Si `./despliegue.md` describe el entorno desplegado,
-esto describe el tuyo.
+qué comandos hacen falta a diario.** Es el único entorno que hay: `DEC-15` retiró el
+despliegue y `./despliegue.md` explica por qué.
 
 ---
 
@@ -122,32 +122,20 @@ comando. No abre nada de nadie.
 El dominio `example.com` está reservado por la **RFC 2606**: nadie puede registrarlo, así
 que ningún correo dirigido ahí llega a una persona real.
 
-### [S2.2] Entorno desplegado
+### [S2.2] No hay entorno desplegado
 
-| | |
-|---|---|
-| Interfaz | https://web-production-3db23.up.railway.app/admin/ |
-| Usuario | `institucion@example.com` |
-| Contraseña | **No está en este documento.** Ver abajo |
+**El de `[S2.1]` es el único que existe.** `DEC-15` retiró el despliegue el 2026-09-17 y
+`DT-31` recoge la consecuencia técnica: no hay URL pública, ni credenciales de producción,
+ni variables que consultar en ningún proveedor. El porqué está en `./despliegue.md`.
 
-```bash
-railway variables --service web --environment production --json | grep SEED_CONTRASENA
-```
+Lo que eso cambia para el día a día: **nada**. El equipo lleva todo el semestre
+desarrollando y demostrando contra `localhost`, y el Avance 2 se enseña desde un portátil.
 
-Esa variable es la **fuente de verdad**: el despliegue siembra la institución en cada
-integración y restablece la contraseña a ese valor. Cambiarla desde el admin no dura
-hasta el siguiente despliegue; para cambiarla de verdad, se cambia la variable.
-
-**Está en Railway y no en el repositorio, deliberadamente.** El entorno desplegado es una
-URL pública en internet y esa cuenta administra el sistema entero: escribir su clave aquí
-se la daría a cualquiera con acceso al repositorio —hoy cuatro personas, mañana quien
-evalúe— y quedaría en el historial de git para siempre.
-
-**No es superusuario de Django**: tiene exactamente los permisos que declara
-`cuentas/permisos.py` y no puede editar los grupos con los que `DT-11` sostiene `INV-4`.
-El razonamiento está en `UX-6` de `./recorrido-de-administracion-de-estudiantes.md`. Si el
-admin le devuelve un `403` sobre algo que debería poder hacer, el sitio donde se arregla es
-la matriz, no la cuenta.
+La cuenta institucional local, la de `[S2.1]`, **no es superusuario de Django**: tiene
+exactamente los permisos que declara `cuentas/permisos.py` y no puede editar los grupos
+con los que `DT-11` sostiene `INV-4`. El razonamiento está en `UX-6` de
+`./recorrido-de-administracion-de-estudiantes.md`. Si el admin le devuelve un `403` sobre
+algo que debería poder hacer, el sitio donde se arregla es la matriz, no la cuenta.
 
 ### [S2.3] Por qué la institución tiene contraseña y las demás cuentas no
 
@@ -387,8 +375,8 @@ uv run python manage.py compilemessages
 ```
 
 **Sin recompilar, el cambio no se ve y nada falla**: Django sigue leyendo el `.mo` viejo.
-Los dos ficheros van al repositorio, el `.po` porque es la fuente y el `.mo` porque el
-entorno desplegado no tiene `gettext` y `collectstatic` no compila mensajes.
+Los dos ficheros van al repositorio, el `.po` porque es la fuente y el `.mo` porque no
+todas las máquinas del equipo tienen `gettext` y `collectstatic` no compila mensajes.
 
 `cuentas/tests_traducciones.py` comprueba que las cuatro salen en español y que el parche
 no ha crecido: si alguien empieza a traducir por su cuenta lo que Django ya trae, se

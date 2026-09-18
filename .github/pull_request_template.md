@@ -19,7 +19,7 @@ Ver docs/convenciones-de-git.md
 
 | Campo | Valor |
 |---|---|
-| PR del plan | `PR-nn` de `docs/plan-de-pull-requests-sprint-2.md` |
+| PR del plan | `PR-nn` de `docs/plan-de-pull-requests-sprint-4.md` |
 | Tareas | `TT-nn`, `TT-nn` |
 | Historias | `HU-nn` |
 | Invariantes que sostiene | `INV-n` / `INVD-n` — o «ninguna» |
@@ -37,9 +37,9 @@ Detalle en docs/definicion-de-terminado.md
 - [ ] **`DoD-2`** Integrado por PR y no rompe nada de lo ya construido. *(Siempre aplica.)*
 - [ ] **`DoD-3`** Migraciones escritas, aplicadas, y `makemigrations --check` sin pendientes.
       <!-- No aplica si el PR no toca modelos. Dilo. -->
-- [ ] **`DoD-4`** ⏸ **SUSPENDIDO** — el entorno desplegado está congelado.
-      **En su lugar:** declara cómo lo verificaste en local, con la salida real del
-      comando. No basta «funciona en mi máquina». Ver `docs/definicion-de-terminado.md`.
+- [ ] **`DoD-4`** Se demuestra **ejecutándolo**: pega el comando y su salida real.
+      No basta «funciona en mi máquina». No hay entorno desplegado y no lo habrá
+      (`DEC-15`); se demuestra en local. *(Siempre aplica.)*
 - [ ] **`DoD-5`** Cada invariante que sostiene tiene un caso de prueba que **falla si se rompe**.
       <!-- No aplica si no sostiene ninguna. Compruébalo antes de decirlo. -->
 - [ ] **`DoD-6`** Todos los datos son ficticios. *(Siempre aplica — `ALC-OUT-07`, Ley 1581 de 2012.)*

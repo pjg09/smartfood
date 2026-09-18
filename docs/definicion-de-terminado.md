@@ -7,13 +7,13 @@
 | doc_id | SMARTFOOD-TIC1-DOD |
 | titulo | Definición de Terminado del prototipo SmartFood |
 | archivo_origen | — · documento derivado; extrae y reformula `[S2]` de `./sprint-1-backlog.md` |
-| documentos_fuente | `./sprint-1-backlog.md` (`[S2]`); `corpus:guia-de-scrum-2020.md` (`COM-3`, `ART-3`); `./smartfood.md` (`ENT-01`, `ALC-OUT-07`) |
+| documentos_fuente | `./sprint-1-backlog.md` (`[S2]`); `corpus:guia-de-scrum-2020.md` (`COM-3`, `ART-3`); `./smartfood.md` (`ENT-01`, `ALC-OUT-07`); `./decisiones-de-alcance.md` (`DEC-15`) |
 | tipo_documento | Compromiso del Incremento (`COM-3` de la Guía de Scrum) |
 | cubre | `TT-07` — Redacción y acuerdo de la Definición de Terminado |
-| criterios | 6 (`DoD-1` … `DoD-6`) · **`DoD-4` suspendido**, ver `DoD-4` |
-| aplica a | Los cinco sprints. No se relaja durante el semestre. **Una excepción registrada**: ver `DoD-4` y `[S5]` |
+| criterios | 6 (`DoD-1` … `DoD-6`), los seis vigentes |
+| aplica a | Los cinco sprints. No se relaja durante el semestre. **Una excepción, ya cerrada**: ver `[S5]` |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Por qué es un documento aparte
 
@@ -32,9 +32,9 @@ Sprint Backlog. Vive donde le corresponde.
 
 > **Nada está terminado hasta que cumple los criterios que aplican a su caso.**
 
-> ⏸ **Uno de los seis está suspendido.** `DoD-4` —demostrar en el entorno desplegado— no
-> se puede cumplir mientras ese entorno esté congelado. Ver la caja en su apartado: no es
-> una relajación por conveniencia, es que la condición previa no existe.
+> **Los seis están vigentes.** `DoD-4` estuvo suspendido entre el 2026-08-30 y el
+> 2026-09-17, mientras no existió la condición previa que exigía. `DEC-15` la retiró y el
+> criterio volvió con otra forma; el rastro está en `[S5]`.
 
 Se aplica a la **unidad de trabajo**, que en este proyecto es **un Pull Request**
 (`[S1]` de `./convenciones-de-git.md`). Un PR es lo que se integra, lo que se despliega
@@ -81,43 +81,25 @@ proyecto, y para entonces el commit lleva días integrado.
 
 **Si el PR no toca modelos**, no aplica. Decláralo.
 
-### `[DoD-4]` Se demuestra en el entorno desplegado — **SUSPENDIDO**
+### `[DoD-4]` Se demuestra ejecutándolo, con la salida real
 
-> ## ⏸ Suspendido desde el 2026-08-30
->
-> **No se puede cumplir, y no por el trabajo.** El entorno desplegado está congelado
-> porque el plan gratuito del proveedor no lo sostiene: la base de datos se duerme, al
-> despertar rechaza conexiones con `FATAL: the database system is starting up`, y toda
-> vista que toque el ORM devuelve 500. El proveedor **prohíbe** desactivar ese
-> comportamiento en el plan gratuito —*«Free plan services must have "sleepApplication"
-> set to "true"»*—, así que no hay arreglo desde el código. El detalle está en
-> `[S2]` de `./despliegue.md`.
->
-> **Mientras esté suspendido, en su lugar aplica esto:** el PR declara **cómo se verificó
-> en local**, con la salida real de lo que ejecutó. No basta «funciona en mi máquina»:
-> hay que enseñar el comando y su resultado.
->
-> **Qué lo restaura.** Pedro consulta con la docente si la asignatura exige el despliegue.
-> Si lo exige, el plan de pago resuelve las dos causas y `DoD-4` vuelve tal cual. Si no lo
-> exige, hay que **retirarlo formalmente** —y con él revisar `ENT-01` y `TT-04`—, no
-> dejarlo suspendido indefinidamente.
->
-> **Esta suspensión caduca sola:** mientras esta caja siga aquí sin fecha de resolución,
-> es deuda declarada, no una decisión cerrada.
-
-El texto original, que vuelve a estar vigente en cuanto exista un entorno desplegado
-fiable:
-
-Lo que el PR entrega se puede **enseñar en `ENT-01`**, no solo en local. Aplica
-**siempre**, pero la forma de demostrarlo depende de lo que se entrega:
+Lo que el PR entrega **se enseña funcionando**, no se deduce del diff. Aplica
+**siempre**, y la forma depende de lo que se entrega:
 
 | Lo que entrega el PR | Cómo se demuestra |
 |---|---|
-| Funcionalidad para un usuario | Se usa, en el entorno desplegado |
-| Configuración o infraestructura | Por su **efecto observable** allí, no por el diff |
+| Funcionalidad para un usuario | Se usa: se recorre la pantalla o el flujo, y se dice con qué cuenta y con qué datos |
+| Configuración o infraestructura | Por su **efecto observable**: el comando que lo ejerce y su salida |
+| Documentación o gestión | Por la comprobación que lo verifica —un script, un recuento, un enlace resuelto— |
 
-Un PR que solo se puede enseñar en el portátil de quien lo escribió no está terminado:
-el prototipo que se sustenta es el desplegado (`ENT-01`).
+**No basta «funciona en mi máquina»: hay que enseñar el comando y su resultado.**
+Pegar la salida real es lo que distingue haberlo comprobado de haberlo dado por hecho.
+
+> **Se demuestra en local, y eso no es una rebaja.** `DEC-15` retira de `ENT-01` la
+> condición de estar desplegado: el prototipo no vive en internet y no hay entorno de
+> pruebas donde enseñarlo. Lo que este criterio pide es más concreto que la redacción
+> anterior —que se conformaba con «se usa, en el entorno desplegado»—, porque exige la
+> salida del comando y no la afirmación de haberlo mirado.
 
 > `TT-06` no tiene pantalla. Se demostró por su efecto: un correo real llegando a una
 > bandeja real.
@@ -190,19 +172,25 @@ ella. No es un documento que una persona escribe y los demás acatan: es un comp
 Un compromiso que cambia sin dejar rastro deja de serlo. Aquí queda cada cambio, con su
 fecha y su motivo.
 
-| Fecha | Cambio | Motivo | Qué lo revierte |
+| Fecha | Cambio | Motivo | Estado |
 |---|---|---|---|
-| 2026-08-30 | **`DoD-4` suspendido** | El entorno desplegado se congeló: el plan gratuito del proveedor no lo sostiene y el fallo no es del código (`[S2]` de `./despliegue.md`) | Que exista un entorno desplegado fiable, o que se retire `ENT-01` del alcance |
+| 2026-08-30 | **`DoD-4` suspendido** | El entorno desplegado se congeló: el plan gratuito del proveedor no lo sostiene y el fallo no es del código | **Cerrado el 2026-09-17** |
+| 2026-09-17 | **`DoD-4` restablecido, con otra redacción** | La consulta con la docente se resolvió: la asignatura no exige despliegue. `DEC-15` retira de `ENT-01` la condición de estar desplegado, así que el criterio ya no espera una condición previa que no va a existir | Vigente |
 
-**No es una relajación por conveniencia.** `DoD-4` no se suspende porque cueste
-cumplirlo, sino porque **nadie puede cumplirlo**: la condición previa —un entorno
-desplegado que funcione— no existe. Un criterio que ningún trabajo puede satisfacer, por
-razones ajenas al trabajo, no es un listón de calidad: es un bloqueo. Dejarlo en pie
-obligaría a mentir en la casilla o a no terminar nunca nada.
+**La suspensión duró dieciocho días y se cerró como debía: con una decisión, no por
+olvido.** Su propia caja declaraba que caducaba sola mientras no tuviera fecha de
+resolución, y nombraba las dos salidas posibles —restaurar el entorno o retirar `ENT-01`
+del alcance—. Se tomó la segunda, registrada en `DEC-15` de
+`./decisiones-de-alcance.md` y en `DT-31` de `./decisiones-tecnicas.md`.
 
-Lo que **no** se hace: bajar el resto. Los otros cinco criterios siguen enteros, y el
-sustituto de `DoD-4` mientras dure —declarar la verificación local con su salida real—
-es más exigente que marcar una casilla.
+**Lo que hay que saber al leer los Sprints 2 y 3.** Todo lo cerrado entre el
+2026-08-30 y el 2026-09-17 se terminó sin `DoD-4` en su forma antigua, declarando en
+su lugar la verificación local con la salida real. Esa declaración **es** lo que `DoD-4`
+pide ahora, así que no queda nada por revisar hacia atrás: lo que se hizo entonces
+cumple el criterio de hoy.
+
+**Lo que no se hizo en ningún momento: bajar el resto.** Los otros cinco criterios
+siguieron enteros durante toda la suspensión.
 
 ---
 
@@ -225,10 +213,17 @@ leída literalmente, no les aplicaba.
 | Identificadores | ninguno | `DoD-1` … `DoD-6`, estables y citables |
 | Ubicación | `[S2]` del backlog del Sprint 1 | documento propio, para los cinco sprints |
 | `DoD-3` | «las migraciones están escritas y aplicadas» | añade que **no quedan cambios sin migrar** |
+| `DoD-4` | «se demuestra en el entorno desplegado (`ENT-01`)» | «se demuestra ejecutándolo, **con la salida real**» — `DEC-15` retiró el entorno; ver `[S5]` |
 
 **No se añadió ningún criterio nuevo y no se relajó ninguno.** Los seis son los seis
 originales; lo que cambia es que ahora cubren el 100 % del trabajo del sprint en vez del
-79 %, y que `DoD-3` es más estricto que antes, no menos.
+79 %, y que `DoD-3` y `DoD-4` son más estrictos que antes, no menos: el primero exige que
+no queden cambios sin migrar, y el segundo exige pegar la salida del comando donde antes
+bastaba con afirmar que se había usado.
+
+`DoD-4` es el único de los seis cuyo **enunciado** cambió después de redactado este
+documento, y no por decisión de quien lo redactó: lo cambió `DEC-15` al retirar de
+`ENT-01` la condición de estar desplegado. El rastro completo está en `[S5]`.
 
 Tampoco se cerró ningún punto abierto. En particular, **`DoD-5` sigue sin decidir si los
 casos de prueba son automatizados o manuales**: eso es plan de pruebas, es de Alejandro

@@ -73,7 +73,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
-| `/salud/` | Sonda del despliegue | Cualquiera | `TT-04` |
+| `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
 **Comprobado ejecutando**, con cada rol identificado y con un anónimo:
 

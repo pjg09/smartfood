@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` el 2026-09-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 30 (`DT-1` … `DT-30`) |
+| decisiones | 31 (`DT-1` … `DT-31`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-30`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-31`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -488,6 +488,28 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 
 ---
 
+#### `[DT-31]` No hay PaaS: el prototipo se ejecuta en local
+
+**Corrige:** `DT-13`, que decidió desplegar en un PaaS con PostgreSQL gestionado.
+
+**Obliga:** `DEC-15` — la asignatura no exige entorno desplegado, y `ENT-01` se recorta para quitarle la condición de estarlo.
+
+**La razón de `DT-13` desapareció, no se debilitó.** Esa decisión se apoyaba en dos hechos: que `ENT-01` exigía un prototipo «desplegado en un entorno de pruebas», y que la Definición de Terminado del Sprint 1 exigía demostrar cada historia allí. `DEC-15` retira el primero y `DoD-4` cambia con él. Sin ninguno de los dos, el PaaS deja de resolver ningún requisito.
+
+**El hecho añadido.** `DT-13` calculaba que un PaaS «lo resuelve en una tarde». Costó bastante más: el plan gratuito del proveedor ni siquiera sostiene el entorno —la base gestionada se duerme y al despertar rechaza conexiones, y desactivarlo está prohibido en ese plan—, y `[S4]` de `./despliegue.md` registra siete trampas que hubo que pagar por el camino. La estimación era optimista y conviene que quede escrito junto a la decisión que la hizo.
+
+**Decidido:**
+
+- **No hay entorno desplegado.** El prototipo se ejecuta en local, con el `docker compose` que `TT-02` dejó reproducible.
+- **`railway.json` se retira del repositorio**, junto con el bloque de `config/settings.py` que leía la variable de dominio del proveedor.
+- **Lo que no era del proveedor se queda.** Los ajustes de seguridad que se activan con `DEBUG = False` —redirección a HTTPS, cookies seguras, HSTS— valen en cualquier ejecución que no sea de desarrollo y no se tocan. La sonda `/salud/` tampoco: comprueba que la base responde, que es útil con o sin PaaS.
+- **El almacenamiento no cambia.** `DT-21` fija un bucket con los prefijos `privado/` y `publico/`; en local eso es MinIO en el mismo `docker compose`, que es lo que el equipo lleva usando desde `TT-02`. Lo que desaparece es la frase de `DT-18` «en producción, el bucket del propio PaaS», porque no hay producción.
+- **El disco efímero deja de ser un argumento.** `DT-18` descartó el sistema de archivos porque en un PaaS el disco se pierde en cada despliegue. Ese motivo ya no aplica, **pero la decisión no cambia**: el motivo que la sostiene es la paridad de control de acceso, no la persistencia, y ese sigue intacto.
+
+**Lo que esta decisión no hace.** No prohíbe desplegar más adelante. `[S5]` de `./despliegue.md` conserva los pasos de reconstrucción, y `DT-13` sigue siendo legible para saber por qué el código tiene la forma que tiene.
+
+---
+
 ## [S2] Modelo de datos núcleo
 
 Dieciocho entidades, todas con **clave primaria UUIDv7** (`DT-17`). Los nombres se ajustarán al implementar; **la forma no**.
@@ -658,7 +680,7 @@ Además, `TT-06` (envío de correo) y `TT-15` (permisos según `[S11]`) se apoya
 - **Estrategia de pruebas automatizadas.** La Definición de Terminado exige un caso de prueba por invariante, pero **no se ha decidido formalmente** si son pruebas automatizadas o guiones manuales. Alejandro es dueño del plan de pruebas (`[S12]`).
   **Resuelto de hecho, no de derecho:** al cerrar el Sprint 1, lo construido lleva **416 pruebas automáticas** con el ejecutor de Django, y `DoD-5` se ha venido cumpliendo con ellas. El punto sigue abierto porque una práctica no es una decisión: falta que el dueño del plan de pruebas la adopte —o la cambie— y quede escrita. Mientras tanto, `DoD-5` dice «caso de prueba» sin adjetivo, a propósito (`[S2]` de `./definicion-de-terminado.md`).
 - **Caducidad de las URL firmadas.** `DT-18` fija que la fotografía se sirve firmada, no cuántos minutos dura la firma.
-- **PaaS concreto.** `DT-13` fija el tipo de despliegue, no el proveedor. **Resuelto en la práctica:** el entorno de pruebas está en Railway, y el bucket es el suyo (`DT-21`). La decisión sigue sin ser normativa: `DT-13` no obliga a ese proveedor.
+- **PaaS concreto.** `DT-13` fijaba el tipo de despliegue, no el proveedor. **Cerrado por desaparición del asunto:** `DT-31` retira el despliegue, así que no hay proveedor que elegir. El bucket con dos prefijos de `DT-21` sigue vigente, sobre MinIO en local.
 
 ---
 
