@@ -135,10 +135,19 @@ class MovimientoInventario(models.Model):
                 name="movimiento_inventario_signo_segun_tipo",
             ),
             # `INV-8`. La merma es la disminución manual: sin motivo no entra.
+            #
+            # **`\S` y no `!= ""`** (`TT-140`). La cadena vacía era lo único que
+            # la primera redacción rechazaba, y «   » la pasaba entera: tres
+            # espacios no son un motivo, pero no son la cadena vacía. El servicio
+            # nunca escribe eso —`asentar` hace `strip()` antes de crear—, y esa
+            # es justamente la razón de subirlo aquí: si la base solo rechaza lo
+            # que el servicio ya rechazaba, la restricción no protege ningún
+            # camino que no estuviera protegido, y `DT-5` la pone para los
+            # caminos que todavía no existen.
             models.CheckConstraint(
                 condition=(
                     ~models.Q(tipo=TipoDeMovimientoDeInventario.MERMA)
-                    | ~models.Q(motivo="")
+                    | models.Q(motivo__regex=r"\S")
                 ),
                 name="movimiento_inventario_merma_con_motivo",
             ),
@@ -169,3 +178,48 @@ class MovimientoInventario(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} de {self.cantidad} · {self.producto}"
+
+
+class Merma(MovimientoInventario):
+    """La merma como entrada propia del admin (`TT-139`, `HU-28`).
+
+    ── ES UN PROXY: NI TABLA NI DATOS NUEVOS ───────────────────────────────
+    Es `MovimientoInventario` con otro nombre, igual que
+    `restricciones.RestriccionesDelEstudiante`. Existe porque **registrar una
+    merma no es lo mismo que registrar un ingreso**, aunque las dos escriban en
+    el mismo libro: el motivo es obligatorio en una y opcional en la otra
+    (`INV-8`), y la cantidad significa lo contrario.
+
+    Un solo formulario con un selector de tipo tendría que hacer obligatorio el
+    motivo **solo a veces**, según lo que el usuario elija arriba. Eso no lo sabe
+    hacer el admin sin JavaScript, y el precio de equivocarse es que alguien
+    descuente existencias sin explicación — que es exactamente lo que `INV-8`
+    impide. Dos entradas de menú, cada una con sus reglas fijas, cuesta menos.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── `default_permissions = ("add", "view")` ─────────────────────────────
+    Sin `change` ni `delete`, y no es una omisión que se pueda conceder después:
+    Django **no crea** esos permisos, así que la matriz no puede darlos aunque
+    alguien quiera (`DT-11`). Un asiento del libro no se reescribe (`INV-3`); un
+    error se corrige con otro movimiento.
+    ─────────────────────────────────────────────────────────────────────────
+    """
+
+    class Meta:
+        proxy = True
+        verbose_name = "merma"
+        verbose_name_plural = "mermas"
+        # Se repite porque el `Meta` de un proxy no hereda el del modelo base
+        # salvo que se herede explícitamente, y sin esto el listado saldría en
+        # el orden que quiera la base.
+        ordering = ["-creado_en"]
+        default_permissions = ("add", "view")
+
+    def __str__(self):
+        """El suyo, no el de `MovimientoInventario`.
+
+        El del modelo base diría «Merma de -3 · Empanada»: un número negativo en
+        el título de la ficha y en las migas, donde quien lo lee está pensando en
+        unidades perdidas. Aquí se dice lo que pasó.
+        """
+        return f"Merma de {abs(self.cantidad)} · {self.producto}"

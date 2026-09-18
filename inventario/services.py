@@ -12,8 +12,10 @@
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
+from catalogo.models import Producto
 from cuentas.models import Rol
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
+from inventario.selectors import existencias_de
 
 
 def _comprobar_que_gestiona_el_inventario(actor, accion):
@@ -134,5 +136,96 @@ def ingresar_mercancia(*, actor, producto, cantidad, motivo=""):
         producto=producto,
         tipo=TipoDeMovimientoDeInventario.INGRESO,
         cantidad=cantidad,
+        motivo=motivo,
+    )
+
+
+@transaction.atomic
+def registrar_merma(*, actor, producto, cantidad, motivo):
+    """Da de baja unidades que se perdieron, con su motivo (`TT-138`, `HU-28`).
+
+    Devuelve el `MovimientoInventario` creado.
+
+    Es el gemelo de `ingresar_mercancia` en la otra dirección, y la diferencia
+    que importa está en la firma: **`motivo` no tiene valor por defecto**. Es
+    `INV-8` escrito donde se llama a la función — quien la invoca sin motivo no
+    llega a la validación, le falta un argumento.
+
+    ── LA CANTIDAD ENTRA EN POSITIVO Y SE ASIENTA EN NEGATIVO ──────────────
+    Quien registra la merma cuenta unidades perdidas: «se dañaron 3». Escribir
+    «-3» para decir eso invita a equivocarse de signo, y un signo equivocado aquí
+    no falla: **suma existencias que no existen**. El servicio recibe 3 y asienta
+    -3, igual que `ingresar_mercancia` recibe 3 y asienta 3.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── NO DEJA EXISTENCIAS NEGATIVAS, Y NO SALE DE NINGUNA HISTORIA ────────
+    `HU-28` no lo pide: sus dos criterios son sobre el motivo. Se aplica por el
+    mismo razonamiento con el que la venta rechaza por existencias insuficientes
+    —`[S4]` de `./docs/reglas-de-la-venta.md`, que lo registró como regla sin
+    historia—: mermar diez de las tres que hay deja el inventario en −7, y `INV-3`
+    seguiría cumpliéndose —la suma explica el número— pero lo que explicaría es un
+    disparate.
+
+    No es fricción gratuita. Si de verdad había diez unidades y el sistema decía
+    tres, lo que falta no es una merma de diez: es un ingreso de siete que nadie
+    registró, **y ese ingreso también tiene una explicación que merece quedar
+    escrita**. Obligar a los dos asientos es lo que hace que el historial siga
+    explicando las existencias.
+
+    Si el equipo prefiere admitir la merma que deja negativo, esto se quita y se
+    registra como decisión. Lo que no se puede es dejarlo sin decidir.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── SE LEE DENTRO DEL BLOQUEO, COMO EN LA VENTA ────────────────────────
+    `DT-6`. Sin `select_for_update` sobre el producto, dos mermas simultáneas de
+    tres unidades sobre un producto que tiene cinco leerían las dos «cinco» y
+    pasarían las dos: quedarían −1. Es el mismo fallo que `registrar_venta` evita
+    y se evita igual — bloquear primero, leer después.
+
+    El bloqueo es sobre `Producto` y no sobre los movimientos, también como en la
+    venta: no hay fila del libro que bloquear antes de escribirla, y el producto
+    es lo que las dos operaciones comparten.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Un producto retirado del catálogo también se merma.** `activo=False` impide
+    venderlo (`HU-26`), no impide que lo que queda en la estantería se dañe. Por
+    eso, a diferencia del cobro, aquí no se filtra por `activo`.
+    """
+    _comprobar_que_gestiona_el_inventario(actor, "Registrar mermas de inventario")
+
+    cantidad = int(cantidad)
+    if cantidad <= 0:
+        raise ValidationError(
+            "Una merma resta: di cuántas unidades se perdieron, en positivo."
+        )
+
+    # `INV-8` antes de tocar la base, para dar un mensaje que se entienda. La
+    # `CheckConstraint` de `MovimientoInventario` es la que de verdad lo impone
+    # (`DT-5`), y `TT-140` lo comprueba saltándose este camino entero.
+    if not (motivo or "").strip():
+        raise ValidationError(
+            "Una merma exige motivo: es la única forma de que desaparezcan "
+            "existencias sin una venta que lo explique (INV-8)."
+        )
+
+    # ── BLOQUEAR, Y SOLO DESPUÉS LEER ───────────────────────────────────────
+    # `.first()` evalúa el `QuerySet`, que es lo que emite el `SELECT ... FOR
+    # UPDATE`. Sin evaluarlo no se bloquea nada.
+    bloqueado = Producto.objects.select_for_update().filter(pk=producto.pk).first()
+    if bloqueado is None:
+        raise ValidationError("Ese producto ya no está en el catálogo.")
+
+    disponibles = existencias_de(bloqueado)
+    if cantidad > disponibles:
+        raise ValidationError(
+            f"De «{bloqueado.nombre}» quedan {disponibles} y se dan de baja "
+            f"{cantidad}. Si de verdad había más, regístralo primero como "
+            "ingreso: ese ingreso también tiene una explicación (INV-3)."
+        )
+
+    return asentar(
+        producto=bloqueado,
+        tipo=TipoDeMovimientoDeInventario.MERMA,
+        cantidad=-cantidad,
         motivo=motivo,
     )
