@@ -11,7 +11,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Los Sprints 1, 2, 3 y 4 están cerrados** —56, 37, 43 y 18 tareas, todas integradas—. El 3 fue el del control parental y **creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El 4 fue el de inventario trazable y pedidos anticipados: cerró `TST-4` y con él **los cuatro escenarios críticos de `ENT-05`**, y retiró el entorno desplegado del alcance (`DEC-15`). Las revisiones de cierre están en `[S7]` de cada plan de PR; la del 4 encontró dos defectos y los arregló antes de cerrar.
 
-**Lo siguiente es el Avance 2** (`EVA-4`, 20 %), semana 14: lo que se enseña es lo que hay en `main`, y el guion está en `[S8]` de `./docs/plan-de-pull-requests-sprint-4.md`. Después, el **Sprint 5**: reportes y plan de pruebas, el más cargado de los dos que quedan.
+**Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
+
+Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
 ## Antes de escribir código, lee esto
 
@@ -23,9 +25,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-n`) |
 | `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-n`) |
 | `docs/backlog-historias-de-usuario.md` | Las historias con sus criterios de aceptación |
-| `docs/sprint-4-backlog.md` | Las 18 tareas del Sprint 4 (`TT-137` … `TT-154`). **Cerrado** |
-| `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas en 7 PR, su **revisión de cierre** (`[S7]`) y el guion del Avance 2 (`[S8]`) |
-| `docs/sprint-3-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
+| `docs/sprint-5-backlog.md` | **Las 33 tareas del sprint en curso** (`TT-155` … `TT-187`), con responsable. Incluye `[S5]`, el cierre del proyecto |
+| `docs/plan-de-pull-requests-sprint-5.md` | Esas 33 tareas en 13 PR y el estado de cada una —**el estado manda aquí** |
+| `docs/sprint-4-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |

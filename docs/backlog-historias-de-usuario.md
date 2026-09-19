@@ -1203,7 +1203,7 @@ absorbe el retraso acumulado antes del Avance 2, que vale el 20 % (`EVA-4`).
 orientativas esté presente **desde la primera recomendación publicada**, no cuando se acaben todas.
 `HU-37` cierra el sprint porque la auditoría consolida los tres reportes anteriores.
 
-**Reparto: 18 + 14 + 12 + 5 + 10 = 59 historias.** Ninguna sin sprint, ninguna en dos.
+**Reparto: 18 + 14 + 14 + 5 + 10 = 61 historias.** Ninguna sin sprint, ninguna en dos.
 
 ## [ANEXO A] Trazabilidad alcance → historias
 
