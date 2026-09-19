@@ -1,0 +1,271 @@
+{% extends "base-aplicacion.html" %}
+{% load l10n %}
+{% load dinero %}
+
+{% comment %} TT-173. La pantalla de cierre de caja (`HU-55`, `DEC-6`, `INVD-5`).
+
+   **Lo que se cuenta va a la izquierda y contra lo que se cuenta, a la derecha.**
+   El esperado se enseña y no se pide: no hay campo para él, y esa ausencia es
+   `INVD-5` —si se pudiera escribir, el sistema volvería a cuadrar contra una
+   estimación, que es justo lo que `PA-7` describe del proceso actual—.
+
+   **La cifra grande viene acompañada de cuántas ventas la componen.** `INVD-5`
+   pide que el esperado se pueda **explicar** desde las ventas registradas, y
+   «$84.000 de 12 ventas en efectivo» invita a ir a comprobarlo; un número solo,
+   no.
+
+   La diferencia **no se calcula en el navegador**, por lo mismo que el total de
+   la recarga: formatear dinero en JavaScript sería un segundo formateador, y
+   `billetera/templatetags/dinero.py` existe para que la misma cifra no salga de
+   dos sitios. Lo que se dice antes de enviar es la regla —qué se resta de qué—,
+   y la cifra la fija el servicio.
+
+   **Cuelga del armazón de la aplicación y no del punto de venta**, como la cola
+   de reservas (`TT-148`): la rejilla de tres zonas de `INT-2` está hecha para
+   cobrar con una fila delante, y el cierre se hace una vez, al final, con
+   billetes en la mano.
+{% endcomment %}
+
+{% block titulo %}Cierre de caja | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'punto-de-venta' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Punto de venta
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Cierre de caja</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Jornada del {{ informacion.fecha|date:"j" }} de
+        {{ informacion.fecha|date:"F"|lower }} de {{ informacion.fecha|date:"Y" }}.
+        Cuenta el dinero del cajón y compáralo con lo que dicen las ventas registradas.
+      </p>
+    </header>
+
+    {% if informacion.ya_esta_cerrada %}
+
+      {% comment %} Ya se cuadró. **No se enseña el formulario apagado**: un botón
+         deshabilitado no dice por qué no se puede, y `[S4]` del sistema visual lo
+         descarta. Lo que se enseña es el cierre que ya existe, que es la respuesta
+         a la pregunta con la que se entra. {% endcomment %}
+      <section data-cierre-registrado
+               class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-texto">Esta jornada ya está cuadrada</h2>
+          {% if informacion.cierre.cuadra %}
+            <span class="rounded-full bg-exito-suave px-3 py-1 text-sm font-medium text-exito-fuerte">
+              Sin diferencia
+            </span>
+          {% else %}
+            <span class="rounded-full bg-aviso-suave px-3 py-1 text-sm font-medium text-aviso-fuerte">
+              Con diferencia
+            </span>
+          {% endif %}
+        </div>
+
+        <dl class="flex flex-col gap-2">
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base font-medium text-texto-suave">Efectivo esperado</dt>
+            <dd class="font-display text-base font-semibold tabular-nums text-texto">
+              {{ informacion.cierre.efectivo_esperado|dinero }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base font-medium text-texto-suave">Base para dar cambio</dt>
+            <dd class="font-display text-base font-semibold tabular-nums text-texto">
+              {{ informacion.cierre.base|dinero }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base font-medium text-texto-suave">Efectivo contado</dt>
+            <dd class="font-display text-base font-semibold tabular-nums text-texto">
+              {{ informacion.cierre.efectivo_contado|dinero }}
+            </dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3 border-t border-borde pt-2">
+            <dt class="text-base font-semibold text-texto">Diferencia</dt>
+            {% comment %} El ámbar se gasta aquí porque aquí hay un estado: la caja no
+               cuadra y alguien tuvo que explicarlo. Cuando cuadra va en el color
+               del texto, no en verde: que cuadre es lo normal y no una
+               enhorabuena. {% endcomment %}
+            <dd data-diferencia
+                class="font-display text-lg font-semibold tabular-nums
+                       {% if informacion.cierre.cuadra %}text-texto{% else %}text-aviso-fuerte{% endif %}">
+              {{ informacion.cierre.diferencia|dinero:"COP" }}
+            </dd>
+          </div>
+        </dl>
+
+        {% if informacion.cierre.motivo %}
+          <div class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-3">
+            <svg class="mt-0.5 h-4 w-4 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+            <p class="text-sm text-aviso-fuerte">
+              <strong class="font-semibold">Motivo:</strong> {{ informacion.cierre.motivo }}
+            </p>
+          </div>
+        {% endif %}
+
+        <p class="text-sm text-texto-suave">
+          Lo cuadró {{ informacion.cierre.cajero.nombre }} a las
+          {{ informacion.cierre.creado_en|date:"H:i" }}. Un cierre no se edita ni se
+          repite: el cuadre es diario.
+        </p>
+      </section>
+
+    {% else %}
+
+      {% comment %} `escritorio:grid-cols-5` con el formulario en tres: lo que se teclea
+         manda, y la columna de la derecha es contra qué se teclea. Por debajo de
+         1024 px se apilan, y **el esperado queda primero**: es lo que hay que
+         leer antes de contar. {% endcomment %}
+      <div class="grid gap-6 escritorio:grid-cols-5 escritorio:items-start">
+
+        {% comment %} La columna de la derecha, primera en el documento para que al apilarse
+           salga arriba. `escritorio:order-last` la devuelve a su sitio en pantalla
+           grande. {% endcomment %}
+        <aside aria-labelledby="lo-que-dicen-las-ventas"
+               class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4
+                      shadow-sm escritorio:order-last escritorio:col-span-2">
+          <h2 id="lo-que-dicen-las-ventas" class="text-lg font-semibold text-texto">
+            Lo que dicen las ventas
+          </h2>
+
+          <div class="flex flex-col gap-1">
+            <span class="text-base font-medium text-texto-suave">Efectivo esperado</span>
+            <span data-efectivo-esperado
+                  class="font-display text-3xl font-semibold tabular-nums text-texto">
+              {{ informacion.efectivo_esperado|dinero:"COP" }}
+            </span>
+            {% comment %} La frase que lo explica (`INVD-5`). Sin ella la cifra hay que
+               creérsela; con ella se puede ir a comprobarla. {% endcomment %}
+            <span class="text-sm text-texto-suave">
+              De {{ informacion.ventas_en_efectivo }}
+              venta{{ informacion.ventas_en_efectivo|pluralize }} en efectivo de esta jornada.
+            </span>
+          </div>
+
+          {% comment %} `DEC-6` y `DEC-1`. Es la condición que más fácil se pierde, y la que
+             explica por qué la cifra de arriba puede parecer baja. Va en
+             `informacion` y no en `aviso`: no hay nada que corregir, es cómo
+             funciona. {% endcomment %}
+          <div role="note"
+               class="flex items-start gap-3 rounded-md border border-borde bg-superficie-hover p-3">
+            <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+            <p class="text-sm text-texto-suave">
+              <strong class="font-semibold text-texto">Aquí solo entra el efectivo.</strong>
+              Las transferencias van de banco a banco y las compras de los estudiantes salen
+              de su billetera: ese dinero nunca pasó por el cajón.
+            </p>
+          </div>
+        </aside>
+
+        <form method="post" data-cierre-de-caja
+              class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4
+                     shadow-sm escritorio:col-span-3">
+          {% csrf_token %}
+
+          <h2 class="text-lg font-semibold text-texto">Lo que hay en el cajón</h2>
+
+          {% comment %} El motivo que falta no es culpa de un campo: depende de las tres
+             cifras a la vez. Por eso llega como error del formulario y no de
+             `motivo`. `role="alert"` para que se anuncie. {% endcomment %}
+          {% if form.non_field_errors %}
+            <div role="alert"
+                 class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+              <svg class="mt-0.5 h-4 w-4 shrink-0 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+              <div class="text-sm text-error-fuerte">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="flex flex-col gap-1">
+            <label for="{{ form.efectivo_contado.id_for_label }}" class="text-base font-medium text-texto">
+              {{ form.efectivo_contado.label }}
+            </label>
+            <div class="relative">
+              <span aria-hidden="true"
+                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                           font-display text-lg text-texto-suave">$</span>
+              {% comment %} **`|unlocalize` en el valor.** En `es-CO` Django escribiría
+                 «8000,00» y el navegador dejaría el campo vacío sin ningún error:
+                 quien entra a corregir una cifra creería que no había ninguna. {% endcomment %}
+              <input type="number" name="{{ form.efectivo_contado.html_name }}"
+                     id="{{ form.efectivo_contado.id_for_label }}"
+                     step="0.01" min="0" inputmode="decimal" required autofocus
+                     value="{{ form.efectivo_contado.value|default_if_none:''|unlocalize }}"
+                     class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                            text-lg tabular-nums text-texto transition-colors
+                            hover:border-acento focus:border-acento focus:outline-none
+                            {% if form.efectivo_contado.errors %}border-error{% else %}border-borde{% endif %}">
+            </div>
+            {% if form.efectivo_contado.errors %}
+              <p class="text-sm font-medium text-error-fuerte">{{ form.efectivo_contado.errors|join:" " }}</p>
+            {% else %}
+              <p class="text-sm text-texto-suave">{{ form.efectivo_contado.help_text }}</p>
+            {% endif %}
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="{{ form.base.id_for_label }}" class="text-base font-medium text-texto">
+              {{ form.base.label }}
+            </label>
+            <div class="relative">
+              <span aria-hidden="true"
+                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                           font-display text-lg text-texto-suave">$</span>
+              <input type="number" name="{{ form.base.html_name }}"
+                     id="{{ form.base.id_for_label }}"
+                     step="0.01" min="0" inputmode="decimal" required
+                     value="{{ form.base.value|default_if_none:''|unlocalize }}"
+                     class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                            text-lg tabular-nums text-texto transition-colors
+                            hover:border-acento focus:border-acento focus:outline-none
+                            {% if form.base.errors %}border-error{% else %}border-borde{% endif %}">
+            </div>
+            {% if form.base.errors %}
+              <p class="text-sm font-medium text-error-fuerte">{{ form.base.errors|join:" " }}</p>
+            {% else %}
+              <p class="text-sm text-texto-suave">{{ form.base.help_text }}</p>
+            {% endif %}
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="{{ form.motivo.id_for_label }}" class="text-base font-medium text-texto">
+              {{ form.motivo.label }}
+            </label>
+            <input type="text" name="{{ form.motivo.html_name }}"
+                   id="{{ form.motivo.id_for_label }}" maxlength="200"
+                   placeholder="Faltó un billete de $10.000…"
+                   value="{{ form.motivo.value|default_if_none:'' }}"
+                   class="h-12 w-full rounded-md border border-borde bg-superficie px-3 text-base
+                          text-texto transition-colors placeholder:text-texto-suave
+                          hover:border-acento focus:border-acento focus:outline-none">
+            <p class="text-sm text-texto-suave">{{ form.motivo.help_text }}</p>
+          </div>
+
+          {% comment %} La regla, en palabras y sin cifras: la resta la hace el servicio.
+             Decirla aquí es lo que evita que alguien cuente el cajón sin descontar
+             la base y crea que le sobra dinero todos los días. {% endcomment %}
+          <p class="border-t border-borde pt-4 text-sm text-texto-suave">
+            La diferencia es lo contado menos la base, comparado con el efectivo esperado.
+            Si no da cero, el motivo es obligatorio.
+          </p>
+
+          <button type="submit"
+                  class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2
+                         rounded-md bg-primario px-6 text-lg font-medium whitespace-nowrap
+                         text-sobre-primario transition-colors hover:bg-primario-fuerte">
+            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-efectivo"></use></svg>
+            Cuadrar la caja
+          </button>
+        </form>
+      </div>
+
+    {% endif %}
+  </div>
+{% endblock %}

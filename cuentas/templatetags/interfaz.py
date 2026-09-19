@@ -54,6 +54,11 @@ PUNTO_DE_VENTA = Entrada("punto-de-venta", "Punto de venta", "i-escaner")
 # no en uno.
 RESERVAS = Entrada("reservas", "Reservas", "i-cafeteria")
 
+# `HU-55`, `DEC-6`. El cuadre del efectivo de la jornada, que es **solo del
+# cajero**: la administración consulta los cierres (`HU-56`), no los hace. Por
+# eso esta entrada está en los dos sitios donde está el cajero y en ninguno más.
+CIERRE_DE_CAJA = Entrada("cierre-de-caja", "Cierre de caja", "i-efectivo")
+
 MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
     Rol.ACUDIENTE: (INICIO, Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes")),
@@ -75,19 +80,19 @@ MENU_POR_ROL = {
     # el admin le enseñaba un índice vacío. Un enlace a una pantalla sin nada
     # dentro es peor que no tenerlo — invita a buscar allí lo que está en su
     # propia caja.
-    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, RESERVAS),
+    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA),
 }
 
-# La barra del punto de venta. **Es una lista aparte**, y desde `HU-24` tiene
-# dos entradas: la caja y la cola de reservas. Cierre de caja y cocina siguen sin
-# existir y no se dibujan huecos por adelantado.
+# La barra del punto de venta. **Es una lista aparte**, y tiene tres entradas:
+# la caja, la cola de reservas (`HU-24`) y el cierre de la jornada (`HU-55`). La
+# cocina sigue sin existir y no se dibujan huecos por adelantado.
 #
 # Va separada de `MENU_POR_ROL[Rol.CAJERO]` porque son dos sitios distintos: en
 # la barra de la aplicación el cajero necesita poder salir del punto de venta, y
 # en el punto de venta necesita justo lo contrario — `INT-2` pide atender toda
 # la demanda del descanso en veinte minutos, y un menú ahí solo son sitios a los
 # que llegar por error con cola delante.
-MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA, RESERVAS)
+MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA)
 
 
 @register.simple_tag
