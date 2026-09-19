@@ -25,7 +25,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from reportes.referencia import REFERENCIA_DIARIA, Comparacion
-from reportes.selectors import AporteNutricional
+from reportes.selectors import AporteNutricional, ResumenDeGasto
 
 from reportes.reglas import (
     DIAS_DE_LA_VENTANA,
@@ -41,7 +41,7 @@ FRAGMENTO = "reportes/partials/recomendaciones.html"
 DESCARGO = "No constituye una valoración médica ni nutricional individualizada"
 
 
-def pintar(alertas, aporte=None):
+def pintar(alertas, aporte=None, gasto=None):
     """El fragmento, con lo que la vista le pasa y nada más.
 
     `aporte` por defecto es el caso sin datos —un estudiante sin consumo en el
@@ -54,6 +54,13 @@ def pintar(alertas, aporte=None):
             "aporte": aporte
             or AporteNutricional(
                 comparaciones=[], dias_con_consumo=0, renglones_sin_declarar=0
+            ),
+            "gasto": gasto
+            or ResumenDeGasto(
+                recargado=Decimal("0.00"),
+                gastado=Decimal("0.00"),
+                devuelto=Decimal("0.00"),
+                saldo=Decimal("0.00"),
             ),
             "estudiante": {"nombre": "Ana Sofía"},
             "ventana_de_frecuencia": DIAS_DE_LA_VENTANA,
@@ -133,6 +140,36 @@ class ElAporteTampocoSePublicaSinElAvisoTest(SimpleTestCase):
         html = pintar([])
 
         self.assertNotIn("data-aporte-nutricional", html)
+        self.assertIn("data-aviso-orientativo", html)
+
+
+class ElGastoTampocoSePublicaSinElAvisoTest(SimpleTestCase):
+    """`TT-166` entra en el mismo fragmento por la misma razón que el aporte.
+
+    `ALC-IN-21` lista **las tres** —alertas de frecuencia, agregados frente a la
+    referencia y resumen de gasto— como recomendaciones informativas, y la frase
+    que las declara orientativas las cubre a las tres. Que esta no hable de
+    nutrición no la saca de la lista.
+    """
+
+    def test_con_gasto_y_sin_nada_mas_el_aviso_sigue_estando(self):
+        html = pintar(
+            [],
+            gasto=ResumenDeGasto(
+                recargado=Decimal("20000"),
+                gastado=Decimal("5000"),
+                devuelto=Decimal("0"),
+                saldo=Decimal("15000"),
+            ),
+        )
+
+        self.assertIn("data-resumen-de-gasto", html)
+        self.assertIn("data-aviso-orientativo", html)
+
+    def test_sin_movimientos_el_bloque_no_se_pinta(self):
+        html = pintar([])
+
+        self.assertNotIn("data-resumen-de-gasto", html)
         self.assertIn("data-aviso-orientativo", html)
 
 
