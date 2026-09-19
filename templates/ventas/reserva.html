@@ -97,11 +97,19 @@
                 <span class="sr-only">Unidades de {{ producto.nombre }}</span>
                 {% comment %} `|unlocalize` no hace falta aquí —la cantidad es un entero y
                    no un `Decimal`—, pero el `max` sí: ofrecer más de lo que queda sin
-                   apartar es enseñar algo que el servicio va a rechazar. {% endcomment %}
+                   apartar es enseñar algo que el servicio va a rechazar.
+
+                   **Las disponibles pueden ser NEGATIVAS**, y por eso las dos condiciones
+                   preguntan por «mayor que cero» y no por «igual a cero». Pasa cuando la
+                   caja vende unidades apartadas para una reserva pagada (`DT-33`, `DT-35`):
+                   entonces quedan menos de cero. Con `== 0` el campo se quedaba habilitado
+                   y con `max` negativo —un rango imposible—, así que el acudiente podía
+                   teclear una cifra que el servicio iba a rechazar. {% endcomment %}
                 <input type="number" name="cantidad-{{ producto.id }}"
-                       min="0" max="{{ producto.disponibles }}" step="1"
+                       min="0" step="1"
+                       {% if producto.disponibles > 0 %}max="{{ producto.disponibles }}"{% endif %}
                        value="{{ producto.cantidad_pedida }}"
-                       {% if producto.disponibles == 0 %}disabled{% endif %}
+                       {% if producto.disponibles <= 0 %}disabled data-sin-disponibles{% endif %}
                        placeholder="0"
                        class="h-11 w-20 rounded-md border border-borde bg-superficie px-3
                               text-center text-base text-texto transition-colors
