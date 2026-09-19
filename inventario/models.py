@@ -160,6 +160,24 @@ class MovimientoInventario(models.Model):
                 ),
                 name="movimiento_inventario_de_venta_con_su_venta",
             ),
+            # `HU-25`, `TT-149`. **Una venta descuenta cada producto UNA vez**, y
+            # eso es lo que impide entregar dos veces un pedido anticipado: la
+            # entrega asienta las líneas de su venta, y un segundo intento
+            # chocaría aquí aunque alguien se saltara el servicio.
+            #
+            # Es la invariante que la base puede imponer, así que la impone la
+            # base (`DT-15`): el `if` del servicio da el mensaje, esta
+            # restricción da la garantía. Sin ella, «no se entrega dos veces»
+            # dependería de que ningún camino futuro se olvidara de mirar el
+            # estado.
+            #
+            # El ingreso y la merma no entran: su `venta` es `NULL` y en
+            # PostgreSQL los nulos no colisionan en un índice único.
+            models.UniqueConstraint(
+                fields=["venta", "producto"],
+                condition=models.Q(tipo=TipoDeMovimientoDeInventario.VENTA),
+                name="movimiento_inventario_una_salida_por_venta_y_producto",
+            ),
             # El ingreso y la merma son manuales: los explica su motivo, no una
             # compra. Referenciar una venta desde ellos sería inventarla.
             models.CheckConstraint(
