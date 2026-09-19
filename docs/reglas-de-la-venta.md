@@ -224,6 +224,13 @@ pasarían las dos.
 >
 > El negativo no se esconde: es el descuadre que `HU-29` existe para auditar, y la pantalla
 > del historial lo enseña con la venta que lo originó.
+>
+> **Y la caja no es la única vía.** `registrar_merma` valida contra las existencias reales,
+> así que **también puede dar de baja unidades apartadas** — se dañó la bandeja con las
+> empanadas de una reserva, y el libro baja igual. La consecuencia es la misma y la salida
+> también: la entrega se registra, el libro queda en negativo y el descuadre se audita. No se
+> cierra por lo mismo que en la caja: exigiría que la merma supiera de reservas, y ninguna
+> historia lo pide. Se anotó al revisar el cierre del Sprint 4.
 
 ---
 

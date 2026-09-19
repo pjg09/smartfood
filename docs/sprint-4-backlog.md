@@ -171,9 +171,9 @@ Pago simulado, como todo lo demás (`ALC-OUT-02`).
 
 | ID | Tarea | Responsable | Origen | Estado |
 |---|---|---|---|---|
-| `TT-152` | Tablero Kanban del Sprint 4 con sus tareas y estado | Naomi | `CUR-3` | ☐ |
-| `TT-153` | Registro de riesgos del Sprint 4 y seguimiento en las Daily | Naomi | `ENT-04` | ☐ |
-| `TT-154` | Preparación de la Sprint Review, la Retrospective y **el Avance 2** (`EVA-4`) | Naomi | `EVT-3`, `EVT-4` | ☐ |
+| `TT-152` | Tablero Kanban del Sprint 4 con sus tareas y estado | Naomi | `CUR-3` | ☑ |
+| `TT-153` | Registro de riesgos del Sprint 4 y seguimiento en las Daily | Naomi | `ENT-04` | ☑ |
+| `TT-154` | Preparación de la Sprint Review, la Retrospective y **el Avance 2** (`EVA-4`) | Naomi | `EVT-3`, `EVT-4` | ☑ |
 
 `TT-154` pesa: el Avance 2 vale el 20 % y es la segunda vez que el proyecto se enseña fuera del equipo.
 
@@ -209,6 +209,22 @@ Tres usos, en el orden en que los recomendaría:
 **3. La reserva es una venta y hay que tratarla como tal.** `TT-144` debe pasar por la misma transacción con bloqueo que `registrar_venta`. Si se implementa como un flujo aparte, las cuatro reglas de rechazo que construyeron los Sprints 2 y 3 —saldo, límite, alérgeno, desactivación— no se aplicarían a las reservas, y habría una puerta trasera para saltarse el control parental entero.
 
 **4. Las tres historias de pedidos anticipados son `Should`.** `HU-23`, `HU-24` y `HU-25` son las únicas del sprint que no son `Must`. Si algo se cae, se caen ellas; `HU-28` y `HU-29` no pueden, porque `HU-29` cierra `TST-4`.
+
+---
+
+### Revisión de cierre de los riesgos (`TT-153`, 2026-09-19)
+
+| Riesgo | Qué pasó |
+|---|---|
+| **1. Sobra tiempo y hay que decidir en qué se gasta** | Se gastó en el primero de los tres usos que este anexo proponía, y de la forma más barata: `TT-137` se resolvió **retirando** el entorno desplegado (`DEC-15`), no restaurándolo. El margen restante fue a la revisión de cierre, que encontró dos defectos |
+| **2. La entrega puede cobrar dos veces** | **No pasó, y estuvo vigilado.** `entregar` no toca la billetera y `TT-151` lo fija desde cuatro ángulos. Al introducir el cobro doble a propósito caen cinco pruebas |
+| **3. La reserva es una venta y hay que tratarla como tal** | **Cumplido.** `reservar` y `registrar_venta` validan por la misma función, y una prueba estructural exige que ninguno de los dos duplique las reglas |
+| **4. Las tres historias de pedidos son `Should`** | No se cayó ninguna. Las cinco historias del sprint están cerradas |
+
+**El riesgo que este anexo no vio.** `DT-33` —la reserva cobra pero no descuenta inventario—
+abrió un hueco que no estaba en la lista: la caja puede vender lo apartado. Se detectó al
+construir `PR-04`, se decidió en `PR-06` (`DT-35`) y la revisión de cierre encontró que la
+merma abre el mismo hueco por otra vía. Ninguno es un defecto; los tres están registrados.
 
 ---
 

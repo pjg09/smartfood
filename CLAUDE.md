@@ -9,9 +9,9 @@ trazabilidad digital. Proyecto de la asignatura *Proyecto Aplicado en TIC 1* (UP
 
 Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, semanas 6 a 15.
 
-**Los Sprints 1, 2 y 3 están cerrados** —56, 37 y 43 tareas, todas integradas—. El 3 fue el del control parental: cerró `TST-1` y `TST-2`, dos de los cuatro escenarios críticos de `ENT-05`, saldó `HU-17` del Sprint 2 y **creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El detalle está en los backlogs; su revisión de cierre, en `[S7]` de `./docs/plan-de-pull-requests-sprint-3.md`.
+**Los Sprints 1, 2, 3 y 4 están cerrados** —56, 37, 43 y 18 tareas, todas integradas—. El 3 fue el del control parental y **creció de 37 a 43 tareas** con `HU-60` y `HU-61`, dos huecos que la planeación no vio. El 4 fue el de inventario trazable y pedidos anticipados: cerró `TST-4` y con él **los cuatro escenarios críticos de `ENT-05`**, y retiró el entorno desplegado del alcance (`DEC-15`). Las revisiones de cierre están en `[S7]` de cada plan de PR; la del 4 encontró dos defectos y los arregló antes de cerrar.
 
-**Estamos en el Sprint 4**, semanas 12 y 13: inventario trazable y pedidos anticipados. El **Avance 2** (`EVA-4`, 20 %) cae en la semana 14, al cerrarlo: lo que se enseña es lo que hay en `main`.
+**Lo siguiente es el Avance 2** (`EVA-4`, 20 %), semana 14: lo que se enseña es lo que hay en `main`, y el guion está en `[S8]` de `./docs/plan-de-pull-requests-sprint-4.md`. Después, el **Sprint 5**: reportes y plan de pruebas, el más cargado de los dos que quedan.
 
 ## Antes de escribir código, lee esto
 
@@ -21,10 +21,10 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-15`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-34`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-35`) |
 | `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
-| `docs/sprint-4-backlog.md` | **Las 18 tareas del sprint en curso** (`TT-137` … `TT-154`), con responsable |
-| `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas agrupadas en 7 PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero— |
+| `docs/sprint-4-backlog.md` | Las 18 tareas del Sprint 4 (`TT-137` … `TT-154`). **Cerrado** |
+| `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas en 7 PR, su **revisión de cierre** (`[S7]`) y el guion del Avance 2 (`[S8]`) |
 | `docs/sprint-3-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
