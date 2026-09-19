@@ -18,10 +18,10 @@ cinco sprints de dos semanas.
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
 | Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
-| Historias terminadas | **51 de 61** |
+| Historias terminadas | El recuento vive en `[S4]` de [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md), que es donde se marca |
 | Sprint 4 | ✅ cerrado el 2026-09-19: **18 de 18 tareas y 7 de 7 PR**. Inventario trazable, pedidos anticipados y `TST-4` |
-| Plan de pruebas | ✅ **completo**: los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`, demostrados |
-| **Sprint 5** | 🔨 **en curso**, semanas 14–15: reportes de consumo y **cierre del proyecto**. 33 tareas (`TT-155`…`TT-187`) en 13 PR |
+| Plan de pruebas | Los cuatro escenarios críticos `TST-1` … `TST-4` están **construidos y cubiertos por la suite** desde el Sprint 4. `ENT-05` pide además **ejecutarlos y dejar evidencia**, y eso es `TT-179`, en curso |
+| **Sprint 5** | 🔨 **en curso**, semanas 14–15: reportes de consumo, cierre de caja y **el cierre del proyecto**. 33 tareas (`TT-155`…`TT-187`) en 13 PR. **El estado de cada una vive en su plan de PR** |
 | **Lo siguiente** | **Entrega final** (`EVA-5`, 30 % de la nota), semana 16 |
 | Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
@@ -120,8 +120,8 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | Documento | Para qué |
 |---|---|
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
-| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto (`DEC-1` … `DEC-14`) |
-| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos (`DT-1` … `DT-30`) |
+| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto. **Nueve amplían el anteproyecto y dos lo recortan**; su `[S3]` dice cuál hace qué |
+| [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos. Una decisión posterior **no reescribe** a la anterior: se añade con su propio identificador y dice a cuál corrige |
 | [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 61 historias con sus criterios de aceptación |
 
 > **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -158,6 +158,8 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
 | [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
 | [`reglas-del-pedido-anticipado.md`](./docs/reglas-del-pedido-anticipado.md) | Qué mueve reservar, consultar y entregar — y qué **no** mueve cada uno |
+| [`reglas-de-frecuencia-de-consumo.md`](./docs/reglas-de-frecuencia-de-consumo.md) | Qué alerta de frecuencia se publica y con qué umbral, y **por qué el umbral es el mismo para todas las categorías** |
+| [`valores-de-referencia-nutricional.md`](./docs/valores-de-referencia-nutricional.md) | Contra qué cifras se comparan los agregados: la norma que las publica, y las tres salvedades declaradas |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
 | [`prueba-de-concepto-del-lector.md`](./docs/prueba-de-concepto-del-lector.md) | Guion de la validación con tarjetas impresas y lector físico (`ENT-02`) |
 

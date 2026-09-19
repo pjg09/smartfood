@@ -11,7 +11,7 @@
 | cubre | `TT-44` — Definición de los campos nutricionales que consumirán las reglas de recomendación |
 | responsable | Alejandro (análisis) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué decide este documento
 
@@ -104,15 +104,18 @@ datos para poder guardarlos.
 
 ## [S3] Lo que este documento NO decide
 
-- **La tabla de valores de referencia de `HU-32`.** `ALC-IN-21` dice «los valores de
-  referencia publicados por la autoridad sanitaria colombiana», y esa tabla es un dato
-  externo con una fuente citable: hay que **fijar cuál es, con su norma y su fecha**,
-  antes de escribir la regla. El candidato que el equipo debe verificar es la
-  reglamentación de etiquetado nutricional frontal del Ministerio de Salud —de ahí salen
-  los tres nutrientes críticos de `[S2]`—, pero **este documento no la da por confirmada**:
-  no se cita una norma que no se ha leído.
-- **Los umbrales de las alertas de `HU-31`.** Cuántas veces por semana en una categoría
-  dispara un aviso es una regla determinística que hay que escribir, y no es un campo.
+- ~~**La tabla de valores de referencia de `HU-32`.**~~ **Resuelta en `TT-162`**
+  (2026-09-19, `PR-03`): `./valores-de-referencia-nutricional.md`. Este documento apuntaba
+  al reglamento de etiquetado nutricional frontal del Ministerio de Salud **sin darlo por
+  confirmado**, porque no se cita una norma que no se ha leído. Se leyó, y era: **Resolución
+  810 de 2021**, artículo 15, `Tabla 9` y `Tabla 10`. Los tres nutrientes críticos que `[S2]`
+  eligió capturar resultaron ser **exactamente** los tres «Máx.» de la `Tabla 10`, así que
+  aquella elección apuntaba a la tabla correcta.
+- ~~**Los umbrales de las alertas de `HU-31`.**~~ **Resueltos en `TT-158`** (2026-09-19,
+  `PR-02`): `./reglas-de-frecuencia-de-consumo.md`. No son «veces por semana» sino **días
+  distintos en una ventana de 14**, y el umbral es **el mismo para todas las categorías** —
+  uno más bajo para unas que para otras exigiría clasificarlas por lo saludables que son, y
+  eso es `ALC-OUT-20`.
 - **Qué se copia exactamente en la línea de venta.** `DT-8` fija que se copia; la lista de
   columnas de `LineaVenta` es del Sprint 2.
 
