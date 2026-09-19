@@ -89,9 +89,9 @@ El historial muestra **la información nutricional registrada al momento de cada
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-158` | Definición de las reglas determinísticas de frecuencia por categoría, con sus umbrales | Alejandro | ☐ |
-| `TT-159` | Motor que evalúa esas reglas sobre el historial | Pedro | ☐ |
-| `TT-160` | Alertas en la pantalla del acudiente | Carlos | ☐ |
+| `TT-158` | Definición de las reglas determinísticas de frecuencia por categoría, con sus umbrales | Alejandro | ☑ |
+| `TT-159` | Motor que evalúa esas reglas sobre el historial | Pedro | ☑ |
+| `TT-160` | Alertas en la pantalla del acudiente | Carlos | ☑ |
 
 `TT-158` es de Alejandro porque `[S12]` le asigna «la definición de las reglas de recomendación». **No es una tarea de implementación**: es decidir cuántas veces por semana en una categoría dispara una alerta, y poder justificarlo.
 
@@ -101,7 +101,7 @@ El historial muestra **la información nutricional registrada al momento de cada
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-161` | Aviso de carácter orientativo junto a las recomendaciones (`INV-9`) | Carlos | ☐ |
+| `TT-161` | Aviso de carácter orientativo junto a las recomendaciones (`INV-9`) | Carlos | ☑ |
 
 > ⚠ **Esta tarea no puede quedarse para después de `HU-31`.** `INV-9` exige que el aviso esté presente **desde la primera recomendación publicada**, y `ALC-OUT-20` excluye «cualquier forma de valoración nutricional individualizada» por ser acto profesional del área de la salud. Publicar alertas sin el descargo, aunque sea una semana, incumple la invariante.
 >

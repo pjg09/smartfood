@@ -371,6 +371,52 @@ misma regla con la que la venta rechaza por existencias insuficientes
 existencias que ya no explican lo que pasó (`INV-3`). Un error se corrige con otro
 movimiento.
 
+### [S2.12] Ver las alertas de frecuencia
+
+**Recién sembrado no sale ninguna, y no es un fallo:** la regla pide **cinco días distintos**
+de la misma categoría dentro de los últimos catorce (`./reglas-de-frecuencia-de-consumo.md`),
+y el seed no crea ventas. Hay que fabricar un historial repartido en varios días.
+
+`creado_en` es `auto_now_add`, así que no se puede fijar al registrar la venta: se cobra
+normal y después se le corrige la fecha con un `update()`, que es lo único que este script
+hace fuera de los servicios.
+
+```python
+# guardar como sembrar-frecuencia.py y lanzar con `uv run python sembrar-frecuencia.py`
+import django, os, sys
+sys.path.insert(0, ".")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+django.setup()
+
+from datetime import timedelta
+from django.utils import timezone
+from catalogo.models import Producto
+from cuentas.models import Rol, Usuario
+from personas.models import EstadoDelEstudiante, Estudiante
+from ventas.models import Venta
+from ventas.services import registrar_venta
+
+cajero = Usuario.objects.filter(rol=Rol.CAJERO).first()
+# **Activo, no `first()` a secas**: una base con la que ya se ha trasteado tiene
+# estudiantes desactivados, y a esos no se les cobra ni se les recarga (`INVD-2`).
+estudiante = Estudiante.objects.filter(estado=EstadoDelEstudiante.ACTIVO).first()
+producto = Producto.objects.filter(categoria__nombre="Panadería").first()
+
+for dia in range(9):                      # nueve días → frecuencia muy alta
+    venta = registrar_venta(
+        actor=cajero, estudiante=estudiante, lineas={producto.id: 1}
+    )
+    Venta.objects.filter(pk=venta.pk).update(
+        creado_en=timezone.now() - timedelta(days=dia)
+    )
+```
+
+Hace falta **saldo y existencias**, como cualquier venta: el atajo está en `[S1.2]`.
+
+Después, entrando como el acudiente de ese estudiante: *Mis estudiantes* → tarjeta
+**Consumo** → **Ver el historial**. Las alertas salen arriba, y el descargo de `INV-9`
+debajo — **ese sale siempre**, haya alertas o no.
+
 ---
 
 ## [S3] Comandos del día a día

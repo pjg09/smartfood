@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-19; `PR-01` del Sprint 5 — historial de consumo del acudiente (`HU-30`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
+| actualizado | 2026-09-19; `PR-02` del Sprint 5 — historial de consumo (`HU-30`) y alertas de frecuencia con su descargo (`HU-31`, `HU-34`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 ### [S0.1] Qué responde este documento
 
@@ -58,7 +58,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
-| `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra** | Acudiente, **solo los suyos** | `TT-156` |
+| `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra**, y las alertas de frecuencia con su descargo | Acudiente, **solo los suyos** | `TT-156`, `TT-160` |
 | `/mis-estudiantes/<id>/desactivar/` | `POST`. Bloquea la tarjeta de un estudiante a cargo. **No hay ruta para reactivar** (`INVD-3`) | Acudiente, **solo los suyos** | `TT-122` |
 | `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
 | `/mis-estudiantes/<id>/limite/retirar/` | `POST`. Quita del todo el límite diario | Acudiente, **solo los suyos** | `TT-135` |
@@ -334,9 +334,23 @@ ficha o subir un precio no reescribe lo que un niño comió el mes pasado. Un pr
 técnica aparece como **hueco declarado** y nunca como una fila de ceros —el cero afirmaría que
 no aporta nada, y nadie lo afirmó—. Las reservas entran en el historial porque **son ventas ya
 pagadas** (`DT-32`), y las que siguen en el mostrador se marcan «sin recoger» para que no se
-lean como consumidas. **No hay ninguna recomendación en esta pantalla**, así que no lleva el
-descargo de `INV-9`: enseñar lo que se compró no es valorar nada, y el aviso llega con la
-primera recomendación (`HU-34`), ni antes ni después.
+lean como consumidas.
+
+En esa misma pantalla están las **alertas de frecuencia** (`HU-31`, `TT-160`): en cuántos
+días distintos de los últimos catorce aparece cada categoría. **Se cuentan días, no
+unidades** —dos compras del mismo martes son un día— y el umbral es el mismo para todas las
+categorías, porque uno más bajo para `Snacks` que para `Frutas` sería afirmar que una
+conviene menos, que es la valoración nutricional que `ALC-OUT-20` excluye. Las reservas
+cuentan **el día en que se recogen**, no el día en que se pagan: la regla habla de consumo.
+Cada alerta enseña su umbral para que se pueda comprobar contra el historial que tiene
+debajo, que es lo que la hace determinística a ojos de quien la lee (`OBJ-E3`). Las reglas
+y sus números están en `./reglas-de-frecuencia-de-consumo.md`.
+
+Y con ellas el **aviso de carácter orientativo** (`HU-34`, `TT-161`, **`INV-9`**), que no es
+un párrafo suelto: el descargo y las alertas son el mismo fragmento de plantilla, así que
+quien enseñe las alertas en otro sitio se lo lleva con ellas. Se pinta **haya alertas o no**
+—decir «ninguna categoría llega al umbral» sin él se leería como «todo está bien», que es
+una valoración igual que la contraria—.
 
 Entra desde el teléfono (`INT-1`), así que la pantalla se diseña a 390 px primero: la barra
 lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
@@ -530,18 +544,30 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     administración y recargar la pantalla: la compra sigue diciendo lo que costó entonces.
     Es `DT-8` enseñada en vivo, y es lo que convierte el historial en un historial. `HU-30`,
     `HU-22`.
+25. **Arriba, en esa misma pantalla, las alertas de frecuencia** (`HU-31`). Con una
+    demostración corta no saldrá ninguna —hacen falta cinco días distintos de la misma
+    categoría—, y eso también se enseña: la pantalla dice qué umbral no se alcanzó, **no
+    dice que la alimentación vaya bien**. Lo que sí está siempre es el descargo de `INV-9`
+    (`HU-34`), con o sin alertas. Para verlas de verdad hay que sembrar el historial: el
+    atajo está en `[S2.12]` de `./desarrollo.md`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-Las recomendaciones (`HU-31` … `HU-34`), los reportes de la cafetería (`HU-35` … `HU-37`)
-y el cierre de caja (`HU-55`, `HU-56`). Es lo que queda del Sprint 5.
+La comparación con la referencia sanitaria (`HU-32`), el resumen de gasto (`HU-33`), los
+reportes de la cafetería (`HU-35` … `HU-37`) y el cierre de caja (`HU-55`, `HU-56`). Es lo
+que queda del Sprint 5.
 
 **El historial de consumo ya está** (`HU-30`, `TT-155` … `TT-157`): el acudiente ve qué
 compró su hijo, renglón a renglón, **con la información nutricional del día de la compra**.
-Lo que falta encima de eso es sumarlo y compararlo, que es lo que traen `HU-31` y `HU-32`
-con el descargo de `HU-34`.
+
+**Y las alertas de frecuencia también** (`HU-31`, `HU-34`, `TT-158` … `TT-161`): en cuántos
+días distintos de los últimos catorce aparece cada categoría, con el mismo umbral para
+todas —clasificarlas por lo saludables que son sería `ALC-OUT-20`— y con el descargo de
+`INV-9` en el mismo fragmento, de modo que no hay forma de publicar una recomendación sin
+él. Lo que falta encima de eso es **sumar los nutrientes y compararlos** con la autoridad
+sanitaria colombiana, que es `HU-32`.
 
 **El inventario ya es trazable y los pedidos anticipados funcionan de punta a punta.** Toda
 merma lleva motivo y lo impone la base (`HU-28`, `INV-8`); las existencias de cualquier
