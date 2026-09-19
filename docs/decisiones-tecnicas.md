@@ -441,7 +441,7 @@ Hay además una razón que no es de estética: **el admin no responde la pregunt
 - Las tres entidades que `[S2]` ya declaraba bajo «Control parental» —`LimiteDiario`, `RestriccionProducto`, `RestriccionAlergeno`— son las de esta app. **No es una entidad nueva ni un modelo nuevo**: es dónde vive el que ya estaba previsto.
 - El límite diario es un `OneToOneField` sobre el estudiante y **no haber fila es no tener límite**. Un `monto = 0` diría lo contrario —«no puede comprar nada»—, así que una `CheckConstraint` lo impide y `HU-12` retirará la restricción borrando la fila.
 
-**Lo que no cambia.** `DT-15` sigue vigente entero, incluidas sus tres reglas: los servicios reciben `actor` y no leen `request.user`, las invariantes que la base pueda imponer las impone la base, y las vistas no escriben. Y **`reportes` sigue sin existir**: cada app se crea en el sprint que la necesita.
+**Lo que no cambia.** `DT-15` sigue vigente entero, incluidas sus tres reglas: los servicios reciben `actor` y no leen `request.user`, las invariantes que la base pueda imponer las impone la base, y las vistas no escriben. Y **`reportes` no se crea aquí**: cada app se crea en el sprint que la necesita, y la suya es el Sprint 5 (`TT-155`).
 
 **Lo que esta decisión no autoriza.** Una app nueva por cada historia que no encaje a la primera. El criterio sigue siendo el de `DT-15` —una app por **dominio**—, y aquí el dominio existe: el control parental es de `USR-2`, tiene sus propias reglas de escritura y su propia invariante. La siguiente que se proponga tendrá que traer un argumento del mismo tipo.
 
