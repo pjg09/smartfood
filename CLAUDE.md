@@ -94,6 +94,12 @@ Dentro de cada una:
 | `selectors.py` | **Toda lectura** no trivial. No conocen `request` |
 | `views.py` | HTTP: parsear, delegar, renderizar. **Cero lógica de negocio** |
 
+**No todo cabe en esos cuatro.** La lógica pura —sin base y sin HTTP— vive en su propio
+módulo al lado: `personas/codigo.py`, `personas/validacion.py`, `ventas/carrito.py`,
+`reportes/reglas.py` y `reportes/referencia.py`. Es lo que permite comprobar un umbral o una
+tabla de referencia **sin sembrar catorce días de ventas**, y leer la regla entera de un
+vistazo cuando alguien pregunte por qué avisó.
+
 Tres reglas (`DT-15`):
 
 1. **Una vista nunca escribe directamente**: llama a un servicio.
@@ -124,16 +130,21 @@ los tres. En las plantillas se usan alias de intención (`bg-superficie`, `text-
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **diez**
-composiciones existen —ocho con sección propia— y de qué plantilla se copia cada una. Dos que se olvidan: la acción de
-una tarjeta de resumen es un **enlace** de acento abajo, no un botón sólido; y **un hueco
-nunca es un botón deshabilitado** — dice qué falta y qué historia lo trae.
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **doce**
+composiciones existen —diez con sección propia— y de qué plantilla se copia cada una. Tres que
+se olvidan: la acción de una tarjeta de resumen es un **enlace** de acento abajo, no un botón
+sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y qué historia lo trae—;
+y un medidor **recorta la barra a 100, nunca el número**.
 
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Trampas de este stack, ya pagadas
+
+Una entra aquí si **costó una ronda de diagnóstico**: casi todas fallan en silencio —no dan
+error y lo que sale es plausible—. Lo que revienta con un mensaje claro no necesita línea:
+lo dice el error.
 
 - **Un `@transaction.atomic` suelto decora lo siguiente que haya, aunque sea una
   clase.** Insertar una clase entre el decorador y su `def` la convierte en función; el
@@ -201,6 +212,15 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   bien** —`aggregate()` no arrastra el orden—, así que no se ve en las pruebas ni en el
   código: se vio en la captura, con catorce ventas en la tabla y tres desgloses de una.
   Limpia con `.order_by()` antes de agrupar.
+- **Lo que se anota ANTES de un `values()` también entra en el `GROUP BY`.** Es la otra
+  cara de lo anterior: `annotate(dia=…).values("categoria").annotate(Count(…))` agrupa por
+  categoría **y por día** —una fila por día, todas con un uno—. `alias()` deja filtrar por
+  la expresión sin seleccionarla, que es lo que hay que usar.
+- **`aggregate()` rechaza un nombre que choque con un campo del modelo** («The annotation
+  conflicts with a field»). Prefija: `total_energia_kcal`.
+- **Un `Count` sobre un `QuerySet` que une con una tabla hija necesita `distinct=True`.**
+  Sumar importes obliga a unir con las líneas, y sin él una venta de tres renglones cuenta
+  como tres **con las cifras de dinero intactas**: solo miente el recuento.
 - **Un campo de relación en el admin se pinta con el `__str__` del modelo apuntado.**
   `Estudiante.__str__` es «Nombre (documento)», así que una ficha que liste `estudiante`
   enseña el documento del menor aunque el listado se cuide de no hacerlo — y enlazado.
@@ -318,6 +338,16 @@ fuente incluye el docstring, y ahí la ausencia **se explica**: buscar «no llam
 la X de la explicación y la prueba pasa sola. `inspect.unwrap(f).__code__.co_names` lista lo
 que la función usa de verdad. Ponle contraprueba: que sí encuentre lo que sí usa.
 
+**Una prueba de ventana o de periodo recibe la fecha, no la lee del reloj.** El selector
+toma `hoy=` y las filas se fechan a mano sobre una jornada fija: si mira `timezone.now()`,
+falla sola una madrugada y nadie sabe por qué. Y `creado_en` es `auto_now_add` —no se puede
+fijar al crear—: se corrige después con `update()`.
+
+**Para fijar «no hay forma de pintar A sin B», renderiza el FRAGMENTO, no la página.**
+`render_to_string` sobre el `partial`, con y sin datos. Si alguien separa los dos bloques en
+dos plantillas, la página seguiría trayendo los dos y la prueba pasaría igual — así es como
+se sostiene `INV-9`, y así falla cuando se rompe.
+
 **Una prueba sobre una página entera busca un `data-*` propio, no un atributo genérico.**
 `assertNotContains(r, 'role="group"')` para decir «no se dibuja el selector de estudiante» se
 rompe el día que el armazón estrena otro grupo — y se rompió. Busca
@@ -345,6 +375,12 @@ el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso
 **Hazlo siempre que toques una pantalla.** En el Sprint 4, mirarla encontró cuatro defectos
 que la suite no vio: un título duplicado, acentos graves literales, el mes capitalizado y
 `|dinero:"COP"` en cifras pequeñas. Ninguno rompía una prueba; los cuatro se veían.
+
+En el Sprint 5 encontró seis más, y **uno era de cifras**: un desglose que decía «1 venta» en
+cada fila con catorce en la tabla, con el total de al lado correcto. Los otros cinco:
+columnas tituladas «method», el documento de un menor enseñado en una ficha, dos cabeceras
+pegadas, una barra de color que se leía como una alarma y un «consúltalas con quien **lo**
+atiende» que nombraba en masculino a una estudiante.
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
@@ -403,6 +439,8 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
    está ahí, para — y **regístralo antes de construirlo**: historia nueva (`HU-nn`) si el backlog
    no la tiene, y además `DEC-n` en `decisiones-de-alcance.md` si amplía `[S11]` o el
    anteproyecto. Un PR no crea alcance; lo aplica. Pasó con `HU-60` y `HU-61`.
+   **Escribir un `.md` que registra cómo funciona algo no es alcance nuevo**: es parte de
+   construirlo, y varias tareas del proyecto son exactamente eso (`TT-44`, `TT-158`, `TT-162`).
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
 5. Al terminar, marca la tarea `☑` **en los dos documentos** —el plan de PR y el sprint backlog—
    dentro del propio PR, y actualiza los contadores. Deben coincidir. **Comprueba la redacción de
@@ -430,6 +468,12 @@ congelada; no la edites. Si una decisión cambia, se actualiza aquí, con su ide
 
 Ninguna afirmación de estos documentos se inventa: cada una cita el identificador del que sale. Al
 añadir contenido, mantén esa propiedad o el documento pierde su valor.
+
+**Una cifra que viene de una norma externa se lee en la norma, y en dos fuentes oficiales
+independientes.** Se cita norma, artículo, tabla y columna —`TT-162` lo hizo con la
+Resolución 810 de 2021—, **lo que no se pudo confirmar se declara** en vez de suponerse, y
+los valores viven en un solo sitio del código para que actualizarlos sea una tabla y una
+prueba. No se cita una norma que no se ha leído.
 
 **Antes de cerrar un PR, cuadra las marcas por script**: que cada `TT-nn` coincida en el
 sprint backlog y en el plan de PR, que el contador diga lo que dicen las marcas, y que las

@@ -8,11 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| actualizado | 2026-09-17; el Sprint 3 estrenó dos composiciones —`[S2.6]` y `[S2.7]`— en las pantallas del control parental |
-| cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental añadió |
+| actualizado | 2026-09-19; el Sprint 5 estrenó otras dos —`[S2.8]` y `[S2.9]`— en los reportes: el medidor del acudiente y el consolidado del admin |
+| cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental y los reportes añadieron |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Qué responde este documento
 
@@ -62,15 +62,17 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Diez, y ocho tienen sección propia porque llevan una decisión o una trampa que hay que
+Doce, y diez tienen sección propia porque llevan una decisión o una trampa que hay que
 conocer antes de copiarlas.
 
-**Dos las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
+**Tres las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
 porque el padrón estrenó a la vez el buscador que pide a cada tecla, el interruptor accesible
 y el orden de los tres controles, y esas tres decisiones se toman una vez o se vuelven a
-discutir en la siguiente pantalla que lleve una tabla. Y la **lista con cantidad**, porque es
+discutir en la siguiente pantalla que lleve una tabla. La **lista con cantidad**, porque es
 una variante de la lista con interruptor y lo que la separa de ella —un solo envío en vez de
-un gesto por fila— es justo lo que habría que volver a razonar en la próxima.
+un gesto por fila— es justo lo que habría que volver a razonar en la próxima. Y el
+**medidor de proporción**, porque lo que decide no es cómo se ve sino qué se recorta y qué
+no, y eso hay que saberlo **antes** de dibujar el segundo.
 
 | Composición | Se copia de | En una frase |
 |---|---|---|
@@ -84,6 +86,8 @@ un gesto por fila— es justo lo que habría que volver a razonar en la próxima
 | Lista con interruptor | `templates/restricciones/partials/lista-de-productos.html` | Una fila por elemento, el estado pintado en el borde y el fondo, y un botón que dice **la acción**, no el estado |
 | Lista con cantidad | `templates/ventas/reserva.html` | La fila de `[S2.6]` con un campo numérico en vez del interruptor; **un solo envío**, no un gesto por fila |
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
+| Medidor de proporción | `templates/reportes/partials/recomendaciones.html` | Barra fina bajo la cifra; **se recorta la barra a 100, nunca el número**, y el color no significa nada |
+| Consolidado de reporte | `templates/admin/ventas/venta/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
 
 ### [S2.1] Tarjeta de resumen
 
@@ -108,6 +112,11 @@ esos tres significan algo (`[S1]`, regla 3).
 Y ahí **la franja sí puede ser `error`**: un saldo en cero significa que no se le puede
 cobrar nada (`INV-1`). Es la excepción que confirma la regla 3 — el color de estado se gasta
 donde el estado existe, no como adorno.
+
+**El segundo sitio sin enlace es el resumen de gasto** (`TT-166`), y por el mismo motivo:
+no hay a dónde ir. Lo que explica esas tres cifras es el historial que está debajo, en la
+misma pantalla. La regla que queda: **el enlace va cuando lleva a algo que no está a la
+vista**; si el detalle ya está debajo, sobra.
 
 ### [S2.2] Tabla de datos
 
@@ -239,6 +248,45 @@ acudiente vio al decidir. Y anota el bloqueo además del retiro, porque media hi
 reconstruye nada — «se retiró el bloqueo de maní el día 3» no dice si el niño estuvo
 protegido antes.
 
+### [S2.8] Medidor de proporción
+
+Una cifra y, debajo, una barra fina que dice qué parte de una referencia representa: el
+aporte nutricional frente a los valores diarios del etiquetado (`HU-32`, `TT-164`).
+
+**Se recorta la barra a 100, nunca el número.** Un 140 % con la barra llena dice la verdad;
+recortar también la cifra escondería justo el caso que más dice. El recorte se hace en el
+selector y no en la plantilla — una plantilla de Django no compara.
+
+**El ancho va en un estilo en línea, y es la única excepción del proyecto.** Tailwind compila
+lo que encuentra **escrito** en las plantillas, y un ancho que sale de un dato no existe
+hasta que corre la consulta: `w-[47%]` no se puede generar. No es una licencia para volver a
+los estilos en línea en cualquier otro sitio.
+
+**El color no significa nada, y ahí está el cuidado.** Se usa `serie-1` y no `serie-2`:
+la segunda es naranja y a tamaño de barra **se lee como un aviso**, que es exactamente lo
+que una comparación nutricional no puede decir (`ALC-OUT-20`). Las series no significan nada,
+pero se parecen a cosas que sí.
+
+### [S2.9] Consolidado de reporte
+
+Los reportes de la cafetería viven en el admin (`HU-35`, `HU-36`), así que **no llevan
+Tailwind**: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en línea, como en
+`admin/catalogo/producto/historial.html`.
+
+La forma es siempre la misma: **la cifra grande**, al lado **una frase que dice de dónde
+sale** —y que cambia con los filtros de la pantalla—, y debajo **tablas de desglose**.
+
+Tres decisiones que se copian con ella:
+
+- **Las tablas de desglose llegan completas**: una categoría sin datos sale en cero, no
+  desaparece. Que no se cobrara nada por transferencia es un dato del periodo; una fila
+  ausente se lee como si el medio no existiera.
+- **Sin datos no se pinta un cero**, se dice que el filtro no alcanzó nada. Un «$0» se lee
+  como «se vendió cero», que es otra cosa.
+- **Sin `<h1>` propio**: el admin ya pinta `title` del contexto como encabezado. Lo que sí
+  se cambia es ese `title` desde `changelist_view`, porque el de fábrica —«Seleccione venta
+  para ver»— describe lo que se hace con una tabla, no lo que es la pantalla.
+
 ---
 
 ## [S3] Los cuatro armazones
@@ -268,6 +316,12 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
   ver `[S2.3]`. La diferencia con un hueco es que un hueco declara algo que llegará, y esto
   no va a llegar nunca — el efectivo no es un medio de pago pendiente para un estudiante.
 - **Un color de estado como adorno.** Ver `[S1]`, regla 3.
+- **Una recomendación sin su descargo.** `INV-9`. Y no se resuelve poniendo un párrafo en la
+  pantalla: las recomendaciones y el aviso son **el mismo fragmento**
+  (`templates/reportes/partials/recomendaciones.html`), de modo que quien las reutilice se
+  lo lleve con ellas. El aviso se pinta **haya recomendaciones o no** — decir «ninguna
+  categoría llega al umbral» sin él se lee como «todo está bien», que es una valoración
+  igual que la contraria (`ALC-OUT-20`).
 - **Una cifra de dinero formateada fuera de `billetera/templatetags/dinero.py`.** Ni en
   JavaScript ni en una plantilla: con dos formateadores, el día que cambie el formato la
   misma pantalla enseña dos monedas.
@@ -284,9 +338,9 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 
 ---
 
-## [ANEXO A] Las seis trampas que ya se pagaron
+## [ANEXO A] Las ocho trampas que ya se pagaron
 
-Las seis fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
+Las ocho fallan **en silencio**: no dan error, y la pantalla simplemente se ve mal.
 
 | Trampa | Qué pasa | Salida |
 |---|---|---|
@@ -295,13 +349,17 @@ Las seis fallan **en silencio**: no dan error, y la pantalla simplemente se ve m
 | `@container` puesto **demasiado arriba** | Peor que la anterior, porque sí hay contra qué medirse: la rejilla mide el lienzo entero y no su columna. El catálogo se partía en dos columnas de 145 px y los nombres salían «Empanada d…» | El contenedor es el ancestro **más cercano**: cada zona que responda a su propio ancho lleva el suyo |
 | `tailwind build` sin `--force` | Compara la fecha de `fuente.css`, no la de las plantillas; contesta «up to date» y la clase nueva no está | `--force`, o `tailwind watch` en otra terminal |
 | `{% now "F" %}` | Devuelve el mes capitalizado, y en una fecha en español va en minúscula | `{% now "F" as mes %}` y luego `{{ mes\|lower }}` |
+| `floatformat:"-2"` sobre una cifra ya redondeada | Vuelve a poner dos decimales: «12,40 g» donde el selector había dejado «12,4 g». Con cuántos decimales se enseña algo se decide **en un sitio**, y si ya lo decidió el selector, la plantilla no lo toca |
+| Una anchura que sale de un dato | Tailwind compila lo que encuentra **escrito** en la plantilla: `w-[47%]` calculado no existe hasta que corre la consulta, y la barra sale sin ancho. Es la única excepción del proyecto al estilo en línea (`[S2.8]`) |
 | Fragmento HTMX que aterriza bajo el pliegue | En una columna con `overflow-y-auto`, lo que devuelve el intercambio puede nacer fuera de la vista — y `autofocus` mantiene el scroll donde está el campo | `hx-swap="… show:top"`, que sube el destino. Reordenar la columna **no** sirve: el foco vuelve a arrastrar el scroll |
 
-La quinta se pagó en `TT-75`. Conviene saber la medida, porque la pantalla de `INT-2` no da
+La del fragmento bajo el pliegue se pagó en `TT-75`. Conviene saber la medida, porque la pantalla de `INT-2` no da
 para más: **a 1024 × 600 la columna del estudiante deja 317 px visibles y la caja de
 búsqueda ocupa 298**. Todo lo que un fragmento traiga nace por debajo del pliegue, así que
 en el punto de venta un intercambio HTMX que no suba su destino es un intercambio que el
 cajero no ve.
 
-Para mirar una pantalla sin abrir el navegador —y para adjuntar la evidencia a un PR mientras
-`DoD-4` esté suspendido— la receta está en `[S5.2]` de `./desarrollo.md`.
+Para mirar una pantalla sin abrir el navegador, la receta está en `[S5.2]` de
+`./desarrollo.md`. **No es opcional**: `DoD-4` está vigente y pide demostrar lo que el PR
+entrega ejecutándolo, y en los Sprints 4 y 5 mirar la pantalla encontró **diez defectos** que
+ninguna prueba vio — uno de ellos, de cifras.

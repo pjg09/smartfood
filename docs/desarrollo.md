@@ -531,9 +531,9 @@ desincroniza a la primera versión.
 
 ### [S5.2] Mirar una pantalla sin abrir el navegador
 
-Para revisar cómo queda algo —y para adjuntar la evidencia a un PR mientras `DoD-4` esté
-suspendido— no hace falta abrir el navegador a mano: se renderiza la pantalla con el cliente
-de pruebas y se fotografía con Chrome sin interfaz.
+Para revisar cómo queda algo **y para adjuntar la evidencia a un PR** —`DoD-4` está vigente y
+pide demostrarlo ejecutándolo— no hace falta abrir el navegador a mano: se renderiza la
+pantalla con el cliente de pruebas y se fotografía con Chrome sin interfaz.
 
 ```bash
 # 1. Recompilar la hoja y publicarla, en este orden y con `--force`:
