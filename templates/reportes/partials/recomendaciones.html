@@ -1,0 +1,231 @@
+{% comment %} Las recomendaciones informativas de `ALC-IN-21`, **con su aviso**.
+
+   `TT-160` las alertas de frecuencia (`HU-31`), `TT-164` la comparación con la
+   referencia sanitaria (`HU-32`) y `TT-161` el descargo (`HU-34`, `INV-9`).
+
+   ═══════════════════════════════════════════════════════════════════════
+   **ESTE FRAGMENTO ES UNO SOLO, Y ESA ES LA FORMA EN QUE SE SOSTIENE `INV-9`.**
+
+   El criterio de `HU-34` —«el aviso aparece en la interfaz, junto a las
+   recomendaciones»— se puede cumplir poniendo un párrafo en esta pantalla, y
+   entonces vale hasta que alguien enseñe una recomendación en otra. Aquí se
+   cumple de la otra manera: **no hay forma de pintar una recomendación sin el
+   aviso**, porque quien incluya este fragmento se lleva las dos clases y el
+   descargo. Está razonado en `[S5]` de
+   `docs/reglas-de-frecuencia-de-consumo.md`.
+
+   **Por eso el fichero creció en vez de partirse en dos.** Con las alertas en
+   una plantilla y los agregados en otra, cada una incluyendo el aviso, la
+   garantía pasaría a depender de que nadie se olvide del `include` — que es
+   exactamente lo que esta forma evita. `TT-164` renombró el fragmento de
+   `alertas-de-frecuencia.html` a `recomendaciones.html` al entrar la segunda.
+   ═══════════════════════════════════════════════════════════════════════
+
+   **Ni un color de estado en todo el bloque, y es deliberado.** El ámbar de este
+   sistema significa «un límite a punto de agotarse» (`[S1]`, regla 3), y pintar
+   de ámbar una categoría diría que consumirla es un problema — que es
+   exactamente la valoración nutricional que `ALC-OUT-20` excluye. La regla no
+   clasifica categorías: cuenta días, con el mismo umbral para `Frutas` que para
+   `Snacks` (`[S3]`). La pantalla tiene que decir lo mismo que la regla.
+
+   **Cada alerta enseña su umbral**, y tampoco es adorno: debajo está el
+   historial, así que el acudiente puede contar los días y comprobar la cifra.
+   Una alerta que no se puede comprobar es indistinguible de una opinión, y
+   `OBJ-E3` pide reglas determinísticas (`ANEXO A` del documento).
+{% endcomment %}
+
+<section aria-labelledby="frecuencia" class="flex flex-col gap-3" data-alertas-de-frecuencia>
+  <div class="flex flex-col gap-1">
+    <h2 id="frecuencia" class="text-lg text-texto">Frecuencia de consumo</h2>
+    <p class="text-base font-medium text-texto-suave">
+      En cuántos días distintos de los últimos {{ ventana_de_frecuencia }} aparece cada
+      categoría. Se cuentan días, no unidades: dos compras del mismo día son un día.
+    </p>
+  </div>
+
+  {% if alertas %}
+    <ul class="flex flex-col gap-3">
+      {% for alerta in alertas %}
+        <li data-alerta
+            class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-md
+                   border border-borde bg-superficie p-4 shadow-sm">
+          <span class="flex min-w-0 flex-col gap-1">
+            <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <svg class="h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-tendencia"></use></svg>
+              <strong class="text-base font-semibold text-texto">{{ alerta.categoria }}</strong>
+              {% comment %} El nivel es una pastilla neutra y no un color de estado, por lo que
+                 dice la cabecera de este fichero. Lo que distingue a una frecuencia
+                 muy alta de una alta es el número, que va al lado en grande. {% endcomment %}
+              <span data-nivel="{{ alerta.nivel }}"
+                    class="rounded bg-superficie-hover px-2 py-0.5 text-sm font-medium
+                           whitespace-nowrap text-texto-suave">
+                {% if alerta.es_muy_alta %}Frecuencia muy alta{% else %}Frecuencia alta{% endif %}
+              </span>
+            </span>
+            <span class="text-sm text-texto-suave">
+              Se señala a partir de {{ alerta.umbral }} días. Puedes comprobarlo en el
+              historial de abajo.
+            </span>
+          </span>
+
+          <span class="shrink-0 font-display text-xl font-semibold tabular-nums text-texto">
+            {{ alerta.dias }}<span class="text-base font-medium text-texto-suave"> de {{ alerta.ventana }} días</span>
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% comment %} **«Ninguna categoría llega al umbral» no es «todo va bien».** La
+       diferencia importa: lo segundo es una valoración y `ALC-OUT-20` la excluye.
+       Por eso la frase dice lo que la regla hizo —contar y no pasar de un
+       número— y no cómo se come. {% endcomment %}
+    <p role="status" data-sin-alertas
+       class="rounded-md border border-dashed border-borde p-6 text-center text-base
+              font-medium text-texto-suave">
+      Ninguna categoría se repite lo suficiente para señalarla: ninguna llega a
+      {{ umbral_de_frecuencia }} días de los últimos {{ ventana_de_frecuencia }}.
+    </p>
+  {% endif %}
+
+  {% comment %} `TT-164`, `HU-32`. La comparación con la referencia sanitaria.
+
+     **Lo que se compara es un día de cafetería**, no el periodo entero: la
+     referencia de la norma es diaria, así que el agregado se divide entre los
+     días en que hubo consumo (`[S5]` de `docs/valores-de-referencia-nutricional.md`).
+
+     Las tres salvedades van escritas debajo y no escondidas en el documento,
+     porque las tres cambian cómo hay que leer la cifra: no es lo que el
+     estudiante necesita, no es toda su dieta, y los azúcares se comparan contra
+     un máximo de azúcares **añadidos**.
+
+     Ni un color de estado aquí tampoco. Un 140 % de sodio en rojo diría que
+     algo va mal, y eso es una valoración (`ALC-OUT-20`): la cifra se enseña
+     entera y quien la interpreta es la familia. {% endcomment %}
+  {% if aporte.hay_datos %}
+    <section aria-labelledby="aporte" class="flex flex-col gap-3" data-aporte-nutricional>
+      <div class="flex flex-col gap-1">
+        <h2 id="aporte" class="text-lg text-texto">Aporte nutricional</h2>
+        <p class="text-base font-medium text-texto-suave">
+          Lo que aportó, en promedio, <strong class="font-semibold text-texto">un día en que
+          compró en la cafetería</strong> —{{ aporte.dias_con_consumo }} de los últimos
+          {{ aporte.ventana }}—, frente a los valores diarios de referencia del etiquetado.
+        </p>
+      </div>
+
+      <ul class="flex flex-col divide-y divide-borde rounded-md border border-borde
+                 bg-superficie shadow-sm">
+        {% for comparacion in aporte.comparaciones %}
+          <li data-nutriente class="flex flex-col gap-2 p-4">
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <span class="text-base font-semibold text-texto">
+                {{ comparacion.referencia.etiqueta }}
+              </span>
+
+              {% if comparacion.declarado %}
+                <span class="flex flex-wrap items-baseline gap-x-2 text-sm text-texto-suave">
+                  {% comment %} Sin `floatformat`: el promedio llega **ya redondeado con los
+                     decimales de su unidad** desde `reportes.referencia` —ninguno en
+                     kcal y mg, uno en gramos—. Un `floatformat:"-2"` aquí volvería a
+                     «12,40 g» lo que el selector había dejado en «12,4 g», y pondría
+                     la decisión en dos sitios. {% endcomment %}
+                  <span class="font-display text-base font-semibold tabular-nums text-texto">
+                    {{ comparacion.promedio_diario }} {{ comparacion.referencia.unidad }}
+                  </span>
+                  {% comment %} «de 2000 kcal» y «máximo 20 g» no son la misma frase: `Tabla 9`
+                     son necesidades y `Tabla 10` son techos, y la norma rotula estos
+                     últimos «Máx.». {% endcomment %}
+                  {% if comparacion.es_maximo %}
+                    de un máximo de {{ comparacion.referencia.valor|floatformat:0 }} {{ comparacion.referencia.unidad }}
+                  {% else %}
+                    de {{ comparacion.referencia.valor|floatformat:0 }} {{ comparacion.referencia.unidad }} de referencia
+                  {% endif %}
+                  <span class="font-display text-base font-semibold tabular-nums text-texto">
+                    · {{ comparacion.porcentaje }} %
+                  </span>
+                </span>
+              {% else %}
+                {% comment %} **Vacío no es cero** (`TT-44`). Ningún renglón del periodo declaró
+                   este nutriente, así que no se sabe — y un cero afirmaría que no
+                   aportó nada. {% endcomment %}
+                <span data-sin-dato class="text-sm text-texto-suave">
+                  Sin datos: ningún producto del periodo lo declaró
+                </span>
+              {% endif %}
+            </div>
+
+            {% if comparacion.declarado %}
+              {% comment %} La barra va con estilo en línea y no con una clase: Tailwind compila
+                 lo que encuentra escrito en las plantillas, y un ancho que sale de un
+                 dato no existe hasta que corre la consulta. El ancho se recorta a 100
+                 en el selector —una plantilla no compara—, **pero el porcentaje de
+                 arriba se enseña entero**: una barra llena con «140 %» al lado dice la
+                 verdad; recortar también la cifra la escondería. {% endcomment %}
+              <span aria-hidden="true" class="block h-1.5 overflow-hidden rounded-full bg-superficie-hover">
+                {% comment %} `serie-1` y no `serie-2`: la segunda es naranja y a tamaño de
+                   barra se lee como un aviso, que es justo lo que esta pantalla no
+                   dice. Las series no significan nada, pero se parecen a cosas que
+                   sí. {% endcomment %}
+                <span class="block h-full rounded-full bg-serie-1"
+                      style="width: {{ comparacion.ancho_de_la_barra }}%"></span>
+              </span>
+              {% if comparacion.referencia.nota %}
+                <span class="text-sm text-texto-suave">{{ comparacion.referencia.nota }}</span>
+              {% endif %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% comment %} `[S4.3]`. Un agregado que se calla lo que dejó fuera se lee como si
+         estuviera completo. Solo se dice cuando hay algo que decir. {% endcomment %}
+      {% if aporte.renglones_sin_declarar %}
+        <p data-renglones-fuera class="text-sm text-texto-suave">
+          {{ aporte.renglones_sin_declarar }} renglón{{ aporte.renglones_sin_declarar|pluralize:"es" }}
+          del periodo {{ aporte.renglones_sin_declarar|pluralize:"queda,quedan" }} fuera de esta
+          cuenta porque el producto no declaraba información nutricional. No se cuentan como
+          cero: no se sabe cuánto aportaron.
+        </p>
+      {% endif %}
+
+      <p class="text-sm text-texto-suave">
+        Referencia: <strong class="font-semibold text-texto">Resolución 810 de 2021</strong> del
+        Ministerio de Salud y Protección Social, artículo 15, columna «niños mayores de 4 años
+        y adultos». <strong class="font-semibold text-texto">No es lo que
+        {{ estudiante.nombre }} necesita</strong>: es el valor que la norma manda imprimir en
+        cualquier etiqueta. Y solo cuenta lo comprado en la cafetería, que es una parte de lo
+        que come al día.
+      </p>
+    </section>
+  {% endif %}
+
+  {% comment %} `TT-161`, `HU-34`, **`INV-9`**. El aviso va aquí dentro y **fuera de
+     cualquier `{% if %}`**: se pinta haya alertas o no. Decir «ninguna categoría
+     se repite lo suficiente» sin el descargo se leería como «todo está bien»,
+     que es una valoración igual que la contraria (`[S5]`).
+
+     La segunda frase es literal del segundo criterio de `HU-34` —«no constituyen
+     valoración médica ni nutricional individualizada»— y de `ALC-OUT-20`. No se
+     suaviza al redactar: es la frase que hace que esta pantalla no sea un acto
+     profesional del área de la salud. {% endcomment %}
+  <div role="note" data-aviso-orientativo
+       class="flex items-start gap-3 rounded-md border border-borde bg-superficie-hover p-4">
+    <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+    <p class="text-sm text-texto-suave">
+      <strong class="font-semibold text-texto">Esto es información orientativa.</strong>
+      Sale de contar lo que se compró con una regla fija, siempre la misma.
+      {% comment %} **Esta frase no se parte en dos líneas, aunque la línea quede larga.**
+         Es el segundo criterio de `HU-34` literal, y `reportes/tests_aviso.py` la
+         busca entera: partirla rompe la prueba, que es exactamente lo que tiene que
+         pasar si alguien la reescribe sin darse cuenta de lo que es. {% endcomment %}
+      <strong class="font-semibold text-texto">No constituye una valoración médica ni nutricional individualizada</strong>, no la hace un profesional de la salud y no
+      sustituye su criterio. Si tienes dudas sobre la alimentación de
+      {{ estudiante.nombre }}, consúltalas con un profesional de la salud.
+      {% comment %} «Con quien **lo** atiende» concuerda en masculino, y el sistema no
+         guarda el género del estudiante — ni tiene por qué: ninguna historia lo
+         pide y sería un dato personal de un menor sin uso (`ALC-OUT-08`). Con una
+         niña, esa frase la nombraba mal. La redacción neutra evita la concordancia
+         en vez de inventarse el dato, y además dice algo más preciso: a quién hay
+         que preguntar. {% endcomment %}
+    </p>
+  </div>
+</section>
