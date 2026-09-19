@@ -9,8 +9,8 @@ libros y `DT-19` en el modelo entero.
 
 Por eso la app entra sin migraciones: todo lo suyo vive en `selectors.py`.
 
-La excepción llegará con `HU-55` —el cierre de caja tiene modelo propio
-(`TT-171`)—, pero ese es de `ventas`: un cierre **no es un reporte**, es un
-hecho nuevo que alguien registra. El reporte de cierres (`HU-56`) sí es de aquí,
-y también será una lectura.
+`HU-55` parecía la excepción y no lo fue: el cierre de caja tiene modelo propio
+(`TT-171`) y vive en `ventas`, porque un cierre **no es un reporte** — es un
+hecho nuevo que alguien registra, con su servicio y sus restricciones. El
+reporte de cierres (`HU-56`) sí es de aquí, y también será una lectura.
 """
