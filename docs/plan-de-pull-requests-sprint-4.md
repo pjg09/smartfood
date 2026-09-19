@@ -72,14 +72,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **12** de 18 | **5** de 7 |
-| Pendientes | 6 | 2 |
+| **Finalizadas** | **15** de 18 | **6** de 7 |
+| Pendientes | 3 | 1 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 5 | 6 |
-| Carlos | 4 | 5 |
-| Alejandro | 3 | 4 |
+| Pedro | 6 | 6 |
+| Carlos | 5 | 5 |
+| Alejandro | 4 | 4 |
 | Naomi | 0 | 3 |
 
 ### [S3.1] Estado de los 7 Pull Requests
@@ -91,7 +91,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-03` | `TT-141`–`TT-142` | `HU-29` · `INV-3`, **`TST-4`** — cierra `ENT-05` | ☑ |
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` · `DT-32`, `DT-33` | ☑ |
 | `PR-05` | `TT-147`–`TT-148` | `HU-24` · `DT-34` | ☑ |
-| `PR-06` | `TT-149`–`TT-151` | `HU-25` | ☐ |
+| `PR-06` | `TT-149`–`TT-151` | `HU-25` · `DT-35` | ☑ |
 | `PR-07` | `TT-152`–`TT-154` | Gestión del sprint y Avance 2 | ☐ |
 
 ---
@@ -346,13 +346,13 @@ está pagado y nadie va a cobrarlo otra vez.
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-25` |
 | Invariantes | `INV-2`, `INV-3` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-149` | Servicio de entrega que **no vuelve a descontar saldo** ni admite entrega doble | Pedro | ☐ |
-| `TT-150` | Registro de la entrega en el punto de venta | Carlos | ☐ |
-| `TT-151` | Caso de prueba: entregar no descuenta saldo, y no se entrega dos veces | Alejandro | ☐ |
+| `TT-149` | Servicio de entrega que **no vuelve a descontar saldo** ni admite entrega doble | Pedro | ☑ |
+| `TT-150` | Registro de la entrega en el punto de venta | Carlos | ☑ |
+| `TT-151` | Caso de prueba: entregar no descuenta saldo, y no se entrega dos veces | Alejandro | ☑ |
 
 > ⚠ **El error a evitar es cobrar dos veces.** El pedido ya se pagó al reservarse (`DT-33`):
 > la entrega cambia su estado y descuenta existencias, y **no vuelve a tocar el saldo**. Si reutiliza `registrar_venta` sin
@@ -360,10 +360,24 @@ está pagado y nadie va a cobrarlo otra vez.
 > consistente— pero el sistema está mal. Es el único fallo del sprint que no detecta
 > ninguna invariante: solo lo detecta `TT-151`.
 >
-> **Y hereda un hueco de `PR-04`.** `DT-33` dejó que la caja pueda vender unidades apartadas
-> para una reserva pagada. `TT-149` tiene que decidir qué hace la entrega cuando llega el
-> estudiante y no hay lo suyo — está en `[S7]` de `./reglas-de-la-venta.md`, con las dos
-> salidas posibles.
+> **Y el hueco heredado de `PR-04` queda cerrado**, con `DT-35`: la entrega **se registra
+> igual** aunque no haya existencias, y el libro puede quedar en negativo. El compromiso ya se
+> adquirió y se cobró; rechazarla dejaría al estudiante sin lo suyo y con el dinero pagado, y
+> el sistema no sabe devolver. El negativo es el descuadre que `HU-29` existe para auditar, y
+> la pantalla del historial lo enseña con la venta que lo originó.
+>
+> **La caja no cambia y las comprobaciones siguen siendo seis.** Restar lo reservado allí
+> habría sido la séptima, y ninguna historia la pide.
+
+**Lo que este PR añadió sin que el plan lo previera:** una `UniqueConstraint` sobre
+`(venta, producto)` para las salidas por venta. «No se entrega dos veces» es el «para qué» de
+`HU-25`, y con solo el `if` del servicio dependería de que ningún camino futuro se olvidara de
+mirar el estado. Ahora el `if` da el mensaje y la base da la garantía (`DT-15`). Al retirarla
+a propósito, la prueba que la vigila cae.
+
+**El fallo que ninguna invariante detecta, comprobado:** al introducir el cobro doble caen
+**cinco** pruebas. Sin ellas el sistema quedaría consistente y mal, que es lo que este PR
+tenía que impedir.
 
 ---
 

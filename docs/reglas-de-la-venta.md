@@ -210,20 +210,20 @@ pedidos pendientes. Es consecuencia de `DT-33`: la reserva cobra pero no descuen
 inventario hasta la entrega, así que sin restar lo apartado dos reservas del último paquete
 pasarían las dos.
 
-> ### ⚠ Hueco conocido, y le toca a `HU-25` cerrarlo
+> ### ✅ Hueco resuelto por `HU-25`, y las comprobaciones siguen siendo seis
 >
-> **La caja sigue mirando las existencias reales, así que puede vender unidades apartadas
-> para una reserva ya pagada.** Cuando pase, el estudiante llegará a recoger algo que no
-> está, con el dinero ya cobrado.
+> **La caja mira las existencias reales, así que puede vender unidades apartadas para una
+> reserva ya pagada.** Eso no cambia, y es deliberado: cerrarlo aquí habría sido la séptima
+> comprobación, y en una caja con fila el cajero leería «no hay existencias» de algo que
+> tiene delante en la vitrina, porque está apartado para otro.
 >
-> No se cierra aquí por dos motivos. Uno: sería **la séptima comprobación**, y este
-> documento existe para que no se añada ninguna sin pensarla — ninguna historia la pide hoy.
-> Dos: quien tiene el problema delante es `HU-25`, que es la que decide qué hace la entrega
-> cuando no hay lo suyo, y esa decisión manda sobre cómo se evita.
+> Lo que se decidió es **qué hace la entrega cuando pasa**, que era la pregunta que este
+> documento remitió a `HU-25`: la entrega **se registra igual** y el libro puede quedar en
+> negativo (`DT-35`). El compromiso ya se adquirió y se cobró; rechazarla dejaría al
+> estudiante sin lo suyo y con el dinero pagado, y el sistema no sabe devolver (`ALC-OUT-01`).
 >
-> Las dos salidas obvias son restar lo reservado también en la caja —séptima comprobación,
-> con su etiqueta y su prueba— o descontar el inventario al reservar, que es la alternativa
-> que `DT-33` descartó. La segunda no añade comprobaciones: las quita.
+> El negativo no se esconde: es el descuadre que `HU-29` existe para auditar, y la pantalla
+> del historial lo enseña con la venta que lo originó.
 
 ---
 

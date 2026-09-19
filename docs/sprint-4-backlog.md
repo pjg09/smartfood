@@ -159,9 +159,9 @@ Pago simulado, como todo lo demás (`ALC-OUT-02`).
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-149` | Servicio de entrega que **no vuelve a descontar saldo** ni admite entrega doble | Pedro | ☐ |
-| `TT-150` | Registro de la entrega en el punto de venta | Carlos | ☐ |
-| `TT-151` | Caso de prueba: entregar no descuenta saldo, y un pedido entregado no se entrega dos veces | Alejandro | ☐ |
+| `TT-149` | Servicio de entrega que **no vuelve a descontar saldo** ni admite entrega doble | Pedro | ☑ |
+| `TT-150` | Registro de la entrega en el punto de venta | Carlos | ☑ |
+| `TT-151` | Caso de prueba: entregar no descuenta saldo, y un pedido entregado no se entrega dos veces | Alejandro | ☑ |
 
 > **El error a evitar es cobrar dos veces.** El pedido ya se pagó al reservarse; la entrega solo cambia su estado y descuenta existencias. Si la entrega reutiliza `registrar_venta` sin más, el estudiante paga dos veces y `INV-2` sigue cuadrando —el historial es consistente— pero el sistema está mal. La prueba de `TT-151` es lo que lo detecta.
 

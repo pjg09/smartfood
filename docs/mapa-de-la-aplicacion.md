@@ -72,6 +72,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/cliente-generico/` | `POST`. Saca al estudiante de la venta en curso | **Solo cajero** | `TT-89` |
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
+| `/punto-de-venta/entregar/` | `POST`. Registra la entrega de un pedido anticipado. **No descuenta saldo**: ya se pagó al reservarse | **Solo cajero** | `TT-150` |
 | `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: catálogo con cantidades, cobro al confirmar y reservas pendientes | **Solo su acudiente** | `TT-145` |
 | `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente | **Cajero y administración** | `TT-148` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |

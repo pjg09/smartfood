@@ -35,6 +35,7 @@ from ventas.views import (
     carrito,
     cliente_generico,
     cobrar,
+    entrega,
     identificacion,
     punto_de_venta,
     reserva,
@@ -267,5 +268,10 @@ urlpatterns = [
     ),
     path("punto-de-venta/carrito/", carrito, name="carrito-del-punto-de-venta"),
     path("punto-de-venta/cobrar/", cobrar, name="cobrar"),
+    # `TT-150`, `HU-25`. La entrega de un pedido anticipado. **Cuelga del punto
+    # de venta**, que es donde el primer criterio de la historia la sitúa, y no
+    # de la cola de `HU-24`: consultar lo que hay que preparar y entregárselo al
+    # estudiante que llega son dos momentos distintos.
+    path("punto-de-venta/entregar/", entrega, name="entrega"),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

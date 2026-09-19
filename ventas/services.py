@@ -27,6 +27,7 @@ from uuid import UUID
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.utils import timezone
 
 from billetera.models import Billetera, TipoDeMovimiento
 from billetera.selectors import consumo_del_dia, saldo_de
@@ -788,3 +789,116 @@ def reservar(*, actor, estudiante, lineas):
     return PedidoAnticipado.objects.create(
         venta=venta, estado=EstadoDelPedido.PENDIENTE
     )
+
+
+class PedidoYaEntregado(VentaRechazada):
+    """`HU-25`: un pedido entregado no se entrega otra vez.
+
+    Hereda de `VentaRechazada` para que el punto de venta la trate como
+    cualquier otro rechazo —`200` con el motivo dentro del fragmento— y no como
+    un error de servidor.
+    """
+
+
+@transaction.atomic
+def entregar(*, actor, pedido):
+    """Registra la entrega de un pedido anticipado (`HU-25`, `TT-149`).
+
+    Devuelve el `PedidoAnticipado` ya entregado.
+
+    Los dos criterios de la historia:
+
+    1. **La entrega se registra en el punto de venta.** La pantalla es `TT-150`;
+       el rol lo exige aquí, porque `[S11]` da el punto de venta a `USR-3`.
+    2. **El pedido ya pagado no vuelve a descontar saldo.** Mira el cuerpo de
+       esta función: **no hay ninguna llamada a `asentar_en_la_billetera`**. Es
+       una ausencia, y `TT-151` es lo único que la vigila.
+
+    ── EL ERROR A EVITAR ES COBRAR DOS VECES ──────────────────────────────
+    El pedido se pagó al reservarse (`DT-33`, `HU-23`). Si esto reutilizara
+    `registrar_venta`, el estudiante pagaría dos veces **y el sistema seguiría
+    cuadrando**: el historial sería consistente, `INV-2` se cumpliría y las dos
+    ventas existirían de verdad. Es el único fallo del sprint que **ninguna
+    invariante detecta**, y por eso la prueba que lo caza no es opcional.
+
+    Lo que la entrega hace es exactamente dos cosas: mover el libro de inventario
+    y cambiar el estado. Ni una más.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── NO SE ENTREGA DOS VECES, Y LA BASE TAMBIÉN LO IMPIDE ───────────────
+    El pedido se bloquea con `select_for_update` antes de mirar su estado: sin
+    eso, dos cajas que lo leyeran a la vez verían las dos «pendiente» y
+    entregarían las dos.
+
+    Y por debajo está la restricción `movimiento_inventario_una_salida_por_venta
+    _y_producto`: una venta descuenta cada producto una sola vez. El `if` de aquí
+    da el mensaje; la restricción da la garantía, también para el camino que
+    alguien escriba mañana (`DT-15`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LA ENTREGA NO SE RECHAZA POR FALTA DE EXISTENCIAS ──────────────────
+    Es la decisión que `[S7]` de `./docs/reglas-de-la-venta.md` dejó abierta para
+    esta historia, y se resuelve del lado del estudiante: **el compromiso ya se
+    adquirió y se cobró**. Rechazar la entrega lo dejaría sin lo suyo y con el
+    dinero pagado, que es peor que cualquier descuadre de inventario.
+
+    Si el libro queda en negativo, esa cifra **es información verdadera**: dice
+    que salió mercancía que el inventario no tenía registrada, que es exactamente
+    el descuadre que `HU-29` existe para auditar. La pantalla del historial lo
+    enseña renglón a renglón y con su motivo — aquí, la venta que lo originó.
+
+    **La otra salida era cerrarlo en la caja**: que la venta del mostrador reste
+    lo reservado. Se descartó: sería la séptima comprobación de `[S6]`, ninguna
+    historia la pide, y en una caja con fila haría que el cajero leyera «no hay
+    existencias» de algo que tiene delante en la vitrina, porque está apartado.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Un estudiante desactivado no retira su pedido** (`INVD-2`). No hace falta
+    reimplementarlo: `comprobar_que_puede_operar` es la puerta única y se llama
+    aquí igual que en el cobro. Es el segundo criterio de `HU-50`, y la razón de
+    que aquella prueba del Sprint 3 se escribiera anticipando esta historia.
+    """
+    _solo_el_cajero(actor)
+
+    # ── BLOQUEAR, Y SOLO DESPUÉS MIRAR EL ESTADO ────────────────────────────
+    # `of=("self",)` bloquea **solo la fila del pedido**. Sin eso, PostgreSQL
+    # rechaza la consulta entera: `venta.estudiante` es opcional (`DEC-1`), así
+    # que `select_related` la trae con un LEFT JOIN y «FOR UPDATE cannot be
+    # applied to the nullable side of an outer join». Y la fila que hay que
+    # bloquear es la del pedido: es la que dos cajas podrían leer a la vez.
+    bloqueado = (
+        PedidoAnticipado.objects.select_for_update(of=("self",))
+        .select_related("venta", "venta__estudiante")
+        .get(pk=pedido.pk)
+    )
+
+    if not bloqueado.esta_pendiente:
+        raise PedidoYaEntregado(
+            f"Este pedido ya se entregó el "
+            f"{bloqueado.entregado_en:%d/%m/%Y a las %H:%M}. No se entrega dos veces."
+        )
+
+    try:
+        comprobar_que_puede_operar(bloqueado.venta.estudiante)
+    except EstudianteNoOperativo as bloqueo:
+        raise EstudianteNoPuedeComprar(str(bloqueo)) from bloqueo
+
+    # El libro de inventario, por su único punto de asiento (`DT-24`). La
+    # cantidad de la línea es positiva y una salida resta, como en el cobro.
+    #
+    # **No se comprueban existencias**: ver la nota de arriba.
+    for linea in bloqueado.venta.lineas.select_related("producto"):
+        asentar_en_el_inventario(
+            producto=linea.producto,
+            tipo=TipoDeMovimientoDeInventario.VENTA,
+            cantidad=-linea.cantidad,
+            venta=bloqueado.venta,
+        )
+
+    # **Y aquí NO va el saldo.** Segundo criterio de `HU-25`.
+    bloqueado.estado = EstadoDelPedido.ENTREGADO
+    bloqueado.entregado_en = timezone.now()
+    bloqueado.entregado_por = actor
+    bloqueado.save(update_fields=["estado", "entregado_en", "entregado_por"])
+
+    return bloqueado
