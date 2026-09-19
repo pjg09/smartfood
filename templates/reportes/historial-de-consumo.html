@@ -23,11 +23,15 @@
    tabla de nutrientes. Una tabla única con siete columnas de cifras no se lee
    en un teléfono, que es de donde entra el acudiente (`INT-1`).
 
-   **No hay ninguna recomendación en esta pantalla, y por eso no lleva el aviso
-   de `INV-9`.** Enseñar lo que se compró no es valorar nada. Las alertas
-   (`HU-31`) y la comparación con la referencia sanitaria (`HU-32`) llegan con
-   su propio descargo, que `HU-34` exige publicar **con la primera
-   recomendación** y no después.
+   **Desde `TT-160` esta pantalla publica recomendaciones**, así que lleva el
+   descargo de `INV-9` — y no como un párrafo suelto que alguien pueda olvidar
+   al copiar las alertas a otro sitio: el aviso y las alertas son **el mismo
+   fragmento** (`partials/alertas-de-frecuencia.html`, `TT-161`). `HU-34` exige
+   que el descargo esté **desde la primera recomendación publicada**, y por eso
+   las dos historias entran en el mismo Pull Request.
+
+   Enseñar lo que se compró, en cambio, no es valorar nada: el historial de
+   abajo no necesita descargo por sí solo.
 {% endcomment %}
 
 {% block titulo %}Consumo | {{ estudiante.nombre }} | SmartFood{% endblock %}
@@ -51,7 +55,20 @@
       </p>
     </header>
 
+    {% comment %} `TT-160`, `TT-161`. Las alertas van **encima** del historial y no en otra
+       pantalla: cada una dice su umbral y aquí debajo están los días para contarlos
+       (`ANEXO A` de `docs/reglas-de-frecuencia-de-consumo.md`).
+
+       Se incluye el fragmento entero, que trae el aviso de `INV-9` con él. **No se
+       copian las filas aquí**: el día que las alertas se enseñen en otro sitio, el
+       descargo tiene que viajar con ellas.
+
+       Solo se pinta si hay compras. Sin ninguna, «ninguna categoría llega al umbral»
+       sobra: lo que hay que decir es que todavía no ha comprado nada, y eso lo dice
+       el bloque de abajo. {% endcomment %}
     {% if compras %}
+      {% include "reportes/partials/alertas-de-frecuencia.html" %}
+
       <ul class="flex flex-col gap-4">
         {% for compra in compras %}
           <li data-compra
@@ -209,18 +226,20 @@
     {% endif %}
 
     {% comment %} El hueco dice qué falta y qué historia lo trae (`[S2.4]`), nunca un botón
-       deshabilitado. Las dos que faltan son las que convierten este historial en
-       un reporte: sumar los nutrientes de un periodo y compararlos con la
-       referencia sanitaria (`HU-32`), y avisar de un patrón de frecuencia por
-       categoría (`HU-31`). Las dos llegan con el descargo de `HU-34`. {% endcomment %}
+       deshabilitado. **Ya no menciona `HU-31`**: las alertas de frecuencia están
+       arriba desde `TT-160`, y una marca que sobrevive a su historia miente igual
+       que mentiría su ausencia cuando era cierta.
+
+       Queda una: sumar los nutrientes del periodo y compararlos con la referencia de
+       la autoridad sanitaria colombiana (`HU-32`, `TT-162` … `TT-164`). {% endcomment %}
     <div role="note"
          class="flex items-start gap-3 rounded-md border border-dashed border-borde p-4">
       <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
       <p class="text-sm text-texto-suave">
-        <strong class="font-semibold text-texto">Los agregados y las alertas llegan con HU-31 y HU-32.</strong>
-        Por ahora esta pantalla enseña lo que se compró, renglón a renglón. Sumar los
-        nutrientes de un periodo, compararlos con los valores de la autoridad sanitaria
-        colombiana y avisar de una frecuencia alta son las dos historias siguientes.
+        <strong class="font-semibold text-texto">Los agregados nutricionales llegan con HU-32.</strong>
+        Esta pantalla enseña lo que se compró, renglón a renglón, y con qué frecuencia se
+        repite cada categoría. Sumar los nutrientes de un periodo y compararlos con los
+        valores publicados por la autoridad sanitaria colombiana es la historia siguiente.
       </p>
     </div>
   </div>
