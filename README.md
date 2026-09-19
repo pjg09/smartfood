@@ -21,7 +21,8 @@ cinco sprints de dos semanas.
 | Historias terminadas | **51 de 61** |
 | Sprint 4 | ✅ cerrado el 2026-09-19: **18 de 18 tareas y 7 de 7 PR**. Inventario trazable, pedidos anticipados y `TST-4` |
 | Plan de pruebas | ✅ **completo**: los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`, demostrados |
-| **Lo siguiente** | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main`. El guion está en `[S8]` del plan de PR del Sprint 4 |
+| **Sprint 5** | 🔨 **en curso**, semanas 14–15: reportes de consumo y **cierre del proyecto**. 33 tareas (`TT-155`…`TT-187`) en 13 PR |
+| **Lo siguiente** | **Entrega final** (`EVA-5`, 30 % de la nota), semana 16 |
 | Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
 > **Al cerrar el Sprint 3 el control parental funciona de verdad.** El acudiente fija el
@@ -132,8 +133,10 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-4-backlog.md`](./docs/sprint-4-backlog.md) | Las 18 tareas del Sprint 4 (`TT-137`…`TT-154`). **Cerrado** |
-| [`plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md) | Esas 18 tareas en 7 PR. **Es donde vive el estado** |
+| [`sprint-5-backlog.md`](./docs/sprint-5-backlog.md) | **Las 33 tareas del sprint en curso** (`TT-155`…`TT-187`), con el cierre del proyecto en `[S5]` |
+| [`plan-de-pull-requests-sprint-5.md`](./docs/plan-de-pull-requests-sprint-5.md) | Esas 33 tareas en 13 PR. **Es donde vive el estado** |
+| [`sprint-4-backlog.md`](./docs/sprint-4-backlog.md) | Sprint 4, cerrado: 18 tareas (`TT-137`…`TT-154`) |
+| [`plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md) | Su plan de PR, cerrado: 7 PR, con la revisión de cierre y el guion del Avance 2 |
 | [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | Sprint 3, cerrado: 43 tareas (`TT-94`…`TT-136`) y el cierre de su registro de riesgos |
 | [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 43 tareas en 16 PR, con el estado de cada una y la **revisión de cierre** (`[S7]`) |
 | [`sprint-2-backlog.md`](./docs/sprint-2-backlog.md) | Sprint 2, cerrado: 37 tareas y 14 de 14 historias |
