@@ -20,9 +20,9 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | Documento | Para qué |
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
-| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-15`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-35`) |
-| `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
+| `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-n`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-n`) |
+| `docs/backlog-historias-de-usuario.md` | Las historias con sus criterios de aceptación |
 | `docs/sprint-4-backlog.md` | Las 18 tareas del Sprint 4 (`TT-137` … `TT-154`). **Cerrado** |
 | `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas en 7 PR, su **revisión de cierre** (`[S7]`) y el guion del Avance 2 (`[S8]`) |
 | `docs/sprint-3-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
@@ -33,15 +33,17 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 | `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
 | `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
+| `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar— y las siete reglas que ninguna historia dice |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
-**El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.** Ocho
-decisiones amplían el anteproyecto y no están incorporadas a él. Para responder qué hace o no hace
-el sistema hay que mirar los dos.
+**El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
+**Nueve** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8` y `DEC-13`) y **dos lo recortan**
+(`DEC-14`, `DEC-15`); ninguna está incorporada a él. Para responder qué hace o no hace el sistema
+hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
 
 Las referencias con prefijo `corpus:` apuntan a documentos del corpus de la asignatura que **no
 están en este repositorio** (material de clase, Guía de Scrum, el DOCX original). No son rutas rotas.
@@ -70,8 +72,9 @@ está mal entendida o de que falta una decisión.
 
 ## Stack y arquitectura
 
-**Django + PostgreSQL + HTMX + Tailwind.** Monolito, un repositorio, un despliegue. UUIDv7 como
-clave primaria en todas las tablas (generado en la aplicación), **excepto el código de tarjeta**.
+**Django + PostgreSQL + HTMX + Tailwind.** Monolito, un repositorio y **sin despliegue**: se
+ejecuta en local (`DEC-15`, `DT-31`). UUIDv7 como clave primaria en todas las tablas (generado en
+la aplicación), **excepto el código de tarjeta**.
 
 Una app por dominio, **y cada una se crea en el sprint que la necesita**: hoy existen
 `cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas` y `restricciones`
@@ -153,7 +156,9 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 - **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
   no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
   `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
-  (`config/tests_plantillas.py`).
+  (`config/tests_plantillas.py`). **Y tampoco pinta un alias inventado que suene a los que sí
+  hay** —`bg-superficie-hundida` frente a `bg-superficie-hover`—: los alias son los de
+  `estilos/fuente.css` y no se deducen.
 - **El rojo y el ámbar significan algo**: saldo insuficiente o alérgeno bloqueado (`INV-1`,
   `INV-5`) y límite a punto de agotarse. Para adornar hay cinco colores de serie sin
   significado; gastar los de estado en decoración les quita fuerza donde hacen falta.
@@ -192,6 +197,10 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   exactamente igual y a quien pulsó sin saber por qué no pasó nada. El precedente del
   repositorio es devolver `200` **con el motivo dentro del fragmento** —lo hacen el cobro y
   el padrón—: el estado de la petición y lo que hay que enseñar son dos preguntas distintas.
+- **`select_for_update()` revienta si `select_related` trae una FK nullable.** Postgres
+  responde «FOR UPDATE cannot be applied to the nullable side of an outer join», y el mensaje
+  **no nombra al culpable**, que es el `select_related`. La salida es acotar el bloqueo a la
+  fila que importa: `select_for_update(of=("self",))`.
 - **`connection.in_atomic_block` no sirve como prueba**: bajo `TestCase` **siempre** es
   `True`, porque cada prueba va envuelta en una transacción. Para fijar «se validó dentro
   del bloqueo» hay que mirar el **orden de las consultas** con `CaptureQueriesContext`: el
@@ -200,6 +209,10 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   un selector de lectura —`padron()` exige el rol institución—, llámalo primero: al revés,
   un acudiente puede desactivar a su propio hijo por la ruta del padrón y recibir un `403`
   **con el cambio ya escrito**. Pasó al compartir el camino de dos transiciones.
+- **El admin ya pinta `title` del contexto como encabezado.** Añadir un `<h1>` propio en
+  una plantilla que extiende `admin/base_site.html` lo enseña dos veces.
+- **Los acentos graves de Markdown no son nada en una plantilla.** `` `HU-25` `` se sirve con
+  las comillas puestas. Dentro de `{% comment %}` da igual; en el texto visible, no.
 - **Un proxy registrado en el admin hereda el `__str__` del modelo base**, y el admin lo
   pinta en el título y en las migas: con `Estudiante` eso enseña el documento del menor en
   una pantalla que se cuida de no enseñarlo en ninguna columna. Dale el suyo. Y
@@ -278,10 +291,17 @@ Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo dife
 `sincronizar_grupos_y_permisos()` y `crear_cuenta(..., accede_a_administracion=True)`. Poner
 `is_staff` a mano deja una cuenta que entra pero no tiene ningún permiso, y todo responde `403`.
 
+**Una prueba de ausencia sobre el código mira el bytecode, no `inspect.getsource`.** El
+fuente incluye el docstring, y ahí la ausencia **se explica**: buscar «no llama a X» encuentra
+la X de la explicación y la prueba pasa sola. `inspect.unwrap(f).__code__.co_names` lista lo
+que la función usa de verdad. Ponle contraprueba: que sí encuentre lo que sí usa.
+
 **Una prueba sobre una página entera busca un `data-*` propio, no un atributo genérico.**
 `assertNotContains(r, 'role="group"')` para decir «no se dibuja el selector de estudiante» se
 rompe el día que el armazón estrena otro grupo — y se rompió. Busca
 `data-selector-estudiante`, que sí es exclusivo de esa pantalla.
+**Y ojo con los nombres de atributo que Tailwind usa como variante**: buscar `disabled` casa
+con la clase `disabled:opacity-50`, así que la prueba pasa con el atributo ausente.
 **Y nunca sobre la copia**: `assertContains(r, "Bloquear productos")` se rompe en cuanto
 alguien mejora la redacción, en un PR que no tenía nada que ver. Afirma sobre la URL, sobre
 `response.context`, o sobre un `data-*`.
@@ -300,6 +320,9 @@ el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso
 **Para mirar una pantalla de verdad** sin navegador manual: la receta —renderizar con
 `django.test.Client` y fotografiar con Chrome sin interfaz— está en `[S5.2]` de
 `docs/desarrollo.md`, con los tres detalles sin los cuales **la captura miente**.
+**Hazlo siempre que toques una pantalla.** En el Sprint 4, mirarla encontró cuatro defectos
+que la suite no vio: un título duplicado, acentos graves literales, el mes capitalizado y
+`|dinero:"COP"` en cifras pequeñas. Ninguno rompía una prueba; los cuatro se veían.
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
@@ -337,6 +360,9 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - **`assets/js/interfaz.js` y `cuentas/templatetags/interfaz.py` son compartidos**: acumulan una
   pieza por pantalla. Al commitear por temáticas, `git add -A` los mete enteros y mezcla dos
   temas en un commit. Ahí se pone el fichero a mano.
+- **`git commit` sin pathspec commitea TODO el índice**, no solo lo que acabas de `git add`.
+  Un `git rm` anterior se cuela en el primer commit que hagas. Al commitear por temáticas,
+  mira `git status` antes de cada uno.
 - **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
   instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
 - **No encadenes un PR sobre otro sin integrar.** Con squash merge, `main` recibe un commit
@@ -382,6 +408,12 @@ congelada; no la edites. Si una decisión cambia, se actualiza aquí, con su ide
 
 Ninguna afirmación de estos documentos se inventa: cada una cita el identificador del que sale. Al
 añadir contenido, mantén esa propiedad o el documento pierde su valor.
+
+**Antes de cerrar un PR, cuadra las marcas por script**: que cada `TT-nn` coincida en el
+sprint backlog y en el plan de PR, que el contador diga lo que dicen las marcas, y que las
+historias `☑` cuadren con `[S4]` y con los metadatos. **Un reemplazo de texto que no encuentra
+su ancla no avisa**: en el Sprint 4, la línea que decía qué cerró `HU-23` no llegó a
+escribirse y se descubrió dos PR después. Cuenta, no confíes.
 
 **Al insertar una fila en una tabla numerada, renumera emparejando por el identificador
 (`HU-nn`), nunca por el número.** Un reemplazo del número encuentra primero tu propia fila
