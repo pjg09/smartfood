@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-19; `PR-05` del Sprint 5 — el reporte de consumo del acudiente completo (`HU-30` … `HU-34`) y el reporte de ventas de la cafetería (`HU-35`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; los del historial y el reporte de ventas se comprobaron ejecutando con los cinco perfiles |
+| actualizado | 2026-09-19; `PR-06` del Sprint 5 — el reporte de consumo del acudiente completo (`HU-30` … `HU-34`) y los de ventas e inventario de la cafetería (`HU-35`, `HU-36`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; los reportes se comprobaron ejecutando con los cinco perfiles |
 | idioma | es-CO |
-| version | 1.7 |
+| version | 1.8 |
 
 ### [S0.1] Qué responde este documento
 
@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y cinco rutas
+## [S2] Las treinta y seis rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -79,6 +79,7 @@ los mismos colores desde `DT-23`.
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
+| `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
 **Comprobado ejecutando**, con cada rol identificado y con un anónimo:
@@ -191,6 +192,14 @@ conviene no perder:
   Una venta se registra en el punto de venta, con su transacción, o no existe. Y **no enseña
   el documento del estudiante ni su código de tarjeta**, ni en el listado ni en la ficha: la
   cafetería consulta su actividad comercial, no el padrón.
+- **El reporte de inventario es el mismo libro, con su consolidado encima** (`HU-36`,
+  `TT-170`). No hay pantalla nueva: entradas, ventas y mermas ya estaban en un solo sitio
+  desde `TT-69`, y lo que faltaba era acotar un periodo y decir cuánto suma lo que se mira —
+  cuántas unidades entraron, cuántas salieron y el neto, con el desglose por tipo. **El neto
+  de un periodo no son las existencias**, y la pantalla lo dice: sobre el libro entero sí lo
+  son (`INV-3`), pero sobre unos días son lo que esos días movieron.
+  Dice además **cuántas mermas van sin motivo**, que es siempre cero porque lo impone una
+  `CheckConstraint` y no el formulario (`INV-8`): la invariante puesta donde se ve.
 - **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
   un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
   es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
@@ -595,8 +604,12 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-El reporte de movimientos de inventario (`HU-36`), el de auditoría (`HU-37`) y el cierre de
-caja (`HU-55`, `HU-56`). Es lo que queda del Sprint 5.
+El reporte de auditoría (`HU-37`) y el cierre de caja (`HU-55`, `HU-56`). Es lo que queda del
+Sprint 5.
+
+**El de movimientos de inventario ya está** (`HU-36`, `TT-169`, `TT-170`): el mismo libro del
+admin, ahora con navegación por fechas y el consolidado del periodo —entradas, salidas, neto
+y desglose por tipo—, más el recuento de mermas sin motivo que hace visible `INV-8`.
 
 **El reporte de ventas ya está** (`HU-35`, `TT-167`, `TT-168`): el libro filtrable en el
 admin, con el consolidado del periodo que se mira y sus desgloses por medio de pago y por

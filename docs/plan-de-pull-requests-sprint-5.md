@@ -71,13 +71,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **14** de 33 | **5** de 13 |
-| Pendientes | 19 | 8 |
+| **Finalizadas** | **16** de 33 | **6** de 13 |
+| Pendientes | 17 | 7 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 5 | 11 |
-| Carlos | 6 | 10 |
+| Pedro | 6 | 11 |
+| Carlos | 7 | 10 |
 | Alejandro | 3 | 6 |
 | Naomi | 0 | 6 |
 
@@ -90,7 +90,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☑ |
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☑ |
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☑ |
-| `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☐ |
+| `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☑ |
 | `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☐ |
 | `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☐ |
 | `PR-09` | `TT-177`–`TT-178` | `HU-37` · **las 61 historias terminadas** | ☐ |
@@ -298,14 +298,29 @@ ventas genéricas de `HU-53` y distingue el medio de pago de `HU-54`.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-36` |
 | Invariantes | consume `INV-3` e `INV-8` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-169` | Selector del reporte de movimientos, con su motivo | Pedro | ☐ |
-| `TT-170` | Reporte de inventario en la interfaz administrativa | Carlos | ☐ |
+| `TT-169` | Selector del reporte de movimientos, con su motivo | Pedro | ☑ |
+| `TT-170` | Reporte de inventario en la interfaz administrativa | Carlos | ☑ |
 
 Se apoya en `historial_de` (Sprint 2) y en la merma con motivo (Sprint 4).
+
+> ✅ **Integrado, y el reporte resultó ser la pantalla que ya existía.** El libro del admin
+> enseñaba los tres tipos con su motivo desde `TT-69`: entradas, ventas y mermas **ya estaban
+> en un solo lugar**, que es el «para qué» de la historia. Lo que le faltaba para ser un
+> reporte eran dos cosas, y son las que `PR-06` añade: **acotar un periodo**
+> (`date_hierarchy`) y **decir cuánto suma lo que se está mirando**.
+>
+> Registrar un ingreso y consultar el consolidado conviven en la misma pantalla, como en
+> `PR-05`: son dos preguntas sobre la misma tabla, y separarlas daría dos sitios donde mirar
+> el mismo libro.
+>
+> **El consolidado dice además cuántas mermas van sin motivo**, que debería ser siempre cero
+> porque lo impone una `CheckConstraint` (`INV-8`). No es desconfianza: es la invariante
+> puesta donde la administración puede verla, como el historial de un producto hace visible
+> que las existencias cuadran.
 
 ---
 
