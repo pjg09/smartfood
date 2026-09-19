@@ -18,6 +18,10 @@
    venta** (`HU-20`): se fija por estudiante, se ve aquí y la caja lo hace
    cumplir. Las restricciones también están enteras: productos (`TT-99`, `HU-10`) y
    alérgenos (`TT-102`, `HU-11`). **Ya no queda ningún hueco en esta ficha.**
+
+   `TT-156` añade la quinta tarjeta, la del consumo (`HU-30`): es la única
+   puerta al historial de compras, y por eso vive aquí y no en el menú — se
+   consulta el consumo **de un estudiante**, y el menú no sabe de cuál.
 {% endcomment %}
 
 {% if seleccionado %}
@@ -323,6 +327,41 @@
             Reservar consumo
           </a>
         {% endif %}
+      </article>
+
+      {% comment %} `TT-156`, `HU-30`. Tarjeta de resumen (`[S2.1]`) como las cuatro de
+         arriba. **El enlace no se esconde nunca**, y es la única de las cinco en la
+         que eso importa: el historial de un estudiante desactivado o de baja sigue
+         siendo suyo y sigue consultándose (`HU-52` dice lo mismo del saldo). Lo que
+         ya se compró no deja de haberse comprado. {% endcomment %}
+      <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                      bg-superficie p-4 shadow-sm transition-all duration-300
+                      hover:-translate-y-1 hover:shadow-lg">
+        <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-4 to-serie-4/50"></span>
+        <span class="flex h-11 w-11 items-center justify-center rounded-md bg-serie-4/10 text-serie-4">
+          <svg class="h-5 w-5" aria-hidden="true"><use href="#i-manzana"></use></svg>
+        </span>
+        <h3 class="text-base font-semibold text-texto-suave">Consumo</h3>
+        {% if compras %}
+          <p class="font-display text-2xl tabular-nums text-texto">
+            {{ compras }}<span class="text-base font-medium text-texto-suave"> compra{{ compras|pluralize }}</span>
+          </p>
+          <p class="text-base font-medium text-texto-suave">
+            Cada una con la información nutricional que el producto declaraba ese día, no
+            la de hoy.
+          </p>
+        {% else %}
+          <p class="font-display text-2xl text-texto">Ninguna</p>
+          <p class="text-base font-medium text-texto-suave">
+            Aquí aparecerá qué compró {{ seleccionado.nombre }} en la cafetería y qué
+            declaraba cada producto.
+          </p>
+        {% endif %}
+        <a href="{% url 'historial-de-consumo' seleccionado.id %}"
+           data-enlace-al-consumo
+           class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
+          Ver el historial
+        </a>
       </article>
     </section>
 

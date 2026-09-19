@@ -1,0 +1,227 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} TT-156. Historial de consumo del estudiante (`HU-30`, `INT-1`).
+
+   **Lo que se pinta aquí es la instantánea, no el catálogo de hoy.** Cada
+   renglón enseña el precio y los nutrientes que el producto declaraba **cuando
+   se vendió** (`TT-84`, `DT-8`). Del producto solo sale el nombre, que no se
+   copia porque la clave ajena va con `PROTECT` y siempre se puede leer.
+
+   Si alguien cambia `{{ linea.energia_kcal }}` por
+   `{{ linea.producto.energia_kcal }}`, esta pantalla deja de ser un historial
+   sin que nada falle: corregir una ficha nutricional reescribiría lo que un
+   niño comió el mes pasado. `reportes/tests_historial.py` lo vigila.
+
+   **Vacío no es cero** (`TT-44`, `[S2.2]`). Un producto sin ficha técnica sale
+   como un hueco declarado, nunca como una fila de ceros: el cero es una
+   afirmación sobre lo que se comió, y nadie la hizo.
+
+   Composición: la ficha de dos franjas de `[S2.2]` —arriba lo que se busca de
+   un vistazo, abajo el detalle sobre fondo hundido—, que aquí vale también en
+   escritorio porque cada compra lleva varios renglones y cada renglón, su
+   tabla de nutrientes. Una tabla única con siete columnas de cifras no se lee
+   en un teléfono, que es de donde entra el acudiente (`INT-1`).
+
+   **No hay ninguna recomendación en esta pantalla, y por eso no lleva el aviso
+   de `INV-9`.** Enseñar lo que se compró no es valorar nada. Las alertas
+   (`HU-31`) y la comparación con la referencia sanitaria (`HU-32`) llegan con
+   su propio descargo, que `HU-34` exige publicar **con la primera
+   recomendación** y no después.
+{% endcomment %}
+
+{% block titulo %}Consumo | {{ estudiante.nombre }} | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6" data-historial-de-consumo>
+
+    <header class="flex flex-col gap-1">
+      <a href="{% url 'mis-estudiantes' %}"
+         class="inline-flex w-fit items-center gap-2 rounded-md text-sm text-texto-suave
+                transition-colors hover:text-acento-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+        Mis estudiantes
+      </a>
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Historial de consumo</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Qué compró <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong> en
+        la cafetería, con la información nutricional que cada producto declaraba
+        <strong class="font-semibold text-texto">el día de la compra</strong>. Lo más
+        reciente va primero.
+      </p>
+    </header>
+
+    {% if compras %}
+      <ul class="flex flex-col gap-4">
+        {% for compra in compras %}
+          <li data-compra
+              class="overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
+
+            {% comment %} Franja de cabecera: cuándo, de dónde vino la compra y cuánto sumó.
+               El total es la suma de los renglones de abajo con los precios de
+               entonces — no hay columna `total` que pueda discrepar de ellos. {% endcomment %}
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 px-4 py-3">
+              {% comment %} La fecha y la marca de la reserva van en la misma caja, y esa caja
+                 envuelve: a 390 px la marca baja entera a la línea siguiente en vez
+                 de partirse en dos renglones dentro de su pastilla. {% endcomment %}
+              <span class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
+                <svg class="h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-calendario"></use></svg>
+                {% comment %} El mes se baja a minúscula aparte: Django lo devuelve capitalizado
+                   —«Septiembre»— y en español va en minúscula dentro de una fecha. {% endcomment %}
+                {{ compra.creado_en|date:"j" }} de
+                {{ compra.creado_en|date:"F"|lower }} de
+                {{ compra.creado_en|date:"Y, H:i" }}
+
+                {% comment %} `DT-32`. Una reserva **es** una venta anticipada, así que entra en
+                   el historial como cualquier otra; lo que cambia es que puede estar
+                   pagada y todavía sin recoger. Decirlo evita la lectura falsa de
+                   que el estudiante ya se lo comió.
+
+                   Va en `aviso` y no en `error`: no ha fallado nada, es un estado. {% endcomment %}
+                {% if compra.es_reserva %}
+                  {% if compra.pedido_anticipado.esta_pendiente %}
+                    <span data-reserva-pendiente
+                          class="rounded bg-aviso-suave px-2 py-0.5 text-sm font-medium
+                                 whitespace-nowrap text-aviso-fuerte">
+                      Reserva sin recoger
+                    </span>
+                  {% else %}
+                    <span data-reserva-entregada
+                          class="rounded bg-superficie-hover px-2 py-0.5 text-sm font-medium
+                                 whitespace-nowrap text-texto-suave">
+                      Reserva entregada
+                    </span>
+                  {% endif %}
+                {% endif %}
+              </span>
+
+              <span class="font-display text-xl font-semibold tabular-nums text-texto">
+                {{ compra.total|dinero:"COP" }}
+              </span>
+            </div>
+
+            <ul class="flex flex-col gap-3 border-t border-borde bg-superficie-hover p-4">
+              {% for linea in compra.lineas.all %}
+                <li data-renglon class="flex flex-col gap-2 rounded-md border border-borde bg-superficie p-3">
+
+                  <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <span class="text-base font-semibold text-texto">
+                      {{ linea.cantidad }} × {{ linea.producto.nombre }}
+                    </span>
+                    <span class="font-display text-base font-semibold tabular-nums text-texto">
+                      {{ linea.importe|dinero }}
+                    </span>
+                  </div>
+
+                  <p class="text-sm text-texto-suave">
+                    {{ linea.precio_unitario|dinero }} cada
+                    {% if linea.porcion %}{{ linea.porcion }}{% else %}unidad{% endif %}
+                  </p>
+
+                  {% if linea.declara_informacion_nutricional %}
+                    {% comment %} Las cifras son **por unidad**, tal como se declararon: es lo que
+                       `[S2.1]` de `docs/campos-nutricionales.md` fija, y decirlo aquí evita
+                       que se lean como el total del renglón. Sumarlas a lo largo de un
+                       periodo es `HU-32`, con su referencia sanitaria detrás.
+
+                       Un nutriente sin declarar se enseña como raya y no como cero: el
+                       cero diría que ese producto no aporta nada de eso. {% endcomment %}
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-borde pt-2
+                               tablet:grid-cols-4">
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Energía</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.energia_kcal is not None %}{{ linea.energia_kcal }} kcal{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Proteínas</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.proteinas_g is not None %}{{ linea.proteinas_g }} g{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Carbohidratos</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.carbohidratos_g is not None %}{{ linea.carbohidratos_g }} g{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Azúcares</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.azucares_g is not None %}{{ linea.azucares_g }} g{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Grasas totales</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.grasas_totales_g is not None %}{{ linea.grasas_totales_g }} g{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Grasas saturadas</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.grasas_saturadas_g is not None %}{{ linea.grasas_saturadas_g }} g{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Sodio</dt>
+                        <dd class="text-base font-medium tabular-nums text-texto">
+                          {% if linea.sodio_mg is not None %}{{ linea.sodio_mg }} mg{% else %}—{% endif %}
+                        </dd>
+                      </div>
+                      <div class="flex flex-col">
+                        <dt class="text-sm text-texto-suave">Porción</dt>
+                        <dd class="text-base font-medium text-texto">
+                          {% if linea.porcion %}{{ linea.porcion }}{% else %}Sin declarar{% endif %}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p class="text-sm text-texto-suave">
+                      Por unidad, tal como la cafetería lo tenía declarado ese día.
+                    </p>
+                  {% else %}
+                    {% comment %} Un hueco se declara, no se rellena (`[S2.4]`). Aquí no falta una
+                       función: falta un dato, y quien lo tiene es la cafetería. Pintar
+                       ceros sería peor que no pintar nada. {% endcomment %}
+                    <p data-sin-informacion-nutricional
+                       class="flex items-start gap-2 rounded-md border border-dashed border-borde
+                              p-2 text-sm text-texto-suave">
+                      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-informacion"></use></svg>
+                      <span>
+                        Este producto no tenía información nutricional declarada el día de la
+                        compra. No es que no aporte nada: es que no se declaró.
+                      </span>
+                    </p>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="rounded-md border border-dashed border-borde p-8 text-center text-base
+                font-medium text-texto-suave" role="status" data-sin-compras>
+        {{ estudiante.nombre }} todavía no ha comprado nada en la cafetería. En cuanto lo
+        haga, cada compra aparecerá aquí con su información nutricional.
+      </p>
+    {% endif %}
+
+    {% comment %} El hueco dice qué falta y qué historia lo trae (`[S2.4]`), nunca un botón
+       deshabilitado. Las dos que faltan son las que convierten este historial en
+       un reporte: sumar los nutrientes de un periodo y compararlos con la
+       referencia sanitaria (`HU-32`), y avisar de un patrón de frecuencia por
+       categoría (`HU-31`). Las dos llegan con el descargo de `HU-34`. {% endcomment %}
+    <div role="note"
+         class="flex items-start gap-3 rounded-md border border-dashed border-borde p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+      <p class="text-sm text-texto-suave">
+        <strong class="font-semibold text-texto">Los agregados y las alertas llegan con HU-31 y HU-32.</strong>
+        Por ahora esta pantalla enseña lo que se compró, renglón a renglón. Sumar los
+        nutrientes de un periodo, compararlos con los valores de la autoridad sanitaria
+        colombiana y avisar de una frecuencia alta son las dos historias siguientes.
+      </p>
+    </div>
+  </div>
+{% endblock %}

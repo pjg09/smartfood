@@ -132,7 +132,11 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         "Configurar y retirar restricciones alimentarias (hecha en INT-1, sin permiso)",
         "Consultar restricciones de sus estudiantes (hecha en INT-1, sin permiso)",
         "Consultar saldo de un estudiante",
-        "Consultar reportes de consumo de su hijo",
+        # `HU-30`, `TT-155`. **Construida en `INT-1` y sin permiso de admin**,
+        # como las de arriba, y además **sin modelo propio que se pueda dar**:
+        # la app `reportes` no tiene tablas. Quién puede leer el consumo lo
+        # decide `reportes.selectors`, que exige ser el acudiente del estudiante.
+        "Consultar reportes de consumo de su hijo (hecha en INT-1, sin permiso)",
     ],
     Rol.CAJERO: [
         # Como la recarga del acudiente: **construida, y sin permiso de admin**.
