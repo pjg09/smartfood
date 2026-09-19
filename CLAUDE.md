@@ -166,9 +166,13 @@ lo dice el error.
 - **Un `Decimal` en un `<input type="number">` necesita `|unlocalize`.** En `es-CO`
   Django escribe «8000,00» y el navegador **pinta el campo vacío, sin error**: quien entra
   a cambiar un valor cree que no había ninguno.
-- **`{% now "F" %}` devuelve el mes capitalizado** y en español va en minúscula. No admite
-  filtro directo: `{% now "F" as mes %}` y luego `{{ mes|lower }}`. La inicial de una frase se
-  pone con `first-letter:uppercase`, nunca cortando la cadena — con acentos se rompe.
+- **El mes ya llega en minúscula, y eso lo sostiene un parche.** Django traduce los doce
+  meses capitalizados en su catálogo `es_CO` —el que manda con `LANGUAGE_CODE = "es-co"`—, y
+  `locale/es_CO/` los corrige. Por eso `{{ x|date:"F" }}` y `{% now "F" %}` responden
+  «septiembre» y no «Septiembre». El `|lower` de las plantillas **se conserva** a propósito:
+  ese parche está pensado para borrarse cuando Django lo arregle, y las fechas del producto
+  no deben depender de él. La inicial de una frase se pone con `first-letter:uppercase`,
+  nunca cortando la cadena — con acentos se rompe.
 - **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
   Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
   a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
@@ -176,7 +180,10 @@ lo dice el error.
   importa —las clases salen de las plantillas, y ésas no las mira—.
 - **Tras tocar `locale/…/django.po` hay que `compilemessages`** (necesita
   `sudo apt install gettext`): Django lee el `.mo`, así que sin recompilar el cambio no se
-  ve y nada falla.
+  ve y nada falla. **Son dos catálogos y no se eligen al azar**: `locale/es/` parchea lo que
+  Django deja sin traducir, y `locale/es_CO/` corrige lo que traduce mal. Una corrección
+  escrita en `es` no gana — con `LANGUAGE_CODE = "es-co"` el catálogo que manda es el
+  `es_CO` y el `es` solo es la reserva, así que la pisa el de Django.
 - **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
   no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
   `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
