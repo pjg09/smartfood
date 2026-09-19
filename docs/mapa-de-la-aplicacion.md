@@ -554,9 +554,10 @@ tres, desde `HU-20`. Las dos advertencias temporales —alérgeno y cupo— se r
 historia que las hizo falsas, y hay pruebas que exigen que ya no estén: una marca que
 sobrevive a su historia miente igual que mentiría su ausencia cuando era cierta.
 
-**El dinero del acudiente está completo**: recargar (`HU-06`), el saldo derivado del
-historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
-es la venta del punto de venta.
+**El dinero del acudiente está completo, y el círculo se cierra**: recargar (`HU-06`), el
+saldo derivado del historial (`HU-08`, `TST-3`), verlo en su panel (`HU-07`) y gastarlo —en
+la caja (`HU-21`) o reservando por adelantado (`HU-23`)—. Cada gasto vuelve al panel como
+movimiento, y el saldo sigue siendo su suma y nunca una cifra guardada (`INV-2`).
 
 La app `reportes` **no está creada**: cada una se crea en el sprint que
 la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` nació en `TT-57` para que la
