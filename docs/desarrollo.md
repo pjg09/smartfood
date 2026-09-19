@@ -314,6 +314,25 @@ aunque escriban la URL.
 Para verla con datos, reserva desde un acudiente (`[S2.9.1]`) y entra con
 `cajero@example.com`.
 
+### [S2.9.3] Entregar un pedido en la caja
+
+Como cajero, en el punto de venta: al identificar al estudiante, si tiene algo reservado sale
+**antes del saldo**, con un botón **Entregar**. Va primero a propósito: lo primero que hay
+que saber de alguien con un pedido es que viene a recogerlo. Si se monta una venta sin verlo,
+se le cobra otra vez lo que su acudiente ya pagó.
+
+**Entregar no descuenta saldo** (`HU-25`): el pedido se pagó al reservarse. Lo que mueve es
+el inventario. Para comprobarlo a mano, mira el saldo antes y después — tiene que ser el
+mismo— y las existencias del producto, que bajan.
+
+**Y no se entrega dos veces.** El segundo intento se rechaza con su motivo dentro de la
+pantalla. Lo impiden dos capas: el servicio mira el estado dentro del bloqueo, y por debajo
+una restricción no deja que una venta descuente el mismo producto dos veces.
+
+**Si no hay existencias, se entrega igual** y el libro queda en negativo (`DT-35`). No es un
+fallo: dice que salió mercancía que el inventario no tenía registrada, y se ve en la pantalla
+de existencias (`[S2.10]`) con la venta que lo originó. El compromiso ya estaba cobrado.
+
 ### [S2.10] Averiguar de dónde salen unas existencias
 
 En el listado de productos del admin, **la cifra de la columna «existencias» es un enlace**.

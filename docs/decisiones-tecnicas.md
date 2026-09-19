@@ -13,13 +13,13 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 34 (`DT-1` … `DT-34`) |
+| decisiones | 35 (`DT-1` … `DT-35`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.8 |
+| version | 1.9 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-34`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-35`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -576,6 +576,34 @@ Dejar la cola solo en el admin deja fuera al cajero, que es quien la prepara y q
 **Lo que esta decisión no amplía.** `INT-3` sigue siendo el admin para todo lo demás de la administración de la cafetería: catálogo, inventario y mermas. Lo que sale del admin es **una consulta**, no una escritura, y sale porque la comparte un rol que no puede entrar allí.
 
 > **Van dos excepciones y conviene contarlas.** `DT-27` el padrón, `DT-34` la cola de reservas. Las dos por la misma razón de fondo: un rol que no vive en el admin necesita ese dato a diario. Una tercera tendría que explicar por qué no es ya un patrón en vez de una excepción.
+
+---
+
+#### `[DT-35]` La entrega de un pedido pagado no se rechaza por falta de existencias
+
+**Cierra:** el hueco que `DT-33` dejó abierto y que `[S7]` de `./reglas-de-la-venta.md` remitió a `HU-25`.
+
+**El hecho que lo obliga.** `DT-33` decidió que la reserva cobra pero no descuenta inventario hasta la entrega. La reserva se protege a sí misma —valida contra `existencias_sin_reservar`—, pero **la caja sigue mirando las existencias reales y puede vender lo apartado**. Cuando pasa, el estudiante llega a recoger algo que ya no está, con el dinero cobrado.
+
+**Decidido:**
+
+- **La entrega se registra siempre.** `entregar` no comprueba existencias: asienta las salidas y cambia el estado.
+- **El libro puede quedar en negativo**, y esa cifra se conserva tal cual.
+- **La caja no cambia.** No se añade una comprobación que reste lo reservado.
+
+**Por qué del lado del estudiante.** El compromiso ya se adquirió y se cobró. Rechazar la entrega lo deja sin lo suyo **y** con el dinero pagado, y el sistema no sabe devolver dinero (`ALC-OUT-01`): el rechazo no tendría salida. Un descuadre de inventario sí la tiene — se mira, se explica y se corrige con un ingreso o una merma.
+
+**El negativo es información, no un fallo.** Dice que salió mercancía que el libro no tenía registrada, que es exactamente el descuadre que `HU-29` existe para auditar. `INV-3` se sigue cumpliendo —las existencias son la suma del historial— y la pantalla de `TT-141` lo enseña renglón a renglón, con la venta que lo originó. **El sistema no lo esconde: lo deja visible donde alguien lo mira.**
+
+**Descartado: cerrar el hueco en la caja.** Que `registrar_venta` restara lo reservado evitaría el caso. Se descarta por tres cosas:
+
+1. Sería **la séptima comprobación** de la venta, y `[S6]` de `./reglas-de-la-venta.md` existe para que ninguna se añada sin que una historia la pida. Ninguna la pide.
+2. En una caja con fila, el cajero leería «no hay existencias» de algo que tiene **delante en la vitrina**, porque está apartado para otro. Ese mensaje no se puede explicar en el mostrador.
+3. No elimina el caso, solo lo adelanta: si la mercancía se rompe o se merma después de reservada, la entrega vuelve a encontrarse sin existencias.
+
+**Descartado también: descontar el inventario al reservar.** Es la alternativa que `DT-33` ya había descartado, por decisión del equipo. Cerraría el hueco por construcción, y sigue siendo la salida si algún día se revisa `DT-33`.
+
+**Lo que esta decisión no toca.** Un estudiante desactivado o de baja **tampoco retira** (`INVD-2`, segundo criterio de `HU-50`): eso no es una cuestión de existencias y la entrega lo comprueba por la puerta única de `personas`.
 
 ---
 
