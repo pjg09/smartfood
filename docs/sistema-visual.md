@@ -289,7 +289,13 @@ Tres decisiones que se copian con ella:
   se lee como uno que cuadró. La otra se dice al lado, nombrando la diferencia.
 - **Ninguna cifra cruda.** El admin pinta un `DecimalField` como el `Decimal` que es
   —«31500,00»—, así que una columna de dinero sin `dinero` deja dos formatos en la misma
-  fila. Se vio en la captura de `TT-176`, como antes en `LineaVentaInline`.
+  fila. Se vio en la captura de `TT-176`, como antes en `LineaVentaInline`. **Y también en
+  el texto**: una cifra metida en una frase con `f"esperado {x}"` sale igual de cruda al
+  lado de una columna formateada (`TT-178`).
+- **Y una cuarta forma, cuando el reporte no tiene modelo** (`TT-178`): la misma cabeza
+  —cifra grande, frase que dice de dónde sale, tablas de desglose— sobre una vista propia
+  con su ruta, no sobre un `change_list`. Lo que cambia es que hay que pintar las migas a
+  mano, y ahí espera la trampa del `ANEXO A`.
 - **Sin `<h1>` propio**: el admin ya pinta `title` del contexto como encabezado. Lo que sí
   se cambia es ese `title` desde `changelist_view`, porque el de fábrica —«Seleccione venta
   para ver»— describe lo que se hace con una tabla, no lo que es la pantalla.
@@ -356,6 +362,7 @@ Las ocho fallan **en silencio**: no dan error, y la pantalla simplemente se ve m
 | `@container` puesto **demasiado arriba** | Peor que la anterior, porque sí hay contra qué medirse: la rejilla mide el lienzo entero y no su columna. El catálogo se partía en dos columnas de 145 px y los nombres salían «Empanada d…» | El contenedor es el ancestro **más cercano**: cada zona que responda a su propio ancho lleva el suyo |
 | `tailwind build` sin `--force` | Compara la fecha de `fuente.css`, no la de las plantillas; contesta «up to date» y la clase nueva no está | `--force`, o `tailwind watch` en otra terminal |
 | `{% now "F" %}` | Devolvía el mes capitalizado porque el catálogo `es_CO` de Django lo capitaliza. Lo corrige `locale/es_CO/` | El `\|lower` se conserva: ese parche es temporal por diseño y las fechas no deben depender de él |
+| `{% block breadcrumbs %}` del admin | Django 6 pinta las migas como `<ol><li>` y su hoja estiliza **la lista**: con un `<div class="breadcrumbs">` el rótulo se pega al borde y se monta sobre la barra lateral, sin ningún error | Copiar el marcado de Django: `<ol class="breadcrumbs">` con un `<li>` por escalón |
 | `floatformat:"-2"` sobre una cifra ya redondeada | Vuelve a poner dos decimales: «12,40 g» donde el selector había dejado «12,4 g». Con cuántos decimales se enseña algo se decide **en un sitio**, y si ya lo decidió el selector, la plantilla no lo toca |
 | Una anchura que sale de un dato | Tailwind compila lo que encuentra **escrito** en la plantilla: `w-[47%]` calculado no existe hasta que corre la consulta, y la barra sale sin ancho. Es la única excepción del proyecto al estilo en línea (`[S2.8]`) |
 | Fragmento HTMX que aterriza bajo el pliegue | En una columna con `overflow-y-auto`, lo que devuelve el intercambio puede nacer fuera de la vista — y `autofocus` mantiene el scroll donde está el campo | `hx-swap="… show:top"`, que sube el destino. Reordenar la columna **no** sirve: el foco vuelve a arrastrar el scroll |

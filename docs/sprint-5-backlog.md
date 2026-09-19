@@ -172,8 +172,8 @@ Es la historia más densa del sprint y la única que añade un modelo. Tres cond
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-177` | Selector de auditoría que consolida ventas, movimientos de inventario y cierres de caja | Pedro | ☐ |
-| `TT-178` | Reporte de auditoría en la interfaz administrativa | Carlos | ☐ |
+| `TT-177` | Selector de auditoría que consolida ventas, movimientos de inventario y cierres de caja | Pedro | ☑ |
+| `TT-178` | Reporte de auditoría en la interfaz administrativa | Carlos | ☑ |
 
 **Va la última porque consolida las tres anteriores.** Al integrarse, `ALC-IN-22` queda cubierto entero y **las 61 historias del proyecto están terminadas**.
 

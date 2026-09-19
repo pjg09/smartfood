@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y ocho rutas
+## [S2] Las treinta y nueve rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -81,6 +81,7 @@ los mismos colores desde `DT-23`.
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
+| `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cuatro clases de operación, con quién hizo qué y cuándo | **Solo administración** | `TT-178` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
@@ -107,6 +108,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/cierre/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/admin/auditoria/` | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/catalogo/imagenes/<clave>` | 200 | 200 | 200 | 200 | **200** |
 
 Cuatro filas piden explicación:
@@ -182,9 +184,10 @@ coincidir porque dejaría media pantalla en cada tema.
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `ventas.venta` | 403 | **200** (solo consulta) | 302 | 302 |
 | `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
+| `/admin/auditoria/` (sin modelo) | 403 | **200** (solo consulta) | 403 | 403 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Nueve lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Diez lecturas que
 conviene no perder:
 
 - **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
@@ -223,6 +226,22 @@ conviene no perder:
   son (`INV-3`), pero sobre unos días son lo que esos días movieron.
   Dice además **cuántas mermas van sin motivo**, que es siempre cero porque lo impone una
   `CheckConstraint` y no el formulario (`INV-8`): la invariante puesta donde se ve.
+- **El reporte de auditoría es el único sin modelo, y por eso es el único con ruta propia**
+  (`HU-37`, `TT-178`). Un `ModelAdmin` pinta el listado de *una* tabla, y la auditoría cruza
+  cuatro —ventas, pedidos entregados, movimientos de inventario y cierres—, así que es una
+  vista registrada en `config/urls.py` **antes** de `admin.site.urls`: Django resuelve en
+  orden y `/admin/auditoria/` la atiende ella. **Sigue sin ser una tercera excepción a
+  `DT-2`**: usa el armazón del admin, sus estilos y su barra; las dos excepciones declaradas
+  son pantallas propias *fuera* de él.
+  **No hay tabla de auditoría**, que es lo que su único criterio significa: ninguna operación
+  se escribe dos veces —una en su libro y otra en un registro de eventos—, porque la segunda
+  es la que nadie mira cuando falla (`DT-19`). Se leen los libros y se mezclan al leerlos.
+  **Los movimientos de tipo venta no entran**: el cobro asienta la venta y su salida a la
+  vez, así que incluirlos pondría cada venta dos veces. La **entrega** sí, porque mueve
+  existencias en otro momento y la hace otra persona.
+  **Y el ingreso y la merma no dicen quién**: el libro de inventario no guarda el actor. La
+  pantalla lo declara con palabras en vez de dejar el hueco en blanco; está en el `ANEXO B`
+  de `./decisiones-de-alcance.md`.
 - **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
   un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
   es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
@@ -315,6 +334,11 @@ no solo la suma con signo, porque esa se compensa sola y un mes con veinte descu
 leería como un mes que cuadra. Y cada cierre **enlaza a las ventas en efectivo de su
 jornada**, que es lo que permite comprobar de dónde sale su efectivo esperado (`INVD-5`) en
 vez de creérselo.
+
+**Y el cuarto reporte, que es el que se abre cuando algo no cuadra**: la auditoría
+(`HU-37`), en `/admin/auditoria/`. Una sola línea de tiempo con las cuatro clases de
+operación, con quién hizo qué y cuándo, y cada renglón enlazado a su propio reporte. Los tres
+consolidados llevan el enlace, para no tener que saberse la URL.
 
 ### Acudiente (`USR-2`)
 
@@ -654,12 +678,29 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     pantalla no deja cuadrar. Es el paso que más dice del proyecto en la sustentación, porque
     `PA-7` describe que hoy la cafetería cuadra contra **su estimación** de lo vendido, y aquí
     no hay ninguna casilla donde escribirla. `HU-55`, `DEC-6`, `INVD-5`.
+27. **Como administración, *Ventas* → «¿Algo no cuadra?» → la auditoría.** Sale la jornada
+    entera en una línea de tiempo: quién cobró, quién reservó, quién entregó y quién cuadró
+    la caja, cada renglón enlazado a su reporte. Es el paso que cierra el argumento del
+    anterior — el descuadre se explica yendo a las operaciones, no preguntando—. Y conviene
+    enseñar lo que **no** dice: el ingreso de mercancía y la merma no registran quién,
+    porque el libro de inventario no guarda el actor, y la pantalla lo declara en vez de
+    dejar el hueco en blanco. `HU-37`, `ALC-IN-22`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-El reporte de auditoría (`HU-37`). **Es la única historia que queda del proyecto entero.**
+**Nada del producto.** Con `HU-37` quedan terminadas **las 61 historias del proyecto**: lo
+que viene después del Sprint 5 es entrega, no desarrollo.
+
+**El reporte de auditoría ya está** (`HU-37`, `TT-177`, `TT-178`): una línea de tiempo con
+ventas, entregas de pedidos, movimientos de inventario y cierres, construida sobre los libros
+que ya existen y **sin ninguna tabla de auditoría**. Con él, `ALC-IN-22` queda cubierto
+entero — los tres reportes que nombra, más este.
+
+**Lo que no puede decir, y lo dice**: quién registró un ingreso o una merma. El libro de
+inventario no guarda el actor. Está declarado en el `ANEXO B` de
+`./decisiones-de-alcance.md` y conviene recogerlo en `ENT-06` como limitación identificada.
 
 **El cierre de caja ya está, y su reporte también** (`HU-55`, `HU-56`, `TT-171` … `TT-176`):
 el cajero cuadra la jornada contra las ventas en efectivo registradas, con el esperado
