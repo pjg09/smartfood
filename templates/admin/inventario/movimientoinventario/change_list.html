@@ -1,0 +1,101 @@
+{% extends "admin/change_list.html" %}
+
+{% comment %}
+TT-170. El consolidado del periodo, encima del libro de inventario (`HU-36`).
+
+**Las cifras son del listado que se está mirando**: salen de
+`resumen_de_movimientos(cl.queryset)`, el mismo `QuerySet` que pinta la tabla de
+abajo con la fecha, los filtros y la búsqueda ya aplicados. Es el mismo
+mecanismo del reporte de ventas (`TT-168`).
+
+**Todas son unidades, ninguna es dinero.** El libro de inventario no sabe lo que
+costó nada; eso es el otro reporte.
+
+Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en
+línea, como `admin/catalogo/producto/historial.html`.
+{% endcomment %}
+
+{% block result_list %}
+  {% if resumen %}
+    <div style="margin:1rem 0 1.5rem" data-resumen-de-movimientos>
+      {% if resumen.hubo_movimientos %}
+        <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:baseline">
+          <p style="margin:0">
+            <strong style="font-size:2.5rem;line-height:1" data-neto>
+              {% if resumen.neto > 0 %}+{% endif %}{{ resumen.neto }}
+            </strong>
+            <span style="font-size:1rem"> unidades netas</span>
+          </p>
+          <p style="margin:0;max-width:62ch">
+            <strong data-entradas>{{ resumen.entradas }}</strong> entraron y
+            <strong data-salidas>{{ resumen.salidas }}</strong> salieron, en
+            <strong>{{ resumen.cuantos }}</strong> movimiento{{ resumen.cuantos|pluralize }}.
+            {% comment %} Decirlo evita que el neto de un periodo se lea como un
+               inventario: sobre el libro entero sí son las existencias de la
+               cafetería (`INV-3`), pero sobre unos días son lo que esos días
+               movieron. {% endcomment %}
+            Es lo que movió <strong>lo que estás mirando</strong>, no las existencias:
+            para ver de dónde sale la cifra de un producto, pincha sus existencias en
+            el catálogo.
+          </p>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:2.5rem;margin-top:1.25rem">
+          {% comment %} El desglose llega **completo**: un tipo sin asientos sale en cero.
+             Que en el periodo no haya habido ninguna merma es justamente lo que se
+             quiere poder leer, y una fila ausente no lo dice. {% endcomment %}
+          <table style="width:auto" data-por-tipo>
+            <caption style="text-align:left;padding:0 0 .35rem">
+              <strong>Por tipo de movimiento</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Tipo</th>
+                {% comment %} `padding-left` en las dos columnas de cifras: sin él los dos
+                   rótulos salen pegados —«ASIENTOSUNIDADES»— porque el admin no
+                   separa celdas estrechas. Se vio en la captura. {% endcomment %}
+                <th scope="col" style="text-align:right;padding-left:1.5rem">Asientos</th>
+                <th scope="col" style="text-align:right;padding-left:1.5rem">Unidades</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for etiqueta, cuantos, unidades in resumen.por_tipo %}
+                <tr>
+                  <td>{{ etiqueta }}</td>
+                  <td style="text-align:right;padding-left:1.5rem;font-variant-numeric:tabular-nums">{{ cuantos }}</td>
+                  <td style="text-align:right;padding-left:1.5rem;font-variant-numeric:tabular-nums">{{ unidades }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% comment %} `INV-8` puesto donde lo ve un humano. Una merma sin motivo **no
+             puede existir**: lo impide una `CheckConstraint` (`DT-5`), no un `if`.
+             Enseñar el recuento no es desconfianza — es lo mismo que hace el
+             historial de un producto al dejar seguir la columna de existencias
+             hasta el total: convierte la invariante en algo comprobable de un
+             vistazo. {% endcomment %}
+          <p style="margin:0;max-width:40ch;align-self:center" data-mermas-con-motivo>
+            {% if resumen.mermas_sin_motivo %}
+              <strong>{{ resumen.mermas_sin_motivo }}</strong> merma{{ resumen.mermas_sin_motivo|pluralize }}
+              sin motivo. <strong>No debería haber ninguna</strong> (INV-8): si ves esta
+              línea, hay una fila escrita saltándose el servicio.
+            {% else %}
+              <strong>Todas las mermas del periodo llevan su motivo</strong>, y no por
+              revisión: lo impone la base de datos, no el formulario (INV-8).
+            {% endif %}
+          </p>
+        </div>
+      {% else %}
+        {% comment %} Sin movimientos no se pinta un neto de cero: un «0» se lee como «no
+           se movió nada», y lo que pasa es que el filtro no alcanzó ningún asiento. {% endcomment %}
+        <p data-sin-movimientos style="margin:0 0 1.5rem;max-width:60ch">
+          Ningún movimiento en lo que estás mirando. Prueba con otra fecha o quita
+          los filtros.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}

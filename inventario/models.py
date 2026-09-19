@@ -29,13 +29,16 @@ from django.db import models
 
 
 class TipoDeMovimientoDeInventario(models.TextChoices):
-    """Los tres tipos de `[S2]`.
+    """Los tres tipos de `[S2]`, y cada uno tiene quién lo asiente.
 
-    `VENTA` no tiene todavía quién lo asiente —es `HU-21` y el servicio de
-    `TT-80`—, y `MERMA` lo ejercita `HU-28` en el Sprint 4. Se declaran desde
-    ahora porque el libro se define entero o no explica las existencias, y
-    porque la restricción de `INV-8` **es más barata puesta con el modelo que
-    añadida después sobre datos ya escritos**.
+    Se declararon con el libro, antes de que existieran sus servicios: **el
+    libro se define entero o no explica las existencias** (`INV-3`), y la
+    restricción de `INV-8` es más barata puesta con el modelo que añadida
+    después sobre datos ya escritos.
+
+    Hoy el ingreso lo asienta `ingresar_mercancia` (`TT-68`), la venta lo
+    descuenta `registrar_venta` dentro de su transacción (`TT-80`) y la merma la
+    registra `registrar_merma` con su motivo obligatorio (`TT-138`, `HU-28`).
     """
 
     INGRESO = "ingreso", "Ingreso"

@@ -1,7 +1,9 @@
-"""`INT-3` para el inventario (`TT-69`, `HU-27`).
+"""`INT-3` para el inventario (`TT-69`, `HU-27`) y su reporte (`TT-170`, `HU-36`).
 
 El admin de Django es la interfaz de la administración de la cafetería (`DT-2`),
-así que el registro del ingreso vive aquí y no en una plantilla propia.
+así que el registro del ingreso vive aquí y no en una plantilla propia. El
+reporte de movimientos, también: es el mismo libro con un consolidado encima, y
+sacarlo a otra pantalla daría dos sitios donde mirar lo mismo.
 
 **El admin es una vista, y una vista nunca escribe directamente** (`DT-15`):
 `save_model` delega en el servicio, que es donde están las reglas.
@@ -19,6 +21,7 @@ from cuentas.models import Rol
 from inventario.models import Merma, MovimientoInventario, TipoDeMovimientoDeInventario
 from inventario.selectors import existencias_de, existencias_por_producto, historial_de
 from inventario.services import ingresar_mercancia, registrar_merma
+from reportes.selectors import resumen_de_movimientos
 
 
 class SoloLaAdministracionDeLaCafeteria:
@@ -44,18 +47,34 @@ class SoloLaAdministracionDeLaCafeteria:
 
 @admin.register(MovimientoInventario)
 class MovimientoInventarioAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
-    """El libro del inventario: se lee y se le añaden asientos. Nada más.
+    """El libro del inventario: se lee, se le añaden asientos y **se consolida**.
 
     **Ni editar ni borrar**, y no es una restricción de permisos que se pueda
     ajustar: un asiento corregido a posteriori deja unas existencias que ya no
     explican lo que pasó, y `INV-3` dice justo lo contrario. Un error se corrige
     con otro movimiento —una merma con su motivo—, que es como se corrige un
     libro.
+
+    ── EL REPORTE DE `HU-36` ES ESTA MISMA PANTALLA, CON SU CONSOLIDADO ─────
+    El «para qué» de la historia es **revisar entradas, ventas y mermas en un
+    solo lugar**, y el libro ya las tenía las tres: son tres clases de asiento
+    de la misma tabla, no tres informes. Lo que le faltaba para ser un reporte
+    es acotar un periodo —`date_hierarchy`— y decir **cuánto suma lo que se está
+    mirando**, que es lo que `TT-170` añade.
+
+    Registrar un ingreso y consultar el consolidado conviven en la misma
+    pantalla por lo mismo que en `ventas`: son dos preguntas sobre la misma
+    tabla, y separarlas daría dos sitios donde mirar el mismo libro.
+    ─────────────────────────────────────────────────────────────────────────
     """
 
     list_display = ["creado_en", "producto", "tipo", "cantidad", "motivo"]
     list_filter = ["tipo", "producto__categoria"]
     search_fields = ["producto__nombre", "motivo"]
+    # `TT-170`, `HU-36`. Sin navegación por fechas, «los movimientos de la
+    # semana pasada» no se pueden acotar y el consolidado solo podría hablar del
+    # libro entero.
+    date_hierarchy = "creado_en"
     ordering = ["-creado_en"]
     readonly_fields = ["id", "creado_en"]
 
@@ -101,6 +120,37 @@ class MovimientoInventarioAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAd
         obj.pk = movimiento.pk
         obj.tipo = movimiento.tipo
         obj.creado_en = movimiento.creado_en
+
+    def changelist_view(self, request, extra_context=None):
+        """`TT-170`. El consolidado del listado ya filtrado (`HU-36`).
+
+        Mismo mecanismo que el reporte de ventas (`TT-168`): se llama a
+        `super()` primero y se lee `cl.queryset` de la respuesta, que es el
+        `QuerySet` con la fecha, los filtros y la búsqueda aplicados.
+        Calcularlo por nuestra cuenta daría un resumen de otro conjunto **sin
+        que nada fallara**, que es la peor clase de error de un reporte.
+
+        `context_data` no existe si el admin devolvió una redirección —lo hace
+        cuando un filtro de la URL no es válido—, así que se comprueba antes de
+        tocarlo.
+        """
+        # El título por defecto es «Seleccione movimiento de inventario para
+        # ver», que describe lo que se hace con una tabla y no lo que es esta
+        # pantalla. Aquí no se selecciona nada: se revisa un libro.
+        extra_context = {
+            "title": "Movimientos de inventario",
+            **(extra_context or {}),
+        }
+
+        respuesta = super().changelist_view(request, extra_context)
+
+        listado = getattr(respuesta, "context_data", {}).get("cl")
+        if listado is not None:
+            respuesta.context_data["resumen"] = resumen_de_movimientos(
+                listado.queryset
+            )
+
+        return respuesta
 
 
 class MermaForm(forms.ModelForm):
