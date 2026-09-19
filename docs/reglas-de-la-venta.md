@@ -24,14 +24,21 @@ ellas **no es casual y no está en ninguna historia**: es una decisión que se t
 cada una en el PR que añadía una condición nueva, y hasta ahora solo vivía en los comentarios
 del código y repartida entre cuatro planes de PR.
 
-**Se escribe ahora porque el Sprint 4 va a tocar esta misma transacción.** Los pedidos
-anticipados (`HU-23` … `HU-25`) retiran mercancía y pasan por la misma puerta de `INVD-2`.
-Quien construya eso necesita saber qué hay aquí dentro **antes** de añadir la séptima
-condición.
+**Se escribió antes de que el Sprint 4 tocara esta misma transacción, y sirvió.** Los
+pedidos anticipados (`HU-23` … `HU-25`) llegaron, retiran mercancía y pasan por la misma
+puerta de `INVD-2` — y **no añadieron ninguna comprobación**: la reserva valida por esta
+misma lista (`[S7]`). Siguen siendo seis.
+
+Quien vaya a tocar este servicio necesita saber qué hay aquí dentro **antes** de añadir la
+séptima.
 
 > **El código manda.** Este documento describe `ventas/services.py`; si algún día discrepan,
 > el equivocado es este. Lo que aquí se fija son **las razones**, que el código no puede
 > demostrar por sí solo.
+
+**Su gemelo es `./reglas-del-pedido-anticipado.md`**, para el otro flujo transaccional: qué
+mueve cada momento de un pedido y qué no. La reserva valida por esta misma lista, así que los
+dos documentos se leen juntos al tocar `ventas/services.py`.
 
 ---
 
@@ -182,8 +189,8 @@ Lo que hay que preguntarse, en este orden:
 1. **¿De qué historia sale?** Si no sale de ninguna, para: es alcance, y se registra antes de
    construirse. Pasó con `HU-60`.
 2. **¿La regla ya existe en otro sitio?** `INVD-2` vive en `personas.services` y la venta la
-   **llama**, no la copia. Una regla copiada es una regla que un día divergirá — y el retiro de
-   pedidos de `HU-25` tiene que llamar a esa misma puerta.
+   **llama**, no la copia. Una regla copiada es una regla que un día divergirá. El retiro de
+   pedidos de `HU-25` llama a esa misma puerta, y por eso no tuvo que acordarse de nada.
 3. **¿Dónde va en el orden?** Aplica la regla de `[S2.1]`: cuanto menos se arregle en el
    mostrador, más adelante va.
 4. **¿Lee algo que pueda cambiar debajo?** Entonces va dentro del bloqueo, y hace falta una

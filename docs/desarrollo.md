@@ -294,7 +294,7 @@ cupo del día o si no alcanza el saldo, la reserva se rechaza igual que la venta
 `HU-23` mencione ninguna de esas reglas. Para verlo, bloquea un producto en
 *Restricciones → Productos* e intenta reservarlo.
 
-**El inventario no se mueve hasta la entrega** (`HU-25`, pendiente). Mientras tanto las
+**El inventario no se mueve hasta la entrega** (`HU-25`, `[S2.9.3]`). Mientras tanto las
 unidades siguen en el libro pero apartadas: las existencias reales no cambian y
 `existencias_sin_reservar` sí.
 
