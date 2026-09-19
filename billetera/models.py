@@ -66,10 +66,17 @@ class Billetera(models.Model):
 class TipoDeMovimiento(models.TextChoices):
     """Los tres tipos de `[S2]`, y cada uno tiene su signo obligado.
 
-    `VENTA` y `DEVOLUCION` no tienen todavía quién los asiente —la venta es
-    `HU-21` y el servicio de `TT-80`—, pero se declaran desde ahora: el libro de
-    movimientos se define entero o no explica el saldo. Lo que falta es el
-    servicio, no el concepto.
+    Los tres se declararon con el libro, antes de que hubiera quién los
+    asentara: **el libro de movimientos se define entero o no explica el
+    saldo** (`INV-2`). Hoy la recarga la asienta `recargar` (`TT-60`) y la
+    venta, `registrar_venta` (`TT-80`).
+
+    **`DEVOLUCION` sigue sin tener quién la asiente, y eso no es una tarea
+    pendiente**: el sistema no mueve dinero real ni sabe devolverlo
+    (`ALC-OUT-01`, `ALC-OUT-02`), y ninguna historia lo pide. El tipo existe
+    porque el libro tiene que poder explicar cualquier saldo, no porque falte
+    un servicio que lo escriba. Lo que sí lo lee ya es el resumen de gasto
+    (`TT-165`), justamente para no quedarse callado el día que algo lo asiente.
     """
 
     RECARGA = "recarga", "Recarga"
