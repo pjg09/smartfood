@@ -41,17 +41,11 @@ from ventas.models import (
     Venta,
 )
 
-# El importe de un renglón, calculado por la base: precio congelado por unidades
-# (`DT-8`). Se declara aquí, una vez, porque lo usan el historial del acudiente
-# y el reporte de ventas de la cafetería, y repetir la expresión es como acaban
-# dando cifras distintas.
-#
-# Se atraviesa **desde la venta** —`lineas__…`—, así que sirve tal cual en
-# cualquier `QuerySet` de `Venta`.
-IMPORTE_DE_LA_LINEA = ExpressionWrapper(
-    F("lineas__precio_unitario") * F("lineas__cantidad"),
-    output_field=DecimalField(max_digits=12, decimal_places=2),
-)
+# El importe de un renglón lo declara `ventas`, que es de quien es el renglón, y
+# desde `TT-172` también lo usa el cierre de caja. Se importa en vez de
+# repetirlo: dos expresiones para la misma cifra es como acaban dando cifras
+# distintas (`DT-19`).
+from ventas.selectors import IMPORTE_DE_LA_LINEA
 
 # **Cuándo se consumió un renglón**, que no siempre es cuándo se pagó (`[S2.3]`
 # de `docs/reglas-de-frecuencia-de-consumo.md`). En el mostrador son el mismo

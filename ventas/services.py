@@ -45,6 +45,7 @@ from restricciones.selectors import (
     limite_diario_de,
 )
 from ventas.models import (
+    CierreDeCaja,
     EstadoDelPedido,
     LineaVenta,
     MedioDePago,
@@ -52,7 +53,7 @@ from ventas.models import (
     PedidoAnticipado,
     Venta,
 )
-from ventas.selectors import existencias_sin_reservar
+from ventas.selectors import efectivo_esperado_de, existencias_sin_reservar
 
 
 class VentaRechazada(ValidationError):
@@ -136,7 +137,7 @@ class ExistenciasInsuficientes(VentaRechazada):
     motivo = "existencias-insuficientes"
 
 
-def _solo_el_cajero(actor):
+def _solo_el_cajero(actor, *, accion="Registrar una venta", regla="[S11], INV-4"):
     """`[S11]`: «registrar ventas en el punto de venta» es de `USR-3`.
 
     Vive en el servicio y no en la vista porque `DT-15` lo exige: el control de
@@ -144,13 +145,22 @@ def _solo_el_cajero(actor):
     un `403` antes de montar nada—, y esa duplicación es deliberada: si mañana
     hay un comando, una tarea programada o una segunda pantalla, la regla sigue
     aquí.
+
+    ── `accion` Y `regla` EXISTEN PORQUE EL MENSAJE SE LEE ──────────────────
+    El rol exigido es el mismo para todo lo que hace el cajero, pero **decirle
+    «registrar ventas es del rol cajero» a quien intentó cerrar la caja es un
+    mensaje equivocado**: nombra otra función y otra regla. Se vio ejecutando
+    `cerrar_caja` con los otros tres roles (`TT-172`).
+
+    La alternativa —una función de comprobación por servicio— repetiría las tres
+    condiciones, y la tercera que se añadiera se olvidaría en una de ellas.
+    ─────────────────────────────────────────────────────────────────────────
     """
     if actor is None or not actor.is_authenticated:
-        raise PermissionDenied("Registrar una venta exige identificarse.")
+        raise PermissionDenied(f"{accion} exige identificarse.")
     if actor.rol != Rol.CAJERO:
         raise PermissionDenied(
-            "Registrar ventas en el punto de venta es del rol cajero, y de "
-            "ningún otro ([S11], INV-4)."
+            f"{accion} es del rol cajero, y de ningún otro ({regla})."
         )
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
@@ -902,3 +912,103 @@ def entregar(*, actor, pedido):
     bloqueado.save(update_fields=["estado", "entregado_en", "entregado_por"])
 
     return bloqueado
+
+
+class CierreRechazado(ValidationError):
+    """El cierre no se registra, y **no se escribe nada**.
+
+    Familia propia y no una subclase de `VentaRechazada`: un cierre no es una
+    venta y quien lo llama no hace lo mismo con los dos. La venta vive en el
+    ticket del punto de venta y su rechazo se pinta ahí; el cierre es un
+    formulario, y su rechazo se cuelga del formulario como en la recarga.
+    """
+
+
+class JornadaYaCerrada(CierreRechazado):
+    """Esa jornada ya se cuadró (`DEC-6`: el cuadre es diario).
+
+    El `if` del servicio da el mensaje; la garantía la da
+    `cierre_de_caja_uno_por_jornada`, que es una restricción de unicidad y no
+    depende de que ningún camino futuro se acuerde de mirar (`DT-15`, regla 2).
+    Es el mismo reparto que en la entrega de un pedido anticipado.
+    """
+
+
+class CierreSinMotivo(CierreRechazado):
+    """La diferencia no es cero y no se dijo por qué (`HU-55`, `ALC-IN-18`).
+
+    **No es una validación de formulario que el servicio repita**: es al revés.
+    La regla vive aquí y en la restricción `cierre_de_caja_diferencia_con_motivo`;
+    el formulario solo la enseña antes de enviar, como en la recarga.
+    """
+
+
+@transaction.atomic
+def cerrar_caja(*, actor, base, efectivo_contado, fecha=None, motivo=""):
+    """Cuadra la caja de una jornada contra sus ventas (`TT-172`, `HU-55`).
+
+    Devuelve el `CierreDeCaja` creado.
+
+    ═══════════════════════════════════════════════════════════════════════
+    **NO HAY PARÁMETRO PARA EL EFECTIVO ESPERADO, Y ESA AUSENCIA ES `INVD-5`.**
+
+    La cifra la calcula `efectivo_esperado_de` sumando las ventas en efectivo
+    de la jornada. No se recibe, no se puede sugerir y no hay forma de
+    escribirla desde fuera: el único camino que crea un `CierreDeCaja` es este.
+
+    Es lo que separa este sistema del proceso que describe `PA-7`, donde la
+    cafetería cuadra el efectivo contra **su estimación** de lo vendido. Si
+    alguien añade un argumento para «corregir» el esperado, la historia deja de
+    significar algo — y hay una prueba que mira el bytecode de esta función
+    para que no pase en silencio.
+    ═══════════════════════════════════════════════════════════════════════
+
+    **La transferencia no entra en el cuadre** (`DEC-6`, `DEC-1`): ese dinero
+    nunca pasó por el cajón. Lo decide `efectivo_esperado_de` filtrando por
+    medio de pago, y está explicado allí.
+
+    `fecha` se recibe y no se lee del reloj dentro de la lógica, por lo mismo
+    que en los selectores de periodo: quien no la pasa cuadra la jornada de hoy
+    en la zona local, que es lo que hace la pantalla.
+
+    **La base se resta de lo contado antes de comparar.** Es el dinero que había
+    en el cajón para dar cambio y no salió de ninguna venta; sin restarla, todo
+    cierre daría un sobrante igual a la base.
+    """
+    _solo_el_cajero(actor, accion="Cuadrar la caja", regla="HU-55, DEC-6")
+
+    if fecha is None:
+        fecha = timezone.localdate()
+
+    if CierreDeCaja.objects.filter(fecha=fecha).exists():
+        raise JornadaYaCerrada(
+            "Esa jornada ya tiene su cierre de caja: el cuadre es diario (DEC-6)."
+        )
+
+    base = Decimal(base)
+    efectivo_contado = Decimal(efectivo_contado)
+    if base < 0 or efectivo_contado < 0:
+        raise CierreRechazado("Ni la base ni el efectivo contado pueden ser negativos.")
+
+    # `INVD-5`: se calcula, no se digita.
+    efectivo_esperado = efectivo_esperado_de(fecha)
+
+    diferencia = efectivo_contado - base - efectivo_esperado
+    motivo = (motivo or "").strip()
+    if diferencia != 0 and not motivo:
+        raise CierreSinMotivo(
+            f"La caja no cuadra por {dinero(abs(diferencia))}: hay que decir por "
+            f"qué (HU-55, mismo criterio que ALC-IN-18 en el inventario)."
+        )
+
+    # `strip()` antes de crear, como en el asiento de inventario: la restricción
+    # exige `\S`, y guardar «  rotura » con sus espacios haría que dos motivos
+    # iguales se leyeran distintos en el reporte de `HU-56`.
+    return CierreDeCaja.objects.create(
+        fecha=fecha,
+        cajero=actor,
+        base=base,
+        efectivo_contado=efectivo_contado,
+        efectivo_esperado=efectivo_esperado,
+        motivo=motivo,
+    )
