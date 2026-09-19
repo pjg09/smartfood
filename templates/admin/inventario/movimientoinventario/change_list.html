@@ -86,6 +86,16 @@ línea, como `admin/catalogo/producto/historial.html`.
             {% endif %}
           </p>
         </div>
+        {% comment %} `TT-178`, `HU-37`. La entrada a la auditoría desde donde se está
+           mirando: quien consulta un consolidado y ve algo raro no tiene por qué
+           saberse la URL. Los tres reportes llevan el mismo enlace, y por eso el
+           texto es el mismo — «¿algo no cuadra?» es el «para» de la historia. {% endcomment %}
+        <p style="margin:1.25rem 0 0" data-enlace-a-la-auditoria>
+          ¿Algo no cuadra?
+          <a href="{% url 'auditoria' %}">Ver la auditoría de la operación</a>,
+          con quién hizo qué y cuándo.
+        </p>
+
       {% else %}
         {% comment %} Sin movimientos no se pinta un neto de cero: un «0» se lee como «no
            se movió nada», y lo que pasa es que el filtro no alcanzó ningún asiento. {% endcomment %}

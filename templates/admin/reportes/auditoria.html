@@ -1,0 +1,170 @@
+{% extends "admin/base_site.html" %}
+{% load dinero %}
+
+{% comment %}
+TT-178. El reporte de auditoría (`HU-37`, `ALC-IN-22`).
+
+**Una sola línea de tiempo con las cuatro clases de operación**, de la más
+reciente a la más antigua. El «para» de la historia es rastrear **quién hizo
+qué** cuando algo no cuadre, así que la columna de quién va antes que la del
+detalle y no al final.
+
+**La columna de quién dice el hueco con palabras.** El ingreso de mercancía y la
+merma no registran actor —`MovimientoInventario` no tiene esa columna—, y
+dejarlo en blanco se leería como un fallo de la consulta. Es la misma regla que
+`[S2.4]` del sistema visual aplica a los huecos: se declara qué falta.
+
+Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en
+línea, como en los tres consolidados.
+
+Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado.
+{% endcomment %}
+
+{% comment %} **Una lista, no un `<div>`.** Django 6 pinta las migas como
+   `<ol class="breadcrumbs"><li>…</li></ol>` y su hoja estiliza la lista, no la
+   clase: con un `<div>` el rótulo se pega al borde izquierdo y se monta sobre
+   la barra lateral. No da ningún error y la página se ve entera — se vio en la
+   captura, comparando con el reporte de cierres. {% endcomment %}
+{% block breadcrumbs %}
+  <ol class="breadcrumbs">
+    <li><a href="{% url 'admin:index' %}">Inicio</a></li>
+    <li aria-current="page">Auditoría</li>
+  </ol>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+
+    {% comment %} El periodo. Es un `<form method="get">` de verdad, con sus dos campos y
+       su botón: sin JavaScript sigue funcionando, y la URL resultante se puede
+       guardar y compartir — que en un reporte de auditoría es media
+       herramienta. {% endcomment %}
+    <form method="get" style="margin:0 0 1.5rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end"
+          data-periodo-de-auditoria>
+      <p style="margin:0">
+        <label for="{{ form.desde.id_for_label }}" style="display:block">Desde</label>
+        <input type="date" name="{{ form.desde.html_name }}"
+               id="{{ form.desde.id_for_label }}" value="{{ desde|date:'Y-m-d' }}">
+      </p>
+      <p style="margin:0">
+        <label for="{{ form.hasta.id_for_label }}" style="display:block">Hasta</label>
+        <input type="date" name="{{ form.hasta.html_name }}"
+               id="{{ form.hasta.id_for_label }}" value="{{ hasta|date:'Y-m-d' }}">
+      </p>
+      <p style="margin:0">
+        <input type="submit" value="Ver el periodo" class="default">
+      </p>
+    </form>
+
+    {% if resumen.hubo_operaciones %}
+      <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:baseline"
+           data-resumen-de-auditoria>
+        <p style="margin:0">
+          <strong style="font-size:2.5rem;line-height:1" data-cuantas-operaciones>
+            {{ resumen.cuantas }}
+          </strong>
+        </p>
+        <p style="margin:0;max-width:60ch">
+          operacion{{ resumen.cuantas|pluralize:"es" }} registrada{{ resumen.cuantas|pluralize }}
+          entre el {{ desde|date:"j" }} de {{ desde|date:"F"|lower }} y el
+          {{ hasta|date:"j" }} de {{ hasta|date:"F"|lower }} de {{ hasta|date:"Y" }}.
+          {% comment %} De dónde sale, que es el único criterio de `HU-37`: no hay tabla de
+             auditoría, se leen los libros que ya existen. {% endcomment %}
+          Salen de los libros que ya existen —ventas, pedidos, inventario y
+          cierres—, no de un registro aparte que alguien tenga que mantener.
+        </p>
+      </div>
+
+      <table style="width:auto;margin:1.25rem 0" data-por-clase>
+        <caption style="text-align:left;padding:0 0 .35rem">
+          <strong>Por clase de operación</strong>
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Clase</th>
+            <th scope="col" style="text-align:right">Operaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for etiqueta, cuantas in resumen.por_clase %}
+            <tr>
+              <td>{{ etiqueta }}</td>
+              <td style="text-align:right;font-variant-numeric:tabular-nums">{{ cuantas }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if resumen.sin_actor %}
+        {% comment %} El hueco declarado, arriba y no escondido en una celda. No es un
+           fallo: `MovimientoInventario` no guarda quién, y sus dos operaciones
+           —ingreso y merma— son exactamente estas. Está en el `ANEXO B` de
+           `decisiones-de-alcance.md`. {% endcomment %}
+        <p style="margin:0 0 1.25rem;max-width:70ch" data-sin-actor>
+          <strong>{{ resumen.sin_actor }}</strong>
+          operacion{{ resumen.sin_actor|pluralize:"es" }} sin actor registrado. No es un
+          fallo de este reporte: el libro de inventario guarda qué se movió y cuándo, pero
+          no quién lo registró, así que el ingreso de mercancía y la merma no pueden
+          decirlo. Es una limitación conocida del prototipo.
+        </p>
+      {% endif %}
+
+      {% if hubo_mas %}
+        <p style="margin:0 0 1.25rem;max-width:70ch" data-hubo-mas>
+          Se enseñan las <strong>{{ limite }}</strong> más recientes del periodo, que tiene
+          más. Acota las fechas para verlas todas: recortar sin decirlo sería lo peor que
+          puede hacer un reporte de auditoría.
+        </p>
+      {% endif %}
+
+      <table style="width:100%" data-linea-de-tiempo>
+        <thead>
+          <tr>
+            <th scope="col">Cuándo</th>
+            <th scope="col">Quién</th>
+            <th scope="col">Qué</th>
+            <th scope="col">Detalle</th>
+            <th scope="col" style="text-align:right">Importe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for operacion in operaciones %}
+            <tr data-operacion="{{ operacion.clase }}">
+              <td style="white-space:nowrap">
+                {{ operacion.cuando|date:"j" }} de
+                {{ operacion.cuando|date:"F"|lower }},
+                {{ operacion.cuando|date:"H:i" }}
+              </td>
+              <td>
+                {% if operacion.tiene_actor %}
+                  {{ operacion.quien }}
+                {% else %}
+                  <span data-sin-quien style="opacity:.7">no se registra</span>
+                {% endif %}
+              </td>
+              <td>
+                {% comment %} El enlace a la operación en su propio reporte. Un renglón de
+                   auditoría que no se puede abrir obliga a buscar la fila a mano,
+                   que es justo lo que no se hace cuando algo no cuadra. {% endcomment %}
+                <a href="{% url operacion.ruta_admin operacion.objeto_id %}">
+                  {{ operacion.accion }}
+                </a>
+              </td>
+              <td>{{ operacion.detalle }}</td>
+              <td style="text-align:right;font-variant-numeric:tabular-nums">
+                {% if operacion.importe is not None %}{{ operacion.importe|dinero }}{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      {% comment %} **Sin operaciones no se pinta un cero.** «0 operaciones» y «no hubo
+         actividad» se parecen, pero en un reporte de auditoría lo que hay que
+         decir es que el periodo elegido no alcanzó nada. {% endcomment %}
+      <p data-sin-operaciones style="max-width:60ch">
+        Ninguna operación registrada en ese periodo. Prueba con otras fechas.
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}
