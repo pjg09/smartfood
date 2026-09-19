@@ -421,9 +421,11 @@ def desactivar(*, actor, estudiante):
     **Solo la institución reactiva** (`INVD-3`, `HU-49`), venga la desactivación
     de donde venga — y esa asimetría es de seguridad: el desbloqueo pasa por una
     verificación presencial, que es lo que impide que quien encontró la tarjeta
-    consiga reactivarla. Ese servicio llega con su historia: aquí no hay ningún
-    argumento que deshaga esto, y el acudiente **no tiene** la acción de
-    reactivar en ninguna pantalla.
+    consiga reactivarla. Ese servicio es `reactivar`, aquí abajo (`TT-123`), y
+    **exige el rol institución venga la desactivación de donde venga**: en esta
+    función no hay ningún argumento que deshaga lo hecho, y el acudiente no
+    tiene la acción de reactivar en ninguna pantalla — no está escondida, no
+    existe.
 
     Es **idempotente**: desactivar a quien ya está desactivado no cambia nada y
     no es un error — en una secretaría con dos personas atendiendo el mismo

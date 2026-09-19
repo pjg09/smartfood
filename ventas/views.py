@@ -274,8 +274,16 @@ def cobrar(request):
         # una frase dentro de otra — que es lo que se rompe en cuanto alguien
         # reescribe el mensaje.
         #
-        # `EstudianteNoOperativo` no es una `VentaRechazada` y no trae etiqueta:
-        # viene de `personas` y es `INVD-2`. La suya llega con `TT-126`.
+        # `TT-126` resolvió la etiqueta de `INVD-2` **por otro camino**: no
+        # dándosela a `EstudianteNoOperativo` —que es de `personas` y no sabe de
+        # tickets— sino traduciéndola en el servicio a `EstudianteNoPuedeComprar`,
+        # que sí es una `VentaRechazada` y sí la trae. Así la regla se queda en
+        # `personas` y la etiqueta, donde se pinta.
+        #
+        # Por eso `EstudianteNoOperativo` ya no llega hasta aquí por ningún
+        # camino de venta: se sigue capturando como red, porque un camino nuevo
+        # que olvide traducirla enseñaría un `500` en la caja en vez de un
+        # rechazo con su motivo.
         return render(
             request,
             "ventas/partials/ticket.html",

@@ -59,9 +59,11 @@ class EstadoDelEstudiante(models.TextChoices):
     """
 
     ACTIVO = "activo", "Activo"
-    # `HU-47`, `HU-48` y `HU-49`, del Sprint 2. El estado existe desde ahora
-    # porque la máquina de estados se declara entera o no es una máquina de
-    # estados; lo que todavía no existe es el servicio que transita a él.
+    # `HU-47`, `HU-48` y `HU-49`. El estado se declaró con la tabla, antes de
+    # que hubiera quién transitara a él: una máquina de estados se declara
+    # entera o no es una máquina de estados. Las tres transiciones existen desde
+    # el Sprint 3 —`desactivar` por dos vías (`TT-120`, `TT-122`) y `reactivar`
+    # solo para la institución (`TT-123`, `INVD-3`)—.
     DESACTIVADO = "desactivado", "Desactivado"
     BAJA = "baja", "De baja"
 
