@@ -510,9 +510,20 @@ respuesta que nadie escribe. Con la opción, la borra y sigue.
 
 ### [S5.1] Si tocas `locale/`
 
-El catálogo propio **solo parchea lo que Django deja sin traducir** en el admin —hoy
-cuatro cadenas de la versión 6.1—. El fichero que se edita es el `.po`; el que lee Django
-es el `.mo`, que hay que recompilar:
+**Hay dos catálogos y no se eligen al azar**, porque resuelven dos problemas distintos:
+
+| Catálogo | Qué arregla | Hoy |
+|---|---|---|
+| `locale/es/` | Lo que Django deja **sin traducir** en el admin | 5 cadenas de la 6.1 |
+| `locale/es_CO/` | Lo que Django **traduce mal** | los 12 meses y «View %s» |
+
+**Una corrección escrita en `es` no gana.** Con `LANGUAGE_CODE = "es-co"` el catálogo que
+manda es el `es_CO` y el `es` solo actúa de reserva, así que lo que el `es_CO` de Django ya
+traduce —aunque lo traduzca mal— pisa cualquier cosa que escribamos en `es`. Lo que sí
+funciona desde `es` es lo que **no está en ninguno de los dos**: entonces la reserva es lo
+único que responde. Es exactamente la diferencia entre las dos filas de la tabla.
+
+El fichero que se edita es el `.po`; el que lee Django es el `.mo`, que hay que recompilar:
 
 ```bash
 sudo apt install gettext        # una vez: msgfmt no viene con el sistema
@@ -523,9 +534,15 @@ uv run python manage.py compilemessages
 Los dos ficheros van al repositorio, el `.po` porque es la fuente y el `.mo` porque no
 todas las máquinas del equipo tienen `gettext` y `collectstatic` no compila mensajes.
 
-`cuentas/tests_traducciones.py` comprueba que las cuatro salen en español y que el parche
-no ha crecido: si alguien empieza a traducir por su cuenta lo que Django ya trae, se
-desincroniza a la primera versión.
+`cuentas/tests_traducciones.py` comprueba que todas salen en español, que **ninguno de los
+dos parches ha crecido** —si alguien empieza a traducir por su cuenta lo que Django ya trae,
+se desincroniza a la primera versión— y que el reporte de cierres enseña «Filtrar por
+jornada» y «14 de septiembre», que es donde se vieron los dos defectos.
+
+**Los dos parches están pensados para borrarse.** Cuando Django traduzca esas cadenas y
+deje de capitalizar los meses, los ficheros sobran. Por eso el `|lower` de las plantillas
+se conserva aunque hoy sea redundante: las fechas del producto no deben depender de un
+parche temporal.
 
 ---
 
