@@ -31,7 +31,14 @@ from ventas.selectors import (
     pedidos_pendientes_de,
     reservas_pendientes,
 )
-from ventas.services import VentaRechazada, registrar_venta, reservar, total_de
+from ventas.models import PedidoAnticipado
+from ventas.services import (
+    VentaRechazada,
+    entregar,
+    registrar_venta,
+    reservar,
+    total_de,
+)
 
 
 def _solo_el_cajero(usuario):
@@ -126,12 +133,6 @@ def identificacion(request):
     except Estudiante.DoesNotExist:
         estudiante = None
 
-    cobro = (
-        informacion_de_cobro(actor=request.user, estudiante=estudiante)
-        if estudiante is not None
-        else None
-    )
-
     # `TT-81`. Quién es el cliente lo recuerda el servidor, no un campo oculto:
     # entre escanear y cobrar puede haber otro escaneo, y manda el último.
     carrito_de_la_venta.fijar_estudiante(request.session, estudiante)
@@ -139,13 +140,34 @@ def identificacion(request):
     return render(
         request,
         "ventas/partials/estudiante-identificado.html",
-        {
-            "estudiante": estudiante,
-            "cobro": cobro,
-            "codigo": codigo,
-            "documento": documento,
-        },
+        _contexto_del_estudiante(
+            request, estudiante, codigo=codigo, documento=documento
+        ),
     )
+
+
+def _contexto_del_estudiante(request, estudiante, **extra):
+    """Lo que necesita el panel del estudiante, en un solo sitio (`TT-150`).
+
+    Lo arman dos vistas —la identificación y la entrega— y repetirlo es como una
+    de las dos acaba enseñando un pedido que la otra ya entregó. Mismo motivo
+    que `_contexto_del_ticket`.
+    """
+    return {
+        "estudiante": estudiante,
+        "cobro": (
+            informacion_de_cobro(actor=request.user, estudiante=estudiante)
+            if estudiante is not None
+            else None
+        ),
+        # `HU-25`. Lo que este estudiante tiene reservado y sin recoger. Va con
+        # la identificación y no en una segunda petición: es otro viaje por
+        # tarjeta, y `INT-2` no lo tiene.
+        "pedidos": (
+            pedidos_pendientes_de(estudiante) if estudiante is not None else []
+        ),
+        **extra,
+    }
 
 
 def _estudiante_de_la_venta(request):
@@ -429,4 +451,80 @@ def reservas(request):
             "pendientes": pendientes,
             "cuantas": pendientes.count(),
         },
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def entrega(request):
+    """Registra la entrega de un pedido anticipado (`TT-150`, `HU-25`).
+
+    Primer criterio de la historia: **se registra en el punto de venta**. Por eso
+    esta vista vive aquí y no en la cola de `HU-24`, que es donde se consulta lo
+    que hay que preparar: entregar es otro momento y otro rol.
+
+    **Sin diálogo de confirmación** (`INT-2`), como el cobro: un modal roba el
+    foco y el foco es del lector.
+
+    Devuelve el panel del estudiante en sus dos estados —entregado o rechazado—,
+    que es la misma zona de la pantalla y por tanto el mismo fragmento. Arrastra
+    el catálogo fuera de banda porque la entrega acaba de mover existencias, y
+    esas son las que el cajero va a leer en la siguiente venta.
+
+    La vista no decide nada: llama al servicio, que es quien bloquea, comprueba
+    el estado y escribe dentro de una sola transacción. Si rechaza, **no se
+    escribió nada** — la transacción se deshizo entera.
+    """
+    _solo_el_cajero(request.user)
+
+    pedido = PedidoAnticipado.objects.filter(
+        pk=request.POST.get("pedido") or None
+    ).select_related("venta__estudiante").first()
+
+    # **El estudiante sale del pedido, no de la sesión.** Se entrega a quien
+    # reservó, y el panel tiene que seguir enseñando a esa persona: si viniera
+    # de la sesión y el cajero hubiera escaneado otra tarjeta entre medias, el
+    # fragmento volvería con alguien que no es el del pedido. Solo se cae a la
+    # sesión cuando el pedido no existe y no hay a quién enseñar.
+    estudiante = (
+        pedido.venta.estudiante if pedido is not None else _estudiante_de_la_venta(request)
+    )
+
+    if pedido is None:
+        return render(
+            request,
+            "ventas/partials/estudiante-identificado.html",
+            _contexto_del_estudiante(
+                request, estudiante, rechazo_de_entrega="Ese pedido ya no existe."
+            ),
+        )
+
+    try:
+        entregado = entregar(actor=request.user, pedido=pedido)
+    except (VentaRechazada, EstudianteNoOperativo) as rechazo:
+        # `200` con el motivo dentro del fragmento, no `400`: htmx no
+        # intercambia lo que llega en `4xx`, y la pantalla se quedaría igual sin
+        # decirle al cajero por qué no pasó nada.
+        return render(
+            request,
+            "ventas/partials/estudiante-identificado.html",
+            _contexto_del_estudiante(
+                request,
+                estudiante,
+                rechazo_de_entrega=" ".join(rechazo.messages)
+                if hasattr(rechazo, "messages")
+                else str(rechazo),
+            ),
+        )
+
+    return render(
+        request,
+        "ventas/partials/estudiante-identificado.html",
+        _contexto_del_estudiante(
+            request,
+            estudiante,
+            entregado=entregado,
+            productos=catalogo_de_venta(),
+            oob_catalogo=True,
+        ),
     )

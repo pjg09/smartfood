@@ -37,6 +37,27 @@
    control preventivo no está disponible.
 {% endcomment %}
 
+  {% if entregado %}
+    <p data-entrega-registrada
+       class="flex items-start gap-3 rounded-md border border-exito bg-exito-suave p-3
+              text-sm text-exito-fuerte">
+      <svg class="mt-0.5 h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      <span>
+        <strong class="font-semibold">Pedido entregado.</strong>
+        Ya estaba pagado: no se le cobra nada.
+      </span>
+    </p>
+  {% endif %}
+
+  {% if rechazo_de_entrega %}
+    <p data-entrega-rechazada
+       class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-3
+              text-sm text-error-fuerte">
+      <svg class="mt-0.5 h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <span>{{ rechazo_de_entrega }}</span>
+    </p>
+  {% endif %}
+
 {% if estudiante %}
   <div class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm"
        role="status">
@@ -132,6 +153,54 @@
           No se le puede vender. Su saldo sigue ahí y lo ve su acudiente.
         </span>
       </p>
+    {% endif %}
+
+    {% comment %} `TT-150`, `HU-25`. Lo que este estudiante tiene reservado y sin recoger.
+
+       Va **antes** de la información de cobro y después del aviso de estado: lo
+       primero que hay que saber al identificar a alguien con un pedido es que
+       viene a recogerlo, no a comprar. Si el cajero monta una venta sin verlo, le
+       cobra otra vez lo que su acudiente ya pagó.
+
+       **Sin diálogo de confirmación** (`INT-2`): el botón entrega, como el de
+       cobrar. Un modal roba el foco y el foco es del lector.
+
+       La respuesta reemplaza este mismo panel —el pedido desaparece de la lista—
+       y arrastra el catálogo fuera de banda, porque la entrega acaba de mover
+       existencias. {% endcomment %}
+    {% if pedidos %}
+      <section data-pedidos-pendientes aria-label="Pedidos por recoger"
+               class="flex flex-col gap-2 rounded-md border border-acento bg-acento-suave p-3">
+        <h3 class="text-base font-semibold text-acento-fuerte">
+          Tiene {{ pedidos|length }} pedido{{ pedidos|length|pluralize }} por recoger
+        </h3>
+
+        {% for pedido in pedidos %}
+          <form method="post" action="{% url 'entrega' %}"
+                hx-post="{% url 'entrega' %}"
+                hx-target="#estudiante-identificado"
+                hx-swap="innerHTML"
+                class="flex flex-wrap items-center justify-between gap-2 rounded-md
+                       border border-borde bg-superficie p-2">
+            {% csrf_token %}
+            <input type="hidden" name="pedido" value="{{ pedido.id }}">
+
+            <ul class="flex min-w-0 flex-col gap-0.5">
+              {% for linea in pedido.venta.lineas.all %}
+                <li class="text-base text-texto">
+                  {{ linea.cantidad }} × {{ linea.producto.nombre }}
+                </li>
+              {% endfor %}
+            </ul>
+
+            <button type="submit"
+                    class="h-11 shrink-0 rounded-md bg-acento px-4 text-base font-semibold
+                           text-sobre-acento transition-colors hover:bg-acento-fuerte">
+              Entregar
+            </button>
+          </form>
+        {% endfor %}
+      </section>
     {% endif %}
 
     {% comment %} `TT-75`, `HU-17`. La información de cobro.
@@ -381,3 +450,12 @@
    saldo de quien ya no está en pantalla.
 {% endcomment %}
 {% include "ventas/partials/medio-de-pago.html" with oob=True %}
+
+{% comment %} `TT-150`. Lo que la entrega arrastra consigo.
+
+   **Va aquí, en el primer nivel de la respuesta.** HTMX solo atiende
+   `hx-swap-oob` en los elementos de primer nivel; anidado no falla, sencillamente
+   no se intercambia, y el catálogo se quedaría enseñando las existencias de antes
+   de la entrega. Mismo motivo y mismo sitio que en el ticket del cobro.
+{% endcomment %}
+{% if oob_catalogo %}{% include "ventas/partials/catalogo.html" %}{% endif %}
