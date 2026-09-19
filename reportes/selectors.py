@@ -32,11 +32,21 @@ from billetera.models import MovimientoBilletera, TipoDeMovimiento
 from billetera.selectors import saldo_de
 from cuentas.models import Rol
 from reportes import referencia, reglas
-from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta, Venta
+from ventas.models import (
+    EstadoDelPedido,
+    LineaVenta,
+    MedioDePago,
+    OrigenDeLaVenta,
+    Venta,
+)
 
 # El importe de un renglón, calculado por la base: precio congelado por unidades
-# (`DT-8`). Se declara aquí, una vez, porque lo usan las dos anotaciones y
-# repetir la expresión es como acaban dando cifras distintas.
+# (`DT-8`). Se declara aquí, una vez, porque lo usan el historial del acudiente
+# y el reporte de ventas de la cafetería, y repetir la expresión es como acaban
+# dando cifras distintas.
+#
+# Se atraviesa **desde la venta** —`lineas__…`—, así que sirve tal cual en
+# cualquier `QuerySet` de `Venta`.
 IMPORTE_DE_LA_LINEA = ExpressionWrapper(
     F("lineas__precio_unitario") * F("lineas__cantidad"),
     output_field=DecimalField(max_digits=12, decimal_places=2),
@@ -476,4 +486,180 @@ def resumen_de_gasto(*, actor, estudiante, hoy=None):
         # lo asiente, este resumen no se queda mintiendo en silencio.
         devuelto=por_tipo.get(TipoDeMovimiento.DEVOLUCION) or cero,
         saldo=saldo_de(estudiante),
+    )
+
+
+# --- Reportes de la cafetería (`ALC-IN-22`) ---------------------------------
+#
+# `[S11]`, fila «Consultar reportes de ventas e inventario»: **solo `USR-4`**.
+# Ni el cajero, que registra las ventas, ni la institución, que tiene el padrón.
+# Es una tupla y no una comparación suelta porque `HU-36` y `HU-37` entran por
+# la misma puerta: el día que la matriz cambie, cambia aquí.
+CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA = (Rol.ADMINISTRADOR,)
+
+
+def _solo_la_administracion(actor):
+    """`[S11]`: los reportes de la operación son de `USR-4` y de nadie más.
+
+    **El cajero no entra, y no es un olvido.** Registra las ventas y ve las
+    suyas pasar por su pantalla, pero el consolidado de la operación —cuánto se
+    vendió, por qué medio, en qué periodo— es función de quien administra el
+    servicio, no de quien cobra. `[S11]` lo separa en dos filas distintas y
+    `[S5]` del anteproyecto explica por qué: el trabajo del administrador «no se
+    centra en cada transacción individual, sino en la información acumulada».
+
+    **La institución tampoco.** Es la responsable de los datos de los menores
+    (Ley 1581), no del negocio de la cafetería, que puede estar en manos de un
+    operador externo (`[S11]`, preámbulo).
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar los reportes exige identificarse.")
+    if actor.rol not in CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA:
+        raise PermissionDenied(
+            "Los reportes de ventas e inventario son de la administración de la "
+            "cafetería y de ningún otro rol ([S11], HU-35)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+
+@dataclass(frozen=True)
+class ResumenDeVentas:
+    """Lo que un periodo de ventas suma (`TT-167`, `HU-35`).
+
+    `total` puede ser `None` cuando no hay ninguna venta: no es cero vendido,
+    es que no hay nada que sumar. Quien lo pinte decide cómo decirlo — aquí no
+    se inventa un cero, por lo mismo que no se inventa en los nutrientes.
+
+    `por_medio_de_pago` y `por_origen` llegan **ordenados y completos**: con los
+    tres medios de `DEC-1` y los dos orígenes de `DT-32` aunque alguno no tenga
+    ventas. Una fila en cero dice «no se vendió nada así», que es información;
+    una fila ausente se lee como si la categoría no existiera.
+    """
+
+    cuantas: int
+    total: Decimal
+    unidades: int
+    por_medio_de_pago: tuple
+    por_origen: tuple
+
+    @property
+    def hubo_ventas(self):
+        return bool(self.cuantas)
+
+
+def ventas_registradas(*, actor, desde=None, hasta=None):
+    """Las ventas del periodo, para el reporte de la cafetería (`HU-35`).
+
+    **Sobre las transacciones registradas, no sobre datos capturados aparte**,
+    que es el primer criterio de la historia: esto es el libro de ventas tal
+    cual, sin ninguna tabla de resumen que alguien tenga que mantener al día.
+
+    Trae **todas** las ventas, incluidas las genéricas de `HU-53` —que no tienen
+    estudiante— y las reservas de `HU-23`. Son actividad comercial del servicio
+    igual que las demás, y `[S5]` del anteproyecto lo dice expreso: las compras
+    de docentes y visitantes «forman parte de las ventas totales de la cafetería
+    y son necesarias para que el cierre de caja y los reportes diarios reflejen
+    la actividad real».
+
+    `desde` y `hasta` son fechas locales inclusivas. Sin ellas devuelve el libro
+    entero: quien acota es quien pregunta, y en el admin lo hace la navegación
+    por fechas.
+    """
+    _solo_la_administracion(actor)
+
+    ventas = Venta.objects.all()
+
+    # Rango sobre la columna y no `creado_en__date`, por lo mismo que en
+    # `consumo_del_dia`: `__date` envuelve la columna en una función y deja
+    # fuera el índice `venta_por_fecha`.
+    if desde is not None:
+        ventas = ventas.filter(
+            creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min))
+        )
+    if hasta is not None:
+        ventas = ventas.filter(
+            creado_en__lt=timezone.make_aware(
+                datetime.combine(hasta + timedelta(days=1), time.min)
+            )
+        )
+
+    return ventas
+
+
+def resumen_de_ventas(ventas):
+    """Lo que suma un conjunto de ventas: cuántas, cuánto y en qué unidades.
+
+    ── RECIBE UN `QuerySet` Y NO UN PERIODO, Y ESO ES LO QUE LA HACE ÚTIL ──
+    El reporte vive en el admin, donde quien consulta filtra por fecha, por
+    medio de pago o por origen con los controles de siempre. Si esta función
+    volviera a consultar por su cuenta, el resumen de arriba hablaría de un
+    conjunto distinto del listado de abajo **sin que nada fallara** — que es la
+    peor clase de error que puede tener un reporte.
+
+    Por eso recibe el `QuerySet` ya filtrado y suma exactamente sobre él. No
+    autoriza a nadie: quien lo llama ya pasó por `ventas_registradas` o por el
+    permiso del admin.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **El total sale de las líneas congeladas** (`DT-8`), no de los productos de
+    hoy: un reporte de mayo tiene que seguir diciendo lo que se cobró en mayo.
+
+    `Count("pk", distinct=True)` y no `Count("pk")`: la suma de los importes
+    obliga a unir con las líneas, y sin `distinct` una venta de tres renglones
+    contaría como tres ventas. El total sí es correcto sobre esa unión —hay una
+    fila por línea, que es justo lo que se quiere sumar—, así que el error solo
+    aparecería en el recuento, con las cifras de dinero intactas: nadie lo
+    notaría.
+    """
+    agregados = ventas.aggregate(
+        cuantas=Count("pk", distinct=True),
+        total=Sum(IMPORTE_DE_LA_LINEA),
+        unidades=Sum("lineas__cantidad"),
+    )
+
+    return ResumenDeVentas(
+        cuantas=agregados["cuantas"] or 0,
+        total=agregados["total"],
+        unidades=agregados["unidades"] or 0,
+        por_medio_de_pago=_desglose(ventas, "medio_pago", MedioDePago),
+        por_origen=_desglose(ventas, "origen", OrigenDeLaVenta),
+    )
+
+
+def _desglose(ventas, campo, opciones):
+    """`((etiqueta, cuántas, total), …)` por cada valor de `opciones`.
+
+    **Completo y en el orden de las opciones**, no en el que devuelva la base:
+    los medios que no se usaron salen en cero. Que no se haya cobrado nada por
+    transferencia es un dato del periodo, y una fila que falta no lo dice — se
+    lee como si la transferencia no existiera.
+    """
+    agrupado = {
+        fila[campo]: fila
+        # **`order_by()` vacío antes de agrupar, y no es cosmético.** Los campos
+        # del orden por defecto —`Venta.Meta.ordering` es `-creado_en`— entran
+        # en el `GROUP BY` de un `values().annotate()`, así que sin esta línea
+        # se agrupa por medio de pago **y por instante**: una fila por venta,
+        # todas con un uno.
+        #
+        # El fallo es silencioso y peor que un error: el total de arriba sigue
+        # bien —`aggregate()` no arrastra el orden— y solo mienten los
+        # desgloses, con cifras que parecen razonables. Se vio mirando la
+        # pantalla, no en las pruebas.
+        for fila in ventas.order_by()
+        .values(campo)
+        .annotate(
+            cuantas=Count("pk", distinct=True),
+            total=Sum(IMPORTE_DE_LA_LINEA),
+        )
+    }
+
+    return tuple(
+        (
+            opcion.label,
+            agrupado.get(opcion.value, {}).get("cuantas", 0),
+            agrupado.get(opcion.value, {}).get("total") or Decimal("0.00"),
+        )
+        for opcion in opciones
     )

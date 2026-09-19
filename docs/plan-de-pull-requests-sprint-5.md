@@ -71,13 +71,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **12** de 33 | **4** de 13 |
-| Pendientes | 21 | 9 |
+| **Finalizadas** | **14** de 33 | **5** de 13 |
+| Pendientes | 19 | 8 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 4 | 11 |
-| Carlos | 5 | 10 |
+| Pedro | 5 | 11 |
+| Carlos | 6 | 10 |
 | Alejandro | 3 | 6 |
 | Naomi | 0 | 6 |
 
@@ -89,7 +89,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☑ |
 | `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☑ |
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☑ |
-| `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☐ |
+| `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☑ |
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☐ |
 | `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☐ |
 | `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☐ |
@@ -261,15 +261,31 @@ Sale entero del libro de movimientos: recargas contra ventas. No hay dato nuevo 
 | Responsables | Pedro y Carlos |
 | Historia | `HU-35` |
 | Invariantes | `S11`: solo la administración |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-167` | Selector del reporte sobre las transacciones registradas | Pedro | ☐ |
-| `TT-168` | Reporte de ventas en la interfaz administrativa | Carlos | ☐ |
+| `TT-167` | Selector del reporte sobre las transacciones registradas | Pedro | ☑ |
+| `TT-168` | Reporte de ventas en la interfaz administrativa | Carlos | ☑ |
 
 «Sobre las transacciones registradas, **no sobre datos capturados aparte**». Incluye las
 ventas genéricas de `HU-53` y distingue el medio de pago de `HU-54`.
+
+> ✅ **Integrado, y en el admin** (`DT-2`): **no hace falta una tercera excepción**. Las dos
+> que hay —el padrón (`DT-27`) y la cola de reservas (`DT-34`)— existen porque las abre a
+> diario alguien que no vive en el admin; aquí quien consulta es justamente el administrador.
+> Es el camino que `TT-141` abrió para el historial de existencias: el admin pone el listado,
+> los filtros y la navegación por fechas, y lo que se añade es el consolidado **del listado
+> que se está mirando**.
+>
+> **Nadie escribe una venta desde ahí**, y no es que no se conceda: `ventas` entra en
+> `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`, así que el permiso no existe en ningún grupo. Una
+> venta se registra en el punto de venta, con su transacción, o no existe.
+>
+> **Mirar la pantalla encontró tres defectos que la suite no vio**, y uno era de cifras: los
+> desgloses decían «1 venta» en cada fila con catorce en la tabla, porque un `order_by()`
+> explícito —el que pone el admin— entra en el `GROUP BY` de un `values().annotate()`. El
+> total de arriba seguía bien, que es lo que lo hacía invisible.
 
 ---
 

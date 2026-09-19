@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-19; `PR-04` del Sprint 5 — el reporte de consumo del acudiente completo: historial (`HU-30`), frecuencia (`HU-31`), referencia sanitaria (`HU-32`), gasto (`HU-33`) y su descargo (`HU-34`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
+| actualizado | 2026-09-19; `PR-05` del Sprint 5 — el reporte de consumo del acudiente completo (`HU-30` … `HU-34`) y el reporte de ventas de la cafetería (`HU-35`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; los del historial y el reporte de ventas se comprobaron ejecutando con los cinco perfiles |
 | idioma | es-CO |
-| version | 1.6 |
+| version | 1.7 |
 
 ### [S0.1] Qué responde este documento
 
@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y cuatro rutas
+## [S2] Las treinta y cinco rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -78,6 +78,7 @@ los mismos colores desde `DT-23`.
 | `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente | **Cajero y administración** | `TT-148` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
+| `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
 **Comprobado ejecutando**, con cada rol identificado y con un anónimo:
@@ -168,9 +169,10 @@ coincidir porque dejaría media pantalla en cada tema.
 | `inventario.movimientoinventario` | 403 | **200** | 302 | 302 |
 | `inventario.merma` | 403 | **200** | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
+| `ventas.venta` | 403 | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Siete lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Ocho lecturas que
 conviene no perder:
 
 - **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
@@ -178,6 +180,17 @@ conviene no perder:
   que la suman, con una columna de existencias tras cada uno. Es una vista propia del admin
   registrada en `get_urls()`, como la baja y la reasignación de `personas`: **no es una
   segunda excepción a `DT-27`**, que sigue siendo solo el padrón.
+- **El reporte de ventas es el libro, con su consolidado encima** (`HU-35`, `TT-168`). El
+  admin pone el listado, los filtros, la búsqueda y la navegación por fechas; lo que se añade
+  es cuánto suma **lo que se está mirando**, porque se calcula sobre el mismo `QuerySet` que
+  pinta la tabla. Si se calculara aparte, filtrar por «efectivo» dejaría arriba el total de
+  todo y nadie lo notaría. **No es una tercera excepción a `DT-2`**: es el camino de
+  `TT-141`, y aquí quien consulta ya vive en el admin.
+  **Nadie lo escribe**, ni siquiera quien lo consulta: alta, edición y borrado responden
+  `403`, y el permiso tampoco existe —`ventas` está en `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`—.
+  Una venta se registra en el punto de venta, con su transacción, o no existe. Y **no enseña
+  el documento del estudiante ni su código de tarjeta**, ni en el listado ni en la ficha: la
+  cafetería consulta su actividad comercial, no el padrón.
 - **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
   un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
   es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
@@ -582,8 +595,13 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-Los reportes de la cafetería (`HU-35` … `HU-37`) y el cierre de caja (`HU-55`, `HU-56`). Es
-lo que queda del Sprint 5.
+El reporte de movimientos de inventario (`HU-36`), el de auditoría (`HU-37`) y el cierre de
+caja (`HU-55`, `HU-56`). Es lo que queda del Sprint 5.
+
+**El reporte de ventas ya está** (`HU-35`, `TT-167`, `TT-168`): el libro filtrable en el
+admin, con el consolidado del periodo que se mira y sus desgloses por medio de pago y por
+origen. Incluye las ventas genéricas y las reservas, porque son actividad comercial del
+servicio igual que las demás.
 
 **`EPI-8` está cerrada para el acudiente**: qué compró, con qué frecuencia, cuánto aportó
 frente a la referencia oficial y en qué se fue el dinero. Lo que falta de reportes es de la

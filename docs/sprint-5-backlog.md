@@ -130,8 +130,8 @@ Sale entero del libro de movimientos de la billetera: recargas contra ventas. No
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-167` | Selector del reporte de ventas sobre las transacciones registradas | Pedro | ☐ |
-| `TT-168` | Reporte de ventas en la interfaz administrativa | Carlos | ☐ |
+| `TT-167` | Selector del reporte de ventas sobre las transacciones registradas | Pedro | ☑ |
+| `TT-168` | Reporte de ventas en la interfaz administrativa | Carlos | ☑ |
 
 «Sobre las transacciones registradas, **no sobre datos capturados aparte**»: el reporte lee las ventas que ya existen. Incluye las genéricas de `HU-53` y distingue el medio de pago de `HU-54`.
 
