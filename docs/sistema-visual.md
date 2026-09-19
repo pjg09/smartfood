@@ -269,8 +269,8 @@ pero se parecen a cosas que sí.
 
 ### [S2.9] Consolidado de reporte
 
-Los reportes de la cafetería viven en el admin (`HU-35`, `HU-36`), así que **no llevan
-Tailwind**: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en línea, como en
+Los reportes de la cafetería viven en el admin (`HU-35`, `HU-36`, `HU-56`), así que **no
+llevan Tailwind**: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en línea, como en
 `admin/catalogo/producto/historial.html`.
 
 La forma es siempre la misma: **la cifra grande**, al lado **una frase que dice de dónde
@@ -283,6 +283,13 @@ Tres decisiones que se copian con ella:
   ausente se lee como si el medio no existiera.
 - **Sin datos no se pinta un cero**, se dice que el filtro no alcanzó nada. Un «$0» se lee
   como «se vendió cero», que es otra cosa.
+- **La cifra grande es la que no se compensa sola.** En el reporte de cierres conviven dos
+  descuadres —la suma con signo y la suma de valores absolutos—, y arriba va la segunda: con
+  la primera, un sobrante y un faltante iguales dan cero y un periodo con veinte descuadres
+  se lee como uno que cuadró. La otra se dice al lado, nombrando la diferencia.
+- **Ninguna cifra cruda.** El admin pinta un `DecimalField` como el `Decimal` que es
+  —«31500,00»—, así que una columna de dinero sin `dinero` deja dos formatos en la misma
+  fila. Se vio en la captura de `TT-176`, como antes en `LineaVentaInline`.
 - **Sin `<h1>` propio**: el admin ya pinta `title` del contexto como encabezado. Lo que sí
   se cambia es ese `title` desde `changelist_view`, porque el de fábrica —«Seleccione venta
   para ver»— describe lo que se hace con una tabla, no lo que es la pantalla.
