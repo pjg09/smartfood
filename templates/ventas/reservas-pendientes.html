@@ -129,15 +129,25 @@
         </div>
       {% endif %}
 
-      {% comment %} Un hueco dice qué falta y qué historia lo trae, nunca un botón
-         deshabilitado (`[S2.4]`). Registrar la entrega es `HU-25`. {% endcomment %}
+      {% comment %} **Ya no es un hueco: es una indicación de dónde se hace lo otro.**
+         Registrar la entrega existe desde `TT-150` (`HU-25`) y vive en el punto de
+         venta, que es donde el primer criterio de la historia la sitúa. Por eso el
+         borde es continuo y no discontinuo: un borde punteado promete algo que falta
+         (`[S2.4]`), y aquí no falta nada.
+
+         Sigue haciendo falta decirlo porque **esta pantalla la comparten dos roles**
+         (`DT-34`): el cajero llega al punto de venta desde su propia barra, y la
+         administración de la cafetería **no entra ahí** —`[S11]` no le concede la
+         caja—. Sin esta línea, quien administra se queda buscando en esta pantalla un
+         botón de entregar que no le corresponde. {% endcomment %}
       <div role="note"
-           class="flex items-start gap-3 rounded-md border border-dashed border-borde p-4">
+           class="flex items-start gap-3 rounded-md border border-borde bg-superficie p-4">
         <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
         <p class="text-sm text-texto-suave">
-          <strong class="font-semibold text-texto">Registrar la entrega llega con HU-25.</strong>
-          Por ahora esta pantalla dice qué hay que preparar; marcar un pedido como entregado
-          —y que no se pueda entregar dos veces— es la siguiente historia.
+          <strong class="font-semibold text-texto">La entrega se registra en el punto de venta.</strong>
+          Esta pantalla dice qué hay que preparar; marcar un pedido como entregado lo hace
+          el cajero al escanear la tarjeta del estudiante que viene a recogerlo, y el
+          pedido ya pagado no vuelve a descontar saldo.
         </p>
       </div>
     {% else %}
