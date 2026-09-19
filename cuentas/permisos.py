@@ -71,6 +71,16 @@ PERMISOS_POR_ROL = {
         # este permiso el admin esconde el inline y el reporte deja de poder
         # abrirse hasta el producto, que es lo que lo hace auditable.
         "ventas.lineaventa": ["view"],
+        # `HU-56`, `TT-176`. El reporte de cierres de caja. **Solo `view`, como
+        # la venta y por el mismo motivo**: un cierre es un asiento con el
+        # efectivo esperado congelado (`INVD-5`), y `ventas` está abajo en
+        # `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`.
+        #
+        # Esta fila **no sale de `[S11]`**, que no tiene una para el cuadre,
+        # sino de `DEC-6`: el cierre «queda registrado y alimenta el reporte de
+        # auditoría de `ALC-IN-22`». Quien lo consulta es `USR-4`; quien lo
+        # registra es `USR-3`, y no tiene permiso aquí.
+        "ventas.cierredecaja": ["view"],
         "catalogo.producto": ["add", "view", "change"],
         "catalogo.categoria": ["add", "view", "change"],
         "catalogo.alergeno": ["add", "view", "change"],

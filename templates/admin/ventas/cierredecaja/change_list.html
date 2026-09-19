@@ -1,0 +1,146 @@
+{% extends "admin/change_list.html" %}
+{% load dinero %}
+
+{% comment %}
+TT-176. El consolidado del periodo, encima del histórico de cierres (`HU-56`).
+
+**Las cifras son del listado que se está mirando**, no del histórico entero:
+salen de `resumen_de_cierres(cl.queryset)`, el mismo `QuerySet` que pinta la
+tabla de abajo con la fecha, los filtros y la búsqueda ya aplicados.
+
+**La cifra grande es el descuadre total, no la diferencia neta**, y esa elección
+es el «para qué» de la historia. La neta se compensa sola: un sobrante de $2.000
+el lunes y un faltante de $2.000 el martes suman cero, y un mes con veinte
+descuadres se leería como un mes que cuadra. Lo que `HU-56` pide es **detectar
+un patrón**, así que arriba va lo que no se compensa y la neta se dice al lado.
+
+Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en
+línea, como en `admin/ventas/venta/change_list.html`.
+
+Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado.
+{% endcomment %}
+
+{% block result_list %}
+  {% if resumen %}
+    <div style="margin:1rem 0 1.5rem" data-resumen-de-cierres>
+      {% if resumen.hubo_cierres %}
+        <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:baseline">
+          <p style="margin:0">
+            <strong style="font-size:2.5rem;line-height:1" data-descuadre-total>
+              {{ resumen.descuadre_total|dinero:"COP" }}
+            </strong>
+          </p>
+          <p style="margin:0;max-width:60ch">
+            de descuadre en
+            <strong data-con-diferencia>{{ resumen.con_diferencia }}</strong>
+            de <strong data-cuantos-cierres>{{ resumen.cuantos }}</strong>
+            jornada{{ resumen.cuantos|pluralize }} cuadrada{{ resumen.cuantos|pluralize }}.
+            {% comment %} La neta va aquí y no arriba: es la cifra que se compensa sola, y
+               leerla primero invita a concluir que no pasó nada. {% endcomment %}
+            Sumando los signos queda en
+            <strong data-diferencia-neta>{{ resumen.diferencia_neta|dinero }}</strong>,
+            que no es lo mismo: un sobrante y un faltante iguales se cancelan y
+            siguen siendo dos descuadres.
+          </p>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:2.5rem;margin-top:1.25rem">
+          {% comment %} Las tres clases llegan **completas**: una en cero dice «ninguna
+             jornada acabó así», que es información. Una fila ausente se leería
+             como si el caso no existiera. {% endcomment %}
+          <table style="width:auto" data-por-resultado>
+            <caption style="text-align:left;padding:0 0 .35rem">
+              <strong>Cómo acabó cada jornada</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Resultado</th>
+                <th scope="col" style="text-align:right">Jornadas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Sin diferencia</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums"
+                    data-cuadrados>{{ resumen.cuadrados }}</td>
+              </tr>
+              <tr>
+                <td>Con sobrante</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums"
+                    data-sobrantes>{{ resumen.sobrantes }}</td>
+              </tr>
+              <tr>
+                <td>Con faltante</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums"
+                    data-faltantes>{{ resumen.faltantes }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table style="width:auto" data-por-concepto>
+            <caption style="text-align:left;padding:0 0 .35rem">
+              <strong>El dinero del periodo</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Concepto</th>
+                <th scope="col" style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Efectivo esperado</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums"
+                    data-esperado>{{ resumen.esperado|dinero }}</td>
+              </tr>
+              <tr>
+                <td>Base para dar cambio</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums">
+                  {{ resumen.base|dinero }}
+                </td>
+              </tr>
+              <tr>
+                <td>Efectivo contado</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums">
+                  {{ resumen.contado|dinero }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {% comment %} `INVD-5` puesto donde la administración puede verlo, como el recuento
+           de mermas sin motivo en el inventario (`INV-8`): un cierre descuadrado
+           sin motivo **no puede existir** —lo impide
+           `cierre_de_caja_diferencia_con_motivo`—, y decirlo es lo que convierte
+           la restricción en algo comprobable desde la pantalla. {% endcomment %}
+        <p style="margin:1.25rem 0 0;max-width:60ch" data-sin-motivo>
+          {% if resumen.sin_motivo %}
+            <strong>{{ resumen.sin_motivo }}</strong>
+            cierre{{ resumen.sin_motivo|pluralize }} con diferencia y sin motivo.
+            Eso no debería poder ocurrir: lo impide una restricción de la base de
+            datos. Si lo estás leyendo, algo escribió por fuera del sistema.
+          {% else %}
+            Todas las diferencias llevan su motivo, y no por cortesía: la base de
+            datos no admite una sin él.
+          {% endif %}
+        </p>
+
+        <p style="margin:.75rem 0 0;max-width:60ch">
+          El efectivo esperado de cada jornada sale de sus ventas en efectivo
+          registradas, y cada fila enlaza a ellas: ábrela para comprobarlo.
+        </p>
+      {% else %}
+        {% comment %} **Sin cierres no se pinta un cero.** «$0 de descuadre» se lee como
+           «todo cuadró», y lo que pasa es que el filtro no alcanzó ninguna
+           jornada — que no es lo mismo, y menos en un reporte de auditoría. {% endcomment %}
+        <p data-sin-cierres style="margin:0 0 1.5rem;max-width:60ch">
+          Ninguna jornada cuadrada en lo que estás mirando. Prueba con otra fecha
+          o quita los filtros.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}
