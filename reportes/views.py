@@ -12,7 +12,8 @@ from django.views.decorators.http import require_http_methods
 
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
-from reportes.selectors import historial_de_consumo
+from reportes import reglas
+from reportes.selectors import alertas_de_frecuencia, historial_de_consumo
 
 
 @login_required
@@ -46,5 +47,21 @@ def consumo_del_estudiante(request, estudiante_id):
     return render(
         request,
         "reportes/historial-de-consumo.html",
-        {"estudiante": estudiante, "compras": compras},
+        {
+            "estudiante": estudiante,
+            "compras": compras,
+            # `TT-160`, `HU-31`. Las alertas van en la misma pantalla que el
+            # historial **a propósito**: cada una dice su umbral, y con las
+            # compras debajo el acudiente puede contar los días y comprobarla.
+            # En otra pantalla habría que creérsela.
+            "alertas": alertas_de_frecuencia(
+                actor=request.user, estudiante=estudiante
+            ),
+            # La ventana y el umbral se pasan para que la pantalla los diga sin
+            # tenerlos escritos a mano: son una decisión de análisis (`TT-158`)
+            # y viven en un solo sitio. Una plantilla con el «14» tecleado se
+            # queda mintiendo el día que la regla cambie.
+            "ventana_de_frecuencia": reglas.DIAS_DE_LA_VENTANA,
+            "umbral_de_frecuencia": reglas.UMBRAL_FRECUENCIA_ALTA,
+        },
     )

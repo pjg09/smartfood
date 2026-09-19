@@ -71,14 +71,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **3** de 33 | **1** de 13 |
-| Pendientes | 30 | 12 |
+| **Finalizadas** | **7** de 33 | **2** de 13 |
+| Pendientes | 26 | 11 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 1 | 11 |
-| Carlos | 1 | 10 |
-| Alejandro | 1 | 6 |
+| Pedro | 2 | 11 |
+| Carlos | 3 | 10 |
+| Alejandro | 2 | 6 |
 | Naomi | 0 | 6 |
 
 ### [S3.1] Estado de los 13 Pull Requests
@@ -86,7 +86,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
 | `PR-01` | `TT-155`–`TT-157` | `HU-30` · app `reportes` | ☑ |
-| `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☐ |
+| `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☑ |
 | `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☐ |
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☐ |
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☐ |
@@ -150,14 +150,14 @@ necesita un `DT-` nuevo, a diferencia de `restricciones` en el Sprint 3.
 | Responsables | Alejandro, Pedro y Carlos |
 | Historias | `HU-31` **y `HU-34`** |
 | Invariantes | **`INV-9`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-158` | Definición de las reglas determinísticas de frecuencia, con sus umbrales | Alejandro | ☐ |
-| `TT-159` | Motor que evalúa esas reglas sobre el historial | Pedro | ☐ |
-| `TT-160` | Alertas en la pantalla del acudiente | Carlos | ☐ |
-| `TT-161` | Aviso de carácter orientativo junto a las recomendaciones | Carlos | ☐ |
+| `TT-158` | Definición de las reglas determinísticas de frecuencia, con sus umbrales | Alejandro | ☑ |
+| `TT-159` | Motor que evalúa esas reglas sobre el historial | Pedro | ☑ |
+| `TT-160` | Alertas en la pantalla del acudiente | Carlos | ☑ |
+| `TT-161` | Aviso de carácter orientativo junto a las recomendaciones | Carlos | ☑ |
 
 > ⚠ **`HU-34` va aquí y no en su propio PR, a propósito.** `INV-9` exige que el aviso esté
 > desde **la primera recomendación publicada**, y `ALC-OUT-20` excluye «cualquier forma de

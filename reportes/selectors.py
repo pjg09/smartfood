@@ -9,11 +9,25 @@ reporte consolida hechos que otro dominio ya asentó; si algún día uno de ello
 necesitara escribir, eso sería un hecho nuevo y no un reporte.
 """
 
+from datetime import timedelta
+
 from django.core.exceptions import PermissionDenied
-from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+from django.db.models import (
+    Case,
+    Count,
+    DateTimeField,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Sum,
+    When,
+)
+from django.db.models.functions import TruncDate
+from django.utils import timezone
 
 from cuentas.models import Rol
-from ventas.models import Venta
+from reportes import reglas
+from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta, Venta
 
 # El importe de un renglón, calculado por la base: precio congelado por unidades
 # (`DT-8`). Se declara aquí, una vez, porque lo usan las dos anotaciones y
@@ -22,6 +36,23 @@ IMPORTE_DE_LA_LINEA = ExpressionWrapper(
     F("lineas__precio_unitario") * F("lineas__cantidad"),
     output_field=DecimalField(max_digits=12, decimal_places=2),
 )
+
+# **Cuándo se consumió un renglón**, que no siempre es cuándo se pagó (`[S2.3]`
+# de `docs/reglas-de-frecuencia-de-consumo.md`). En el mostrador son el mismo
+# momento; en una reserva, no: el acudiente puede pagar el domingo por la noche
+# lo del lunes, y lo que la frecuencia mide es el lunes.
+#
+# `TruncDate` corta en la zona horaria del colegio —`America/Bogota`—, no en
+# UTC: partir el día por UTC mandaría la compra de las 19:00 al día siguiente.
+MOMENTO_DEL_CONSUMO = Case(
+    When(
+        venta__origen=OrigenDeLaVenta.RESERVA,
+        then=F("venta__pedido_anticipado__entregado_en"),
+    ),
+    default=F("venta__creado_en"),
+    output_field=DateTimeField(),
+)
+DIA_DEL_CONSUMO = TruncDate(MOMENTO_DEL_CONSUMO)
 
 
 def _solo_su_acudiente(actor, estudiante):
@@ -115,4 +146,85 @@ def historial_de_consumo(*, actor, estudiante):
         # función no tiene por qué ir al `Meta` a averiguar cómo llega un
         # historial.
         .order_by("-creado_en")
+    )
+
+
+def dias_de_consumo_por_categoria(*, actor, estudiante, hoy=None):
+    """`{categoría: días distintos con consumo}` en la ventana de la regla.
+
+    `TT-159`, `HU-31`. Es lo único que la base tiene que contar para que
+    `reportes.reglas` decida: **días distintos, no unidades ni importe**
+    (`[S2.1]`). Dos empanadas el mismo martes son un día de `Almuerzo`.
+
+    ── QUÉ ENTRA, Y POR QUÉ NO ES LO MISMO QUE EN EL HISTORIAL ─────────────
+    El historial de `HU-30` enseña **todas** las compras, reservas sin recoger
+    incluidas. Aquí no: una reserva pagada que sigue en el mostrador todavía no
+    se ha consumido, y contarla diría que el estudiante comió algo que no ha
+    recogido (`[S2.3]`).
+
+    No es una contradicción entre las dos lecturas: un historial responde «qué
+    se ha comprado» y esta regla responde «con qué frecuencia se ha consumido».
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LA CATEGORÍA SE LEE DEL PRODUCTO, Y ES LA ÚNICA CIFRA QUE NO ES DT-8 ─
+    `TT-84` congeló en la línea el precio y los nutrientes, **no la categoría**:
+    no hay nada que congelar. Si la cafetería mueve un producto de `Panadería` a
+    `Almuerzo`, la pregunta «¿cada cuánto come de esto?» se responde con la
+    clasificación vigente. Está razonado en `[S2.4]`.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `hoy` existe para las pruebas y para poder mirar otra jornada; por defecto
+    es hoy en la zona horaria del colegio. La ventana lo **incluye**, así que
+    son `DIAS_DE_LA_VENTANA` días contando el de hoy.
+
+    **`alias()` y no `annotate()` para el día**, y esa distinción no es de
+    estilo: lo que se anota antes de un `values()` entra en el `GROUP BY`, y el
+    recuento saldría agrupado por categoría **y por día** —una fila por día, con
+    un uno en cada una—. `alias()` deja filtrar por la expresión sin
+    seleccionarla. El fallo sería silencioso: cifras bien formadas, todas a uno.
+    """
+    _solo_su_acudiente(actor, estudiante)
+
+    if hoy is None:
+        hoy = timezone.localdate()
+    desde = hoy - timedelta(days=reglas.DIAS_DE_LA_VENTANA - 1)
+
+    recuento = (
+        LineaVenta.objects.filter(venta__estudiante=estudiante)
+        # La reserva sin entregar no cuenta. Se excluye por el estado del pedido
+        # y no dejando que su fecha nula se caiga del rango: la regla dice «lo
+        # que todavía no se ha recogido no se ha consumido», y eso merece
+        # leerse en el código tal cual, no deducirse de cómo compara un nulo.
+        .exclude(
+            venta__origen=OrigenDeLaVenta.RESERVA,
+            venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
+        )
+        .alias(dia=DIA_DEL_CONSUMO)
+        .filter(dia__gte=desde, dia__lte=hoy)
+        .values("producto__categoria__nombre")
+        .annotate(dias=Count(DIA_DEL_CONSUMO, distinct=True))
+    )
+
+    return {fila["producto__categoria__nombre"]: fila["dias"] for fila in recuento}
+
+
+def alertas_de_frecuencia(*, actor, estudiante, hoy=None):
+    """Las alertas de frecuencia de un estudiante (`TT-159`, `HU-31`).
+
+    Junta las dos mitades: la base cuenta los días y `reportes.reglas` decide si
+    alguno pasa de un umbral. **El veredicto no se calcula aquí a propósito** —
+    los umbrales son una decisión de análisis (`TT-158`, `[S12]`) y viven en un
+    módulo puro que se puede leer y probar sin sembrar catorce días de ventas.
+
+    Devuelve una lista, ya ordenada, que puede estar vacía: **lo normal es que no
+    haya ninguna alerta**, y eso no es un hueco ni un error. Por debajo del
+    umbral no se publica nada, ni siquiera un «va bien» — decirlo sería la
+    valoración nutricional que `ALC-OUT-20` excluye.
+
+    **Quien las pinte se lleva el aviso de `INV-9` con ellas**: en la plantilla
+    son el mismo fragmento (`TT-161`, `[S5]`). Esta función no lo sabe ni tiene
+    por qué, pero quien añada una segunda pantalla que la llame, sí.
+    """
+    return reglas.evaluar(
+        dias_de_consumo_por_categoria(actor=actor, estudiante=estudiante, hoy=hoy)
     )
