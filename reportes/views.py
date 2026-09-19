@@ -17,6 +17,7 @@ from reportes.selectors import (
     agregados_nutricionales,
     alertas_de_frecuencia,
     historial_de_consumo,
+    resumen_de_gasto,
 )
 
 
@@ -67,6 +68,10 @@ def consumo_del_estudiante(request, estudiante_id):
             "aporte": agregados_nutricionales(
                 actor=request.user, estudiante=estudiante
             ),
+            # `TT-166`, `HU-33`. El gasto frente a lo recargado, en la misma
+            # ventana. **Ojo: sus fechas son las de los movimientos**, no las
+            # del consumo — el dinero de una reserva sale al reservar.
+            "gasto": resumen_de_gasto(actor=request.user, estudiante=estudiante),
             # La ventana y el umbral se pasan para que la pantalla los diga sin
             # tenerlos escritos a mano: son una decisión de análisis (`TT-158`)
             # y viven en un solo sitio. Una plantilla con el «14» tecleado se
