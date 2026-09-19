@@ -18,10 +18,10 @@ cinco sprints de dos semanas.
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
 | Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
-| Historias terminadas | **48 de 61** |
-| **Sprint 4** | 🔨 **en curso**, semanas 12–13: inventario trazable y pedidos anticipados. 18 tareas (`TT-137`…`TT-154`) en 7 PR |
+| Historias terminadas | **51 de 61** |
+| Sprint 4 | ✅ cerrado el 2026-09-19: **18 de 18 tareas y 7 de 7 PR**. Inventario trazable, pedidos anticipados y `TST-4` |
 | Plan de pruebas | ✅ **completo**: los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`, demostrados |
-| Lo siguiente | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main` |
+| **Lo siguiente** | **Avance 2** (`EVA-4`, 20 % de la nota), semana 14 — se enseña lo que hay en `main`. El guion está en `[S8]` del plan de PR del Sprint 4 |
 | Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
 > **Al cerrar el Sprint 3 el control parental funciona de verdad.** El acudiente fija el
@@ -33,6 +33,16 @@ cinco sprints de dos semanas.
 > El cajero ve al identificar la fotografía, el saldo, el consumo del día y las restricciones
 > vigentes; la institución bloquea y desbloquea tarjetas desde el padrón, y el acudiente
 > bloquea la suya sin esperar a secretaría —desbloquear, no: eso pasa por el colegio—.
+
+> **Al cerrar el Sprint 4, el acudiente reserva y la cafetería entrega.** Paga por
+> adelantado desde su aplicación y el saldo baja **al reservar**; el personal consulta en una
+> cola qué hay que preparar; y el cajero registra la entrega en la caja **sin volver a
+> cobrar**. La reserva pasa por la misma validación que el cobro, así que hereda las seis
+> comprobaciones del control parental sin que la historia mencione ninguna.
+>
+> El inventario, además, se explica: toda merma lleva motivo —lo impone la base de datos, no
+> el formulario— y la cifra de existencias de cualquier producto se desglosa renglón a
+> renglón hasta el total.
 
 > **El plan de pruebas de `ENT-05` queda completo con el Sprint 4.** `TST-4` —las existencias
 > de un producto coinciden exactamente con la suma de su historial— era el último de los

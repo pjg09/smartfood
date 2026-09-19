@@ -579,3 +579,84 @@ class LaPantallaDeReservaTest(BaseReserva):
 
         self.assertContains(respuesta, "data-enlace-a-reserva")
         self.assertContains(respuesta, self.url)
+
+
+class ElCampoNoOfreceLoQueNoHayTest(BaseReserva):
+    """Hallazgo de la revisión de cierre del Sprint 4.
+
+    **Las disponibles pueden ser negativas.** Pasa cuando la caja vende unidades
+    apartadas para una reserva pagada, que es el hueco que `DT-33` dejó abierto y
+    `DT-35` decidió sobrellevar.
+
+    La pantalla preguntaba por «igual a cero» para deshabilitar el campo, así que
+    con −4 se quedaba **habilitado** y con `max="-4"` sobre `min="0"`: un rango
+    imposible, y una cifra que el servicio iba a rechazar. Ahora pregunta por
+    «mayor que cero», que es lo que de verdad decide si hay algo que reservar.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.acudiente)
+        self.url = reverse("reserva", args=[self.estudiante.id])
+
+    def _deja_las_disponibles_en_negativo(self):
+        """Reserva cuatro y deja que la caja venda las diez que hay."""
+        reservar(
+            actor=self.acudiente,
+            estudiante=self.estudiante,
+            lineas={self.empanada.id: 4},
+        )
+        cajero = Usuario.objects.crear_usuario(
+            email="cajero-negativo@example.com", rol=Rol.CAJERO, nombre="Cajero"
+        )
+        otro_acudiente, otro = familia("1009999950", email="otra-n@example.com")
+        recargar(actor=otro_acudiente, estudiante=otro, monto=Decimal("100000"))
+        registrar_venta(
+            actor=cajero, estudiante=otro, lineas={self.empanada.id: 10}
+        )
+
+    def test_las_disponibles_pueden_ser_negativas(self):
+        """Primero se fija el hecho: si dejara de pasar, las de abajo probarían
+        sobre un escenario que ya no existe."""
+        self._deja_las_disponibles_en_negativo()
+
+        self.assertEqual(existencias_sin_reservar()[self.empanada.id], -4)
+
+    def test_el_campo_queda_deshabilitado_con_disponibles_negativas(self):
+        self._deja_las_disponibles_en_negativo()
+
+        cuerpo = self.client.get(self.url).content.decode()
+        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+
+        self.assertIn("data-sin-disponibles", fila)
+
+    def test_no_se_emite_un_max_negativo(self):
+        """`min="0"` con `max="-4"` es un rango imposible: el navegador no sabe
+        qué hacer con él y el atributo miente sobre lo que se puede pedir."""
+        self._deja_las_disponibles_en_negativo()
+
+        cuerpo = self.client.get(self.url).content.decode()
+
+        self.assertNotIn('max="-', cuerpo)
+
+    def test_con_disponibles_de_cero_tambien_queda_deshabilitado(self):
+        """El caso que sí funcionaba, para que el arreglo no lo rompa."""
+        reservar(
+            actor=self.acudiente,
+            estudiante=self.estudiante,
+            lineas={self.empanada.id: 10},
+        )
+
+        cuerpo = self.client.get(self.url).content.decode()
+        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+
+        self.assertIn("data-sin-disponibles", fila)
+
+    def test_con_disponibles_el_campo_se_puede_usar(self):
+        """La contraprueba: si esto fallara, las de arriba pasarían por deshabilitar
+        siempre."""
+        cuerpo = self.client.get(self.url).content.decode()
+        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+
+        self.assertNotIn("data-sin-disponibles", fila)
+        self.assertIn('max="10"', fila)

@@ -492,13 +492,39 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
 18. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
     inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
+19. **Como administración, registrar una merma** desde *Mermas*: se intenta **sin motivo** y
+    no entra. Lo que hay que decir es que el rechazo no es del formulario, **es de la base de
+    datos**: `TT-140` lo comprueba escribiendo por el ORM. `HU-28`, `INV-8`.
+20. **Pinchar la cifra de existencias** de ese producto en el catálogo: sale su historial con
+    una columna de existencias tras cada movimiento, y hay que seguirla hasta el total de
+    arriba. Es el escenario crítico **`TST-4`**, y con él los cuatro de `ENT-05` quedan
+    demostrados. `HU-29`, `INV-3`.
+21. **Como acudiente, reservar** desde la tarjeta *Reservas* de su estudiante: se eligen
+    cantidades y se paga. **El saldo baja al reservar**, no al recoger, y queda en el
+    historial. `HU-23`.
+    Antes de eso conviene **bloquear un producto y tratar de reservarlo**: la reserva se
+    rechaza igual que la venta, porque pasa por la misma validación. Ninguno de los criterios
+    de `HU-23` lo menciona, y es el punto que más dice del diseño.
+22. **Como cajero, *Reservas***: la cola de lo que hay que preparar, de lo más antiguo a lo
+    más reciente. `HU-24`.
+23. **Escanear la tarjeta de ese estudiante** en el punto de venta: su pedido sale **antes
+    del saldo**. Pulsar *Entregar* y comparar: **el saldo no se mueve** y las existencias sí.
+    Intentarlo otra vez lo rechaza. `HU-25`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-La merma y las alertas de inventario (`HU-28`, `HU-29`), reportes y recomendaciones
-(`HU-30`…`HU-34`) y cierre de caja (`HU-55`, `HU-56`).
+Reportes y recomendaciones (`HU-30` … `HU-34`) y cierre de caja (`HU-55`, `HU-56`). Es lo
+que queda para el Sprint 5.
+
+**El inventario ya es trazable y los pedidos anticipados funcionan de punta a punta.** Toda
+merma lleva motivo y lo impone la base (`HU-28`, `INV-8`); las existencias de cualquier
+producto se desglosan renglón a renglón hasta el total (`HU-29`, `TST-4`); y el acudiente
+reserva, la cafetería consulta y el cajero entrega sin volver a cobrar (`HU-23`, `HU-24`,
+`HU-25`), que es `FUN-5` entero.
+
+**Con `TST-4` quedan demostrados los cuatro escenarios críticos de `ENT-05`.**
 
 **El control parental está completo: las tres restricciones se configuran y las tres
 frenan la venta.** El producto bloqueado (`HU-60`), el alérgeno (`HU-18`, escenario

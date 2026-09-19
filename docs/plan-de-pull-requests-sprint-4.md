@@ -72,15 +72,20 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **15** de 18 | **6** de 7 |
-| Pendientes | 3 | 1 |
+| **Finalizadas** | **18** de 18 | **7** de 7 |
+| Pendientes | 0 | 0 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
 | Pedro | 6 | 6 |
 | Carlos | 5 | 5 |
 | Alejandro | 4 | 4 |
-| Naomi | 0 | 3 |
+| Naomi | 3 | 3 |
+
+> ✅ **Sprint 4 cerrado el 2026-09-19: 18 de 18 tareas y 7 de 7 Pull Requests.** Cinco
+> historias —`HU-28`, `HU-29`, `HU-23`, `HU-24` y `HU-25`—, y con `HU-29` el plan de pruebas
+> de `ENT-05` queda completo. La revisión de cierre está en `[S7]` y la preparación del
+> Avance 2 en `[S8]`.
 
 ### [S3.1] Estado de los 7 Pull Requests
 
@@ -92,7 +97,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-04` | `TT-143`–`TT-146` | `HU-23` · `DT-32`, `DT-33` | ☑ |
 | `PR-05` | `TT-147`–`TT-148` | `HU-24` · `DT-34` | ☑ |
 | `PR-06` | `TT-149`–`TT-151` | `HU-25` · `DT-35` | ☑ |
-| `PR-07` | `TT-152`–`TT-154` | Gestión del sprint y Avance 2 | ☐ |
+| `PR-07` | `TT-152`–`TT-154` | Gestión del sprint, revisión de cierre y Avance 2 | ☑ |
 
 ---
 
@@ -387,17 +392,26 @@ tenía que impedir.
 
 | | |
 |---|---|
-| Título del PR | `docs(gestion): cerrar el Sprint 4 y preparar el Avance 2` |
+| Título del PR | `fix(ventas): sanear la reserva y la cola al cerrar el Sprint 4` |
 | Rama | `docs/TT-152-gestion-del-sprint-4` |
 | Responsable | Naomi |
 | Historia | ninguna — gestión |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-152` | Tablero Kanban del Sprint 4 | Naomi | ☐ |
-| `TT-153` | Registro de riesgos del Sprint 4 | Naomi | ☐ |
-| `TT-154` | Preparación de la Sprint Review, la Retrospective y el **Avance 2** | Naomi | ☐ |
+| `TT-152` | Tablero Kanban del Sprint 4 | Naomi | ☑ |
+| `TT-153` | Registro de riesgos del Sprint 4 | Naomi | ☑ |
+| `TT-154` | Preparación de la Sprint Review, la Retrospective y el **Avance 2** | Naomi | ☑ |
+
+**Dónde está cada cosa.** El tablero de `TT-152` es la vista de la Daily y vive fuera del
+repositorio, como en los tres sprints anteriores; el estado que manda es el de este
+documento. El registro de riesgos de `TT-153` es el `ANEXO A` de `./sprint-4-backlog.md`, y
+sus cuatro riesgos se revisan abajo. La preparación del Avance 2 (`TT-154`) es `[S8]`.
+
+**`PR-07` trae además dos correcciones de código**, y por eso su título dejó de ser
+`docs(gestion): …`: la revisión de cierre encontró dos defectos reales y se arreglan aquí, no
+en el sprint que viene. Están en `[S7]`.
 
 ---
 
@@ -437,3 +451,118 @@ y las tres de gestión.
    cierra `TST-4`.
 6. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.
+
+---
+
+## [S7] Revisión de cierre del Sprint 4
+
+Hecha antes de marcar `PR-07`, sobre `main` con los seis PR anteriores integrados. **No es
+una lista de comprobaciones satisfechas: es lo que se miró y lo que salió.**
+
+### Qué se comprobó, y con qué
+
+| Comprobación | Resultado |
+|---|---|
+| `manage.py check` y `makemigrations --check` | Sin incidencias · `No changes detected` |
+| Suite completa | **1.186 pruebas, OK** — eran 1.047 al cerrar el Sprint 3 |
+| **130 combinaciones de ruta y rol**, con los cuatro roles y un anónimo | Ningún `5xx` y ninguna excepción |
+| `id` de HTML duplicados en las cuatro pantallas nuevas | Ninguno. Importa porque un `id` repetido manda un intercambio de HTMX al elemento equivocado |
+| Contadores y marcas de los tres documentos | Cuadran: 18 tareas sin discrepancias, 7 PR, 51 historias de 61 |
+| **Siete casos límite del sprint, ejecutados** | Dos defectos y un hueco no documentado — abajo |
+
+### Qué encontró
+
+**1. El campo de cantidad de la reserva se quedaba habilitado con existencias negativas.**
+La plantilla preguntaba `disponibles == 0` para deshabilitarlo, y **las disponibles pueden ser
+negativas**: pasa en cuanto la caja vende unidades apartadas para una reserva pagada, que es
+el hueco que `DT-33` dejó abierto y `DT-35` decidió sobrellevar. Con `−4`, el campo quedaba
+activo y con `max="-4"` sobre `min="0"` —un rango imposible—, así que el acudiente podía
+teclear una cifra que el servicio iba a rechazar. Ahora pregunta por «mayor que cero» y el
+`max` solo se emite cuando hay algo que reservar.
+
+Es la clase de error que no da ningún síntoma hasta que se cumple la condición rara, y la
+condición rara la creó este mismo sprint.
+
+**2. La cola de reservas acumulaba pedidos que nunca se van a entregar, sin decirlo.** Un
+estudiante desactivado o de baja no retira (`INVD-2`) y la entrega lo rechaza, pero su pedido
+sigue pendiente y sin anular: **se queda en la cola para siempre** y el personal lo prepara
+cada mañana en balde.
+
+No se esconde —está pagado, y con dinero de por medio quitarlo de la lista es lo peor que se
+puede hacer—: ahora se **marca**, con la fila señalada y un aviso que explica qué pasa. Qué
+hacer con ese pedido sigue sin decidirse; es un punto abierto del `ANEXO B` de
+`./decisiones-de-alcance.md`, y la pantalla lo hace visible en vez de resolverlo por su
+cuenta.
+
+**3. La merma también puede dar de baja unidades apartadas**, no solo la caja. `[S7]` de
+`./reglas-de-la-venta.md` solo hablaba del cobro; `registrar_merma` valida contra las
+existencias reales y se dañaron las empanadas de una reserva igual que las demás. La
+consecuencia y la salida son las de `DT-35`, así que no cambia el código — cambia el
+documento, que lo decía a medias.
+
+### Lo que se miró y estaba bien
+
+- **Las seis comprobaciones de la venta se aplican a la reserva** sin estar duplicadas, y una
+  prueba estructural exige que ninguno de los dos servicios las tenga escritas aparte.
+- **`LineaVenta` ya era única por `(venta, producto)`**, así que la restricción nueva de
+  inventario no puede chocar con una venta legítima.
+- **Entregar dos veces falla por tres caminos**: el bloqueo, el estado y la restricción de
+  base. Retirando el `if`, la base sigue rechazándolo.
+- **Un pedido de un producto retirado del catálogo se entrega igual**, que es lo correcto: se
+  reservó cuando el producto se ofrecía.
+- **Reservar sin existencias se rechaza**, y dos reservas del mismo producto se apartan las dos.
+
+### Lo que este sprint deja abierto
+
+| Punto | Dónde está registrado |
+|---|---|
+| Qué hacer con un pedido pagado de un estudiante que no puede retirar | `ANEXO B` de `./decisiones-de-alcance.md` |
+| Si las reservas caducan | `reservas_pendientes`, en su docstring |
+| Que la caja y la merma pueden disponer de lo apartado | `[S7]` de `./reglas-de-la-venta.md`, con las dos salidas |
+
+Los tres son **decisiones de alcance**, no defectos: ninguna historia los pide y el sistema no
+miente sobre ellos.
+
+---
+
+## [S8] Preparación del Avance 2 (`TT-154`, `EVA-4`)
+
+**Se enseña lo que hay en `main`.** El recorrido vive en `[S4]` de
+`./mapa-de-la-aplicacion.md` y se demuestra **en local** (`DEC-15`): no hay entorno
+desplegado, y eso es una decisión registrada, no una carencia que haya que disimular.
+
+### Antes de empezar
+
+```bash
+docker compose up -d
+uv run python manage.py migrate
+uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' --estudiantes 12
+```
+
+Y después **el paso que se olvida**: `sembrar` no crea existencias ni saldo, así que el punto
+de venta no puede cobrar recién sembrado. El atajo está en `[S1.2]` de `./desarrollo.md`.
+
+### Qué es nuevo desde el Avance 1
+
+Lo que el Sprint 4 añadió, en el orden en que se enseña:
+
+1. **Merma con motivo obligatorio** (`HU-28`). Se intenta sin motivo y el formulario lo
+   rechaza; la gracia es decir que **lo impone la base de datos**, no el formulario.
+2. **Existencias explicables** (`HU-29`). Se pincha la cifra del catálogo y se sigue la
+   columna hasta el total. Es `TST-4`, y **con él los cuatro escenarios críticos de `ENT-05`
+   quedan demostrados** — es el hito del sprint y merece decirse.
+3. **Reserva y pago anticipado** (`HU-23`). El acudiente reserva; el saldo baja al reservar.
+   Enseñar además que **la reserva hereda las reglas del control parental**: bloquear un
+   producto y ver que no se puede reservar.
+4. **Cola de reservas** (`HU-24`) y **entrega** (`HU-25`). El cajero identifica al estudiante,
+   ve su pedido y lo entrega: **el saldo no se mueve** y las existencias sí.
+
+### Lo que conviene tener preparado
+
+- **La demostración de que no se cobra dos veces** es el punto más difícil de enseñar y el
+  más valioso: el saldo antes y después de entregar, en la misma pantalla.
+- **Un producto con existencias en negativo** para enseñar la pantalla de `HU-29` haciendo su
+  trabajo, si se quiere mostrar la auditoría de un descuadre.
+- **Qué falta y por qué**: los reportes son el Sprint 5, y el prototipo no se despliega por
+  decisión (`DEC-15`). Las dos cosas se dicen, no se esquivan.
+

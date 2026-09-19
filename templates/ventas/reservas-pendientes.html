@@ -48,6 +48,11 @@
             <div class="flex flex-wrap items-baseline justify-between gap-2 p-3">
               <span class="text-base font-semibold text-texto">
                 {{ pedido.venta.estudiante.nombre }}
+                {% if not pedido.venta.estudiante.puede_operar %}
+                  <span data-no-puede-retirar
+                        class="ml-1 rounded bg-aviso-suave px-2 py-0.5 text-sm
+                               font-medium text-aviso-fuerte">No puede retirar</span>
+                {% endif %}
               </span>
               <span class="text-sm text-texto-suave">
                 {{ pedido.creado_en|date:"j" }} de
@@ -77,6 +82,11 @@
               <tr data-reserva class="border-t border-borde bg-superficie align-top">
                 <td class="p-3 text-base font-medium text-texto">
                   {{ pedido.venta.estudiante.nombre }}
+                  {% if not pedido.venta.estudiante.puede_operar %}
+                    <span data-no-puede-retirar
+                          class="ml-1 rounded bg-aviso-suave px-2 py-0.5 text-sm
+                                 font-medium text-aviso-fuerte">No puede retirar</span>
+                  {% endif %}
                 </td>
                 <td class="p-3 text-base text-texto-suave">
                   {{ pedido.creado_en|date:"j" }} de
@@ -96,6 +106,28 @@
           </tbody>
         </table>
       </div>
+
+      {% comment %} `INVD-2`. Un estudiante desactivado o de baja **no retira** su pedido,
+         y la caja lo rechazará. Se marca en vez de esconderlo: está pagado y sin
+         anular, y quitarlo de la lista lo volvería invisible — justo lo que no
+         conviene con dinero de por medio.
+
+         Qué hacer con ese pedido **no está decidido** (`ANEXO B` de
+         `decisiones-de-alcance.md`: si se devuelve el saldo, si queda pendiente o si
+         se anula), así que la pantalla no propone nada: dice lo que pasa y a quién
+         preguntar. Va en `aviso` y no en `error`: no ha fallado nada. {% endcomment %}
+      {% if hay_sin_salida %}
+        <div role="note" data-avisos-sin-salida
+             class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+          <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <p class="text-sm text-aviso-fuerte">
+            <strong class="font-semibold">Hay pedidos marcados «No puede retirar».</strong>
+            Su tarjeta está desactivada o el estudiante se dio de baja, así que la caja no
+            los entrega. No los prepares: están pagados y sin anular, y qué hacer con ese
+            dinero lo decide la institución.
+          </p>
+        </div>
+      {% endif %}
 
       {% comment %} Un hueco dice qué falta y qué historia lo trae, nunca un botón
          deshabilitado (`[S2.4]`). Registrar la entrega es `HU-25`. {% endcomment %}
