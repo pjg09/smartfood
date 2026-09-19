@@ -28,8 +28,8 @@ ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
 # --- Aplicaciones ---------------------------------------------------------
 
-# Una app por dominio. Aquí están solo las tres que toca el Sprint 1; billetera,
-# inventario, ventas y reportes se crean en el sprint que las necesita.
+# Una app por dominio, y cada una se creó en el sprint que la necesitó. Con
+# `reportes` (`TT-155`) están las ocho: no queda ninguna por crear.
 APPS_DE_DJANGO = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -64,6 +64,12 @@ APPS_DEL_PROYECTO = [
     # así que no cabe en `personas` ni en `catalogo` sin acoplar dos dominios que
     # `INV-4` mantiene separados a propósito.
     "restricciones",
+    # Reportes (`TT-155`, `HU-30` … `HU-37`). **`DT-15` la declaró desde el
+    # principio**, así que crearla ahora no es una desviación: es la última app
+    # del plan y llega en el sprint que la necesita. No tiene modelos ni
+    # migraciones —un reporte es una lectura de hechos que ya están escritos—;
+    # el porqué está en `reportes/models.py`.
+    "reportes",
 ]
 
 INSTALLED_APPS = APPS_DE_DJANGO + APPS_DE_TERCEROS + APPS_DEL_PROYECTO
