@@ -139,8 +139,8 @@ Sale entero del libro de movimientos de la billetera: recargas contra ventas. No
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-169` | Selector del reporte de movimientos, con su motivo | Pedro | ☐ |
-| `TT-170` | Reporte de inventario en la interfaz administrativa | Carlos | ☐ |
+| `TT-169` | Selector del reporte de movimientos, con su motivo | Pedro | ☑ |
+| `TT-170` | Reporte de inventario en la interfaz administrativa | Carlos | ☑ |
 
 Se apoya en `historial_de`, que existe desde el Sprint 2, y en la merma con motivo del Sprint 4.
 

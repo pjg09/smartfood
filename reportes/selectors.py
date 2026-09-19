@@ -31,6 +31,7 @@ from django.utils import timezone
 from billetera.models import MovimientoBilletera, TipoDeMovimiento
 from billetera.selectors import saldo_de
 from cuentas.models import Rol
+from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from reportes import referencia, reglas
 from ventas.models import (
     EstadoDelPedido,
@@ -662,4 +663,143 @@ def _desglose(ventas, campo, opciones):
             agrupado.get(opcion.value, {}).get("total") or Decimal("0.00"),
         )
         for opcion in opciones
+    )
+
+
+@dataclass(frozen=True)
+class ResumenDeMovimientos:
+    """Lo que un periodo movió en el libro de inventario (`TT-169`, `HU-36`).
+
+    **Todas las cifras son de unidades, no de dinero.** El inventario no sabe
+    lo que costó nada: eso es el reporte de ventas. Aquí se cuentan unidades que
+    entraron y salieron, que es lo que `ALC-IN-19` pide seguir.
+
+    `entradas` y `salidas` llegan **las dos en positivo**, y `neto` con su signo.
+    En el libro una salida es negativa (`DT-5`), pero «se perdieron 12 unidades»
+    no es una cifra negativa: el signo se invierte una vez, aquí, como hace
+    `billetera.selectors.consumo_del_dia` con el dinero.
+
+    `mermas_sin_motivo` **debería ser siempre cero**: lo impone una
+    `CheckConstraint` (`INV-8`, `DT-5`). Se cuenta y se enseña igual, y eso no
+    es desconfianza: es lo que convierte la invariante en algo que la
+    administración puede ver, como el historial de un producto hace visible que
+    las existencias cuadran (`TT-141`).
+    """
+
+    cuantos: int
+    entradas: int
+    salidas: int
+    neto: int
+    por_tipo: tuple
+    mermas_sin_motivo: int
+
+    @property
+    def hubo_movimientos(self):
+        return bool(self.cuantos)
+
+
+def movimientos_registrados(*, actor, desde=None, hasta=None):
+    """El libro de inventario del periodo (`TT-169`, `HU-36`).
+
+    **Entradas, ventas y mermas en un solo sitio**, que es el «para qué» de la
+    historia. No hay tres consultas ni tres pantallas: es un libro con tres
+    clases de asiento, y cada uno lleva su motivo cuando lo tiene (`INV-8`).
+
+    Gemela de `ventas_registradas`, con la misma puerta —`[S11]` concede los
+    reportes de ventas **e inventario** en la misma fila— y el mismo criterio
+    para el periodo: fechas locales inclusivas, y sin ellas el libro entero.
+    """
+    _solo_la_administracion(actor)
+
+    movimientos = MovimientoInventario.objects.all()
+
+    if desde is not None:
+        movimientos = movimientos.filter(
+            creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min))
+        )
+    if hasta is not None:
+        movimientos = movimientos.filter(
+            creado_en__lt=timezone.make_aware(
+                datetime.combine(hasta + timedelta(days=1), time.min)
+            )
+        )
+
+    return movimientos
+
+
+def resumen_de_movimientos(movimientos):
+    """Lo que suma un conjunto de asientos de inventario.
+
+    Recibe el `QuerySet` ya filtrado por el mismo motivo que
+    `resumen_de_ventas`: en el admin se le pasa el listado que se está mirando,
+    así que el consolidado de arriba y la tabla de abajo no pueden hablar de
+    conjuntos distintos.
+
+    **`Count("pk")` sin `distinct`, al revés que en las ventas.** Allí sumar
+    importes obliga a unir con las líneas y una venta de tres renglones contaría
+    tres veces; aquí no hay ninguna unión que multiplique: las cantidades están
+    en la propia fila y los filtros del admin —tipo, categoría del producto—
+    solo atraviesan claves ajenas hacia delante.
+
+    `neto` es la suma con signo. Sobre el libro entero **es la existencia total
+    de la cafetería** (`INV-3`); sobre un periodo es lo que ese periodo movió, y
+    la pantalla lo dice así para que nadie lo lea como un inventario.
+    """
+    cantidad = F("cantidad")
+    entero = IntegerField()
+
+    agregados = movimientos.aggregate(
+        cuantos=Count("pk"),
+        neto=Sum("cantidad"),
+        entradas=Sum(
+            Case(When(cantidad__gt=0, then=cantidad), default=0, output_field=entero)
+        ),
+        # En positivo: el menos invierte el signo del libro una sola vez.
+        salidas=-Sum(
+            Case(When(cantidad__lt=0, then=cantidad), default=0, output_field=entero)
+        ),
+    )
+
+    return ResumenDeMovimientos(
+        cuantos=agregados["cuantos"] or 0,
+        entradas=agregados["entradas"] or 0,
+        salidas=agregados["salidas"] or 0,
+        neto=agregados["neto"] or 0,
+        por_tipo=_desglose_de_movimientos(movimientos),
+        # Una merma sin motivo **no puede existir**: lo impide una
+        # `CheckConstraint` (`INV-8`). Se cuenta para poder decirlo en pantalla.
+        mermas_sin_motivo=movimientos.filter(
+            tipo=TipoDeMovimientoDeInventario.MERMA, motivo=""
+        ).count(),
+    )
+
+
+def _desglose_de_movimientos(movimientos):
+    """`((etiqueta, cuántos, unidades), …)` por cada tipo de asiento.
+
+    Completo y en el orden de `TipoDeMovimientoDeInventario`, como el desglose
+    de las ventas: un tipo sin asientos sale en cero. Que en el periodo no haya
+    habido ninguna merma es justamente lo que se quiere leer.
+
+    Las unidades van **en positivo también en las salidas**: la columna dice
+    «cuántas unidades movió este tipo», y mezclar signos en una columna obliga a
+    leer dos cosas a la vez.
+    """
+    agrupado = {
+        fila["tipo"]: fila
+        # `order_by()` vacío antes de agrupar: un orden explícito entra en el
+        # `GROUP BY` de un `values().annotate()` y parte el desglose en una fila
+        # por asiento. El admin siempre ordena (`TT-168` lo pagó).
+        for fila in movimientos.order_by()
+        .values("tipo")
+        .annotate(cuantos=Count("pk"), unidades=Sum("cantidad"))
+    }
+
+    return tuple(
+        (
+            tipo.label,
+            agrupado.get(tipo.value, {}).get("cuantos", 0),
+            abs(agrupado.get(tipo.value, {}).get("unidades") or 0),
+        )
+        for tipo in TipoDeMovimientoDeInventario
     )
