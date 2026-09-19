@@ -1,32 +1,48 @@
 """El admin, entero en español.
 
-Django 6.1 estrenó o renombró cuatro cadenas del admin y su catálogo `es`
-todavía las devuelve en inglés, así que en una pantalla por lo demás en español
-aparecían «Run», «- Select an option -» y «Search». Tres se arreglan con el
-catálogo propio de `locale/`; la cuarta, el `alt` del icono de la lupa, está
-escrita a pelo en la plantilla de Django y obligó a sustituirla.
+Hay **dos problemas distintos** y por eso hay dos catálogos propios:
 
-**Estas pruebas vigilan las dos cosas que se rompen solas:**
+1. **Lo que Django deja sin traducir.** Django 6.1 estrenó o renombró cinco
+   cadenas del admin y sus catálogos españoles las devuelven en inglés, así que
+   en una pantalla por lo demás en español aparecían «Run»,
+   «- Select an option -», «Search» y «Filter by». Cuatro se arreglan con
+   `locale/es/`; la quinta, el `alt` del icono de la lupa, está escrita a pelo en
+   la plantilla de Django y obligó a sustituirla.
+2. **Lo que Django traduce mal.** El catálogo `es_CO` capitaliza los doce meses,
+   así que el formato de fecha de Colombia salía «19 de Septiembre de 2026» en
+   mitad de una frase, y traduce «View %s» como «Vista %s», que es un sustantivo
+   donde va un verbo. Eso se corrige en `locale/es_CO/`, **y tiene que ser ahí**:
+   con `LANGUAGE_CODE = "es-co"` el catálogo que manda es el `es_CO` y el `es`
+   solo es la reserva, así que una corrección escrita en `es` no ganaría.
+
+**Estas pruebas vigilan las tres cosas que se rompen solas:**
 
 1. Que las traducciones sigan aplicándose. Un `LOCALE_PATHS` mal puesto, o un
    `.mo` sin recompilar tras tocar el `.po`, y las cadenas vuelven al inglés sin
    que nada falle.
-2. Que la plantilla copiada no se quede vieja. Está anclada a Django 6.1: si la
+2. Que ninguno de los dos parches crezca hasta convertirse en una traducción
+   propia del admin, que se desincronizaría a la primera versión.
+3. Que la plantilla copiada no se quede vieja. Está anclada a Django 6.1: si la
    suya cambia, la nuestra sigue sirviendo el marcado antiguo **en silencio**.
 """
 
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import django
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import formats
+from django.utils.dates import MONTHS
 from django.utils.translation import gettext
 
 from cuentas.models import Rol, Usuario
-from cuentas.services import sincronizar_grupos_y_permisos
+from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
 from personas.services import dar_de_alta_la_institucion
+from ventas.models import CierreDeCaja
 
 PLANTILLA_DE_DJANGO = (
     Path(django.__file__).parent
@@ -35,17 +51,31 @@ PLANTILLA_DE_DJANGO = (
 NUESTRA_PLANTILLA = Path(__file__).resolve().parent.parent / (
     "templates/admin/search_form.html"
 )
+RAIZ = Path(__file__).resolve().parent.parent
+CATALOGO_ES = RAIZ / "locale/es/LC_MESSAGES/django.po"
+CATALOGO_ES_CO = RAIZ / "locale/es_CO/LC_MESSAGES/django.po"
+
+
+def entradas_de(catalogo):
+    """Los `msgid` de un `.po`, sin la cabecera —que es un `msgid ""` vacío
+    obligatorio—."""
+    return [
+        linea
+        for linea in catalogo.read_text().splitlines()
+        if linea.startswith("msgid ") and linea != 'msgid ""'
+    ]
 
 
 class ElCatalogoPropioTraduceLoQueDjangoNoTest(TestCase):
     """Se comprueba la traducción, no el fichero: lo que importa es lo que sale."""
 
-    def test_las_cuatro_cadenas_estan_en_espanol(self):
+    def test_las_cinco_cadenas_estan_en_espanol(self):
         esperado = {
             "- Select an option -": "- Seleccione una opción -",
             "Run": "Ejecutar",
             "Search": "Buscar",
             "Search %(name)s": "Buscar %(name)s",
+            "Filter by %(field_name)s": "Filtrar por %(field_name)s",
         }
         for original, traduccion in esperado.items():
             with self.subTest(cadena=original):
@@ -57,19 +87,73 @@ class ElCatalogoPropioTraduceLoQueDjangoNoTest(TestCase):
         Si crece, es señal de que alguien empezó a traducir por su cuenta lo que
         Django ya trae — y eso se queda desincronizado a la primera versión.
         """
-        catalogo = (
-            Path(__file__).resolve().parent.parent
-            / "locale/es/LC_MESSAGES/django.po"
-        ).read_text()
+        entradas = entradas_de(CATALOGO_ES)
 
-        # Sin contar la cabecera, que es un `msgid ""` vacío obligatorio.
-        entradas = [
-            linea
-            for linea in catalogo.splitlines()
-            if linea.startswith("msgid ") and linea != 'msgid ""'
-        ]
+        self.assertEqual(len(entradas), 5, f"el parche creció: {entradas}")
 
-        self.assertEqual(len(entradas), 4, f"el parche creció: {entradas}")
+
+class ElCatalogoDeColombiaCorrigeLoQueDjangoTraduceMalTest(TestCase):
+    """El otro parche, y el que **no podría vivir en `locale/es/`**.
+
+    Con `LANGUAGE_CODE = "es-co"` el catálogo que manda es el `es_CO` y el `es`
+    solo es la reserva: una corrección escrita en `es` la pisaría el catálogo de
+    Django. Por eso hay dos ficheros y no uno, y por eso esta prueba comprueba
+    **lo que sale**, no dónde está escrito.
+    """
+
+    def test_los_doce_meses_van_en_minuscula(self):
+        """En español el nombre del mes va en minúscula. El catálogo `es` de
+        Django lo hace bien; el `es_CO` los capitaliza los doce.
+
+        Es la misma regla que `CLAUDE.md` fija para nuestras plantillas —donde se
+        arregla con `|lower`—, aplicada a lo que pinta el admin, que era la única
+        parte del producto que no la cumplía.
+        """
+        for numero, nombre in MONTHS.items():
+            with self.subTest(mes=numero):
+                self.assertEqual(str(nombre), str(nombre).lower())
+
+    def test_la_fecha_del_admin_sale_en_minuscula(self):
+        """Contra el formato de verdad, que es donde se veía el defecto.
+
+        El `DATE_FORMAT` de `es_CO` escribe «día de MES de año», así que el mes
+        va en mitad de la frase: comprobar solo la tabla `MONTHS` dejaría pasar
+        un cambio de formato que volviera a capitalizarlo.
+        """
+        self.assertEqual(
+            formats.date_format(date(2026, 9, 19), "DATE_FORMAT"),
+            "19 de septiembre de 2026",
+        )
+
+    def test_el_titulo_de_una_ficha_de_solo_lectura_es_un_verbo(self):
+        """«Vista cierre de caja» encabezaba la ficha del reporte de cierres.
+
+        Es el título de cualquier ficha que no se puede editar: los tres
+        reportes de la cafetería y las restricciones por estudiante.
+        """
+        self.assertEqual(gettext("View %s") % "cierre de caja", "Ver cierre de caja")
+
+    def test_no_se_corrige_nada_que_ninguna_pantalla_imprima(self):
+        """Los días de la semana vienen igual de capitalizados y **no se tocan**.
+
+        Ninguna pantalla del proyecto los imprime, y cada entrada de más es una
+        que hay que revisar al subir de versión de Django. Trece: los doce meses
+        y el título de la ficha.
+        """
+        entradas = entradas_de(CATALOGO_ES_CO)
+
+        self.assertEqual(len(entradas), 13, f"el parche creció: {entradas}")
+
+    def test_lo_que_django_ya_traduce_bien_no_se_toca(self):
+        """La contraprueba de los dos parches juntos: si alguien empezara a
+        traducir el admin por su cuenta, esto sería lo primero que cambiaría."""
+        for original, traduccion in (
+            ("Home", "Inicio"),
+            ("Save", "Grabar"),
+            ("Delete", "Eliminar"),
+        ):
+            with self.subTest(cadena=original):
+                self.assertEqual(gettext(original), traduccion)
 
 
 class ElAdminSeVeEnteroEnEspanolTest(TestCase):
@@ -119,6 +203,50 @@ class ElAdminSeVeEnteroEnEspanolTest(TestCase):
         for espanol in ["Seleccione una opción", ">Ejecutar<", 'value="Buscar"']:
             with self.subTest(cadena=espanol):
                 self.assertIn(espanol, cuerpo)
+
+
+class LosReportesConNavegacionPorFechasSeVenEnEspanolTest(TestCase):
+    """Contra la pantalla donde se vieron los dos defectos.
+
+    Los tres reportes de la cafetería son las únicas pantallas con
+    `date_hierarchy`, así que son las únicas que imprimían «Filter by» y las
+    únicas donde el mes capitalizado se leía en un enlace. Se comprueban sobre
+    el de cierres, que los tiene los dos —el rótulo y los enlaces de día—.
+    """
+
+    def setUp(self):
+        sincronizar_grupos_y_permisos()
+        administracion = crear_cuenta(
+            email="administracion-traducciones@example.com",
+            rol=Rol.ADMINISTRADOR,
+            nombre="Administración",
+            accede_a_administracion=True,
+            enviar_invitacion=False,
+        )
+        self.client.force_login(administracion)
+        cajero = Usuario.objects.crear_usuario(
+            email="cajero-traducciones@example.com", rol=Rol.CAJERO, nombre="Cajero"
+        )
+        # Un cierre de una jornada conocida: sin filas, el admin no dibuja los
+        # enlaces de día y no habría mes que comprobar.
+        CierreDeCaja.objects.create(
+            fecha=date(2026, 9, 19),
+            cajero=cajero,
+            base=Decimal("50000"),
+            efectivo_esperado=Decimal("10000"),
+            efectivo_contado=Decimal("60000"),
+        )
+        self.cuerpo = self.client.get(
+            reverse("admin:ventas_cierredecaja_changelist")
+        ).content.decode()
+
+    def test_el_rotulo_de_la_navegacion_por_fechas_esta_en_espanol(self):
+        self.assertIn("Filtrar por jornada", self.cuerpo)
+        self.assertNotIn("Filter by", self.cuerpo)
+
+    def test_los_enlaces_de_fecha_llevan_el_mes_en_minuscula(self):
+        self.assertIn("septiembre", self.cuerpo)
+        self.assertNotIn("Septiembre", self.cuerpo)
 
 
 class LaPlantillaCopiadaSigueAlDiaTest(TestCase):
