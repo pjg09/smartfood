@@ -414,8 +414,14 @@ for dia in range(9):                      # nueve días → frecuencia muy alta
 Hace falta **saldo y existencias**, como cualquier venta: el atajo está en `[S1.2]`.
 
 Después, entrando como el acudiente de ese estudiante: *Mis estudiantes* → tarjeta
-**Consumo** → **Ver el historial**. Las alertas salen arriba, y el descargo de `INV-9`
-debajo — **ese sale siempre**, haya alertas o no.
+**Consumo** → **Ver el historial**. Las alertas salen arriba, el **aporte nutricional**
+debajo —ese sí aparece con una sola compra— y el descargo de `INV-9` al final: **ese sale
+siempre**, haya recomendaciones o no.
+
+**Para ver el «sin datos» del aporte y el renglón excluido**, vende además un producto sin
+información nutricional: el seed crea el catálogo con ficha completa, así que hay que crear
+uno a propósito. Un producto sin declarar no suma cero — se excluye y la pantalla dice
+cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional.md`).
 
 ---
 

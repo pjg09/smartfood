@@ -37,6 +37,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
 | `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar— y las siete reglas que ninguna historia dice |
 | `docs/reglas-de-frecuencia-de-consumo.md` | **Qué alerta de frecuencia se publica y con qué umbral**, y por qué el umbral es el mismo para todas las categorías (`ALC-OUT-20`) |
+| `docs/valores-de-referencia-nutricional.md` | **Contra qué cifras se comparan los agregados**, con la norma que las publica y las tres salvedades declaradas (`TT-162`) |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |

@@ -71,14 +71,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **7** de 33 | **2** de 13 |
-| Pendientes | 26 | 11 |
+| **Finalizadas** | **10** de 33 | **3** de 13 |
+| Pendientes | 23 | 10 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 2 | 11 |
-| Carlos | 3 | 10 |
-| Alejandro | 2 | 6 |
+| Pedro | 3 | 11 |
+| Carlos | 4 | 10 |
+| Alejandro | 3 | 6 |
 | Naomi | 0 | 6 |
 
 ### [S3.1] Estado de los 13 Pull Requests
@@ -87,7 +87,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 |---|---|---|---|
 | `PR-01` | `TT-155`–`TT-157` | `HU-30` · app `reportes` | ☑ |
 | `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☑ |
-| `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☐ |
+| `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☑ |
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☐ |
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☐ |
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☐ |
@@ -181,13 +181,31 @@ modelos probabilísticos** — `OBJ-E3` exige reglas determinísticas.
 | Responsables | Alejandro, Pedro y Carlos |
 | Historia | `HU-32` |
 | Invariantes | `INV-9` (ya cubierto por `PR-02`) |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-162` | Localizar y registrar los valores de la autoridad sanitaria colombiana, con su fuente | Alejandro | ☐ |
-| `TT-163` | Cálculo determinístico de los agregados frente a esa referencia | Pedro | ☐ |
-| `TT-164` | Comparación en la pantalla del acudiente | Carlos | ☐ |
+| `TT-162` | Localizar y registrar los valores de la autoridad sanitaria colombiana, con su fuente | Alejandro | ☑ |
+| `TT-163` | Cálculo determinístico de los agregados frente a esa referencia | Pedro | ☑ |
+| `TT-164` | Comparación en la pantalla del acudiente | Carlos | ☑ |
+
+> ✅ **Integrado, y la referencia apareció.** Es la **Resolución 810 de 2021** del
+> Ministerio de Salud, artículo 15, `Tabla 9` y `Tabla 10`, columna «niños mayores de 4 años
+> y adultos». Se leyó en dos compilaciones oficiales independientes —Invima y SuperSalud—
+> porque el PDF del Ministerio es un escaneado y la copia de la Alcaldía trae las tablas
+> como imagen. Los siete campos que el catálogo declara tienen valor en esa tabla: no falta
+> ninguno.
+>
+> **Se usa la columna del etiquetado y no la recomendación por edad y sexo de la Resolución
+> 3803 de 2016, a propósito**: elegir la fila según la edad del estudiante individualiza la
+> referencia, y comparar contra un requerimiento personal es la valoración nutricional que
+> `ALC-OUT-20` excluye. El VRN del etiquetado es el mismo para toda la población mayor de
+> cuatro años y no afirma lo que un niño necesita — y la pantalla lo dice con esas palabras.
+>
+> **Lo que no se pudo confirmar se declaró**: en abril de 2026 el Ministerio puso en consulta
+> pública un proyecto que derogaría la 810, y no se pudo verificar si ya se expidió. Está
+> escrito en `[S1.1]` del documento, con la mitigación: los siete valores viven en un solo
+> sitio del código.
 
 > **`TT-162` es investigación, no código, y es la tarea con más riesgo de quedarse a
 > medias.** La historia exige que la referencia sea «la publicada por la autoridad sanitaria
