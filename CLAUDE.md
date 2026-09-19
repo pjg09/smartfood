@@ -80,9 +80,11 @@ está mal entendida o de que falta una decisión.
 ejecuta en local (`DEC-15`, `DT-31`). UUIDv7 como clave primaria en todas las tablas (generado en
 la aplicación), **excepto el código de tarjeta**.
 
-Una app por dominio, **y cada una se crea en el sprint que la necesita**: hoy existen
-`cuentas`, `personas`, `catalogo`, `billetera`, `inventario`, `ventas` y `restricciones`
-—esta última no la previó `DT-15` y la declara `DT-28`—; `reportes` no.
+Una app por dominio, **y cada una se creó en el sprint que la necesitó**. Con `reportes`
+(`TT-155`) están **las ocho** y no queda ninguna por crear: `cuentas`, `personas`,
+`catalogo`, `billetera`, `inventario`, `ventas`, `restricciones` —esta no la previó `DT-15`
+y la declara `DT-28`— y `reportes`, que entra **sin modelos y sin migraciones** porque un
+reporte es una lectura de hechos que otro dominio ya asentó.
 Dentro de cada una:
 
 | Archivo | Responsabilidad |
@@ -107,6 +109,11 @@ devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django c
 secretaría abre a diario (`DT-27`), y la cola de reservas pendientes, que comparten dos roles
 que no comparten interfaz (`DT-34`). **Una tercera tendría que explicar por qué no es ya un
 patrón en vez de una excepción.**
+
+**Los reportes de la cafetería no son una tercera excepción**: viven dentro del admin, por el
+camino que `TT-141` abrió para el historial de existencias y `TT-168` repite para el de
+ventas — el admin pone listado, filtros y fechas, y lo que se añade es el consolidado **del
+listado que se está mirando**, calculado sobre el mismo `QuerySet` que pinta la tabla.
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -187,6 +194,17 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
   misma pantalla enseña dos monedas.
+- **Un `order_by()` explícito entra en el `GROUP BY` de un `values().annotate()`**, y el
+  `ordering` del `Meta` ya no (Django lo dejó de hacer en 3.1). El admin **siempre** ordena
+  el listado explícitamente, así que un desglose calculado sobre `cl.queryset` se agrupa
+  además por la fecha: una fila por venta, todas con un uno. **El total de al lado sigue
+  bien** —`aggregate()` no arrastra el orden—, así que no se ve en las pruebas ni en el
+  código: se vio en la captura, con catorce ventas en la tabla y tres desgloses de una.
+  Limpia con `.order_by()` antes de agrupar.
+- **Un campo de relación en el admin se pinta con el `__str__` del modelo apuntado.**
+  `Estudiante.__str__` es «Nombre (documento)», así que una ficha que liste `estudiante`
+  enseña el documento del menor aunque el listado se cuide de no hacerlo — y enlazado.
+  Declara `fields` con un método propio que diga solo el nombre. Pasó en `TT-168`.
 - **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
   van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
   modelo nuevo y nada indica por qué.
