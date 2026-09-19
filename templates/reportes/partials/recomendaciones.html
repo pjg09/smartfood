@@ -1,3 +1,4 @@
+{% load dinero %}
 {% comment %} Las recomendaciones informativas de `ALC-IN-21`, **con su aviso**.
 
    `TT-160` las alertas de frecuencia (`HU-31`), `TT-164` la comparación con la
@@ -195,6 +196,99 @@
         cualquier etiqueta. Y solo cuenta lo comprado en la cafetería, que es una parte de lo
         que come al día.
       </p>
+    </section>
+  {% endif %}
+
+  {% comment %} `TT-166`, `HU-33`. El gasto frente a lo recargado.
+
+     **Va dentro de este fragmento aunque no hable de nutrición**, y es a
+     propósito: `ALC-IN-21` lista el resumen de gasto como una de las tres
+     recomendaciones informativas, junto con las alertas y los agregados. La
+     frase que las declara orientativas las cubre a las tres, así que la que
+     sale de aquí se lleva el descargo como las otras dos.
+
+     **La fecha de estas cifras es la del movimiento, no la del consumo.** Un
+     pedido pagado el domingo y recogido el lunes es gasto del domingo y consumo
+     del lunes: las dos cosas son ciertas, y por eso los bloques de arriba y este
+     pueden no cuadrar renglón a renglón aunque el periodo sea el mismo.
+
+     Ni un color de estado tampoco aquí. Gastar más de lo recargado **no es una
+     deuda** —`INV-1` impide que una venta deje el saldo en negativo—, así que
+     pintarlo de rojo diría algo que el sistema no permite que ocurra. {% endcomment %}
+  {% if gasto.hubo_movimiento %}
+    <section aria-labelledby="gasto" class="flex flex-col gap-3" data-resumen-de-gasto>
+      <div class="flex flex-col gap-1">
+        <h2 id="gasto" class="text-lg text-texto">Gasto en la cafetería</h2>
+        <p class="text-base font-medium text-texto-suave">
+          Lo que recargaste y lo que se gastó en los últimos {{ gasto.ventana }} días.
+          Sale del mismo libro de movimientos del que sale el saldo.
+        </p>
+      </div>
+
+      <div class="grid gap-3 tablet:grid-cols-3">
+        {% comment %} Tres tarjetas de resumen (`[S2.1]`) **sin enlace**: no hay a dónde ir
+           desde una cifra que ya está explicada por el historial de abajo. La franja
+           usa series, que no significan nada. {% endcomment %}
+        <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                        bg-superficie p-4 shadow-sm">
+          <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-3 to-serie-3/50"></span>
+          <h3 class="text-base font-semibold text-texto-suave">Recargaste</h3>
+          <p data-recargado class="font-display text-2xl tabular-nums text-texto">
+            {{ gasto.recargado|dinero:"COP" }}
+          </p>
+        </article>
+
+        <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                        bg-superficie p-4 shadow-sm">
+          <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-1 to-serie-1/50"></span>
+          <h3 class="text-base font-semibold text-texto-suave">Se gastó</h3>
+          <p data-gastado class="font-display text-2xl tabular-nums text-texto">
+            {{ gasto.gastado|dinero:"COP" }}
+          </p>
+          {% if gasto.porcentaje_gastado is not None %}
+            <p class="text-base font-medium text-texto-suave">
+              El {{ gasto.porcentaje_gastado }} % de lo que recargaste en estos días.
+            </p>
+          {% endif %}
+        </article>
+
+        <article class="relative flex flex-col gap-2 overflow-hidden rounded-md border border-borde
+                        bg-superficie p-4 shadow-sm">
+          <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-serie-4 to-serie-4/50"></span>
+          <h3 class="text-base font-semibold text-texto-suave">Saldo ahora</h3>
+          <p data-saldo class="font-display text-2xl tabular-nums text-texto">
+            {{ gasto.saldo|dinero:"COP" }}
+          </p>
+          {% comment %} El saldo **no es del periodo**: es la suma de todos los movimientos
+             de la billetera (`INV-2`). Decirlo evita la resta mental que no cuadra —
+             lo recargado menos lo gastado en catorce días no da el saldo. {% endcomment %}
+          <p class="text-base font-medium text-texto-suave">
+            No es de estos días: es la suma de todos sus movimientos.
+          </p>
+        </article>
+      </div>
+
+      {% if gasto.devuelto %}
+        {% comment %} Hoy ningún servicio asienta devoluciones (`ALC-OUT-01`), así que esta
+           fila no se dibuja nunca. Está escrita para que el día que algo las
+           asiente, el resumen no se quede callado. {% endcomment %}
+        <p data-devuelto class="text-sm text-texto-suave">
+          Además se devolvieron {{ gasto.devuelto|dinero }} a la billetera en el periodo.
+        </p>
+      {% endif %}
+
+      {% if gasto.gasto_sin_recarga_en_el_periodo %}
+        {% comment %} **El caso que más se malinterpreta.** La resta de las dos primeras
+           cifras parece un descubierto, y un descubierto es imposible: `INV-1` no
+           deja que una venta deje el saldo en negativo. Lo que pasó es que tiró
+           del saldo que ya tenía. Va en texto normal y no en `error`: no ha
+           fallado nada. {% endcomment %}
+        <p role="note" data-gasto-sin-recarga class="text-base font-medium text-texto-suave">
+          Se gastó más de lo que recargaste en estos días, y
+          <strong class="font-semibold text-texto">eso no es una deuda</strong>: salió del
+          saldo que ya tenía. Una compra nunca deja la billetera en negativo.
+        </p>
+      {% endif %}
     </section>
   {% endif %}
 

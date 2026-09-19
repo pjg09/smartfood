@@ -71,13 +71,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **10** de 33 | **3** de 13 |
-| Pendientes | 23 | 10 |
+| **Finalizadas** | **12** de 33 | **4** de 13 |
+| Pendientes | 21 | 9 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 3 | 11 |
-| Carlos | 4 | 10 |
+| Pedro | 4 | 11 |
+| Carlos | 5 | 10 |
 | Alejandro | 3 | 6 |
 | Naomi | 0 | 6 |
 
@@ -88,7 +88,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-01` | `TT-155`–`TT-157` | `HU-30` · app `reportes` | ☑ |
 | `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☑ |
 | `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☑ |
-| `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☐ |
+| `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☑ |
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☐ |
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☐ |
 | `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☐ |
@@ -225,14 +225,28 @@ modelos probabilísticos** — `OBJ-E3` exige reglas determinísticas.
 | Responsables | Pedro y Carlos |
 | Historia | `HU-33` |
 | Invariantes | ninguna; consume `INV-2` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-165` | Selector del gasto frente al saldo recargado en un periodo | Pedro | ☐ |
-| `TT-166` | Resumen de gasto en la pantalla del acudiente | Carlos | ☐ |
+| `TT-165` | Selector del gasto frente al saldo recargado en un periodo | Pedro | ☑ |
+| `TT-166` | Resumen de gasto en la pantalla del acudiente | Carlos | ☑ |
 
 Sale entero del libro de movimientos: recargas contra ventas. No hay dato nuevo que capturar.
+
+> ✅ **Integrado, y con una diferencia que conviene saber antes de leer la pantalla.** Los
+> tres bloques de recomendaciones comparten ventana —catorce días— pero **no calendario**:
+> la frecuencia y los agregados cuentan una reserva el día en que **se recoge**, y el gasto
+> el día en que **se paga**. Un pedido pagado el domingo y recogido el lunes es gasto del
+> domingo y consumo del lunes; las dos cosas son ciertas, y por eso los bloques pueden no
+> cuadrar renglón a renglón.
+>
+> **El saldo que se enseña no es del periodo**: es la suma de todos los movimientos de la
+> billetera (`INV-2`). Sin decirlo, la resta de las dos cifras invita a pensar que sí.
+>
+> Y gastar más de lo recargado en el periodo **no es una deuda** —`INV-1` impide que una
+> venta deje el saldo en negativo—: la pantalla lo dice con esas palabras, porque la resta
+> se lee como un descubierto que el sistema no permite que exista.
 
 ---
 

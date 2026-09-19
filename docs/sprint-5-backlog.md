@@ -121,8 +121,8 @@ El historial muestra **la información nutricional registrada al momento de cada
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-165` | Selector del gasto frente al saldo recargado en un periodo | Pedro | ☐ |
-| `TT-166` | Resumen de gasto en la pantalla del acudiente | Carlos | ☐ |
+| `TT-165` | Selector del gasto frente al saldo recargado en un periodo | Pedro | ☑ |
+| `TT-166` | Resumen de gasto en la pantalla del acudiente | Carlos | ☑ |
 
 Sale entero del libro de movimientos de la billetera: recargas contra ventas. No hay dato nuevo que capturar.
 
