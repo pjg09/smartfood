@@ -1,0 +1,99 @@
+# Correcciones al catálogo `es_CO` de Django.
+#
+# ── POR QUÉ ESTE FICHERO ES DISTINTO DE `locale/es/` ─────────────────────────
+# El de al lado parchea lo que Django deja **sin traducir**. Este corrige lo que
+# Django traduce **mal**, y por eso tiene que vivir aquí y no allí: el proyecto
+# corre con `LANGUAGE_CODE = "es-co"`, así que el catálogo que manda es el
+# `es_CO` y el `es` solo actúa de reserva. Una corrección escrita en `es` no
+# ganaría — la comprobaría y la pisaría el `es_CO` de Django.
+#
+# Lo que hay aquí son **los doce meses en minúscula** y el título de una ficha de
+# solo lectura. Nada más, y conviene que siga siendo así: esto es un parche sobre
+# un catálogo ajeno, no una traducción del admin.
+#
+# ── LOS MESES ───────────────────────────────────────────────────────────────
+# En español los nombres de mes van en minúscula, y el catálogo `es` de Django lo
+# hace bien. El `es_CO` los capitaliza los doce —y también los días de la semana—,
+# así que el formato de fecha de Colombia, `j \d\e F \d\e Y`, sale como «19 de
+# Septiembre de 2026» en mitad de una frase.
+#
+# No es una preferencia: es la misma regla que `CLAUDE.md` ya fija para nuestras
+# plantillas —«`{% now "F" %}` devuelve el mes capitalizado y en español va en
+# minúscula»—. Lo que este fichero hace es aplicarla también a lo que pinta el
+# admin, que hasta ahora era la única parte del producto que no la cumplía.
+#
+# **Los días de la semana no se corrigen**, aunque vengan igual de capitalizados:
+# ninguna pantalla del proyecto los imprime. Se añadirán el día que alguna lo
+# haga, no por si acaso — cada entrada de más es una que hay que revisar al subir
+# de versión de Django.
+#
+# Se comprobó contra `django/conf/locale/es_CO/LC_MESSAGES/django.mo`: los doce
+# vuelven capitalizados. Cuando Django lo corrija, este fichero sobra y se borra.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SmartFood\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: es_CO\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. El título de una ficha de solo lectura del admin. El catálogo `es_CO` lo
+#. traduce «Vista %s», que es un sustantivo donde va un verbo: la pantalla
+#. encabezaba «Vista cierre de caja». Lo leen las fichas de los tres reportes y
+#. la de restricciones por estudiante, que son las que no se pueden editar.
+#: django/contrib/admin/options.py
+#, python-format
+msgid "View %s"
+msgstr "Ver %s"
+
+#. Los doce meses, en minúscula. Ver la nota de la cabecera.
+#: django/utils/dates.py
+msgid "January"
+msgstr "enero"
+
+#: django/utils/dates.py
+msgid "February"
+msgstr "febrero"
+
+#: django/utils/dates.py
+msgid "March"
+msgstr "marzo"
+
+#: django/utils/dates.py
+msgid "April"
+msgstr "abril"
+
+#: django/utils/dates.py
+msgid "May"
+msgstr "mayo"
+
+#: django/utils/dates.py
+msgid "June"
+msgstr "junio"
+
+#: django/utils/dates.py
+msgid "July"
+msgstr "julio"
+
+#: django/utils/dates.py
+msgid "August"
+msgstr "agosto"
+
+#: django/utils/dates.py
+msgid "September"
+msgstr "septiembre"
+
+#: django/utils/dates.py
+msgid "October"
+msgstr "octubre"
+
+#: django/utils/dates.py
+msgid "November"
+msgstr "noviembre"
+
+#: django/utils/dates.py
+msgid "December"
+msgstr "diciembre"

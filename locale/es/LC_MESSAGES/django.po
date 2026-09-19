@@ -1,10 +1,17 @@
 # Traducciones propias del proyecto SmartFood.
 #
 # **Solo lo que el catálogo de Django deja sin traducir.** Django 6.1 estrenó o
-# renombró estas cadenas del admin y su catálogo `es` todavía las devuelve en
-# inglés, así que en una pantalla por lo demás en español aparecían «Run» y
-# «- Select an option -». Se comprobó una por una contra
-# `django/conf/locale/es/LC_MESSAGES/django.mo`: las cuatro vuelven tal cual.
+# renombró estas cadenas del admin y sus catálogos españoles todavía las
+# devuelven en inglés, así que en una pantalla por lo demás en español aparecían
+# «Run», «- Select an option -» y «Filter by». Se comprobó una por una contra
+# `django/conf/locale/es/LC_MESSAGES/django.mo` y contra el de `es_CO`: las cinco
+# vuelven tal cual.
+#
+# **Lo que Django traduce mal no va aquí, va en `locale/es_CO/`.** El proyecto
+# corre con `LANGUAGE_CODE = "es-co"`, así que el catálogo que manda es el
+# `es_CO` y este solo actúa de reserva: una corrección escrita aquí la pisaría
+# el catálogo de Django. Este fichero sirve porque lo que arregla **no está en
+# ninguno de los dos**, y entonces la reserva es lo único que responde.
 #
 # Este fichero **no traduce nada del proyecto**: lo nuestro se escribe en español
 # desde el principio (`CLAUDE.md`) y no pasa por `gettext`. Es un parche sobre un
@@ -48,3 +55,13 @@ msgstr "Buscar"
 #, python-format
 msgid "Search %(name)s"
 msgstr "Buscar %(name)s"
+
+#. El rótulo de la navegación por fechas del listado, que encabeza los enlaces
+#. de año, mes y día. Lleva detrás el nombre del campo: «Filtrar por jornada».
+#. Django 6 lo estrenó y **ningún catálogo español lo trae**, ni el `es` ni el
+#. `es_CO`: se comprobó contra los dos `.mo`. Sale en los tres reportes de la
+#. cafetería, que son las pantallas con `date_hierarchy`.
+#: django/contrib/admin/templates/admin/date_hierarchy.html
+#, python-format
+msgid "Filter by %(field_name)s"
+msgstr "Filtrar por %(field_name)s"
