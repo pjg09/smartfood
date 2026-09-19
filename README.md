@@ -49,11 +49,11 @@ cinco sprints de dos semanas.
 > cuatro escenarios críticos: `TST-3` se demostró en el Sprint 2, `TST-1` y `TST-2` en el 3.
 > Los cuatro se ejercitan en la suite y fallan si la invariante que protegen se rompe.
 
-> El avance de arriba envejece. **La fuente es el plan de PR del sprint en curso**, que es
-> donde vive el estado de cada tarea; esta tabla solo lo resume. El del sprint en curso es
-> [`docs/plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md); el
-> del Sprint 3, con su revisión de cierre, está en
-> [`docs/plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md).
+> El avance de arriba envejece. **La fuente es el plan de PR de cada sprint**, que es donde
+> vive el estado de cada tarea; esta tabla solo lo resume. Los cuatro están cerrados y cada
+> uno lleva su revisión de cierre en `[S7]`; el último es
+> [`docs/plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md), que
+> además trae el guion del Avance 2 en `[S8]`.
 
 > **El prototipo no se despliega, por decisión tomada el 2026-09-17.** El entorno de
 > pruebas estuvo congelado desde el 2026-08-30 —el plan gratuito del proveedor no lo
@@ -132,7 +132,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`sprint-4-backlog.md`](./docs/sprint-4-backlog.md) | **Las 18 tareas del sprint en curso** (`TT-137`…`TT-154`), con responsable |
+| [`sprint-4-backlog.md`](./docs/sprint-4-backlog.md) | Las 18 tareas del Sprint 4 (`TT-137`…`TT-154`). **Cerrado** |
 | [`plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md) | Esas 18 tareas en 7 PR. **Es donde vive el estado** |
 | [`sprint-3-backlog.md`](./docs/sprint-3-backlog.md) | Sprint 3, cerrado: 43 tareas (`TT-94`…`TT-136`) y el cierre de su registro de riesgos |
 | [`plan-de-pull-requests-sprint-3.md`](./docs/plan-de-pull-requests-sprint-3.md) | Esas 43 tareas en 16 PR, con el estado de cada una y la **revisión de cierre** (`[S7]`) |
@@ -154,6 +154,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
 | [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
+| [`reglas-del-pedido-anticipado.md`](./docs/reglas-del-pedido-anticipado.md) | Qué mueve reservar, consultar y entregar — y qué **no** mueve cada uno |
 | [`formato-de-carga.md`](./docs/formato-de-carga.md) | Contrato del archivo de carga de estudiantes |
 | [`prueba-de-concepto-del-lector.md`](./docs/prueba-de-concepto-del-lector.md) | Guion de la validación con tarjetas impresas y lector físico (`ENT-02`) |
 
