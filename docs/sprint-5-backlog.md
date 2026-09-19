@@ -77,9 +77,9 @@ Lo que sí hay, y en ningún sprint anterior lo hubo, es una sección de **cierr
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-155` | App `reportes` y selector del historial de consumo de un estudiante | Pedro | ☐ |
-| `TT-156` | Pantalla del historial de consumo en la interfaz del acudiente | Carlos | ☐ |
-| `TT-157` | Caso de prueba: el acudiente solo ve a los estudiantes a su cargo | Alejandro | ☐ |
+| `TT-155` | App `reportes` y selector del historial de consumo de un estudiante | Pedro | ☑ |
+| `TT-156` | Pantalla del historial de consumo en la interfaz del acudiente | Carlos | ☑ |
+| `TT-157` | Caso de prueba: el acudiente solo ve a los estudiantes a su cargo | Alejandro | ☑ |
 
 El historial muestra **la información nutricional registrada al momento de cada venta**, no la actual: es lo que `TT-84` congeló en la línea de venta en el Sprint 2 (`DT-8`). Leer el producto actual en vez de la instantánea rompe `HU-22` retroactivamente.
 

@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-17; Sprint 3 cerrado — control parental, estado del estudiante y consulta en `INT-3`. Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre |
+| actualizado | 2026-09-19; `PR-01` del Sprint 5 — historial de consumo del acudiente (`HU-30`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.1] Qué responde este documento
 
@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta rutas
+## [S2] Las treinta y cuatro rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -58,6 +58,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
+| `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra** | Acudiente, **solo los suyos** | `TT-156` |
 | `/mis-estudiantes/<id>/desactivar/` | `POST`. Bloquea la tarjeta de un estudiante a cargo. **No hay ruta para reactivar** (`INVD-3`) | Acudiente, **solo los suyos** | `TT-122` |
 | `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
 | `/mis-estudiantes/<id>/limite/retirar/` | `POST`. Quita del todo el límite diario | Acudiente, **solo los suyos** | `TT-135` |
@@ -88,6 +89,7 @@ los mismos colores desde `DT-23`.
 | `/carga/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/recargar/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/consumo/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/limite/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/limite/retirar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/productos/` | 403 | 403 | 403 | **200** | 302 → acceso |
@@ -107,10 +109,10 @@ Cuatro filas piden explicación:
 - **El acudiente recibe `403` en la tarjeta, también la de su propio hijo.** `HU-45` es de
   `USR-5`: quien produce la tarjeta es el colegio. Si algún día el acudiente tiene que
   verla, será con una historia que lo pida.
-- **Un acudiente que pide la recarga o el límite de un estudiante ajeno recibe `404`, no
-  `403`.** Comprobado ejecutando. Es la misma regla del fragmento HTMX: los dos casos —no
-  existe y no es tuyo— se responden igual a propósito, porque un `403` le confirmaría
-  a un desconocido que ese estudiante existe. Los otros tres roles reciben `403` antes de
+- **Un acudiente que pide la recarga, el límite o el consumo de un estudiante ajeno
+  recibe `404`, no `403`.** Comprobado ejecutando. Es la misma regla del fragmento HTMX:
+  los dos casos —no existe y no es tuyo— se responden igual a propósito, porque un `403`
+  le confirmaría a un desconocido que ese estudiante existe. Los otros tres roles reciben `403` antes de
   que se mire ningún identificador: el rol se rechaza primero.
 - **La administración de la cafetería recibe `403` en el punto de venta.** No es un
   olvido: `[S11]` concede «registrar ventas en el punto de venta» al cajero y a nadie
@@ -319,10 +321,22 @@ le puede configurar: fijar un cupo no mueve dinero, así que `INVD-2` no lo alca
 `/mis-estudiantes/`: sus estudiantes, con selector cuando tiene más de uno, **el saldo de
 cada uno y sus últimos cinco movimientos** (`HU-07`). El saldo no es un campo guardado: se
 calcula sumando el historial al pedir la página (`INV-2`), y el historial va debajo
-precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). En la ficha están las cuatro cifras del estudiante —saldo, cupo diario, productos
-bloqueados y alérgenos bloqueados— (`HU-07`, `HU-09`, `HU-10`, `HU-11`): **ya no queda
-ningún hueco**. Lo que no hay se dice con palabras y nunca con un cero: «sin límite» y un
+precisamente para que la cifra se pueda comprobar. Si alguno está de baja, lo dice, y **su saldo sigue ahí**: congelado, sin poder recargarlo ni gastarlo, y con el aviso de que la devolución del dinero no se hace desde el sistema (`HU-52`, `ALC-OUT-01`). En la ficha están las seis cifras del estudiante, repartidas en cinco tarjetas —saldo,
+cupo diario, productos bloqueados, alérgenos bloqueados, reservas sin recoger y compras
+registradas— (`HU-07`, `HU-09`, `HU-10`, `HU-11`, `HU-23`, `HU-30`): **ya no queda ningún
+hueco**. Lo que no hay se dice con palabras y nunca con un cero: «sin límite» y un
 cupo de cero son lo contrario el uno del otro.
+
+Y `consumo`, el **historial de consumo** de cada estudiante (`HU-30`, `TT-156`): qué compró,
+cuándo, cuánto costó y **qué declaraba cada producto ese día**. Las cifras nutricionales salen
+de la instantánea que la venta congeló (`DT-8`, `HU-22`), no del catálogo de hoy: corregir una
+ficha o subir un precio no reescribe lo que un niño comió el mes pasado. Un producto sin ficha
+técnica aparece como **hueco declarado** y nunca como una fila de ceros —el cero afirmaría que
+no aporta nada, y nadie lo afirmó—. Las reservas entran en el historial porque **son ventas ya
+pagadas** (`DT-32`), y las que siguen en el mostrador se marcan «sin recoger» para que no se
+lean como consumidas. **No hay ninguna recomendación en esta pantalla**, así que no lleva el
+descargo de `INV-9`: enseñar lo que se compró no es valorar nada, y el aviso llega con la
+primera recomendación (`HU-34`), ni antes ni después.
 
 Entra desde el teléfono (`INT-1`), así que la pantalla se diseña a 390 px primero: la barra
 lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
@@ -510,13 +524,24 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 23. **Escanear la tarjeta de ese estudiante** en el punto de venta: su pedido sale **antes
     del saldo**. Pulsar *Entregar* y comparar: **el saldo no se mueve** y las existencias sí.
     Intentarlo otra vez lo rechaza. `HU-25`.
+24. **Volver a entrar como acudiente**, tarjeta *Consumo* → **Ver el historial**: ahí está
+    todo lo comprado en los pasos anteriores, con lo que cada producto declaraba ese día.
+    Para cerrar el argumento, **cambiarle el precio a un producto ya vendido** desde la
+    administración y recargar la pantalla: la compra sigue diciendo lo que costó entonces.
+    Es `DT-8` enseñada en vivo, y es lo que convierte el historial en un historial. `HU-30`,
+    `HU-22`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-Reportes y recomendaciones (`HU-30` … `HU-34`) y cierre de caja (`HU-55`, `HU-56`). Es lo
-que queda para el Sprint 5.
+Las recomendaciones (`HU-31` … `HU-34`), los reportes de la cafetería (`HU-35` … `HU-37`)
+y el cierre de caja (`HU-55`, `HU-56`). Es lo que queda del Sprint 5.
+
+**El historial de consumo ya está** (`HU-30`, `TT-155` … `TT-157`): el acudiente ve qué
+compró su hijo, renglón a renglón, **con la información nutricional del día de la compra**.
+Lo que falta encima de eso es sumarlo y compararlo, que es lo que traen `HU-31` y `HU-32`
+con el descargo de `HU-34`.
 
 **El inventario ya es trazable y los pedidos anticipados funcionan de punta a punta.** Toda
 merma lleva motivo y lo impone la base (`HU-28`, `INV-8`); las existencias de cualquier
@@ -558,8 +583,10 @@ sobrevive a su historia miente igual que mentiría su ausencia cuando era cierta
 historial (`HU-08`, `TST-3`) y verlo en su panel (`HU-07`). Lo que falta es gastarlo, que
 es la venta del punto de venta.
 
-La app `reportes` **no está creada**: cada una se crea en el sprint que
-la necesita (`[S3]` de `./decisiones-tecnicas.md`). `ventas` nació en `TT-57` para que la
+La app `reportes` **ya existe** (`TT-155`), y con ella están las ocho del proyecto: cada
+una se creó en el sprint que la necesitó (`[S3]` de `./decisiones-tecnicas.md`). Entra **sin
+modelos y sin migraciones**, porque un reporte es una lectura de hechos que otro dominio ya
+asentó. `ventas` nació en `TT-57` para que la
 pantalla tuviera dónde vivir y hoy tiene sus modelos (`TT-78`) y **su servicio** (`TT-80`):
 la venta con su medio de pago y su estudiante opcional, la línea de venta, y la transacción
 única que sostiene `INV-1`, `INV-2` e `INV-3` a la vez. La línea congela además el precio y los
