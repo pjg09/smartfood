@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-19; `PR-03` del Sprint 5 — historial de consumo (`HU-30`), alertas de frecuencia con su descargo (`HU-31`, `HU-34`) y comparación con la referencia sanitaria (`HU-32`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
+| actualizado | 2026-09-19; `PR-04` del Sprint 5 — el reporte de consumo del acudiente completo: historial (`HU-30`), frecuencia (`HU-31`), referencia sanitaria (`HU-32`), gasto (`HU-33`) y su descargo (`HU-34`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; el del historial se comprobó ejecutando con los cinco perfiles |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 ### [S0.1] Qué responde este documento
 
@@ -58,7 +58,7 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
-| `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra**, las alertas de frecuencia y el aporte frente a la referencia sanitaria, con su descargo | Acudiente, **solo los suyos** | `TT-156`, `TT-160`, `TT-164` |
+| `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra**, las alertas de frecuencia, el aporte frente a la referencia sanitaria y el gasto frente a lo recargado, con su descargo | Acudiente, **solo los suyos** | `TT-156`, `TT-160`, `TT-164`, `TT-166` |
 | `/mis-estudiantes/<id>/desactivar/` | `POST`. Bloquea la tarjeta de un estudiante a cargo. **No hay ruta para reactivar** (`INVD-3`) | Acudiente, **solo los suyos** | `TT-122` |
 | `/mis-estudiantes/<id>/limite/` | Fijar o cambiar el límite diario de gasto de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-96` |
 | `/mis-estudiantes/<id>/limite/retirar/` | `POST`. Quita del todo el límite diario | Acudiente, **solo los suyos** | `TT-135` |
@@ -360,6 +360,17 @@ añadidos, así que la cifra señala de más y nunca de menos. Un producto sin f
 que se calla lo que excluyó se lee como si estuviera completo. La tabla, su fuente y lo que
 no se pudo confirmar están en `./valores-de-referencia-nutricional.md`.
 
+Y el **resumen de gasto** (`HU-33`, `TT-166`): lo recargado contra lo gastado en el mismo
+periodo, sacado del libro de movimientos del que sale el saldo —no hay ningún dato nuevo que
+capturar (`INV-2`, `DT-4`)—. **Sus fechas son las de los movimientos, no las del consumo**, y
+esa es la única diferencia de calendario de la pantalla: el dinero de una reserva sale al
+reservar y la comida se consume al recogerla, así que un pedido pagado el domingo es gasto
+del domingo y consumo del lunes. El **saldo** que acompaña a las dos cifras no es del
+periodo: es la suma de toda la vida de la billetera, y decirlo evita la resta mental que no
+cuadra. Y si se gastó más de lo recargado en esos días, la pantalla aclara que **eso no es
+una deuda**: `INV-1` no deja que una compra deje el saldo en negativo, así que lo que pasó es
+que tiró del saldo que ya tenía.
+
 Y con ellas el **aviso de carácter orientativo** (`HU-34`, `TT-161`, **`INV-9`**), que no es
 un párrafo suelto: el descargo y las alertas son el mismo fragmento de plantilla, así que
 quien enseñe las alertas en otro sitio se lo lleva con ellas. Se pinta **haya alertas o no**
@@ -558,8 +569,8 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     administración y recargar la pantalla: la compra sigue diciendo lo que costó entonces.
     Es `DT-8` enseñada en vivo, y es lo que convierte el historial en un historial. `HU-30`,
     `HU-22`.
-25. **Arriba, en esa misma pantalla, las alertas de frecuencia** (`HU-31`) y el **aporte
-    nutricional** (`HU-32`). Con una demostración corta no saldrá ninguna alerta —hacen
+25. **Arriba, en esa misma pantalla, las alertas de frecuencia** (`HU-31`), el **aporte
+    nutricional** (`HU-32`) y el **gasto frente a lo recargado** (`HU-33`). Con una demostración corta no saldrá ninguna alerta —hacen
     falta cinco días distintos de la misma categoría—, y eso también se enseña: la pantalla
     dice qué umbral no se alcanzó, **no dice que la alimentación vaya bien**. El aporte sí
     sale con una sola compra, con su porcentaje y **con la norma citada debajo**. Lo que
@@ -571,11 +582,12 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-El resumen de gasto (`HU-33`), los reportes de la cafetería (`HU-35` … `HU-37`) y el cierre
-de caja (`HU-55`, `HU-56`). Es lo que queda del Sprint 5.
+Los reportes de la cafetería (`HU-35` … `HU-37`) y el cierre de caja (`HU-55`, `HU-56`). Es
+lo que queda del Sprint 5.
 
-**Con `HU-32`, el reporte de consumo del acudiente está completo salvo el gasto**: qué
-compró, con qué frecuencia y cuánto aportó frente a la referencia oficial.
+**`EPI-8` está cerrada para el acudiente**: qué compró, con qué frecuencia, cuánto aportó
+frente a la referencia oficial y en qué se fue el dinero. Lo que falta de reportes es de la
+cafetería, no de la familia.
 
 **El historial de consumo ya está** (`HU-30`, `TT-155` … `TT-157`): el acudiente ve qué
 compró su hijo, renglón a renglón, **con la información nutricional del día de la compra**.
