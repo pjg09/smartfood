@@ -315,12 +315,9 @@ class LineaVenta(models.Model):
     )
     sodio_mg = models.PositiveIntegerField("sodio (mg)", null=True, blank=True)
 
-    # Los campos que se copian del producto al vender. Vive aquí y no repartido
-    # por el servicio para que añadir un nutriente al catálogo sea **una** línea:
-    # si esta lista se queda corta, el dato nuevo no llega al historial y nadie
-    # se entera hasta que un reporte lo eche en falta meses después.
-    CAMPOS_DE_LA_INSTANTANEA = (
-        "porcion",
+    # Los nutrientes congelados, sin `porcion`: esa es texto y dice a qué se
+    # refieren las cifras, no es una de ellas (`TT-44`, `[S2]`).
+    CAMPOS_NUTRICIONALES = (
         "energia_kcal",
         "proteinas_g",
         "carbohidratos_g",
@@ -329,6 +326,12 @@ class LineaVenta(models.Model):
         "grasas_saturadas_g",
         "sodio_mg",
     )
+
+    # Los campos que se copian del producto al vender. Vive aquí y no repartido
+    # por el servicio para que añadir un nutriente al catálogo sea **una** línea:
+    # si esta lista se queda corta, el dato nuevo no llega al historial y nadie
+    # se entera hasta que un reporte lo eche en falta meses después.
+    CAMPOS_DE_LA_INSTANTANEA = ("porcion", *CAMPOS_NUTRICIONALES)
 
     class Meta:
         verbose_name = "línea de venta"
@@ -363,6 +366,24 @@ class LineaVenta(models.Model):
         es —un valor derivable de otros dos de la misma fila (`DT-19`)—.
         """
         return self.precio_unitario * self.cantidad
+
+    @property
+    def declara_informacion_nutricional(self):
+        """¿La línea congeló algún nutriente? **Vacío no es cero** (`TT-44`).
+
+        El gemelo de `catalogo.Producto.declara_informacion_nutricional`, sobre
+        la instantánea en vez de sobre el catálogo de hoy, y lo necesita el
+        historial de `HU-30`: un producto sin ficha técnica tiene que verse como
+        un hueco —«no lo declaró»— y no como una fila de ceros, que es una
+        afirmación sobre lo que el niño comió y nadie la hizo.
+
+        Se pregunta por los `CAMPOS_NUTRICIONALES`, no por la lista entera de la
+        instantánea: `porcion` es texto y describe a qué se refieren las cifras.
+        Un producto con «paquete de 30 g» y ningún nutriente sigue sin declarar.
+        """
+        return any(
+            getattr(self, campo) is not None for campo in self.CAMPOS_NUTRICIONALES
+        )
 
 
 class EstadoDelPedido(models.TextChoices):

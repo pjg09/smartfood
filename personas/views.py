@@ -31,6 +31,7 @@ from personas.services import (
 )
 from personas.tarjeta import ancho_mm, svg_del_codigo
 from personas.validacion import ArchivoInvalido
+from reportes.selectors import historial_de_consumo
 from restricciones.selectors import (
     alergenos_bloqueados_de,
     limite_diario_de,
@@ -97,7 +98,7 @@ def carga_de_estudiantes(request):
 ULTIMOS_MOVIMIENTOS = 5
 
 
-def _contexto_del_estudiante(estudiante):
+def _contexto_del_estudiante(estudiante, *, actor):
     """Lo que la ficha de un estudiante necesita, venga de la página o del fragmento.
 
     **La misma función para los dos caminos**, a propósito: la página y el
@@ -123,6 +124,13 @@ def _contexto_del_estudiante(estudiante):
     **Son dos cifras y no una suma**, a propósito: una lista de productos y una
     condición no se agregan. Sumarlas daría un número que no significa nada y
     escondería justo la distinción que `HU-10` y `HU-11` existen para marcar.
+
+    `TT-156` añade el recuento de compras, y **es la única lectura de aquí que
+    exige el actor**: el resto de los selectores de la ficha no autorizan a nadie
+    —quien lo hace es `estudiantes_a_cargo`, antes de llegar—, pero el consumo lo
+    concede `[S11]` **solo al acudiente del estudiante**, y esa comprobación vive
+    en la capa de datos (`DT-11`). Por eso esta función recibe quién pregunta en
+    vez de darlo por supuesto.
     """
     return {
         "seleccionado": estudiante,
@@ -143,6 +151,15 @@ def _contexto_del_estudiante(estudiante):
         # recuentos de arriba: la tarjeta solo dice cuántas hay pendientes.
         "pedidos_pendientes": (
             pedidos_pendientes_de(estudiante).count() if estudiante is not None else 0
+        ),
+        # `TT-156`, `HU-30`. Cuántas compras tiene el historial. Un `count()`
+        # otra vez: la tarjeta dice cuántas hay y el detalle está una pantalla
+        # más allá — traer aquí las líneas y sus nutrientes para contar ventas
+        # sería pedirle a la base todo el historial para pintar una cifra.
+        "compras": (
+            historial_de_consumo(actor=actor, estudiante=estudiante).count()
+            if estudiante is not None
+            else 0
         ),
     }
 
@@ -168,7 +185,10 @@ def panel_del_acudiente(request):
     return render(
         request,
         "personas/mis-estudiantes.html",
-        {"estudiantes": estudiantes, **_contexto_del_estudiante(seleccionado)},
+        {
+            "estudiantes": estudiantes,
+            **_contexto_del_estudiante(seleccionado, actor=request.user),
+        },
     )
 
 
@@ -194,7 +214,7 @@ def estudiante_seleccionado(request, estudiante_id):
     return render(
         request,
         "partials/estudiante-seleccionado.html",
-        _contexto_del_estudiante(estudiante),
+        _contexto_del_estudiante(estudiante, actor=request.user),
     )
 
 
@@ -238,7 +258,7 @@ def desactivacion_por_el_acudiente(request, estudiante_id):
             request,
             "partials/estudiante-seleccionado.html",
             {
-                **_contexto_del_estudiante(estudiante),
+                **_contexto_del_estudiante(estudiante, actor=request.user),
                 "error": "; ".join(error.messages),
             },
         )
@@ -247,7 +267,10 @@ def desactivacion_por_el_acudiente(request, estudiante_id):
     return render(
         request,
         "partials/estudiante-seleccionado.html",
-        {**_contexto_del_estudiante(estudiante), "recien_desactivado": True},
+        {
+            **_contexto_del_estudiante(estudiante, actor=request.user),
+            "recien_desactivado": True,
+        },
     )
 
 

@@ -23,6 +23,7 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
+from reportes.views import consumo_del_estudiante
 from restricciones.views import (
     alergenos_bloqueados,
     bloqueo_de_alergeno,
@@ -152,6 +153,19 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/recargar/",
         recarga,
         name="recarga",
+    ),
+    # Historial de consumo (`TT-156`, `HU-30`). Cuelga del estudiante como la
+    # recarga y por el mismo motivo: **lo que se consumió es suyo**, no de la
+    # cuenta del acudiente. Un acudiente con tres hijos tiene tres historiales, y
+    # una ruta sin estudiante no sabría cuál.
+    #
+    # Una sola ruta, no dos: la página se envía entera y no hay fragmento que
+    # intercambiar (`DT-16`). Filtrar por periodo llega con `HU-33`, que es quien
+    # define qué es un periodo.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/consumo/",
+        consumo_del_estudiante,
+        name="historial-de-consumo",
     ),
     # Reserva anticipada (`TT-145`, `HU-23`). Cuelga del estudiante por lo mismo
     # que la recarga y el límite: **se reserva PARA alguien**, y la restricción

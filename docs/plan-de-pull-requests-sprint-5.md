@@ -71,21 +71,21 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **0** de 33 | **0** de 13 |
-| Pendientes | 33 | 13 |
+| **Finalizadas** | **3** de 33 | **1** de 13 |
+| Pendientes | 30 | 12 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 0 | 11 |
-| Carlos | 0 | 10 |
-| Alejandro | 0 | 6 |
+| Pedro | 1 | 11 |
+| Carlos | 1 | 10 |
+| Alejandro | 1 | 6 |
 | Naomi | 0 | 6 |
 
 ### [S3.1] Estado de los 13 Pull Requests
 
 | PR | Tareas | Qué cierra | Estado |
 |---|---|---|---|
-| `PR-01` | `TT-155`–`TT-157` | `HU-30` · app `reportes` | ☐ |
+| `PR-01` | `TT-155`–`TT-157` | `HU-30` · app `reportes` | ☑ |
 | `PR-02` | `TT-158`–`TT-161` | `HU-31` **y `HU-34`** · **`INV-9`** | ☐ |
 | `PR-03` | `TT-162`–`TT-164` | `HU-32` | ☐ |
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☐ |
@@ -114,13 +114,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-30` |
 | Invariantes | consume `DT-8`; `S11` en el control de acceso |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-155` | App `reportes` y selector del historial de consumo | Pedro | ☐ |
-| `TT-156` | Pantalla del historial en la interfaz del acudiente | Carlos | ☐ |
-| `TT-157` | Caso de prueba: el acudiente solo ve a sus estudiantes | Alejandro | ☐ |
+| `TT-155` | App `reportes` y selector del historial de consumo | Pedro | ☑ |
+| `TT-156` | Pantalla del historial en la interfaz del acudiente | Carlos | ☑ |
+| `TT-157` | Caso de prueba: el acudiente solo ve a sus estudiantes | Alejandro | ☑ |
 
 Crea la app `reportes`, que `DT-15` declaró desde el principio: **no es una desviación** y no
 necesita un `DT-` nuevo, a diferencia de `restricciones` en el Sprint 3.
@@ -128,6 +128,16 @@ necesita un `DT-` nuevo, a diferencia de `restricciones` en el Sprint 3.
 > **Lee la instantánea, no el producto.** El historial muestra la información nutricional
 > **registrada al momento de cada venta** (`TT-84`, `DT-8`). Leer el producto actual rompe
 > `HU-22` retroactivamente: editar un precio reescribiría el pasado.
+
+> ✅ **Integrado.** La app `reportes` entra **sin modelos y sin migraciones**: un reporte es
+> una lectura de hechos que ya están escritos en `ventas`, `billetera` e `inventario`, y una
+> tabla propia de «consumo» sería la segunda fuente de verdad que `DT-19` evita. Con ella
+> están las ocho apps del proyecto: no queda ninguna por crear.
+>
+> El aviso de arriba se comprueba **por los dos caminos por los que se rompe**: el selector,
+> que podría leer el producto, y la plantilla, que podría pintarlo aunque el selector traiga
+> la línea congelada. Los dos tienen prueba, y las dos fallan al introducir la violación a
+> propósito.
 
 ---
 
