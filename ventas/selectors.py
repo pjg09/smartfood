@@ -6,15 +6,31 @@ respuestas HTTP.
 """
 
 from dataclasses import dataclass
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+from django.utils import timezone
 
 from billetera.selectors import consumo_del_dia, saldo_de
 from catalogo.selectors import productos_en_el_catalogo
 from cuentas.models import Rol
 from inventario.selectors import existencias_por_producto
 from restricciones.selectors import RestriccionesVigentes, restricciones_vigentes
+
+# El importe de un renglón, calculado por la base: precio congelado por unidades
+# (`DT-8`). Se declara **una vez y aquí**, que es de donde es el renglón, porque
+# lo usan el historial del acudiente, el reporte de ventas de la cafetería y el
+# efectivo esperado del cierre. Repetir la expresión es como acaban dando cifras
+# distintas (`DT-19`).
+#
+# Se atraviesa **desde la venta** —`lineas__…`—, así que sirve tal cual en
+# cualquier `QuerySet` de `Venta`.
+IMPORTE_DE_LA_LINEA = ExpressionWrapper(
+    F("lineas__precio_unitario") * F("lineas__cantidad"),
+    output_field=DecimalField(max_digits=12, decimal_places=2),
+)
 
 
 @dataclass(frozen=True)
@@ -329,4 +345,128 @@ def reservas_pendientes(*, actor):
         .select_related("venta", "venta__estudiante")
         .prefetch_related("venta__lineas__producto")
         .order_by("creado_en")
+    )
+
+
+def efectivo_esperado_de(fecha):
+    """Lo que la caja debería tener de una jornada: sus ventas en efectivo.
+
+    `TT-172`, `HU-55`, `INVD-5`. Es **la** cifra de la historia, y sale del
+    libro de ventas tal cual: no hay tabla de recaudo que alguien tenga que
+    mantener al día, igual que no hay columna `saldo` ni columna `existencias`
+    (`DT-4`, `DT-5`).
+
+    ── QUÉ ENTRA Y QUÉ NO ──────────────────────────────────────────────────
+    Entra `MedioDePago.EFECTIVO` y nada más.
+
+    · **La transferencia queda fuera** (`DEC-6`, `DEC-1`): va de la app bancaria
+      del cliente a la cuenta de la cafetería y **ese dinero nunca pasó por el
+      cajón**. Sumarla haría que todo cierre diera un faltante igual a lo
+      transferido, y el motivo obligatorio de `HU-55` se llenaría de «faltan las
+      transferencias» hasta dejar de significar nada.
+    · **La billetera también** (`HU-54`): la compra de un estudiante descuenta
+      saldo, no billetes. El dinero entró el día de la recarga y ni siquiera
+      entonces fue efectivo — la recarga es simulada (`ALC-OUT-01`).
+
+    Las **reservas** no necesitan regla propia y por eso no la tienen: son
+    siempre de un estudiante, así que son siempre de billetera (`DT-32`,
+    `venta_medio_de_pago_segun_el_cliente`) y el filtro por efectivo las deja
+    fuera solo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **No autoriza a nadie**, como `saldo_de` y por el mismo motivo: la llaman el
+    servicio de cierre —que ya exigió el rol— y el selector de la pantalla. La
+    autorización va en quien llama.
+
+    Devuelve `Decimal("0.00")` cuando no hubo ninguna venta en efectivo. Aquí sí
+    es un cero de verdad y no un hueco: la caja tenía que tener cero, y el
+    cajero cuenta lo mismo con ventas que sin ellas.
+    """
+    from ventas.models import MedioDePago, Venta
+
+    # Rango sobre la columna y no `creado_en__date`, por lo mismo que en
+    # `ventas_registradas`: `__date` envuelve la columna en una función y deja
+    # fuera el índice `venta_por_fecha`.
+    inicio = timezone.make_aware(datetime.combine(fecha, time.min))
+    fin = timezone.make_aware(datetime.combine(fecha + timedelta(days=1), time.min))
+
+    total = (
+        Venta.objects.filter(
+            medio_pago=MedioDePago.EFECTIVO, creado_en__gte=inicio, creado_en__lt=fin
+        ).aggregate(total=Sum(IMPORTE_DE_LA_LINEA))
+    )["total"]
+
+    return total or Decimal("0.00")
+
+
+@dataclass(frozen=True)
+class InformacionDelCierre:
+    """Lo que el cajero ve antes de contar el dinero (`TT-173`, `HU-55`).
+
+    `cierre` es el de la jornada si ya se cerró, y `None` si no. Se trae junto
+    con el esperado y no en una consulta aparte porque la pantalla hace **una**
+    pregunta —«¿cómo va la caja de hoy?»— y las dos mitades de la respuesta se
+    leen juntas: ofrecer el formulario de un cierre ya hecho sería invitar a un
+    error que la base va a rechazar (`cierre_de_caja_uno_por_jornada`).
+    """
+
+    fecha: object
+    efectivo_esperado: Decimal
+    ventas_en_efectivo: int
+    cierre: object
+
+    @property
+    def ya_esta_cerrada(self):
+        return self.cierre is not None
+
+
+def informacion_del_cierre(*, actor, fecha=None):
+    """El esperado de la jornada y su cierre, si ya lo hay (`TT-173`, `HU-55`).
+
+    ── LA AUTORIZACIÓN VIVE AQUÍ, COMO EN `informacion_de_cobro` ───────────
+    Este es el único camino por el que el recaudo en efectivo del día llega a
+    una pantalla, así que exige el rol aunque alguien escriba la URL a mano
+    (`DT-11`, `INV-4`). `efectivo_esperado_de` no autoriza a propósito: el
+    servicio de cierre también lo consulta, y ahí el rol ya se comprobó.
+
+    **Cerrar la caja es del cajero.** `HU-55` es de `USR-3` y `DEC-6` la
+    describe como lo que hace quien cuenta el dinero al terminar la jornada. La
+    administración no cuadra la caja: **consulta** los cierres, que es `HU-56` y
+    es otra pantalla.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `fecha` se recibe y no se lee del reloj, por lo que `CLAUDE.md` deja escrito
+    de las pruebas de ventana: un selector que mira `timezone.now()` falla solo
+    una madrugada y nadie sabe por qué. Quien no la pasa obtiene la jornada de
+    hoy en la zona local, que es lo que hace la vista.
+    """
+    from cuentas.models import Rol
+    from ventas.models import CierreDeCaja, MedioDePago, Venta
+
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Cerrar la caja exige identificarse.")
+    if actor.rol != Rol.CAJERO:
+        raise PermissionDenied(
+            "Cuadrar la caja es del rol cajero, y de ningún otro (HU-55, DEC-6)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    if fecha is None:
+        fecha = timezone.localdate()
+
+    inicio = timezone.make_aware(datetime.combine(fecha, time.min))
+    fin = timezone.make_aware(datetime.combine(fecha + timedelta(days=1), time.min))
+
+    return InformacionDelCierre(
+        fecha=fecha,
+        efectivo_esperado=efectivo_esperado_de(fecha),
+        # Cuántas ventas componen esa cifra. Es lo que convierte el esperado en
+        # algo que se puede comprobar en vez de creer: `INVD-5` pide que se
+        # **explique** desde las ventas registradas, y «$84.000 de 12 ventas en
+        # efectivo» invita a ir a mirarlas.
+        ventas_en_efectivo=Venta.objects.filter(
+            medio_pago=MedioDePago.EFECTIVO, creado_en__gte=inicio, creado_en__lt=fin
+        ).count(),
+        cierre=CierreDeCaja.objects.filter(fecha=fecha).select_related("cajero").first(),
     )

@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y seis rutas
+## [S2] Las treinta y siete rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -74,6 +74,7 @@ los mismos colores desde `DT-23`.
 | `/punto-de-venta/carrito/` | `POST`. Monta la venta: añadir, descontar, quitar, vaciar | **Solo cajero** | `TT-81` |
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/punto-de-venta/entregar/` | `POST`. Registra la entrega de un pedido anticipado. **No descuenta saldo**: ya se pagó al reservarse | **Solo cajero** | `TT-150` |
+| `/punto-de-venta/cierre/` | Cierre de caja: el efectivo esperado de la jornada, calculado desde las ventas registradas, contra lo que el cajero cuenta | **Solo cajero** | `TT-173` |
 | `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: catálogo con cantidades, cobro al confirmar y reservas pendientes | **Solo su acudiente** | `TT-145` |
 | `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente | **Cajero y administración** | `TT-148` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
@@ -104,6 +105,7 @@ los mismos colores desde `DT-23`.
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/punto-de-venta/identificacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/punto-de-venta/cierre/` | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/catalogo/imagenes/<clave>` | 200 | 200 | 200 | 200 | **200** |
 
 Cuatro filas piden explicación:
@@ -133,15 +135,22 @@ qué pasa al imprimirla.
 |---|---|---|
 | `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
 | `base-acceso.html` | Dos columnas: panel de marca y formulario | `/login/`, `/invitacion/…`, `/invitacion/lista/` |
-| `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37` |
+| `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37`, `/reservas/`, `/punto-de-venta/cierre/` |
 | `base-punto-de-venta.html` | Pantalla completa, sin diálogos, con foco permanente y una **columna de iconos que no se despliega** | `/punto-de-venta/` |
 | `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |
 
 **El punto de venta (`INT-2`) ya tiene el suyo** (`TT-57`): se opera con teclado y lector,
 así que no lleva diálogos y el foco vuelve solo al campo del modo activo. Su columna
 lateral es de iconos y **no se despliega**: no hay botón que lo intente, porque los 280 px
-de las etiquetas saldrían de la zona donde el cajero pulsa. Hoy tiene una sola entrada
-—esta misma pantalla—, así que sirve para situarse y para salir, no para navegar.
+de las etiquetas saldrían de la zona donde el cajero pulsa. Tiene tres entradas —la caja,
+la cola de reservas y el cierre de la jornada—, que son los tres sitios donde trabaja el
+cajero y ninguno más.
+
+**Dos de esas tres no viven dentro de este armazón**, y es deliberado: la cola de reservas
+la comparte con la administración (`DT-34`) y el cierre se hace una vez, al final, con
+billetes en la mano. La rejilla de tres zonas sin scroll está hecha para cobrar con una
+fila delante; añadirle una cuarta zona sería romperla para dos pantallas que no la
+necesitan.
 
 **Los dos modos de identificación son pestañas**, y los dos campos existen siempre en el
 documento: la pestaña enseña uno y esconde el otro, no los crea. Eso es lo que mantiene una
@@ -404,9 +413,10 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 ### Cajero (`USR-3`)
 
-`/punto-de-venta/`, y **solo eso**: es su única pantalla y su menú tiene una sola entrada.
-Cualquier otro rol recibe `403` aunque escriba la URL (`DT-11`), y él no entra al admin —
-`[S11]` le concede registrar ventas, y registrar ventas ocurre entero aquí. La pantalla
+`/punto-de-venta/`, más la cola de reservas (`HU-24`) y el cierre de caja de la jornada
+(`HU-55`). Cualquier otro rol recibe `403` en el punto de venta aunque escriba la URL
+(`DT-11`), y él no entra al admin — `[S11]` le concede registrar ventas, y registrar ventas
+ocurre entero aquí. La pantalla
 coloca las tres zonas —quién compra, qué compra y cuánto es— y el campo donde escribe el
 lector, que retiene el foco.
 
@@ -505,6 +515,19 @@ alérgeno, producto bloqueado, existencias, cupo del día y saldo — todas dent
 transacción. Lo que no se arregla en el mostrador va delante; lo que sí —quitar un renglón,
 recargar— va detrás, para que el cajero lea el motivo que de verdad explica el rechazo.
 
+**Y al terminar la jornada cuadra la caja** (`HU-55`, `DEC-6`). La pantalla le enseña **el
+efectivo esperado calculado desde las ventas registradas** —y de cuántas ventas sale, para
+que pueda ir a comprobarlo— y le pide lo que cuenta: el efectivo del cajón y la base que
+dejó para dar cambio. Si la diferencia no es cero, **el motivo es obligatorio**, con el
+mismo criterio que `ALC-IN-18` aplica a la merma.
+
+**No hay campo para el efectivo esperado, y esa ausencia es `INVD-5`.** `PA-7` describe que
+hoy la cafetería cuadra contra **su estimación** de lo vendido; si la cifra se pudiera
+escribir, el sistema habría cambiado el papel por una pantalla y nada más. **Las
+transferencias quedan fuera del cuadre**: ese dinero fue de banco a banco y nunca pasó por
+el cajón. Y el cuadre es **uno por jornada**, no uno por cajero: un cierre por turno sería
+el módulo de turnos que `DEC-6` descarta. Está todo en `./reglas-del-cierre-de-caja.md`.
+
 ---
 
 ## [S5] El recorrido de demostración
@@ -599,13 +622,25 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     está siempre es el descargo de `INV-9` (`HU-34`), con o sin recomendaciones. Para ver
     las alertas de verdad hay que sembrar el historial: el atajo está en `[S2.12]` de
     `./desarrollo.md`.
+26. **Como cajero, *Cierre de caja***: la pantalla enseña el efectivo esperado de la jornada
+    y **de cuántas ventas sale**. Conviene enseñarlo después del paso 18, que es el que mete
+    efectivo en la caja — y comparar: **la venta por transferencia no está ahí dentro**, ni
+    las compras de los estudiantes. Se cuenta un billete de menos a propósito: sin motivo, la
+    pantalla no deja cuadrar. Es el paso que más dice del proyecto en la sustentación, porque
+    `PA-7` describe que hoy la cafetería cuadra contra **su estimación** de lo vendido, y aquí
+    no hay ninguna casilla donde escribirla. `HU-55`, `DEC-6`, `INVD-5`.
 
 ---
 
 ## [S6] Lo que todavía no existe
 
-El reporte de auditoría (`HU-37`) y el cierre de caja (`HU-55`, `HU-56`). Es lo que queda del
-Sprint 5.
+El reporte de auditoría (`HU-37`) y el reporte de cierres de caja (`HU-56`). Es lo que queda
+del Sprint 5.
+
+**El cierre de caja ya está** (`HU-55`, `TT-171` … `TT-174`): el cajero cuadra la jornada
+contra las ventas en efectivo registradas, con el esperado **calculado y nunca digitado**
+(`INVD-5`), las transferencias fuera del cuadre y motivo obligatorio si hay diferencia. Lo
+que falta es **consultarlos**, que es `HU-56` y es del administrador.
 
 **El de movimientos de inventario ya está** (`HU-36`, `TT-169`, `TT-170`): el mismo libro del
 admin, ahora con navegación por fechas y el consolidado del periodo —entradas, salidas, neto

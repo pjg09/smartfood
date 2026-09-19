@@ -34,6 +34,7 @@ from restricciones.views import (
 )
 from ventas.views import (
     carrito,
+    cierre_de_caja,
     cliente_generico,
     cobrar,
     entrega,
@@ -287,5 +288,14 @@ urlpatterns = [
     # de la cola de `HU-24`: consultar lo que hay que preparar y entregárselo al
     # estudiante que llega son dos momentos distintos.
     path("punto-de-venta/entregar/", entrega, name="entrega"),
+    # `TT-173`, `HU-55`, `DEC-6`. El cierre de caja de la jornada. **Cuelga del
+    # punto de venta** porque es lo último que hace el cajero en su turno, y la
+    # historia lo sitúa ahí; pero **no usa el armazón del punto de venta**, que
+    # es una rejilla de tres zonas pensada para cobrar con una fila delante.
+    #
+    # Una sola ruta, no dos: la pantalla se envía entera y responde entera. No
+    # hay fragmento HTMX que separar (`DT-16`) — y como escribe, termina en una
+    # redirección para que recargar el navegador no intente cuadrar dos veces.
+    path("punto-de-venta/cierre/", cierre_de_caja, name="cierre-de-caja"),
     path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
 ]

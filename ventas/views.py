@@ -6,6 +6,9 @@ renderizar. **Cero lógica de negocio** (`DT-15`).
 Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
 """
 
+from decimal import Decimal
+
+from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -14,6 +17,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import saldo_de
+from billetera.templatetags.dinero import dinero
 from cuentas.models import Rol
 from personas.models import Estudiante
 from personas.selectors import (
@@ -27,13 +31,16 @@ from ventas.selectors import (
     catalogo_de_venta,
     catalogo_para_reservar,
     informacion_de_cobro,
+    informacion_del_cierre,
     lineas_del_carrito,
     pedidos_pendientes_de,
     reservas_pendientes,
 )
 from ventas.models import PedidoAnticipado
 from ventas.services import (
+    CierreRechazado,
     VentaRechazada,
+    cerrar_caja,
     entregar,
     registrar_venta,
     reservar,
@@ -541,4 +548,104 @@ def entrega(request):
             productos=catalogo_de_venta(),
             oob_catalogo=True,
         ),
+    )
+
+
+class CierreDeCajaForm(forms.Form):
+    """Lo que el cajero cuenta: la base y el efectivo del cajón (`TT-173`).
+
+    ═══════════════════════════════════════════════════════════════════════
+    **NO HAY CAMPO PARA EL EFECTIVO ESPERADO, Y ESA AUSENCIA ES `INVD-5`.**
+
+    La pantalla lo **enseña** —es la cifra contra la que se cuenta— y no lo
+    **pide**. Un campo aquí, aunque llegara relleno, sería una casilla que se
+    puede editar antes de enviar, y entonces el sistema volvería a cuadrar
+    contra una estimación como en `PA-7`.
+    ═══════════════════════════════════════════════════════════════════════
+
+    `motivo` es opcional **en el formulario** y obligatorio cuando la caja no
+    cuadra. La regla no puede vivir aquí porque depende de una cifra que el
+    formulario no conoce: la decide el servicio y la garantiza
+    `cierre_de_caja_diferencia_con_motivo` (`DT-15`).
+    """
+
+    base = forms.DecimalField(
+        label="Base para dar cambio",
+        min_value=Decimal("0"),
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={"step": "0.01", "inputmode": "decimal"}),
+        help_text="El dinero que había en el cajón y no salió de ninguna venta.",
+    )
+    efectivo_contado = forms.DecimalField(
+        label="Efectivo contado",
+        min_value=Decimal("0"),
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={"step": "0.01", "inputmode": "decimal"}),
+        help_text="Todo lo que hay en el cajón, con la base incluida.",
+    )
+    motivo = forms.CharField(
+        label="Motivo de la diferencia",
+        required=False,
+        max_length=200,
+        widget=forms.TextInput(attrs={"placeholder": "Faltó un billete de $10.000…"}),
+        help_text="Obligatorio solo si la caja no cuadra.",
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def cierre_de_caja(request):
+    """La pantalla de cierre de caja de la jornada (`TT-173`, `HU-55`).
+
+    **Solo el cajero.** Cuadrar la caja es de `USR-3` (`DEC-6`), y la
+    autorización la hace el selector, no un `if` de esta vista: es el único
+    camino por el que el recaudo en efectivo del día llega a una pantalla, y
+    responde `PermissionDenied` aunque alguien escriba la URL (`DT-11`).
+
+    ── VIVE EN EL ARMAZÓN DE LA APLICACIÓN, NO EN EL DE LA CAJA ────────────
+    `base-punto-de-venta.html` es una pantalla completa de tres zonas, sin
+    scroll y con el foco atado al lector: está hecha para cobrar con una fila
+    delante. El cierre es lo contrario —se hace una vez, al final, sin nadie
+    esperando y con billetes en la mano—, y meterlo en esa rejilla obligaría a
+    inventarle una cuarta zona a un armazón que tiene tres por una razón.
+
+    Es el mismo camino que `TT-148` tomó con la cola de reservas, y por eso la
+    entrada está en los dos menús del cajero: en la barra del punto de venta,
+    para llegar desde la caja, y en la de la aplicación, para volver.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **No es una vista HTMX**: cerrar la caja escribe y termina en una
+    redirección, para que recargar el navegador no intente cuadrar dos veces
+    (`DT-16`). Que la segunda vez fallaría por `cierre_de_caja_uno_por_jornada`
+    no es motivo para dejar la trampa puesta.
+    """
+    informacion = informacion_del_cierre(actor=request.user)
+
+    formulario = CierreDeCajaForm(request.POST or None)
+
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            cierre = cerrar_caja(
+                actor=request.user,
+                base=formulario.cleaned_data["base"],
+                efectivo_contado=formulario.cleaned_data["efectivo_contado"],
+                motivo=formulario.cleaned_data["motivo"],
+            )
+        except CierreRechazado as error:
+            # El motivo que falta no es culpa de un campo concreto —depende de
+            # las tres cifras a la vez—, así que se cuelga del formulario y no
+            # de `motivo`. Igual que en la recarga.
+            formulario.add_error(None, str(error))
+        else:
+            messages.success(
+                request,
+                f"Caja cuadrada. {'Sin diferencia' if cierre.cuadra else 'Con diferencia'}: "
+                f"{dinero(cierre.diferencia)}.",
+            )
+            return redirect("cierre-de-caja")
+
+    return render(
+        request,
+        "ventas/cierre-de-caja.html",
+        {"informacion": informacion, "form": formulario},
     )

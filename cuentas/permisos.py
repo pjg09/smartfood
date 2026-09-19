@@ -161,6 +161,13 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
         # `ventas.selectors.informacion_de_cobro`, que exige el rol, no un
         # permiso de Django.
         "Consultar saldo de un estudiante (hecha en INT-2, solo al cobrar)",
+        # `HU-55`, `DEC-6`, `TT-171`. **Modelo propio desde este sprint y sin
+        # permiso de admin**, como la venta: `CierreDeCaja` entra en `ventas`,
+        # que está abajo en `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`. El cajero
+        # cuadra la caja en `INT-2` y quién puede hacerlo lo decide
+        # `cerrar_caja` con el `actor` que recibe. Esta fila no sale de `[S11]`
+        # —que no tiene una para el cuadre— sino de `DEC-6`.
+        "Cerrar la caja de la jornada (modelo desde TT-171, sin permiso de admin)",
     ],
     # «Consultar restricciones de un estudiante» ya no está en ninguno de los dos:
     # se mudó arriba con `TT-111`, como `view` sobre

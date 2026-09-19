@@ -18,6 +18,11 @@ escritos — el mismo razonamiento con el que `TT-67` creó la restricción de
 `INV-8` antes de que `HU-28` la ejercitara.
 ═══════════════════════════════════════════════════════════════════════════
 
+**Aquí vive también el cierre de caja** (`TT-171`, `HU-55`), y no en `reportes`:
+un cuadre no es una lectura de hechos ajenos, es **un hecho nuevo** que un cajero
+registra al terminar su jornada, con su servicio y sus restricciones. Lo que sí
+es un reporte es consultarlos (`HU-56`).
+
 **`estudiante` es opcional, y eso no es laxitud: es `DEC-1`.** Una venta sin
 estudiante **es** una venta a cliente genérico (`USR-6`, `HU-53`), que descuenta
 inventario como cualquier otra y no aplica restricciones alimentarias porque no
@@ -96,8 +101,7 @@ class Venta(models.Model):
     **El cajero no es opcional.** Toda venta la registra alguien, y `[S11]`
     concede «registrar ventas en el punto de venta» a `USR-3` y a nadie más. Que
     el campo exista no autoriza: quién puede vender lo comprueba el servicio, y
-    esto solo deja constancia de quién lo hizo — que es lo que `HU-55` necesitará
-    para cuadrar la caja.
+    esto solo deja constancia de quién lo hizo.
 
     `PROTECT` en las dos claves ajenas. Dar de baja a un estudiante no borra
     (`DT-12`, `HU-51`) y su historial de consumo sigue siendo suyo; desactivar
@@ -502,3 +506,167 @@ class PedidoAnticipado(models.Model):
     @property
     def esta_pendiente(self):
         return self.estado == EstadoDelPedido.PENDIENTE
+
+
+class CierreDeCaja(models.Model):
+    """El cuadre del efectivo de una jornada (`TT-171`, `HU-55`, `DEC-6`).
+
+    ═══════════════════════════════════════════════════════════════════════
+    **EL EFECTIVO ESPERADO NO SE DIGITA: SE CALCULA** (`INVD-5`).
+
+    Es el sentido entero de la historia. `PA-7` describe lo que hace hoy la
+    cafetería: cuadrar el efectivo contra **su estimación** de lo vendido. Si
+    esta tabla admitiera una cifra escrita a mano, el sistema habría cambiado
+    el papel por una pantalla y nada más.
+
+    Por eso el campo existe pero **ningún camino lo recibe**: lo rellena
+    `cerrar_caja` sumando las ventas en efectivo de la jornada, y no hay
+    parámetro por el que entre otra cosa. La prueba que lo fija mira el
+    bytecode del servicio, no su firma.
+    ═══════════════════════════════════════════════════════════════════════
+
+    ── POR QUÉ SÍ SE GUARDA, SI ES UNA SUMA DE OTRA TABLA ──────────────────
+    Parece la columna `saldo` que `DT-4` prohíbe, y no lo es: es una
+    **instantánea**, la misma figura que `DT-8` con el precio de la línea. Lo
+    que se guarda no es «lo que suman hoy las ventas de aquel día», sino
+    **contra qué cifra se contó el dinero aquella tarde**.
+
+    La diferencia se nota con una venta registrada tarde. Si el esperado se
+    recalculara al leerlo, un cobro asentado después del cuadre movería la
+    diferencia de un cierre ya firmado: el descuadre de $2.000 que alguien
+    explicó por escrito pasaría a ser otro, o a no existir, sin que nadie
+    tocara nada. Un asiento no se reescribe (`INV-2`, `INV-3`), y este lo es.
+
+    `INVD-5` sigue en pie —«el efectivo esperado del día **debe poder
+    explicarse** a partir de las ventas en efectivo registradas»—: se explica
+    yendo al reporte de ventas del día, filtrado por efectivo. Lo que la
+    invariante prohíbe es que la cifra salga de otro sitio, no que quede
+    escrita.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LA DIFERENCIA NO ES UNA COLUMNA, Y ES LA OTRA CARA DE LO ANTERIOR ───
+    Sale de tres columnas de **esta misma fila** que ya no se mueven, así que
+    guardarla sería la desnormalización que `DT-19` evita: dos cifras que
+    tienen que coincidir siempre acaban un día no coincidiendo, y entonces no
+    hay forma de saber cuál miente. Es exactamente el caso de
+    `LineaVenta.importe`, que tampoco es columna.
+
+    `HU-55` pide «calcular y registrar la diferencia», y queda registrada: los
+    tres sumandos están escritos y la resta no admite otro resultado.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── UN CIERRE POR JORNADA, Y NO UNO POR CAJERO ──────────────────────────
+    `DEC-6` lo dice dos veces: «el cuadre es **diario**» y «**no hay apertura
+    formal de turno**». Un cierre por cajero sería un turno con otro nombre —y
+    obligaría a declarar una base al empezar, que es justo lo que la decisión
+    descarta—. Lo impone una `UniqueConstraint` sobre la fecha.
+
+    `cajero` dice entonces **quién cuadró**, no de quién son las ventas. Con
+    dos cajeros en la misma jornada, el cuadre sigue siendo uno y lo firma
+    quien cuenta el dinero al final del día.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **La base no se declara al abrir: se registra al cerrar.** Es el dinero que
+    había en el cajón para dar cambio y que no salió de ninguna venta, así que
+    se resta de lo contado antes de comparar. Sin ella, todo cierre daría un
+    sobrante igual a la base y el motivo obligatorio dejaría de significar algo.
+
+    La clave primaria es UUIDv7 generado en la aplicación (`DT-17`).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
+    # `DateField` y no `DateTimeField`: lo que se cuadra es una jornada, no un
+    # instante. Es además lo que hace comprobable «un cierre por día» con una
+    # restricción de unicidad; sobre una marca de tiempo no habría dos iguales
+    # jamás y la regla no existiría.
+    fecha = models.DateField("jornada")
+    cajero = models.ForeignKey(
+        "cuentas.Usuario",
+        on_delete=models.PROTECT,
+        related_name="cierres_de_caja",
+        verbose_name="cajero",
+    )
+    base = models.DecimalField("base para cambio", max_digits=10, decimal_places=2)
+    efectivo_contado = models.DecimalField(
+        "efectivo contado", max_digits=10, decimal_places=2
+    )
+    # Lo calcula el servicio desde las ventas en efectivo de la jornada. Ver el
+    # bloque de arriba: **no hay camino por el que se digite**.
+    efectivo_esperado = models.DecimalField(
+        "efectivo esperado", max_digits=10, decimal_places=2
+    )
+    # `blank=True` y `default=""`, nunca `null`, por lo mismo que el motivo de
+    # la merma (`INV-8`): dos formas de decir «no hay motivo» son dos formas de
+    # esquivar la restricción.
+    motivo = models.CharField("motivo de la diferencia", max_length=200, blank=True, default="")
+    creado_en = models.DateTimeField("creado en", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "cierre de caja"
+        verbose_name_plural = "cierres de caja"
+        # De la jornada más reciente a la más antigua, como los dos libros: un
+        # cierre se consulta empezando por el último.
+        ordering = ["-fecha"]
+        constraints = [
+            # `DEC-6`: el cuadre es diario. Ver el bloque de arriba.
+            models.UniqueConstraint(fields=["fecha"], name="cierre_de_caja_uno_por_jornada"),
+            # Las tres cifras son dinero contado o cobrado: ninguna puede ser
+            # negativa. Cero sí —una jornada sin ventas en efectivo cuadra con
+            # la caja vacía—, y por eso es `gte` y no `gt`.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(base__gte=0)
+                    & models.Q(efectivo_contado__gte=0)
+                    & models.Q(efectivo_esperado__gte=0)
+                ),
+                name="cierre_de_caja_montos_no_negativos",
+            ),
+            # ── `HU-55`, CUARTO CRITERIO: DIFERENCIA ≠ 0 EXIGE MOTIVO ──────
+            # El mismo criterio que `ALC-IN-18` aplica al inventario, y con el
+            # mismo mecanismo: una `CheckConstraint`, no un `if` (`DT-15`,
+            # regla 2). Un `if` protege el camino que lo tiene; la restricción
+            # protege los que todavía no existen —el reporte de `HU-56`, un
+            # comando, la consola de alguien con prisa—.
+            #
+            # «La diferencia es cero» se escribe como «lo contado menos la base
+            # es lo esperado», porque una `CheckConstraint` compara columnas de
+            # la fila y no propiedades de Python.
+            #
+            # **`\S` y no `!= ""`**, por lo que costó `TT-140` en la merma: tres
+            # espacios no son la cadena vacía y tampoco son un motivo.
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        efectivo_contado=models.F("base") + models.F("efectivo_esperado")
+                    )
+                    | models.Q(motivo__regex=r"\S")
+                ),
+                name="cierre_de_caja_diferencia_con_motivo",
+            ),
+        ]
+
+    def __str__(self):
+        return f"Cierre de caja del {self.fecha:%d/%m/%Y}"
+
+    @property
+    def diferencia(self):
+        """Lo que sobra o falta en el cajón, en positivo o en negativo.
+
+        Se calcula y no se guarda (`DT-19`): los tres sumandos están en esta
+        misma fila y ninguno se mueve.
+
+        **Positiva es sobrante y negativa es faltante**, no al revés. Se resta
+        la base porque ese dinero no salió de ninguna venta: estaba en el cajón
+        para dar cambio.
+        """
+        return self.efectivo_contado - self.base - self.efectivo_esperado
+
+    @property
+    def cuadra(self):
+        """¿La jornada cerró sin diferencia?
+
+        Se pregunta aquí y no repitiendo `cierre.diferencia == 0` por ahí, igual
+        que `es_generica`: que cuadre significa algo —que no hace falta motivo—
+        y nombrarlo evita que alguien lo lea como una comparación cualquiera.
+        """
+        return self.diferencia == 0
