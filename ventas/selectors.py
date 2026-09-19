@@ -296,6 +296,17 @@ def reservas_pendientes(*, actor):
     es «caducado»). Una reserva de anteayer sin recoger **sigue pendiente**, y
     esconderla la dejaría pagada y olvidada. Si algún día se decide que caducan,
     eso es una decisión de alcance con su historia, no un `filter` aquí.
+
+    **Tampoco esconde los pedidos que hoy no se pueden entregar.** Un estudiante
+    desactivado o de baja no retira (`INVD-2`), y su pedido sigue aquí: está
+    pagado y sin anular, así que quitarlo lo volvería invisible — justo lo que no
+    conviene con dinero de por medio. La pantalla lo **marca** en vez de
+    esconderlo, preguntándole al estudiante que viene en `select_related`.
+
+    Que un pedido así **no tiene salida hoy** es un punto abierto declarado en el
+    `ANEXO B` de `./docs/decisiones-de-alcance.md` —no se decidió si se devuelve
+    el saldo, si queda pendiente o si se anula—. Esto lo hace visible en vez de
+    resolverlo por su cuenta.
     """
     from cuentas.models import Rol
     from ventas.models import EstadoDelPedido, PedidoAnticipado
@@ -312,6 +323,9 @@ def reservas_pendientes(*, actor):
 
     return (
         PedidoAnticipado.objects.filter(estado=EstadoDelPedido.PENDIENTE)
+        # `venta__estudiante` no es adorno: la pantalla pregunta a cada
+        # estudiante si puede retirar (`INVD-2`), y sin traerlo aquí serían
+        # tantas consultas como reservas.
         .select_related("venta", "venta__estudiante")
         .prefetch_related("venta__lineas__producto")
         .order_by("creado_en")

@@ -30,6 +30,7 @@ from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
+from personas.services import dar_de_baja, desactivar
 from ventas.models import EstadoDelPedido, PedidoAnticipado
 from ventas.selectors import reservas_pendientes
 from ventas.services import reservar
@@ -305,3 +306,73 @@ class LosDosMenusLlevanALaCola(BaseCola):
         )
 
         self.assertIn(RESERVAS, MENU_DEL_PUNTO_DE_VENTA)
+
+
+class LaColaMarcaLoQueNoTieneSalidaTest(BaseCola):
+    """Hallazgo de la revisión de cierre del Sprint 4.
+
+    Un estudiante desactivado o de baja **no retira** su pedido (`INVD-2`), pero
+    el pedido sigue pagado y sin anular, así que se queda en la cola. Sin
+    marcarlo, el personal lo prepara cada mañana y la caja lo rechaza cada vez.
+
+    **No se esconde**: con dinero de por medio, quitarlo de la lista lo volvería
+    invisible. Qué hacer con él no está decidido —`ANEXO B` de
+    `decisiones-de-alcance.md`—, así que la pantalla lo señala y no propone nada.
+    """
+
+    def setUp(self):
+        super().setUp()
+        sincronizar_grupos_y_permisos()
+        self.url = reverse("reservas")
+        self.institucion = Usuario.objects.crear_usuario(
+            email="secretaria@example.com", rol=Rol.INSTITUCION, nombre="Secretaría"
+        )
+
+    def _entra_de_cajero(self):
+        usuario = crear_cuenta(
+            email="cajero-marca@example.com",
+            rol=Rol.CAJERO,
+            nombre="Cajero",
+            accede_a_administracion=False,
+            enviar_invitacion=False,
+        )
+        self.client.force_login(usuario)
+
+    def test_el_pedido_de_un_estudiante_de_baja_sigue_en_la_cola(self):
+        """Está pagado: esconderlo sería peor que enseñarlo."""
+        pedido = self.reserva_de("1001000030", "Ana Sofía")
+        dar_de_baja(actor=self.institucion, estudiante=pedido.venta.estudiante)
+
+        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 1)
+
+    def test_la_pantalla_lo_marca(self):
+        pedido = self.reserva_de("1001000031", "Ana Sofía")
+        desactivar(actor=self.institucion, estudiante=pedido.venta.estudiante)
+        self._entra_de_cajero()
+
+        respuesta = self.client.get(self.url)
+
+        self.assertTrue(respuesta.context["hay_sin_salida"])
+        self.assertContains(respuesta, "data-no-puede-retirar")
+        self.assertContains(respuesta, "data-avisos-sin-salida")
+
+    def test_sin_ninguno_marcado_no_se_dibuja_el_aviso(self):
+        """El aviso aparece cuando hay algo que avisar, no siempre."""
+        self.reserva_de("1001000032", "Bruno Díaz")
+        self._entra_de_cajero()
+
+        respuesta = self.client.get(self.url)
+
+        self.assertFalse(respuesta.context["hay_sin_salida"])
+        self.assertNotContains(respuesta, "data-no-puede-retirar")
+
+    def test_la_cola_no_hace_una_consulta_por_estudiante(self):
+        """Preguntar a cada pedido si su estudiante puede retirar no puede costar
+        una consulta por fila: el estudiante ya viene en `select_related`."""
+        for i in range(3):
+            self.reserva_de(f"100100004{i}", f"Estudiante {i}")
+
+        with self.assertNumQueries(3):
+            for pedido in reservas_pendientes(actor=self.cajero):
+                pedido.venta.estudiante.puede_operar
+                list(pedido.venta.lineas.all())

@@ -450,6 +450,12 @@ def reservas(request):
         {
             "pendientes": pendientes,
             "cuantas": pendientes.count(),
+            # `INVD-2`. Si hay alguno que no se puede entregar, la pantalla lo
+            # explica una vez arriba además de marcar la fila. Se calcula aquí
+            # para no recorrer la lista dos veces en la plantilla.
+            "hay_sin_salida": any(
+                not p.venta.estudiante.puede_operar for p in pendientes
+            ),
         },
     )
 
