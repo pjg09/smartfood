@@ -1,0 +1,103 @@
+{% extends "admin/change_list.html" %}
+{% load dinero %}
+
+{% comment %}
+TT-168. El consolidado del periodo, encima del listado de ventas (`HU-35`).
+
+**Las cifras son del listado que se está mirando**, no del libro entero: salen
+de `resumen_de_ventas(cl.queryset)`, el mismo `QuerySet` que pinta la tabla de
+abajo con la fecha, los filtros y la búsqueda ya aplicados. Si alguna vez las
+dos cosas dejan de cuadrar, es que alguien consultó por su cuenta.
+
+Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en
+línea, como `admin/catalogo/producto/historial.html`.
+
+Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado.
+{% endcomment %}
+
+{% block result_list %}
+  {% if resumen %}
+    <div style="margin:1rem 0 1.5rem" data-resumen-de-ventas>
+      {% if resumen.hubo_ventas %}
+        <div style="display:flex;flex-wrap:wrap;gap:2rem;align-items:baseline">
+          <p style="margin:0">
+            <strong style="font-size:2.5rem;line-height:1" data-total-vendido>
+              {{ resumen.total|dinero:"COP" }}
+            </strong>
+          </p>
+          <p style="margin:0;max-width:60ch">
+            en <strong data-cuantas-ventas>{{ resumen.cuantas }}</strong>
+            venta{{ resumen.cuantas|pluralize }} y
+            <strong>{{ resumen.unidades }}</strong> unidad{{ resumen.unidades|pluralize:"es" }}
+            vendida{{ resumen.unidades|pluralize }}.
+            {% comment %} Decir de dónde sale la cifra es la mitad del primer criterio de
+               `HU-35`: se construye sobre las transacciones registradas, no sobre
+               datos capturados aparte. {% endcomment %}
+            Sale de sumar los renglones de esas ventas con el precio que tenían
+            al venderse, y cambia con los filtros de esta pantalla.
+          </p>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:2.5rem;margin-top:1.25rem">
+          {% comment %} Los dos desgloses llegan **completos**: un medio de pago sin ventas
+             sale en cero. Que no se cobrara nada por transferencia es un dato del
+             periodo; una fila ausente se leería como si no existiera ese medio. {% endcomment %}
+          <table style="width:auto" data-por-medio-de-pago>
+            <caption style="text-align:left;padding:0 0 .35rem">
+              <strong>Por medio de pago</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Medio</th>
+                <th scope="col" style="text-align:right">Ventas</th>
+                <th scope="col" style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for etiqueta, cuantas, total in resumen.por_medio_de_pago %}
+                <tr>
+                  <td>{{ etiqueta }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ cuantas }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ total|dinero }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <table style="width:auto" data-por-origen>
+            <caption style="text-align:left;padding:0 0 .35rem">
+              <strong>Por origen</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Origen</th>
+                <th scope="col" style="text-align:right">Ventas</th>
+                <th scope="col" style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for etiqueta, cuantas, total in resumen.por_origen %}
+                <tr>
+                  <td>{{ etiqueta }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ cuantas }}</td>
+                  <td style="text-align:right;font-variant-numeric:tabular-nums">{{ total|dinero }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {% comment %} **Sin ventas no se pinta un total de cero.** Un «$0» se lee como «se
+           vendió cero», y lo que pasa es que el filtro no alcanzó ninguna venta.
+           Es la misma distinción que el resto de los reportes hace entre un dato
+           en cero y un dato que no existe. {% endcomment %}
+        <p data-sin-ventas style="margin:0 0 1.5rem;max-width:60ch">
+          Ninguna venta en lo que estás mirando. Prueba con otra fecha o quita
+          los filtros.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {{ block.super }}
+{% endblock %}

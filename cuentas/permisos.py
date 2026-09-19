@@ -61,6 +61,16 @@ PERMISOS_POR_ROL = {
     # historial de inventario lo referencia y sin él las existencias dejan de
     # explicarse (`INV-3`). Se retira del catálogo, que es un estado.
     Rol.ADMINISTRADOR: {
+        # `HU-35`, `TT-168`. «Consultar reportes de ventas e inventario: Sí».
+        # **Solo `view`, y las escrituras no es que no se concedan: no se pueden
+        # conceder** — `ventas` entra abajo en `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`.
+        # Una venta es un asiento y se registra en el punto de venta con su
+        # transacción, o no existe (`INV-1`, `INV-2`, `INV-3`).
+        "ventas.venta": ["view"],
+        # La línea, por el inline que explica de qué se compone cada venta. Sin
+        # este permiso el admin esconde el inline y el reporte deja de poder
+        # abrirse hasta el producto, que es lo que lo hace auditable.
+        "ventas.lineaventa": ["view"],
         "catalogo.producto": ["add", "view", "change"],
         "catalogo.categoria": ["add", "view", "change"],
         "catalogo.alergeno": ["add", "view", "change"],
@@ -156,7 +166,12 @@ FUNCIONES_PENDIENTES_DE_MODELO = {
     # se mudó arriba con `TT-111`, como `view` sobre
     # `restricciones.restriccionesdelestudiante`.
     Rol.ADMINISTRADOR: [
-        "Consultar reportes de ventas e inventario",
+        # **Los reportes de ventas ya no están aquí**: `TT-168` les dio pantalla
+        # y permiso (`ventas.venta`, arriba). Lo que queda de esta fila de
+        # `[S11]` es el de inventario, que tiene modelo desde `TT-67` y pantalla
+        # desde `TT-141` —el historial de un producto— pero todavía no un
+        # reporte del periodo: eso es `HU-36`.
+        "Consultar el reporte de movimientos de inventario del periodo (HU-36)",
     ],
     Rol.INSTITUCION: [],
 }
@@ -198,7 +213,15 @@ ESCRITURA_PROHIBIDA = {
 # No es una lista de modelos, es el prefijo de la app. Un modelo nuevo ahí dentro
 # —el asiento de `TT-104` lo fue— queda cubierto sin que nadie se acuerde de
 # añadirlo, que es la diferencia entre una regla y una foto del momento.
-APPS_SIN_ESCRITURA_PARA_NINGUN_ROL = ["restricciones"]
+# **`ventas` se añade con `TT-168`**, al entrar el reporte en el admin. El
+# argumento es el mismo que en `restricciones`, por otro motivo: allí la
+# escritura es del acudiente y aquí no es de nadie. Una venta se registra en el
+# punto de venta, dentro de la transacción que descuenta saldo y existencias a
+# la vez, o no existe; y un asiento no se edita ni se borra (`INV-2`, `INV-3`).
+#
+# Concederle `view` a la administración para que pueda consultar el reporte es
+# justo el momento en que alguien podría conceder de más sin pensarlo.
+APPS_SIN_ESCRITURA_PARA_NINGUN_ROL = ["restricciones", "ventas"]
 
 
 def nombre_del_grupo(rol):

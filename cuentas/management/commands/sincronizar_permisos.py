@@ -20,9 +20,15 @@ class Command(BaseCommand):
             if permisos:
                 self.stdout.write(f"{grupo}: {', '.join(permisos)}")
             else:
+                # **No es que falten sus modelos**: el acudiente y el cajero
+                # los tienen desde los Sprints 2 y 3. Es que ninguno de los dos
+                # entra al admin —`INT-1` e `INT-2` son sus interfaces
+                # (`DT-2`)—, así que un permiso aquí no protegería nada y
+                # sugeriría un camino por `INT-3` que no existe. La explicación
+                # larga está en `cuentas/permisos.py`.
                 self.stdout.write(
-                    f"{grupo}: sin permisos todavía "
-                    "(sus modelos llegan en sprints posteriores)"
+                    f"{grupo}: sin permisos, y es lo correcto "
+                    "(no entra al admin; ver cuentas/permisos.py)"
                 )
 
         self.stdout.write(self.style.SUCCESS("Matriz [S11] sincronizada."))
