@@ -23,7 +23,7 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
-from reportes.views import consumo_del_estudiante
+from reportes.views import auditoria_de_la_operacion, consumo_del_estudiante
 from restricciones.views import (
     alergenos_bloqueados,
     bloqueo_de_alergeno,
@@ -51,6 +51,17 @@ admin.site.site_title = "SmartFood"
 admin.site.index_title = "Gestión de la cafetería"
 
 urlpatterns = [
+    # `TT-178`, `HU-37`, `ALC-IN-22`. El reporte de auditoría. **Va antes que
+    # `admin.site.urls`, y esa es toda la razón por la que existe esta línea
+    # aquí**: Django resuelve en orden, así que `/admin/auditoria/` la atiende
+    # nuestra vista y todo lo demás sigue siendo el admin.
+    #
+    # No cuelga de un modelo porque no tiene uno: cruza ventas, pedidos,
+    # movimientos de inventario y cierres. Un `ModelAdmin` pinta el listado de
+    # una tabla, y este reporte es el de cuatro. Vive **dentro** del admin —su
+    # armazón, sus estilos, su barra—, así que **no es una tercera excepción a
+    # `DT-2`**: las dos que hay son pantallas propias fuera de él.
+    path("admin/auditoria/", auditoria_de_la_operacion, name="auditoria"),
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
     # Cola de reservas pendientes (`TT-148`, `HU-24`). **No cuelga del punto de

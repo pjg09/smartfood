@@ -117,11 +117,16 @@ secretaría abre a diario (`DT-27`), y la cola de reservas pendientes, que compa
 que no comparten interfaz (`DT-34`). **Una tercera tendría que explicar por qué no es ya un
 patrón en vez de una excepción.**
 
-**Los reportes de la cafetería no son una tercera excepción**: los tres viven dentro del
+**Los reportes de la cafetería no son una tercera excepción**: los cuatro viven dentro del
 admin, por el camino que `TT-141` abrió para el historial de existencias y repiten `TT-168`
 (ventas), `TT-170` (inventario) y `TT-176` (cierres de caja) — el admin pone listado, filtros
 y fechas, y lo que se añade es el consolidado **del listado que se está mirando**, calculado
 sobre el mismo `QuerySet` que pinta la tabla.
+
+**El cuarto no tiene modelo, y por eso es el único con ruta propia**: la auditoría
+(`TT-178`) cruza cuatro tablas, así que es una vista registrada en `config/urls.py`
+**antes** de `admin.site.urls` —Django resuelve en orden— y usa el armazón del admin. Sigue
+sin ser una excepción a `DT-2`: las dos que hay son pantallas propias *fuera* del admin.
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -271,6 +276,10 @@ lo dice el error.
   **con el cambio ya escrito**. Pasó al compartir el camino de dos transiciones.
 - **El admin ya pinta `title` del contexto como encabezado.** Añadir un `<h1>` propio en
   una plantilla que extiende `admin/base_site.html` lo enseña dos veces.
+- **Las migas del admin son `<ol><li>`, no un `<div>`.** Django 6 las pinta así y su hoja
+  estiliza **la lista**: un `{% block breadcrumbs %}` con `<div class="breadcrumbs">` deja el
+  rótulo pegado al borde izquierdo, montado sobre la barra lateral, **sin ningún error**. Se
+  vio comparando dos capturas (`TT-178`).
 - **Los acentos graves de Markdown no son nada en una plantilla.** `` `HU-25` `` se sirve con
   las comillas puestas. Dentro de `{% comment %}` da igual; en el texto visible, no.
 - **Un proxy registrado en el admin hereda el `__str__` del modelo base**, y el admin lo

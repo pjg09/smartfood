@@ -30,6 +30,7 @@ from django.utils import timezone
 
 from billetera.models import MovimientoBilletera, TipoDeMovimiento
 from billetera.selectors import saldo_de
+from billetera.templatetags.dinero import dinero
 from cuentas.models import Rol
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from reportes import referencia, reglas
@@ -39,6 +40,7 @@ from ventas.models import (
     LineaVenta,
     MedioDePago,
     OrigenDeLaVenta,
+    PedidoAnticipado,
     Venta,
 )
 
@@ -495,7 +497,7 @@ CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA = (Rol.ADMINISTRADOR,)
 
 
 def _solo_la_administracion(
-    actor, *, que="Los reportes de ventas e inventario", regla="[S11], HU-35"
+    actor, *, que="los reportes de ventas e inventario", regla="[S11], HU-35"
 ):
     """`[S11]`: los reportes de la operación son de `USR-4` y de nadie más.
 
@@ -525,9 +527,13 @@ def _solo_la_administracion(
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied("Consultar los reportes exige identificarse.")
     if actor.rol not in CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA:
+        # **«Consultar X es de…» y no «X son de…»**: con un sujeto singular
+        # —«el reporte de auditoría»— la segunda forma no concuerda, y se vio
+        # ejecutándolo. Con el infinitivo delante, la frase vale para los cuatro
+        # reportes sin que nadie tenga que acordarse del número.
         raise PermissionDenied(
-            f"{que} son de la administración de la cafetería y de ningún otro "
-            f"rol ({regla})."
+            f"Consultar {que} es de la administración de la cafetería y de "
+            f"ningún otro rol ({regla})."
         )
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
@@ -883,7 +889,7 @@ def cierres_registrados(*, actor, desde=None, hasta=None):
     que es lo que dice su `fecha`.
     """
     _solo_la_administracion(
-        actor, que="Los cierres de caja registrados", regla="HU-56, DEC-6"
+        actor, que="los cierres de caja registrados", regla="HU-56, DEC-6"
     )
 
     cierres = CierreDeCaja.objects.select_related("cajero")
@@ -971,4 +977,346 @@ def resumen_de_cierres(cierres):
         sin_motivo=cierres.exclude(
             efectivo_contado=F("base") + F("efectivo_esperado")
         ).filter(motivo="").count(),
+    )
+
+
+@dataclass(frozen=True)
+class Operacion:
+    """Una línea del reporte de auditoría (`TT-177`, `HU-37`).
+
+    **Quién hizo qué, y cuándo.** Es el «para» de la historia —«poder rastrear
+    quién hizo qué cuando algo no cuadre»— y por eso los tres campos que la
+    definen son `cuando`, `quien` y `accion`; lo demás acompaña.
+
+    `quien` es `None` cuando el sistema **no lo registró**, no cuando no lo
+    sabemos. Hoy pasa con el ingreso de mercancía y la merma:
+    `MovimientoInventario` no tiene columna de actor —sus servicios reciben el
+    `actor`, lo comprueban y no lo guardan—. La pantalla lo dice con esas
+    palabras en vez de dejar el hueco en blanco, que se leería como un error de
+    la consulta. Está declarado en el `ANEXO B` de `./docs/decisiones-de-alcance.md`.
+
+    `modelo` y `objeto_id` no son adorno: son lo que permite **ir a mirar la
+    operación** en su propio reporte. Un renglón de auditoría que no se puede
+    abrir obliga a buscar la fila a mano, que es justo lo que no se hace cuando
+    algo no cuadra. Se devuelven como identificadores y no como URL: un selector
+    no sabe de rutas (`DT-15`).
+    """
+
+    cuando: object
+    clase: str
+    accion: str
+    quien: object
+    detalle: str
+    importe: object
+    modelo: str
+    objeto_id: object
+
+    @property
+    def tiene_actor(self):
+        return self.quien is not None
+
+    @property
+    def ruta_admin(self):
+        """El nombre de la ruta del admin donde se abre esta operación.
+
+        El nombre, no la URL: resolverla es cosa de la plantilla con `{% url %}`,
+        que es lo que hace que renombrar una ruta no deje aquí un enlace roto y
+        silencioso. Un selector no sabe de rutas (`DT-15`), y esto sigue sin
+        saberlo — es una traducción del nombre del modelo, que sí es suyo.
+
+        **Todas las operaciones apuntan a un modelo registrado en el admin.** La
+        entrega es la excepción aparente: `PedidoAnticipado` no está registrado,
+        así que apunta a su venta, que es donde está lo que se entregó. Si algún
+        día se añade una clase que apunte a un modelo sin admin, esto reventará
+        con `NoReverseMatch` al pintar — ruidoso, que es lo que se quiere.
+        """
+        return f"admin:{self.modelo.replace('.', '_')}_change"
+
+
+#: Las cuatro clases de operación, y el orden en que se declaran en la pantalla.
+#: No son las tres tablas: la entrega de un pedido es una operación por derecho
+#: propio —mueve existencias y la hace otra persona en otro momento— y sale de
+#: `PedidoAnticipado`, que es quien guarda **quién** entregó.
+CLASES_DE_OPERACION = (
+    ("venta", "Ventas"),
+    ("entrega", "Entregas de pedidos"),
+    ("inventario", "Movimientos de inventario"),
+    ("cierre", "Cierres de caja"),
+)
+
+#: Cuántas operaciones devuelve como mucho. Un reporte de auditoría se consulta
+#: acotado —«qué pasó el martes»—, y sin tope una consulta sin fechas se traería
+#: el libro entero a memoria para ordenarlo. Quien necesite más, acota el
+#: periodo; la pantalla dice cuándo se llegó al tope en vez de recortar en
+#: silencio.
+OPERACIONES_MAXIMAS = 500
+
+
+def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS):
+    """Las operaciones registradas del periodo, en una sola línea de tiempo.
+
+    `TT-177`, `HU-37`, `ALC-IN-22`. Devuelve `(operaciones, hubo_mas)`: la lista
+    ordenada de la más reciente a la más antigua, y si el tope dejó algo fuera.
+
+    ── SE CONSTRUYE SOBRE LAS TRANSACCIONES REGISTRADAS ────────────────────
+    Único criterio de la historia, y aquí significa algo concreto: **no hay
+    tabla de auditoría**. Ninguna operación se escribe dos veces —una en su
+    libro y otra en un registro de eventos—, porque dos fuentes de la misma
+    verdad acaban divergiendo (`DT-19`) y la segunda es la que nadie mira
+    cuando falla. Esto lee los libros que ya existen y los mezcla al leerlos.
+
+    Es la misma decisión que `DT-4` y `DT-5` toman con el saldo y las
+    existencias, aplicada a la trazabilidad.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── LOS MOVIMIENTOS DE VENTA NO ENTRAN, Y ESO NO DEJA NINGÚN HUECO ──────
+    Un cobro asienta la venta **y** su salida de inventario en la misma
+    transacción (`HU-21`), así que incluir las dos pondría cada venta dos veces
+    en la línea de tiempo, con el mismo instante y el mismo actor.
+
+    Lo que sí es una operación aparte es la **entrega** de un pedido anticipado:
+    mueve existencias en otro momento y la hace otra persona (`HU-25`). Entra
+    por `PedidoAnticipado`, que es quien guarda quién entregó — el movimiento no
+    lo guarda.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **La mezcla se hace en Python, no en SQL.** Son cuatro tablas sin ninguna
+    columna en común más que el instante, así que una `UNION` obligaría a
+    inventarles un esquema compartido y a repetirlo en cada `SELECT`. Con el
+    periodo acotado y el tope de `OPERACIONES_MAXIMAS`, ordenar cuatro listas
+    cortas en memoria cuesta menos que mantener esa consulta.
+    """
+    _solo_la_administracion(
+        actor, que="el reporte de auditoría", regla="HU-37, ALC-IN-22"
+    )
+
+    inicio = (
+        timezone.make_aware(datetime.combine(desde, time.min))
+        if desde is not None
+        else None
+    )
+    fin = (
+        timezone.make_aware(datetime.combine(hasta + timedelta(days=1), time.min))
+        if hasta is not None
+        else None
+    )
+
+    def acotar(consulta, campo="creado_en"):
+        if inicio is not None:
+            consulta = consulta.filter(**{f"{campo}__gte": inicio})
+        if fin is not None:
+            consulta = consulta.filter(**{f"{campo}__lt": fin})
+        return consulta
+
+    operaciones = [
+        *_ventas_de_la_auditoria(acotar, limite),
+        *_entregas_de_la_auditoria(acotar, limite),
+        *_movimientos_de_la_auditoria(acotar, limite),
+        *_cierres_de_la_auditoria(acotar, limite),
+    ]
+    operaciones.sort(key=lambda operacion: operacion.cuando, reverse=True)
+
+    return operaciones[:limite], len(operaciones) > limite
+
+
+def _ventas_de_la_auditoria(acotar, limite):
+    """Cada venta, con quién la cobró y a quién.
+
+    **Una reserva no la cobra un cajero**: la paga el acudiente desde su
+    aplicación (`DT-32`), así que el actor sale del acudiente del estudiante y
+    no del campo `cajero`, que en una reserva es nulo por restricción.
+    """
+    consulta = (
+        acotar(Venta.objects.all())
+        .select_related("cajero", "estudiante__acudiente")
+        .prefetch_related("lineas")
+        .order_by("-creado_en")[:limite]
+    )
+
+    for venta in consulta:
+        unidades = sum(linea.cantidad for linea in venta.lineas.all())
+        total = sum(
+            (linea.precio_unitario * linea.cantidad for linea in venta.lineas.all()),
+            Decimal("0.00"),
+        )
+        if venta.es_reserva:
+            quien = venta.estudiante.acudiente.nombre
+            accion = "Reservó y pagó por adelantado"
+        else:
+            quien = venta.cajero.nombre if venta.cajero_id else None
+            accion = "Cobró una venta"
+
+        cliente = venta.estudiante.nombre if venta.estudiante_id else "cliente genérico"
+        yield Operacion(
+            cuando=venta.creado_en,
+            clase="venta",
+            accion=accion,
+            quien=quien,
+            detalle=(
+                f"{unidades} artículo{'s' if unidades != 1 else ''} para {cliente} "
+                f"({venta.get_medio_pago_display().lower()})"
+            ),
+            importe=total,
+            modelo="ventas.venta",
+            objeto_id=venta.pk,
+        )
+
+
+def _entregas_de_la_auditoria(acotar, limite):
+    """La entrega de un pedido anticipado: **mueve existencias y no cobra**.
+
+    Es la operación que más fácil se cae de un reporte de auditoría, porque no
+    deja asiento en la billetera ni crea una venta: solo cambia un estado y
+    descuenta inventario (`HU-25`). Y es justamente la que conviene poder
+    rastrear — quien pregunta «¿quién le entregó esto?» pregunta por esto.
+    """
+    consulta = (
+        acotar(
+            PedidoAnticipado.objects.filter(estado=EstadoDelPedido.ENTREGADO),
+            campo="entregado_en",
+        )
+        .select_related("entregado_por", "venta__estudiante")
+        .prefetch_related("venta__lineas")
+        .order_by("-entregado_en")[:limite]
+    )
+
+    for pedido in consulta:
+        unidades = sum(linea.cantidad for linea in pedido.venta.lineas.all())
+        yield Operacion(
+            cuando=pedido.entregado_en,
+            clase="entrega",
+            accion="Entregó un pedido anticipado",
+            quien=pedido.entregado_por.nombre if pedido.entregado_por_id else None,
+            detalle=(
+                f"{unidades} artículo{'s' if unidades != 1 else ''} a "
+                f"{pedido.venta.estudiante.nombre}"
+            ),
+            # **Sin importe, y no es un cero**: la entrega no cobra nada. Se pagó
+            # al reservar, y ese asiento ya está en su propia línea.
+            importe=None,
+            # Apunta a la **venta**, no al pedido: `PedidoAnticipado` no está
+            # registrado en el admin —no hay nada que administrar en él, su
+            # única escritura es la entrega (`DT-34`)— y la venta es donde está
+            # lo que se entregó, con sus renglones.
+            modelo="ventas.venta",
+            objeto_id=pedido.venta_id,
+        )
+
+
+def _movimientos_de_la_auditoria(acotar, limite):
+    """El ingreso de mercancía y la merma. **Sin quién, y se dice.**
+
+    Los dos son ajustes manuales y los dos pasan por un servicio que exige el
+    rol administrador, pero `MovimientoInventario` **no guarda el actor**: lo
+    recibe, lo comprueba y lo descarta. Así que estas dos líneas dicen qué y
+    cuándo, y en la columna de quién va el hueco declarado.
+
+    Los movimientos de tipo venta no entran: los explica su venta o su entrega,
+    que ya están arriba.
+    """
+    consulta = (
+        acotar(
+            MovimientoInventario.objects.filter(
+                tipo__in=[
+                    TipoDeMovimientoDeInventario.INGRESO,
+                    TipoDeMovimientoDeInventario.MERMA,
+                ]
+            )
+        )
+        .select_related("producto")
+        .order_by("-creado_en")[:limite]
+    )
+
+    for movimiento in consulta:
+        es_merma = movimiento.tipo == TipoDeMovimientoDeInventario.MERMA
+        detalle = f"{movimiento.cantidad:+d} {movimiento.producto.nombre}"
+        if movimiento.motivo:
+            detalle += f" — {movimiento.motivo}"
+        yield Operacion(
+            cuando=movimiento.creado_en,
+            clase="inventario",
+            accion="Registró una merma" if es_merma else "Ingresó mercancía",
+            quien=None,
+            detalle=detalle,
+            importe=None,
+            modelo="inventario.movimientoinventario",
+            objeto_id=movimiento.pk,
+        )
+
+
+def _cierres_de_la_auditoria(acotar, limite):
+    """El cuadre de cada jornada, con su diferencia y su motivo.
+
+    Se acota por `creado_en` y no por `fecha`, al revés que el reporte de
+    `HU-56`: en la línea de tiempo lo que importa es **cuándo se registró la
+    operación**, no qué jornada cuadraba. Un cierre de ayer escrito esta mañana
+    es una operación de esta mañana.
+    """
+    consulta = (
+        acotar(CierreDeCaja.objects.all())
+        .select_related("cajero")
+        .order_by("-creado_en")[:limite]
+    )
+
+    for cierre in consulta:
+        # **Las dos cifras pasan por `dinero`**, como la de al lado. El `Decimal`
+        # crudo sale «10500.00» y el importe de la fila sale «-$2.000»: dos
+        # formatos de dinero en la misma línea, que es lo que ese filtro existe
+        # para evitar. Se vio en la captura, igual que en `TT-176`.
+        detalle = (
+            f"jornada del {cierre.fecha:%d/%m/%Y} · "
+            f"esperado {dinero(cierre.efectivo_esperado)} · "
+            f"contado {dinero(cierre.efectivo_contado)}"
+        )
+        if not cierre.cuadra:
+            detalle += f" — {cierre.motivo}"
+        yield Operacion(
+            cuando=cierre.creado_en,
+            clase="cierre",
+            accion="Cuadró la caja" if cierre.cuadra else "Cuadró la caja con diferencia",
+            quien=cierre.cajero.nombre,
+            detalle=detalle,
+            importe=cierre.diferencia,
+            modelo="ventas.cierredecaja",
+            objeto_id=cierre.pk,
+        )
+
+
+@dataclass(frozen=True)
+class ResumenDeAuditoria:
+    """Cuántas operaciones y de qué clase, más las que no dicen quién.
+
+    `sin_actor` **no debería ser cero**, al revés que las mermas sin motivo del
+    reporte de inventario: hoy es exactamente el número de ingresos y mermas del
+    periodo. Se cuenta y se enseña para que el hueco se lea como lo que es —algo
+    que el sistema no registra— y no como un fallo de la consulta.
+    """
+
+    cuantas: int
+    por_clase: tuple
+    sin_actor: int
+
+    @property
+    def hubo_operaciones(self):
+        return bool(self.cuantas)
+
+
+def resumen_de_auditoria(operaciones):
+    """Lo que suma una línea de tiempo ya construida.
+
+    Recibe la lista y no el periodo, por lo mismo que los otros tres resúmenes:
+    lo que se cuenta tiene que ser exactamente lo que se está mirando. Aquí es
+    todavía más literal —la lista ya está en memoria—, así que no hay forma de
+    que las dos mitades de la pantalla hablen de conjuntos distintos.
+    """
+    por_clase = {clase: 0 for clase, _ in CLASES_DE_OPERACION}
+    for operacion in operaciones:
+        por_clase[operacion.clase] += 1
+
+    return ResumenDeAuditoria(
+        cuantas=len(operaciones),
+        por_clase=tuple(
+            (etiqueta, por_clase[clase]) for clase, etiqueta in CLASES_DE_OPERACION
+        ),
+        sin_actor=sum(1 for operacion in operaciones if not operacion.tiene_actor),
     )

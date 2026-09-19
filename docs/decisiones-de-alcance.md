@@ -409,6 +409,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Retención y borrado de fotografías.** `DEC-8` no decide cuánto tiempo se conserva la fotografía de un estudiante dado de baja (`DEC-7`), ni si el acudiente puede exigir su eliminación. En una implementación real la Ley 1581 de 2012 lo exigiría.
 - **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.
+- **El libro de inventario no registra quién.** `MovimientoInventario` guarda qué se movió, cuánto y cuándo, y su servicio **recibe el actor, lo comprueba y lo descarta**: no hay columna para él. Se destapó construyendo el reporte de auditoría (`HU-37`, `TT-177`), cuyo «para» es rastrear quién hizo qué: el cobro, la reserva, la entrega y el cuadre sí dicen quién, y el **ingreso de mercancía y la merma no pueden**. No se resuelve por inferencia —añadir la columna es una historia, y dejaría sin actor todo lo ya registrado—, así que **el reporte lo declara en pantalla** en vez de dejar el hueco en blanco, que se leería como un fallo de la consulta. Conviene recogerlo en `ENT-06` como limitación identificada.
 
 ---
 

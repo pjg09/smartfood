@@ -5,18 +5,27 @@ lógica de negocio** (`DT-15`): quién puede ver el consumo de un estudiante lo
 decide `reportes.selectors`, y esta vista solo traduce su respuesta.
 """
 
+from datetime import timedelta
+
+from django import forms
+from django.contrib import admin
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from reportes import reglas
 from reportes.selectors import (
+    OPERACIONES_MAXIMAS,
     agregados_nutricionales,
     alertas_de_frecuencia,
+    auditoria,
     historial_de_consumo,
+    resumen_de_auditoria,
     resumen_de_gasto,
 )
 
@@ -78,5 +87,90 @@ def consumo_del_estudiante(request, estudiante_id):
             # queda mintiendo el día que la regla cambie.
             "ventana_de_frecuencia": reglas.DIAS_DE_LA_VENTANA,
             "umbral_de_frecuencia": reglas.UMBRAL_FRECUENCIA_ALTA,
+        },
+    )
+
+
+#: Cuántos días atrás mira el reporte de auditoría cuando nadie pide un periodo.
+#: Una semana: es lo que se revisa cuando algo no cuadró «esta semana», que es
+#: como se pregunta. Sin ventana por defecto, la primera visita se traería el
+#: libro entero para enseñar las quinientas últimas.
+DIAS_DE_AUDITORIA_POR_DEFECTO = 7
+
+
+class PeriodoDeAuditoriaForm(forms.Form):
+    """Las dos fechas del reporte, y nada más.
+
+    **Son fechas locales inclusivas**, como en los otros tres reportes. El
+    formulario no valida que `desde` sea anterior a `hasta`: si se invierten no
+    sale nada, la pantalla lo dice, y una regla más aquí sería una regla que el
+    selector no tiene.
+    """
+
+    desde = forms.DateField(
+        label="Desde", required=False, widget=forms.DateInput(attrs={"type": "date"})
+    )
+    hasta = forms.DateField(
+        label="Hasta", required=False, widget=forms.DateInput(attrs={"type": "date"})
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def auditoria_de_la_operacion(request):
+    """El reporte de auditoría (`TT-178`, `HU-37`, `ALC-IN-22`).
+
+    ── VIVE EN EL ADMIN, Y NO ES UNA TERCERA EXCEPCIÓN A `DT-2` ────────────
+    Las dos excepciones declaradas —el padrón (`DT-27`) y la cola de reservas
+    (`DT-34`)— son pantallas propias, con Tailwind y fuera del admin, porque las
+    abre a diario alguien que no es administrador. Esta no: usa el armazón del
+    admin, sus estilos y su barra, y quien la consulta ya vive ahí.
+
+    **Lo que sí es distinto de los otros tres reportes es que no hay modelo.**
+    Un `ModelAdmin` pinta el listado de *una* tabla, y la auditoría cruza
+    cuatro. Por eso es una vista con su ruta, registrada **antes** de
+    `admin.site.urls` en `config/urls.py`: así la URL queda `/admin/auditoria/`
+    —que es donde alguien la buscaría— en vez de colgar de un modelo con el que
+    no tiene que ver. Es el mismo camino que `TT-141` abrió para el historial de
+    existencias, con la diferencia de que aquel sí tenía modelo del que colgar.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **Se autoriza dos veces y las dos hacen falta.** `is_staff` decide si el
+    armazón del admin tiene sentido para quien llama —sin él, Django lo mandaría
+    a su propia pantalla de acceso—, y el selector decide si puede ver el dato.
+    Un cajero tiene lo segundo en contra aunque tuviera lo primero.
+    """
+    if not request.user.is_staff:
+        raise PermissionDenied(
+            "El reporte de auditoría vive en la administración (INT-3)."
+        )
+
+    formulario = PeriodoDeAuditoriaForm(request.GET or None)
+    formulario.is_valid()
+
+    hoy = timezone.localdate()
+    desde = formulario.cleaned_data.get("desde") if formulario.is_bound else None
+    hasta = formulario.cleaned_data.get("hasta") if formulario.is_bound else None
+    if desde is None and hasta is None:
+        desde = hoy - timedelta(days=DIAS_DE_AUDITORIA_POR_DEFECTO - 1)
+        hasta = hoy
+
+    operaciones, hubo_mas = auditoria(actor=request.user, desde=desde, hasta=hasta)
+
+    return render(
+        request,
+        "admin/reportes/auditoria.html",
+        {
+            # El contexto del admin: la barra, el selector de tema y las migas.
+            # Sin él la pantalla se pintaría desnuda dentro de su propio armazón.
+            **admin.site.each_context(request),
+            "title": "Reporte de auditoría",
+            "form": formulario,
+            "desde": desde,
+            "hasta": hasta,
+            "operaciones": operaciones,
+            "hubo_mas": hubo_mas,
+            "limite": OPERACIONES_MAXIMAS,
+            "resumen": resumen_de_auditoria(operaciones),
         },
     )

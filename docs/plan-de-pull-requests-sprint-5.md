@@ -71,13 +71,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **22** de 33 | **8** de 13 |
-| Pendientes | 11 | 5 |
+| **Finalizadas** | **24** de 33 | **9** de 13 |
+| Pendientes | 9 | 4 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 9 | 11 |
-| Carlos | 9 | 10 |
+| Pedro | 10 | 11 |
+| Carlos | 10 | 10 |
 | Alejandro | 4 | 6 |
 | Naomi | 0 | 6 |
 
@@ -93,7 +93,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☑ |
 | `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☑ |
 | `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☑ |
-| `PR-09` | `TT-177`–`TT-178` | `HU-37` · **las 61 historias terminadas** | ☐ |
+| `PR-09` | `TT-177`–`TT-178` | `HU-37` · **las 61 historias terminadas** | ☑ |
 | `PR-10` | `TT-179`–`TT-180` | `ENT-05` y el resto de `ENT-03` | ☐ |
 | `PR-11` | `TT-181`–`TT-182` | `ENT-04` | ☐ |
 | `PR-12` | `TT-183`–`TT-184` | `ENT-06` y `ENT-07` | ☐ |
@@ -382,12 +382,12 @@ pierden fácil:
 | Responsables | Pedro y Carlos |
 | Historia | `HU-37` |
 | Invariantes | cubre `ALC-IN-22` entero |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-177` | Selector que consolida ventas, movimientos de inventario y cierres | Pedro | ☐ |
-| `TT-178` | Reporte de auditoría en la interfaz administrativa | Carlos | ☐ |
+| `TT-177` | Selector que consolida ventas, movimientos de inventario y cierres | Pedro | ☑ |
+| `TT-178` | Reporte de auditoría en la interfaz administrativa | Carlos | ☑ |
 
 > 🏁 **Al integrar este PR, las 61 historias del proyecto están terminadas.** Es el último
 > que toca el producto: de aquí en adelante el sprint es entrega, no desarrollo. Merece
