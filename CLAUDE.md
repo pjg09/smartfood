@@ -117,10 +117,11 @@ secretaría abre a diario (`DT-27`), y la cola de reservas pendientes, que compa
 que no comparten interfaz (`DT-34`). **Una tercera tendría que explicar por qué no es ya un
 patrón en vez de una excepción.**
 
-**Los reportes de la cafetería no son una tercera excepción**: viven dentro del admin, por el
-camino que `TT-141` abrió para el historial de existencias y `TT-168` repite para el de
-ventas — el admin pone listado, filtros y fechas, y lo que se añade es el consolidado **del
-listado que se está mirando**, calculado sobre el mismo `QuerySet` que pinta la tabla.
+**Los reportes de la cafetería no son una tercera excepción**: los tres viven dentro del
+admin, por el camino que `TT-141` abrió para el historial de existencias y repiten `TT-168`
+(ventas), `TT-170` (inventario) y `TT-176` (cierres de caja) — el admin pone listado, filtros
+y fechas, y lo que se añade es el consolidado **del listado que se está mirando**, calculado
+sobre el mismo `QuerySet` que pinta la tabla.
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -226,6 +227,15 @@ lo dice el error.
   `Estudiante.__str__` es «Nombre (documento)», así que una ficha que liste `estudiante`
   enseña el documento del menor aunque el listado se cuide de no hacerlo — y enlazado.
   Declara `fields` con un método propio que diga solo el nombre. Pasó en `TT-168`.
+  **Y `list_filter` es la otra puerta, que no se arregla con la primera**: un
+  `list_filter = ["cajero"]` pinta el `__str__` de cada uno en la barra lateral — el correo,
+  con `Usuario` — por mucho que la columna diga el nombre. Ahí hace falta un
+  `SimpleListFilter` propio. Pasó en `TT-176`.
+- **En el admin, una columna de dinero sin `dinero` sale cruda.** El admin pinta un
+  `DecimalField` tal cual —«31500,00»— y al lado una columna calculada sale «$31.500»: **dos
+  formatos en la misma fila**, que es justo lo que el filtro existe para evitar. No falla y
+  se ve bien hasta que se miran las dos juntas. Declara un método por cifra. Pasó en
+  `TT-176`, y antes en `LineaVentaInline`.
 - **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
   van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
   modelo nuevo y nada indica por qué.

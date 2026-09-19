@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y siete rutas
+## [S2] Las treinta y ocho rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -80,6 +80,7 @@ los mismos colores desde `DT-23`.
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
+| `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
@@ -180,9 +181,10 @@ coincidir porque dejaría media pantalla en cada tema.
 | `inventario.merma` | 403 | **200** | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
 | `ventas.venta` | 403 | **200** (solo consulta) | 302 | 302 |
+| `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Ocho lecturas que
+Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Nueve lecturas que
 conviene no perder:
 
 - **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
@@ -201,6 +203,18 @@ conviene no perder:
   Una venta se registra en el punto de venta, con su transacción, o no existe. Y **no enseña
   el documento del estudiante ni su código de tarjeta**, ni en el listado ni en la ficha: la
   cafetería consulta su actividad comercial, no el padrón.
+- **El reporte de cierres de caja enseña dos cifras de descuadre, y esa es la historia**
+  (`HU-56`, `TT-176`). La suma con signo se compensa sola: un sobrante de $2.000 el lunes y
+  un faltante de $2.000 el martes dan cero, y un mes con veinte descuadres se leería como un
+  mes que cuadra. Arriba va el **descuadre total** —lo que no se compensa—, y la neta se dice
+  al lado. Es lo que convierte el reporte en lo que `HU-56` pide: **detectar un patrón** en
+  vez de enterarse suelto cada día.
+  **El tercer criterio no se cumple enseñando la cifra**: cada cierre enlaza al reporte de
+  ventas de esa jornada, ya filtrado por efectivo. Es lo que hace comprobable `INVD-5` en dos
+  clics, y hay una prueba que sigue el enlace y cuadra lo que trae contra el esperado.
+  **El cajero no entra**, aunque sea quien escribe estas filas: cuadrar su caja es suyo
+  (`HU-55`), leer el patrón de la cafetería es de quien administra el servicio. Y **nadie las
+  edita**: el esperado quedó congelado contra el dinero que se contó aquella tarde.
 - **El reporte de inventario es el mismo libro, con su consolidado encima** (`HU-36`,
   `TT-170`). No hay pantalla nueva: entradas, ventas y mermas ya estaban en un solo sitio
   desde `TT-69`, y lo que faltaba era acotar un periodo y decir cuánto suma lo que se mira —
@@ -290,6 +304,17 @@ inventario* registra el ingreso de mercancía por ajuste manual. Ese libro **se 
 le añaden asientos, pero no se edita ni se borra**: un asiento corregido a posteriori
 deja unas existencias que ya no explican lo que pasó. Un error se corrige con otro
 movimiento.
+
+**Y los tres reportes de la operación**, los tres en el admin y los tres con la misma
+forma: el listado de siempre con filtros y navegación por fechas, y encima **el consolidado
+de lo que se está mirando**. Ventas (`HU-35`), movimientos de inventario (`HU-36`) y cierres
+de caja (`HU-56`). Ninguno abre una pantalla nueva y ninguno se escribe desde ahí.
+
+El de cierres es el que más conviene saber leer: enseña **el descuadre total** del periodo y
+no solo la suma con signo, porque esa se compensa sola y un mes con veinte descuadres se
+leería como un mes que cuadra. Y cada cierre **enlaza a las ventas en efectivo de su
+jornada**, que es lo que permite comprobar de dónde sale su efectivo esperado (`INVD-5`) en
+vez de creérselo.
 
 ### Acudiente (`USR-2`)
 
@@ -634,13 +659,13 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Lo que todavía no existe
 
-El reporte de auditoría (`HU-37`) y el reporte de cierres de caja (`HU-56`). Es lo que queda
-del Sprint 5.
+El reporte de auditoría (`HU-37`). **Es la única historia que queda del proyecto entero.**
 
-**El cierre de caja ya está** (`HU-55`, `TT-171` … `TT-174`): el cajero cuadra la jornada
-contra las ventas en efectivo registradas, con el esperado **calculado y nunca digitado**
-(`INVD-5`), las transferencias fuera del cuadre y motivo obligatorio si hay diferencia. Lo
-que falta es **consultarlos**, que es `HU-56` y es del administrador.
+**El cierre de caja ya está, y su reporte también** (`HU-55`, `HU-56`, `TT-171` … `TT-176`):
+el cajero cuadra la jornada contra las ventas en efectivo registradas, con el esperado
+**calculado y nunca digitado** (`INVD-5`), las transferencias fuera del cuadre y motivo
+obligatorio si hay diferencia; y la administración consulta el histórico con el descuadre del
+periodo y el enlace que explica cada cifra esperada.
 
 **El de movimientos de inventario ya está** (`HU-36`, `TT-169`, `TT-170`): el mismo libro del
 admin, ahora con navegación por fechas y el consolidado del periodo —entradas, salidas, neto

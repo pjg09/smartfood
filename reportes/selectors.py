@@ -34,6 +34,7 @@ from cuentas.models import Rol
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from reportes import referencia, reglas
 from ventas.models import (
+    CierreDeCaja,
     EstadoDelPedido,
     LineaVenta,
     MedioDePago,
@@ -45,7 +46,7 @@ from ventas.models import (
 # desde `TT-172` también lo usa el cierre de caja. Se importa en vez de
 # repetirlo: dos expresiones para la misma cifra es como acaban dando cifras
 # distintas (`DT-19`).
-from ventas.selectors import IMPORTE_DE_LA_LINEA
+from ventas.selectors import DIFERENCIA_DEL_CIERRE, IMPORTE_DE_LA_LINEA
 
 # **Cuándo se consumió un renglón**, que no siempre es cuándo se pagó (`[S2.3]`
 # de `docs/reglas-de-frecuencia-de-consumo.md`). En el mostrador son el mismo
@@ -493,7 +494,9 @@ def resumen_de_gasto(*, actor, estudiante, hoy=None):
 CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA = (Rol.ADMINISTRADOR,)
 
 
-def _solo_la_administracion(actor):
+def _solo_la_administracion(
+    actor, *, que="Los reportes de ventas e inventario", regla="[S11], HU-35"
+):
     """`[S11]`: los reportes de la operación son de `USR-4` y de nadie más.
 
     **El cajero no entra, y no es un olvido.** Registra las ventas y ve las
@@ -506,13 +509,25 @@ def _solo_la_administracion(actor):
     **La institución tampoco.** Es la responsable de los datos de los menores
     (Ley 1581), no del negocio de la cafetería, que puede estar en manos de un
     operador externo (`[S11]`, preámbulo).
+
+    ── `que` Y `regla` EXISTEN PORQUE EL MENSAJE SE LEE ────────────────────
+    El rol exigido es el mismo para los tres reportes, pero **decirle «los
+    reportes de ventas e inventario son de la administración» a quien intentó
+    consultar los cierres de caja es un mensaje equivocado**: nombra otros
+    reportes y otra historia. Se vio ejecutando `cierres_registrados` con los
+    otros tres roles (`TT-175`), y es el mismo arreglo que `TT-172` hizo con
+    `ventas.services._solo_el_cajero`.
+
+    La alternativa —una comprobación por reporte— repetiría las tres
+    condiciones, y la cuarta que se añadiera se olvidaría en una de ellas.
+    ─────────────────────────────────────────────────────────────────────────
     """
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied("Consultar los reportes exige identificarse.")
     if actor.rol not in CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA:
         raise PermissionDenied(
-            "Los reportes de ventas e inventario son de la administración de la "
-            "cafetería y de ningún otro rol ([S11], HU-35)."
+            f"{que} son de la administración de la cafetería y de ningún otro "
+            f"rol ({regla})."
         )
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
@@ -796,4 +811,164 @@ def _desglose_de_movimientos(movimientos):
             abs(agrupado.get(tipo.value, {}).get("unidades") or 0),
         )
         for tipo in TipoDeMovimientoDeInventario
+    )
+
+
+@dataclass(frozen=True)
+class ResumenDeCierres:
+    """Lo que dicen los cierres de un periodo (`TT-175`, `HU-56`).
+
+    ── DOS CIFRAS DE DESCUADRE, Y NO SOBRA NINGUNA ─────────────────────────
+    `diferencia_neta` es la suma **con signo** y `descuadre_total` la suma de
+    los valores absolutos. No son la misma cifra y la distancia entre las dos es
+    el dato: un sobrante de $2.000 el lunes y un faltante de $2.000 el martes
+    dan una neta de cero y un descuadre total de $4.000.
+
+    Enseñar solo la neta diría «la caja cuadra» de un mes con veinte
+    descuadres, que es exactamente lo contrario del «para qué» de la historia —
+    **detectar un patrón** en vez de enterarse suelto cada día.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `sin_motivo` **debería ser siempre cero**: lo impone
+    `cierre_de_caja_diferencia_con_motivo`. Se cuenta y se enseña igual, por lo
+    mismo que `mermas_sin_motivo` en el inventario: es la invariante puesta
+    donde la administración puede verla.
+
+    Las cifras de dinero pueden ser `None` si no hay ningún cierre, y quien lo
+    pinte decide cómo decirlo: un periodo sin cierres no es un periodo que
+    cuadró.
+    """
+
+    cuantos: int
+    cuadrados: int
+    sobrantes: int
+    faltantes: int
+    esperado: Decimal
+    contado: Decimal
+    base: Decimal
+    diferencia_neta: Decimal
+    descuadre_total: Decimal
+    sin_motivo: int
+
+    @property
+    def hubo_cierres(self):
+        return bool(self.cuantos)
+
+    @property
+    def con_diferencia(self):
+        """Cuántos no cuadraron, que es la cifra que se lee primero."""
+        return self.sobrantes + self.faltantes
+
+
+def cierres_registrados(*, actor, desde=None, hasta=None):
+    """Los cierres de caja del periodo (`TT-175`, `HU-56`).
+
+    Primer criterio de la historia: **quedan registrados y son consultables**.
+    Es la tabla tal cual, con el cajero traído, y la misma puerta que los otros
+    dos reportes de la cafetería.
+
+    ── EL CAJERO NO ENTRA AQUÍ, Y ACABA DE ESCRIBIR ESTAS FILAS ────────────
+    Cuadrar la caja es suyo (`HU-55`); **consultar el histórico de cuadres no**.
+    `[S11]` separa registrar de consolidar en dos filas distintas y `[S5]` del
+    anteproyecto explica por qué: el trabajo del administrador «no se centra en
+    cada transacción individual, sino en la información acumulada». Detectar un
+    patrón de descuadres es precisamente eso — y sobre el trabajo de quien
+    cuenta el dinero.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `desde` y `hasta` son fechas locales inclusivas, como en los otros dos. **Se
+    comparan contra `fecha` y no contra `creado_en`**: lo que se acota es la
+    jornada que se cuadró, no el instante en que alguien la registró. Un cierre
+    escrito a las 23:58 de un día que cuadra el anterior pertenece al anterior,
+    que es lo que dice su `fecha`.
+    """
+    _solo_la_administracion(
+        actor, que="Los cierres de caja registrados", regla="HU-56, DEC-6"
+    )
+
+    cierres = CierreDeCaja.objects.select_related("cajero")
+
+    # Sobre un `DateField` no hace falta el rodeo de `creado_en__gte`: la
+    # comparación es directa y no envuelve la columna en ninguna función.
+    if desde is not None:
+        cierres = cierres.filter(fecha__gte=desde)
+    if hasta is not None:
+        cierres = cierres.filter(fecha__lte=hasta)
+
+    return cierres
+
+
+def resumen_de_cierres(cierres):
+    """Lo que suma un conjunto de cierres: cuántos, cuánto y cuánto descuadró.
+
+    Recibe el `QuerySet` ya filtrado por lo mismo que `resumen_de_ventas` y
+    `resumen_de_movimientos`: en el admin se le pasa el listado que se está
+    mirando, así que el consolidado de arriba no puede hablar de otro conjunto
+    que la tabla de abajo.
+
+    **Todo sale de un solo `aggregate`, sin `values()`.** El desglose de los
+    otros dos reportes agrupa por una columna con `choices`; aquí lo que
+    distingue las tres clases —cuadró, sobró, faltó— **no es una columna**, es
+    el signo de una resta. Con `values()` habría que anotarla antes, y lo que se
+    anota antes de un `values()` entra en el `GROUP BY`: una fila por cierre,
+    todas con un uno. Contar con `Case`/`When` no tiene ese problema y además se
+    lee de una vez.
+
+    `Count("pk")` sin `distinct`: no hay ninguna unión que multiplique filas.
+    """
+    diferencia = DIFERENCIA_DEL_CIERRE
+    dinero_ = DecimalField(max_digits=12, decimal_places=2)
+
+    agregados = cierres.aggregate(
+        cuantos=Count("pk"),
+        esperado=Sum("efectivo_esperado"),
+        contado=Sum("efectivo_contado"),
+        base_total=Sum("base"),
+        diferencia_neta=Sum(diferencia),
+        # El valor absoluto, sin traerse las filas: el signo se invierte en la
+        # rama que lo necesita. `Func(..., function="ABS")` haría lo mismo y
+        # ataría el reporte a que la base tenga esa función con ese nombre.
+        descuadre_total=Sum(
+            Case(
+                When(efectivo_contado__lt=F("base") + F("efectivo_esperado"),
+                     then=-diferencia),
+                default=diferencia,
+                output_field=dinero_,
+            )
+        ),
+        cuadrados=Count(
+            Case(
+                When(efectivo_contado=F("base") + F("efectivo_esperado"), then=1),
+                output_field=IntegerField(),
+            )
+        ),
+        sobrantes=Count(
+            Case(
+                When(efectivo_contado__gt=F("base") + F("efectivo_esperado"), then=1),
+                output_field=IntegerField(),
+            )
+        ),
+        faltantes=Count(
+            Case(
+                When(efectivo_contado__lt=F("base") + F("efectivo_esperado"), then=1),
+                output_field=IntegerField(),
+            )
+        ),
+    )
+
+    return ResumenDeCierres(
+        cuantos=agregados["cuantos"] or 0,
+        cuadrados=agregados["cuadrados"] or 0,
+        sobrantes=agregados["sobrantes"] or 0,
+        faltantes=agregados["faltantes"] or 0,
+        esperado=agregados["esperado"],
+        contado=agregados["contado"],
+        base=agregados["base_total"],
+        diferencia_neta=agregados["diferencia_neta"],
+        descuadre_total=agregados["descuadre_total"],
+        # Un cierre descuadrado sin motivo **no puede existir**: lo impide
+        # `cierre_de_caja_diferencia_con_motivo`. Se cuenta para poder decirlo.
+        sin_motivo=cierres.exclude(
+            efectivo_contado=F("base") + F("efectivo_esperado")
+        ).filter(motivo="").count(),
     )

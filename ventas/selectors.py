@@ -32,6 +32,23 @@ IMPORTE_DE_LA_LINEA = ExpressionWrapper(
     output_field=DecimalField(max_digits=12, decimal_places=2),
 )
 
+# La diferencia de un cierre de caja, **calculada por la base** (`TT-175`).
+#
+# ── ES EL GEMELO EN SQL DE `CierreDeCaja.diferencia`, Y ESO HAY QUE VIGILARLO ─
+# La propiedad del modelo resta en Python y sirve para una fila; esta expresión
+# resta en Postgres y sirve para agregar, filtrar y ordenar un listado entero.
+# Son dos escrituras de la misma regla, que es justo lo que `DT-19` evita — y
+# aquí no hay salida: sumar en Python obligaría a traerse todos los cierres.
+#
+# Lo que se hace en su lugar es **fijar que coinciden**: hay una prueba que
+# compara las dos sobre las mismas filas y falla si alguien toca una sola. Si un
+# día hace falta una tercera forma de restar esto, la respuesta no es escribirla,
+# es preguntarse por qué.
+DIFERENCIA_DEL_CIERRE = ExpressionWrapper(
+    F("efectivo_contado") - F("base") - F("efectivo_esperado"),
+    output_field=DecimalField(max_digits=12, decimal_places=2),
+)
+
 
 @dataclass(frozen=True)
 class InformacionDeCobro:

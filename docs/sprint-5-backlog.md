@@ -165,8 +165,8 @@ Es la historia más densa del sprint y la única que añade un modelo. Tres cond
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-175` | Selector de los cierres registrados | Pedro | ☐ |
-| `TT-176` | Reporte de cierres en la interfaz administrativa | Carlos | ☐ |
+| `TT-175` | Selector de los cierres registrados | Pedro | ☑ |
+| `TT-176` | Reporte de cierres en la interfaz administrativa | Carlos | ☑ |
 
 ### `[HU-37]` Reporte de auditoría
 

@@ -71,13 +71,13 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **20** de 33 | **7** de 13 |
-| Pendientes | 13 | 6 |
+| **Finalizadas** | **22** de 33 | **8** de 13 |
+| Pendientes | 11 | 5 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 8 | 11 |
-| Carlos | 8 | 10 |
+| Pedro | 9 | 11 |
+| Carlos | 9 | 10 |
 | Alejandro | 4 | 6 |
 | Naomi | 0 | 6 |
 
@@ -92,7 +92,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☑ |
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☑ |
 | `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☑ |
-| `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☐ |
+| `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☑ |
 | `PR-09` | `TT-177`–`TT-178` | `HU-37` · **las 61 historias terminadas** | ☐ |
 | `PR-10` | `TT-179`–`TT-180` | `ENT-05` y el resto de `ENT-03` | ☐ |
 | `PR-11` | `TT-181`–`TT-182` | `ENT-04` | ☐ |
@@ -364,12 +364,12 @@ pierden fácil:
 | Responsables | Pedro y Carlos |
 | Historia | `HU-56` |
 | Invariantes | `INVD-5` |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-175` | Selector de los cierres registrados | Pedro | ☐ |
-| `TT-176` | Reporte de cierres en la interfaz administrativa | Carlos | ☐ |
+| `TT-175` | Selector de los cierres registrados | Pedro | ☑ |
+| `TT-176` | Reporte de cierres en la interfaz administrativa | Carlos | ☑ |
 
 ---
 
