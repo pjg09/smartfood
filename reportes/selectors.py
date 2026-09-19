@@ -10,7 +10,8 @@ necesitara escribir, eso sería un hecho nuevo y no un reporte.
 """
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, time, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import PermissionDenied
 from django.db.models import (
@@ -27,6 +28,8 @@ from django.db.models import (
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 
+from billetera.models import MovimientoBilletera, TipoDeMovimiento
+from billetera.selectors import saldo_de
 from cuentas.models import Rol
 from reportes import referencia, reglas
 from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta, Venta
@@ -345,4 +348,132 @@ def agregados_nutricionales(*, actor, estudiante, hoy=None):
         comparaciones=referencia.comparar(totales, agregados["dias"]),
         dias_con_consumo=agregados["dias"],
         renglones_sin_declarar=sin_declarar,
+    )
+
+
+@dataclass(frozen=True)
+class ResumenDeGasto:
+    """Lo que entró y lo que salió de la billetera en el periodo (`HU-33`).
+
+    Las tres cifras se leen juntas: **recargado**, **gastado** y el **saldo**,
+    que no es del periodo sino de toda la vida de la billetera (`INV-2`). Sin la
+    tercera, las dos primeras invitan a una resta que no significa lo que parece
+    — ver `gasto_sin_recarga_en_el_periodo`.
+
+    Todas positivas, incluido el gasto. En el libro una venta resta y su monto
+    es negativo (`DT-4`), pero «gastó $12.000» no es una cifra negativa: es
+    cuánto salió. El signo se invierte **una sola vez**, aquí, como hace
+    `billetera.selectors.consumo_del_dia`.
+    """
+
+    recargado: Decimal
+    gastado: Decimal
+    devuelto: Decimal
+    saldo: Decimal
+    ventana: int = reglas.DIAS_DE_LA_VENTANA
+
+    @property
+    def hubo_movimiento(self):
+        return bool(self.recargado or self.gastado or self.devuelto)
+
+    @property
+    def porcentaje_gastado(self):
+        """Qué parte de lo recargado en el periodo se gastó, o `None`.
+
+        `None` cuando no hubo recargas: dividir entre cero no es cero por
+        ciento, es que la pregunta no aplica. Ese caso tiene su propia frase en
+        la pantalla, porque es **el más frecuente y el que más se malinterpreta**
+        (ver abajo).
+        """
+        if not self.recargado:
+            return None
+        return int(
+            (self.gastado / self.recargado * 100).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+        )
+
+    @property
+    def gasto_sin_recarga_en_el_periodo(self):
+        """¿Gastó más de lo que se recargó **en estos días**?
+
+        ── ESTO NO ES UNA DEUDA, Y LA PANTALLA TIENE QUE DECIRLO ───────────
+        `INV-1` impide que una venta deje el saldo en negativo, así que un
+        estudiante **nunca** debe nada. Que gaste más de lo recargado en el
+        periodo solo significa que tiró del saldo que ya tenía de antes.
+
+        Sin esta distinción, la resta de las dos cifras se lee como un
+        descubierto, que es imposible por construcción. Por eso se pregunta
+        aquí y no se deja que cada pantalla la deduzca restando.
+        ─────────────────────────────────────────────────────────────────────
+        """
+        return self.gastado > self.recargado
+
+
+def resumen_de_gasto(*, actor, estudiante, hoy=None):
+    """El gasto frente al saldo recargado en el periodo (`TT-165`, `HU-33`).
+
+    Sale entero del libro de la billetera —recargas contra ventas—, así que no
+    hay ningún dato nuevo que capturar: son los mismos asientos de los que sale
+    el saldo (`INV-2`, `DT-4`).
+
+    ── AQUÍ LA FECHA ES LA DEL MOVIMIENTO, NO LA DEL CONSUMO ───────────────
+    Es la diferencia con los otros dos bloques de la pantalla, y parece una
+    incoherencia hasta que se lee entera: la frecuencia y los agregados
+    responden «cuándo comió», así que una reserva cuenta el día en que se
+    recoge; **esto responde «cuándo salió el dinero», y el dinero sale al
+    reservar** (`HU-23`, `TT-146`).
+
+    Un pedido pagado el domingo y recogido el lunes es gasto del domingo y
+    consumo del lunes. Las dos cosas son ciertas a la vez, y por eso no se
+    reutiliza `_lineas_consumidas`: son dos preguntas con dos calendarios.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **La ventana sí es la misma**, para que «el periodo» signifique lo mismo en
+    toda la pantalla: los `reglas.DIAS_DE_LA_VENTANA` días naturales con el de
+    hoy incluido.
+
+    El saldo **no** es del periodo: es la suma de todos los movimientos de la
+    billetera, y se lo pregunta a `billetera.selectors.saldo_de`, que es la
+    única definición de «saldo» del sistema. Calcularlo aquí sería la segunda,
+    y el día que cambie una, la pantalla enseñaría dos cifras distintas de lo
+    mismo.
+    """
+    _solo_su_acudiente(actor, estudiante)
+
+    if hoy is None:
+        hoy = timezone.localdate()
+    desde = hoy - timedelta(days=reglas.DIAS_DE_LA_VENTANA - 1)
+
+    # Los límites de la jornada **en la zona horaria del colegio**, como en
+    # `consumo_del_dia`: partir el día por UTC movería la recarga de las 19:00
+    # al día siguiente. Y es un rango sobre la columna, no un `__date`, que
+    # envolvería `creado_en` en una función y dejaría fuera su índice.
+    comienzo = timezone.make_aware(datetime.combine(desde, time.min))
+    siguiente = timezone.make_aware(
+        datetime.combine(hoy + timedelta(days=1), time.min)
+    )
+
+    movimientos = MovimientoBilletera.objects.filter(
+        billetera__estudiante=estudiante,
+        creado_en__gte=comienzo,
+        creado_en__lt=siguiente,
+    )
+
+    por_tipo = {
+        fila["tipo"]: fila["total"]
+        for fila in movimientos.values("tipo").annotate(total=Sum("monto"))
+    }
+    cero = Decimal("0.00")
+
+    return ResumenDeGasto(
+        recargado=por_tipo.get(TipoDeMovimiento.RECARGA) or cero,
+        # El menos invierte el signo del libro una sola vez.
+        gastado=-(por_tipo.get(TipoDeMovimiento.VENTA) or cero),
+        # **Hoy siempre es cero y aun así se lee**, en vez de darlo por hecho:
+        # el tipo existe en el libro desde `TT-59` y ningún servicio lo asienta
+        # todavía (`ALC-OUT-01`: el sistema no devuelve dinero). El día que algo
+        # lo asiente, este resumen no se queda mintiendo en silencio.
+        devuelto=por_tipo.get(TipoDeMovimiento.DEVOLUCION) or cero,
+        saldo=saldo_de(estudiante),
     )
