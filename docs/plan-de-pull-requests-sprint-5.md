@@ -71,14 +71,14 @@ Los cortes se eligieron con tres criterios, en este orden:
 
 | | Tareas | Pull Requests |
 |---|---|---|
-| **Finalizadas** | **16** de 33 | **6** de 13 |
-| Pendientes | 17 | 7 |
+| **Finalizadas** | **20** de 33 | **7** de 13 |
+| Pendientes | 13 | 6 |
 
 | Responsable | Finalizadas | Total |
 |---|---|---|
-| Pedro | 6 | 11 |
-| Carlos | 7 | 10 |
-| Alejandro | 3 | 6 |
+| Pedro | 8 | 11 |
+| Carlos | 8 | 10 |
+| Alejandro | 4 | 6 |
 | Naomi | 0 | 6 |
 
 ### [S3.1] Estado de los 13 Pull Requests
@@ -91,7 +91,7 @@ Los cortes se eligieron con tres criterios, en este orden:
 | `PR-04` | `TT-165`–`TT-166` | `HU-33` | ☑ |
 | `PR-05` | `TT-167`–`TT-168` | `HU-35` | ☑ |
 | `PR-06` | `TT-169`–`TT-170` | `HU-36` | ☑ |
-| `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☐ |
+| `PR-07` | `TT-171`–`TT-174` | `HU-55` · `INVD-5` | ☑ |
 | `PR-08` | `TT-175`–`TT-176` | `HU-56` | ☐ |
 | `PR-09` | `TT-177`–`TT-178` | `HU-37` · **las 61 historias terminadas** | ☐ |
 | `PR-10` | `TT-179`–`TT-180` | `ENT-05` y el resto de `ENT-03` | ☐ |
@@ -333,14 +333,14 @@ Se apoya en `historial_de` (Sprint 2) y en la merma con motivo (Sprint 4).
 | Responsables | Pedro, Carlos y Alejandro |
 | Historia | `HU-55` |
 | Invariantes | **`INVD-5`** |
-| Estado | ☐ |
+| Estado | ☑ |
 
 | Tarea | Descripción | Resp. | Estado |
 |---|---|---|---|
-| `TT-171` | Modelo de cierre: fecha, cajero, base, efectivo contado, diferencia y motivo | Pedro | ☐ |
-| `TT-172` | Servicio que calcula el efectivo esperado **desde las ventas registradas** | Pedro | ☐ |
-| `TT-173` | Pantalla de cierre de caja en el punto de venta | Carlos | ☐ |
-| `TT-174` | Caso de prueba: diferencia ≠ 0 exige motivo; transferencias fuera del cuadre | Alejandro | ☐ |
+| `TT-171` | Modelo de cierre: fecha, cajero, base, efectivo contado, diferencia y motivo | Pedro | ☑ |
+| `TT-172` | Servicio que calcula el efectivo esperado **desde las ventas registradas** | Pedro | ☑ |
+| `TT-173` | Pantalla de cierre de caja en el punto de venta | Carlos | ☑ |
+| `TT-174` | Caso de prueba: diferencia ≠ 0 exige motivo; transferencias fuera del cuadre | Alejandro | ☑ |
 
 **El PR más denso del sprint** y el único que añade un modelo. Tres condiciones que se
 pierden fácil:

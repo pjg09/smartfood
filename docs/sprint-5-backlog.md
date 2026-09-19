@@ -148,10 +148,10 @@ Se apoya en `historial_de`, que existe desde el Sprint 2, y en la merma con moti
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-171` | Modelo de cierre de caja: fecha, cajero, base, efectivo contado, diferencia y motivo | Pedro | ☐ |
-| `TT-172` | Servicio de cierre que calcula el efectivo esperado **desde las ventas registradas** (`INVD-5`) | Pedro | ☐ |
-| `TT-173` | Pantalla de cierre de caja en el punto de venta | Carlos | ☐ |
-| `TT-174` | Caso de prueba: diferencia ≠ 0 exige motivo, y las transferencias **no** entran en el cuadre | Alejandro | ☐ |
+| `TT-171` | Modelo de cierre de caja: fecha, cajero, base, efectivo contado, diferencia y motivo | Pedro | ☑ |
+| `TT-172` | Servicio de cierre que calcula el efectivo esperado **desde las ventas registradas** (`INVD-5`) | Pedro | ☑ |
+| `TT-173` | Pantalla de cierre de caja en el punto de venta | Carlos | ☑ |
+| `TT-174` | Caso de prueba: diferencia ≠ 0 exige motivo, y las transferencias **no** entran en el cuadre | Alejandro | ☑ |
 
 Es la historia más densa del sprint y la única que añade un modelo. Tres condiciones que se pierden fácil:
 
