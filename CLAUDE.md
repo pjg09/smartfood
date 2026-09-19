@@ -21,7 +21,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 |---|---|
 | `docs/smartfood.md` | Contexto: problema, objetivos, alcance (`S9`), solución (`S10`), matriz de permisos (`S11`), usuarios (`S5`) |
 | `docs/decisiones-de-alcance.md` | Alcance acordado **después** del anteproyecto (`DEC-1` … `DEC-15`) |
-| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-31`) |
+| `docs/decisiones-tecnicas.md` | Arquitectura, stack y modelo de datos (`DT-1` … `DT-34`) |
 | `docs/backlog-historias-de-usuario.md` | Las 61 historias con sus criterios de aceptación |
 | `docs/sprint-4-backlog.md` | **Las 18 tareas del sprint en curso** (`TT-137` … `TT-154`), con responsable |
 | `docs/plan-de-pull-requests-sprint-4.md` | Esas 18 tareas agrupadas en 7 PR y el estado de cada una —**el estado manda aquí**, no lo repitas en este fichero— |
@@ -96,8 +96,10 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con una sola excepción declarada**: el padrón de la institución tiene pantalla propia
-porque es la que secretaría abre a diario (`DT-27`). Si hace falta una segunda, se registra.
+**con dos excepciones declaradas**: el padrón de la institución, que es la pantalla que
+secretaría abre a diario (`DT-27`), y la cola de reservas pendientes, que comparten dos roles
+que no comparten interfaz (`DT-34`). **Una tercera tendría que explicar por qué no es ya un
+patrón en vez de una excepción.**
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se

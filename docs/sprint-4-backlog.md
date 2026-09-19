@@ -152,8 +152,8 @@ Pago simulado, como todo lo demás (`ALC-OUT-02`).
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-147` | Selector de reservas pendientes | Pedro | ☐ |
-| `TT-148` | Consulta de reservas pendientes desde la cafetería | Carlos | ☐ |
+| `TT-147` | Selector de reservas pendientes | Pedro | ☑ |
+| `TT-148` | Consulta de reservas pendientes desde la cafetería | Carlos | ☑ |
 
 ### `[HU-25]` Registro de la entrega del pedido
 

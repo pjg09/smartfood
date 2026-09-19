@@ -38,6 +38,7 @@ from ventas.views import (
     identificacion,
     punto_de_venta,
     reserva,
+    reservas,
 )
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
@@ -49,6 +50,11 @@ admin.site.index_title = "Gestión de la cafetería"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
+    # Cola de reservas pendientes (`TT-148`, `HU-24`). **No cuelga del punto de
+    # venta aunque el cajero sea uno de sus dos usuarios**: la administración de
+    # la cafetería también la consulta (`FUN-5`) y `INT-2` le responde `403`.
+    # Una ruta compartida es lo que evita dos pantallas del mismo dato.
+    path("reservas/", reservas, name="reservas"),
     # Acceso al sistema (`TT-56`, `DEC-12`). **No es un camino de alta**: aquí
     # solo entra quien ya tiene cuenta y ya definió su contraseña con la
     # invitación. `INV-6` e `INVD-1` no se tocan.

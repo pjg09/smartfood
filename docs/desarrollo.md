@@ -298,6 +298,22 @@ cupo del día o si no alcanza el saldo, la reserva se rechaza igual que la venta
 unidades siguen en el libro pero apartadas: las existencias reales no cambian y
 `existencias_sin_reservar` sí.
 
+### [S2.9.2] Ver qué hay que preparar para el descanso
+
+Como cajero o como administración: entrada **Reservas** del menú. También está en la columna
+de iconos del punto de venta, que es lo que el cajero tiene delante mientras cobra.
+
+Enseña lo pagado y no recogido, **de lo más antiguo a lo más reciente** — es una cola de
+trabajo, no un historial, y lo que importa es qué lleva más tiempo esperando. Un pedido
+entregado sale de la lista.
+
+**La consultan los dos roles de la cafetería** (`HU-24`, `FUN-5`): quien prepara y quien
+entrega no tienen por qué ser la misma persona. La institución y el acudiente reciben `403`
+aunque escriban la URL.
+
+Para verla con datos, reserva desde un acudiente (`[S2.9.1]`) y entra con
+`cajero@example.com`.
+
 ### [S2.10] Averiguar de dónde salen unas existencias
 
 En el listado de productos del admin, **la cifra de la columna «existencias» es un enlace**.

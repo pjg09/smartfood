@@ -48,6 +48,12 @@ ADMINISTRACION = Entrada("admin:index", "Administración", "i-ajustes")
 # reconoce de su pantalla es el lector.
 PUNTO_DE_VENTA = Entrada("punto-de-venta", "Punto de venta", "i-escaner")
 
+# `HU-24`. La cola de reservas pendientes, que **comparten los dos roles de la
+# cafetería** (`USR-3` y `USR-4`): quien prepara y quien entrega no tienen que
+# ser la misma persona (`FUN-5`). Por eso la entrada aparece en los dos menús y
+# no en uno.
+RESERVAS = Entrada("reservas", "Reservas", "i-cafeteria")
+
 MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
     Rol.ACUDIENTE: (INICIO, Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes")),
@@ -61,26 +67,27 @@ MENU_POR_ROL = {
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
         ADMINISTRACION,
     ),
-    # `USR-4` administra el catálogo desde `INT-3`.
-    Rol.ADMINISTRADOR: (INICIO, ADMINISTRACION),
+    # `USR-4` administra el catálogo desde `INT-3`, y consulta la cola de
+    # reservas (`HU-24`), que no vive en el admin — ver `DT-34`.
+    Rol.ADMINISTRADOR: (INICIO, RESERVAS, ADMINISTRACION),
     # `USR-3` cobra, y cobrar ocurre entero en `INT-2`. **Sin entrada a la
     # administración**: no tiene un solo permiso sobre ningún modelo, así que
     # el admin le enseñaba un índice vacío. Un enlace a una pantalla sin nada
     # dentro es peor que no tenerlo — invita a buscar allí lo que está en su
     # propia caja.
-    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA),
+    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, RESERVAS),
 }
 
-# La barra del punto de venta. **Es una lista aparte y hoy tiene una sola
-# entrada**, que es exactamente lo que el Sprint 2 construyó: entregas, cierre
-# de caja y cocina no existen todavía y no se dibujan huecos por adelantado.
+# La barra del punto de venta. **Es una lista aparte**, y desde `HU-24` tiene
+# dos entradas: la caja y la cola de reservas. Cierre de caja y cocina siguen sin
+# existir y no se dibujan huecos por adelantado.
 #
 # Va separada de `MENU_POR_ROL[Rol.CAJERO]` porque son dos sitios distintos: en
 # la barra de la aplicación el cajero necesita poder salir del punto de venta, y
 # en el punto de venta necesita justo lo contrario — `INT-2` pide atender toda
 # la demanda del descanso en veinte minutos, y un menú ahí solo son sitios a los
 # que llegar por error con cola delante.
-MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA,)
+MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA, RESERVAS)
 
 
 @register.simple_tag
