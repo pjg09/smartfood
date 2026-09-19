@@ -13,7 +13,11 @@ from django.views.decorators.http import require_http_methods
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from reportes import reglas
-from reportes.selectors import alertas_de_frecuencia, historial_de_consumo
+from reportes.selectors import (
+    agregados_nutricionales,
+    alertas_de_frecuencia,
+    historial_de_consumo,
+)
 
 
 @login_required
@@ -55,6 +59,12 @@ def consumo_del_estudiante(request, estudiante_id):
             # compras debajo el acudiente puede contar los días y comprobarla.
             # En otra pantalla habría que creérsela.
             "alertas": alertas_de_frecuencia(
+                actor=request.user, estudiante=estudiante
+            ),
+            # `TT-164`, `HU-32`. La comparación con la referencia sanitaria, en
+            # la misma ventana que las alertas: dos periodos distintos en la
+            # misma pantalla serían dos pantallas.
+            "aporte": agregados_nutricionales(
                 actor=request.user, estudiante=estudiante
             ),
             # La ventana y el umbral se pasan para que la pantalla los diga sin

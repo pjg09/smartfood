@@ -9,6 +9,7 @@ reporte consolida hechos que otro dominio ya asentó; si algún día uno de ello
 necesitara escribir, eso sería un hecho nuevo y no un reporte.
 """
 
+from dataclasses import dataclass
 from datetime import timedelta
 
 from django.core.exceptions import PermissionDenied
@@ -19,6 +20,7 @@ from django.db.models import (
     DecimalField,
     ExpressionWrapper,
     F,
+    IntegerField,
     Sum,
     When,
 )
@@ -26,7 +28,7 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 
 from cuentas.models import Rol
-from reportes import reglas
+from reportes import referencia, reglas
 from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta, Venta
 
 # El importe de un renglón, calculado por la base: precio congelado por unidades
@@ -149,6 +151,39 @@ def historial_de_consumo(*, actor, estudiante):
     )
 
 
+def _lineas_consumidas(estudiante, hoy=None):
+    """Los renglones **consumidos** por el estudiante dentro de la ventana.
+
+    **Una sola definición de «consumido en el periodo»**, y por eso es una
+    función y no dos consultas parecidas: la frecuencia (`HU-31`) y los
+    agregados nutricionales (`HU-32`) miran exactamente las mismas filas, y dos
+    definiciones que empiezan iguales acaban discrepando en la tercera historia.
+
+    La ventana son `reglas.DIAS_DE_LA_VENTANA` días naturales **con el de hoy
+    incluido**, y la reserva sin recoger no entra: está pagada, pero todavía no
+    se ha consumido (`[S2.3]` de `docs/reglas-de-frecuencia-de-consumo.md`). Se
+    excluye por el estado del pedido y no dejando que su fecha nula se caiga del
+    rango — la regla merece leerse en el código tal cual, no deducirse de cómo
+    compara un nulo.
+
+    **No autoriza a nadie**: es privada del módulo y quien la usa ya pasó por
+    `_solo_su_acudiente`.
+    """
+    if hoy is None:
+        hoy = timezone.localdate()
+    desde = hoy - timedelta(days=reglas.DIAS_DE_LA_VENTANA - 1)
+
+    return (
+        LineaVenta.objects.filter(venta__estudiante=estudiante)
+        .exclude(
+            venta__origen=OrigenDeLaVenta.RESERVA,
+            venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
+        )
+        .alias(dia=DIA_DEL_CONSUMO)
+        .filter(dia__gte=desde, dia__lte=hoy)
+    )
+
+
 def dias_de_consumo_por_categoria(*, actor, estudiante, hoy=None):
     """`{categoría: días distintos con consumo}` en la ventana de la regla.
 
@@ -185,22 +220,8 @@ def dias_de_consumo_por_categoria(*, actor, estudiante, hoy=None):
     """
     _solo_su_acudiente(actor, estudiante)
 
-    if hoy is None:
-        hoy = timezone.localdate()
-    desde = hoy - timedelta(days=reglas.DIAS_DE_LA_VENTANA - 1)
-
     recuento = (
-        LineaVenta.objects.filter(venta__estudiante=estudiante)
-        # La reserva sin entregar no cuenta. Se excluye por el estado del pedido
-        # y no dejando que su fecha nula se caiga del rango: la regla dice «lo
-        # que todavía no se ha recogido no se ha consumido», y eso merece
-        # leerse en el código tal cual, no deducirse de cómo compara un nulo.
-        .exclude(
-            venta__origen=OrigenDeLaVenta.RESERVA,
-            venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
-        )
-        .alias(dia=DIA_DEL_CONSUMO)
-        .filter(dia__gte=desde, dia__lte=hoy)
+        _lineas_consumidas(estudiante, hoy)
         .values("producto__categoria__nombre")
         .annotate(dias=Count(DIA_DEL_CONSUMO, distinct=True))
     )
@@ -227,4 +248,101 @@ def alertas_de_frecuencia(*, actor, estudiante, hoy=None):
     """
     return reglas.evaluar(
         dias_de_consumo_por_categoria(actor=actor, estudiante=estudiante, hoy=hoy)
+    )
+
+
+@dataclass(frozen=True)
+class AporteNutricional:
+    """Lo que la cafetería aportó en el periodo, listo para pintar (`TT-163`).
+
+    Es un objeto y no una lista suelta de comparaciones porque las tres cifras
+    se leen juntas o no significan nada: **cuántos días hubo consumo** —que es
+    el divisor—, **cuántos renglones quedaron fuera** por no declarar nada, y
+    las comparaciones en sí.
+
+    `renglones_sin_declarar` no es una curiosidad: `[S2.2]` de
+    `docs/campos-nutricionales.md` obliga a excluir del agregado los productos
+    sin declarar **y a decir cuántos se excluyeron**. Un agregado que se calla
+    lo que dejó fuera se lee como si estuviera completo.
+    """
+
+    comparaciones: list
+    dias_con_consumo: int
+    renglones_sin_declarar: int
+    ventana: int = reglas.DIAS_DE_LA_VENTANA
+
+    @property
+    def hay_datos(self):
+        return bool(self.comparaciones)
+
+
+def agregados_nutricionales(*, actor, estudiante, hoy=None):
+    """Los agregados del periodo frente a la referencia sanitaria (`HU-32`).
+
+    `TT-163`. Suma lo consumido en la misma ventana que las alertas de
+    frecuencia, lo divide entre los días en que hubo consumo y compara ese
+    promedio con la tabla de `reportes.referencia` — la Resolución 810 de 2021
+    del Ministerio de Salud, artículo 15.
+
+    ── SE SUMA LA INSTANTÁNEA, POR UNIDADES VENDIDAS ───────────────────────
+    Los nutrientes salen de `LineaVenta` —lo que el producto declaraba al
+    venderse (`DT-8`)— multiplicados por la cantidad del renglón, porque las
+    cifras del catálogo son **por porción vendible** (`[S2.1]` de
+    `docs/campos-nutricionales.md`). Dos empanadas aportan el doble que una;
+    aquí sí se cuentan unidades, al revés que en la frecuencia, y son dos
+    preguntas distintas: cada cuánto come algo, y cuánto le aportó.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── VACÍO NO ES CERO, Y LA SUMA LO RESPETA SOLA ─────────────────────────
+    `Sum` ignora los nulos, así que un producto sin sodio declarado no aporta
+    un cero al sodio: no aporta nada. Si **ningún** renglón del periodo declaró
+    un nutriente, su total llega nulo y la comparación se publica como «sin
+    datos» en vez de como un cero (`[S4.3]` del documento de referencia).
+
+    Aparte se cuentan los renglones que **no declaran nada**, que es lo que la
+    pantalla tiene que decir para que el agregado no se lea como completo.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `hoy` existe para las pruebas y para mirar otra jornada, igual que en la
+    frecuencia.
+    """
+    _solo_su_acudiente(actor, estudiante)
+
+    lineas = _lineas_consumidas(estudiante, hoy)
+
+    # Un `Sum` por nutriente, con el prefijo puesto: `aggregate(energia_kcal=…)`
+    # choca con el campo del modelo y Django lo rechaza.
+    sumas = {
+        f"total_{valor.campo}": Sum(
+            ExpressionWrapper(
+                F(valor.campo) * F("cantidad"),
+                output_field=(
+                    IntegerField()
+                    if valor.campo in ("energia_kcal", "sodio_mg")
+                    else DecimalField(max_digits=12, decimal_places=2)
+                ),
+            )
+        )
+        for valor in referencia.REFERENCIA_DIARIA
+    }
+
+    agregados = lineas.aggregate(dias=Count(DIA_DEL_CONSUMO, distinct=True), **sumas)
+
+    totales = {
+        valor.campo: agregados[f"total_{valor.campo}"]
+        for valor in referencia.REFERENCIA_DIARIA
+        if agregados[f"total_{valor.campo}"] is not None
+    }
+
+    # Los renglones que no declararon **ni un** nutriente. Es el mismo criterio
+    # que `LineaVenta.declara_informacion_nutricional` pregunta fila a fila,
+    # resuelto en la base para no traerse el periodo entero a memoria.
+    sin_declarar = lineas.filter(
+        **{f"{campo}__isnull": True for campo in LineaVenta.CAMPOS_NUTRICIONALES}
+    ).count()
+
+    return AporteNutricional(
+        comparaciones=referencia.comparar(totales, agregados["dias"]),
+        dias_con_consumo=agregados["dias"],
+        renglones_sin_declarar=sin_declarar,
     )

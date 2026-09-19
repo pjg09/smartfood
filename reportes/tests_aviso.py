@@ -18,9 +18,14 @@ individualizada, y `ALC-OUT-20` es la razón de que eso sea una frase y no una
 idea general.
 """
 
+from decimal import Decimal
+
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+
+from reportes.referencia import REFERENCIA_DIARIA, Comparacion
+from reportes.selectors import AporteNutricional
 
 from reportes.reglas import (
     DIAS_DE_LA_VENTANA,
@@ -30,22 +35,47 @@ from reportes.reglas import (
 )
 from reportes.tests_frecuencia import HOY, BaseDeFrecuencia
 
-FRAGMENTO = "reportes/partials/alertas-de-frecuencia.html"
+FRAGMENTO = "reportes/partials/recomendaciones.html"
 
 # La frase del segundo criterio de `HU-34`, tal como `ALC-OUT-20` la nombra.
 DESCARGO = "No constituye una valoración médica ni nutricional individualizada"
 
 
-def pintar(alertas):
-    """El fragmento, con lo que la vista le pasa y nada más."""
+def pintar(alertas, aporte=None):
+    """El fragmento, con lo que la vista le pasa y nada más.
+
+    `aporte` por defecto es el caso sin datos —un estudiante sin consumo en el
+    periodo—, para que cada prueba solo tenga que montar lo que mira.
+    """
     return render_to_string(
         FRAGMENTO,
         {
             "alertas": alertas,
+            "aporte": aporte
+            or AporteNutricional(
+                comparaciones=[], dias_con_consumo=0, renglones_sin_declarar=0
+            ),
             "estudiante": {"nombre": "Ana Sofía"},
             "ventana_de_frecuencia": DIAS_DE_LA_VENTANA,
             "umbral_de_frecuencia": UMBRAL_FRECUENCIA_ALTA,
         },
+    )
+
+
+def aporte_con(porcentajes):
+    """Un `AporteNutricional` montado a mano, sin tocar la base."""
+    comparaciones = [
+        Comparacion(
+            referencia=valor,
+            total=Decimal("100"),
+            promedio_diario=Decimal("50"),
+            porcentaje=porcentajes.get(valor.campo),
+        )
+        for valor in REFERENCIA_DIARIA
+        if valor.campo in porcentajes
+    ]
+    return AporteNutricional(
+        comparaciones=comparaciones, dias_con_consumo=2, renglones_sin_declarar=0
     )
 
 
@@ -81,6 +111,58 @@ class NoSePuedePintarUnaAlertaSinElAvisoTest(SimpleTestCase):
 
         self.assertIn("data-sin-alertas", html)
         self.assertIn("data-aviso-orientativo", html)
+
+
+class ElAporteTampocoSePublicaSinElAvisoTest(SimpleTestCase):
+    """`TT-164` entra en el mismo fragmento que las alertas, y por lo mismo.
+
+    La comparación con la referencia sanitaria es una recomendación informativa
+    de `ALC-IN-21` igual que las alertas, así que `INV-9` la alcanza igual. Si
+    alguien la saca a una plantilla propia, esto falla.
+    """
+
+    def test_con_agregados_y_sin_alertas_el_aviso_sigue_estando(self):
+        html = pintar([], aporte=aporte_con({"energia_kcal": 19}))
+
+        self.assertIn("data-aporte-nutricional", html)
+        self.assertIn("data-aviso-orientativo", html)
+
+    def test_sin_agregados_el_bloque_no_se_pinta(self):
+        """Sin consumo en el periodo no hay nada que promediar, y un cero sería
+        inventado."""
+        html = pintar([])
+
+        self.assertNotIn("data-aporte-nutricional", html)
+        self.assertIn("data-aviso-orientativo", html)
+
+
+class ElAporteDiceDeDondeSaleTest(SimpleTestCase):
+    """`HU-32`, primer criterio: la referencia es la de la autoridad sanitaria
+    colombiana, **y la pantalla dice cuál**.
+
+    Sin la cita, la cifra es un número que hay que creerse. Con ella, cualquiera
+    puede ir a la norma y comprobarla — que es lo que separa una comparación de
+    una opinión.
+    """
+
+    def test_la_pantalla_nombra_la_norma(self):
+        html = pintar([], aporte=aporte_con({"energia_kcal": 19}))
+
+        self.assertIn("Resolución 810 de 2021", html)
+        self.assertIn("Ministerio de Salud", html)
+
+    def test_declara_que_la_referencia_no_es_lo_que_el_estudiante_necesita(self):
+        """`[S3]` de `docs/valores-de-referencia-nutricional.md`.
+
+        Es lo que mantiene la comparación fuera de `ALC-OUT-20`: el VRN del
+        etiquetado es el mismo para toda la población mayor de cuatro años y no
+        afirma lo que un niño necesita. Callarlo convertiría una regla de tres
+        pública en algo que parece un requerimiento personal.
+        """
+        html = pintar([], aporte=aporte_con({"energia_kcal": 19}))
+
+        self.assertIn("No es lo que", html)
+        self.assertIn("necesita", html)
 
 
 class ElAvisoDiceLoQueTieneQueDecirTest(SimpleTestCase):

@@ -111,9 +111,9 @@ El historial muestra **la información nutricional registrada al momento de cada
 
 | ID | Tarea | Responsable | Estado |
 |---|---|---|---|
-| `TT-162` | Localizar y registrar los valores de referencia de la autoridad sanitaria colombiana, con su fuente | Alejandro | ☐ |
-| `TT-163` | Cálculo determinístico de los agregados nutricionales frente a esa referencia | Pedro | ☐ |
-| `TT-164` | Comparación en la pantalla del acudiente | Carlos | ☐ |
+| `TT-162` | Localizar y registrar los valores de referencia de la autoridad sanitaria colombiana, con su fuente | Alejandro | ☑ |
+| `TT-163` | Cálculo determinístico de los agregados nutricionales frente a esa referencia | Pedro | ☑ |
+| `TT-164` | Comparación en la pantalla del acudiente | Carlos | ☑ |
 
 `TT-162` es **investigación documental, no código**, y es la tarea con más riesgo de quedarse a medias: la historia exige que la referencia sea «la publicada por la autoridad sanitaria colombiana», así que hay que ir a la normativa del Ministerio de Salud, elegir la tabla y **dejar registrada la fuente**. Si en la sustentación preguntan de dónde salen esas cifras, esta tarea es la respuesta.
 

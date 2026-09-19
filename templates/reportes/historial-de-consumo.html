@@ -55,19 +55,20 @@
       </p>
     </header>
 
-    {% comment %} `TT-160`, `TT-161`. Las alertas van **encima** del historial y no en otra
-       pantalla: cada una dice su umbral y aquí debajo están los días para contarlos
-       (`ANEXO A` de `docs/reglas-de-frecuencia-de-consumo.md`).
+    {% comment %} `TT-160`, `TT-161`, `TT-164`. Las recomendaciones van **encima** del
+       historial y no en otra pantalla: cada alerta dice su umbral, el aporte dice de
+       cuántos días sale, y aquí debajo están las compras para contarlas (`ANEXO A` de
+       `docs/reglas-de-frecuencia-de-consumo.md`).
 
        Se incluye el fragmento entero, que trae el aviso de `INV-9` con él. **No se
-       copian las filas aquí**: el día que las alertas se enseñen en otro sitio, el
-       descargo tiene que viajar con ellas.
+       copian las filas aquí**: el día que una recomendación se enseñe en otro sitio,
+       el descargo tiene que viajar con ella.
 
        Solo se pinta si hay compras. Sin ninguna, «ninguna categoría llega al umbral»
        sobra: lo que hay que decir es que todavía no ha comprado nada, y eso lo dice
        el bloque de abajo. {% endcomment %}
     {% if compras %}
-      {% include "reportes/partials/alertas-de-frecuencia.html" %}
+      {% include "reportes/partials/recomendaciones.html" %}
 
       <ul class="flex flex-col gap-4">
         {% for compra in compras %}
@@ -225,22 +226,14 @@
       </p>
     {% endif %}
 
-    {% comment %} El hueco dice qué falta y qué historia lo trae (`[S2.4]`), nunca un botón
-       deshabilitado. **Ya no menciona `HU-31`**: las alertas de frecuencia están
-       arriba desde `TT-160`, y una marca que sobrevive a su historia miente igual
-       que mentiría su ausencia cuando era cierta.
+    {% comment %} **Aquí había un hueco y ya no hay ninguno.** Decía que los agregados
+       nutricionales llegaban con `HU-32`, y llegaron (`TT-162` … `TT-164`): la
+       comparación está arriba, con su fuente y sus salvedades. Se retira entero en
+       vez de reescribirlo, porque un bloque punteado dice **qué falta** (`[S2.4]`) y
+       aquí no falta nada.
 
-       Queda una: sumar los nutrientes del periodo y compararlos con la referencia de
-       la autoridad sanitaria colombiana (`HU-32`, `TT-162` … `TT-164`). {% endcomment %}
-    <div role="note"
-         class="flex items-start gap-3 rounded-md border border-dashed border-borde p-4">
-      <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
-      <p class="text-sm text-texto-suave">
-        <strong class="font-semibold text-texto">Los agregados nutricionales llegan con HU-32.</strong>
-        Esta pantalla enseña lo que se compró, renglón a renglón, y con qué frecuencia se
-        repite cada categoría. Sumar los nutrientes de un periodo y compararlos con los
-        valores publicados por la autoridad sanitaria colombiana es la historia siguiente.
-      </p>
-    </div>
+       Lo que queda de `EPI-8` para el acudiente es el resumen de gasto (`HU-33`), y
+       ese no es un hueco de esta pantalla: sale del libro de la billetera, no de las
+       líneas de venta, y vive donde `HU-33` decida. {% endcomment %}
   </div>
 {% endblock %}
