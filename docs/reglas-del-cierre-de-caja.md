@@ -133,9 +133,12 @@ Cuarto criterio de `HU-55`, con el mismo criterio que `ALC-IN-18` aplica a la me
 - **La base** lo garantiza con `cierre_de_caja_diferencia_con_motivo`.
 
 No es duplicación: es `DT-15`, regla 2. Un `if` protege el camino que lo tiene; la
-restricción protege los que todavía no existen — el reporte de `HU-56`, un comando, una
-consola con prisa. Y se escribe con `\S`, no con `!= ""`, por lo que costó descubrirlo en la
-merma (`TT-140`): tres espacios no son la cadena vacía y tampoco son un motivo.
+restricción protege los que todavía no existen — un comando, una tarea programada, una
+consola con prisa. Cuando se escribió esta línea el ejemplo era el reporte de `HU-56`, que
+llegó dos PR después; el siguiente camino tampoco se sabe cuál será.
+
+Y se escribe con `\S`, no con `!= ""`, por lo que costó descubrirlo en la merma (`TT-140`):
+tres espacios no son la cadena vacía y tampoco son un motivo.
 
 ---
 
