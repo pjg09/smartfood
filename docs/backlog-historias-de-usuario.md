@@ -20,7 +20,7 @@
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
-| version | 2.9 |
+| version | 3.0 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -106,10 +106,10 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El sistema acepta un archivo estructurado con estudiantes y sus responsables.
-  - La carga es una función exclusiva de la institución educativa: ningún otro rol puede ejecutarla.
-  - Cada estudiante queda vinculado a un responsable.
-  - Un mismo acudiente puede quedar a cargo de varios estudiantes.
+ - El sistema acepta un archivo estructurado con estudiantes y sus responsables.
+ - La carga es una función exclusiva de la institución educativa: ningún otro rol puede ejecutarla.
+ - Cada estudiante queda vinculado a un responsable.
+ - Un mismo acudiente puede quedar a cargo de varios estudiantes.
 - **Origen:** `ALC-IN-01`, `ALC-IN-04`, `FUN-1`, `OBJ-E2`, matriz `S11` (fila «Cargar estudiantes y crear cuentas de acudientes»)
 
 #### `[HU-02]` Validación del archivo antes de escribir
@@ -120,9 +120,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La validación ocurre **antes** de escribir cualquier dato en el sistema.
-  - Si hay errores, se reportan y **no** se escribe nada: la carga es todo o nada.
-  - El reporte identifica los errores encontrados.
+ - La validación ocurre **antes** de escribir cualquier dato en el sistema.
+ - Si hay errores, se reportan y **no** se escribe nada: la carga es todo o nada.
+ - El reporte identifica los errores encontrados.
 - **Origen:** `ALC-IN-02`, `FUN-1`, `OBJ-E2`
 
 #### `[HU-03]` Invitación por correo y definición de contraseña
@@ -133,9 +133,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El sistema genera la invitación **automáticamente** tras la carga.
-  - Se **genera** una invitación por cada acudiente cargado. **Su entrega por correo queda fuera del prototipo** (`DEC-9`): las direcciones de los acudientes son ficticias (`ALC-OUT-07`) y no corresponden a ningún buzón. La entrega real se demuestra en `HU-39` y `HU-41`, que son altas de una en una.
-  - El acudiente define su propia contraseña mediante esa invitación. La invitación generada por la carga es utilizable: la historia se demuestra de extremo a extremo tomando el enlace de un acudiente cargado.
+ - El sistema genera la invitación **automáticamente** tras la carga.
+ - Se **genera** una invitación por cada acudiente cargado. **Su entrega por correo queda fuera del prototipo** (`DEC-9`): las direcciones de los acudientes son ficticias (`ALC-OUT-07`) y no corresponden a ningún buzón. La entrega real se demuestra en `HU-39` y `HU-41`, que son altas de una en una.
+ - El acudiente define su propia contraseña mediante esa invitación. La invitación generada por la carga es utilizable: la historia se demuestra de extremo a extremo tomando el enlace de un acudiente cargado.
 - **Origen:** `ALC-IN-03`, `FUN-1`, `OBJ-E2`, `DEC-9`
 
 #### `[HU-04]` Acudiente con varios estudiantes a cargo
@@ -146,8 +146,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Una cuenta de acudiente puede tener varios estudiantes vinculados.
-  - El saldo, el límite diario y las restricciones son **por estudiante**, no por acudiente.
+ - Una cuenta de acudiente puede tener varios estudiantes vinculados.
+ - El saldo, el límite diario y las restricciones son **por estudiante**, no por acudiente.
 - **Origen:** `ALC-IN-04`, `ALC-IN-06`, `FUN-1`
 
 #### `[HU-05]` Autorregistro bloqueado
@@ -158,8 +158,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - No existe ningún camino de autorregistro en ninguna de las tres interfaces.
-  - Toda cuenta de acudiente nace de la carga institucional (`HU-01`) más la invitación (`HU-03`).
+ - No existe ningún camino de autorregistro en ninguna de las tres interfaces.
+ - Toda cuenta de acudiente nace de la carga institucional (`HU-01`) más la invitación (`HU-03`).
 - **Origen:** `ALC-IN-05`, `OBJ-E2`, `INV-6`
 
 ---
@@ -176,10 +176,10 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La billetera es individual por estudiante.
-  - La recarga la ejecuta únicamente el acudiente.
-  - La recarga queda asentada en el historial de movimientos.
-  - El flujo de pago es **simulado**: no hay dinero real ni pasarela bancaria.
+ - La billetera es individual por estudiante.
+ - La recarga la ejecuta únicamente el acudiente.
+ - La recarga queda asentada en el historial de movimientos.
+ - El flujo de pago es **simulado**: no hay dinero real ni pasarela bancaria.
 - **Origen:** `ALC-IN-06`, `FUN-2`, `S11`, `ALC-OUT-01`, `ALC-OUT-02`
 
 #### `[HU-07]` Consulta de saldo por el acudiente
@@ -190,8 +190,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El acudiente ve el saldo de cada estudiante a su cargo.
-  - El saldo mostrado corresponde exactamente al historial de movimientos.
+ - El acudiente ve el saldo de cada estudiante a su cargo.
+ - El saldo mostrado corresponde exactamente al historial de movimientos.
 - **Origen:** `ALC-IN-06`, `ALC-IN-19`, `S11`, `INV-2`
 
 #### `[HU-08]` Saldo reconstruible desde el historial
@@ -202,8 +202,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Todo movimiento que altere el saldo queda registrado.
-  - La suma del historial coincide **exactamente** con el saldo mostrado (`TST-3`).
+ - Todo movimiento que altere el saldo queda registrado.
+ - La suma del historial coincide **exactamente** con el saldo mostrado (`TST-3`).
 - **Origen:** `ALC-IN-19`, `OBJ-E4`, `INV-2`, `TST-3`
 
 ---
@@ -220,9 +220,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El límite se define por estudiante.
-  - Solo el acudiente puede fijarlo o modificarlo.
-  - El límite se evalúa contra el consumo del día en cada venta.
+ - El límite se define por estudiante.
+ - Solo el acudiente puede fijarlo o modificarlo.
+ - El límite se evalúa contra el consumo del día en cada venta.
 - **Origen:** `ALC-IN-07`, `FUN-2`, `OBJ-E5`, `S11`
 
 #### `[HU-10]` Bloqueo de un producto puntual
@@ -233,8 +233,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El bloqueo aplica a un producto identificado del catálogo.
-  - Se distingue explícitamente del bloqueo por alérgeno (`HU-11`).
+ - El bloqueo aplica a un producto identificado del catálogo.
+ - Se distingue explícitamente del bloqueo por alérgeno (`HU-11`).
 - **Origen:** `ALC-IN-08`, `FUN-3`, `OBJ-E5`
 
 #### `[HU-11]` Bloqueo por alérgeno
@@ -245,9 +245,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El bloqueo se aplica sobre la **condición** (el alérgeno), no sobre una lista fija de productos.
-  - Un producto incorporado al catálogo **después** de configurado el bloqueo queda cubierto automáticamente si declara ese alérgeno.
-  - Depende de que el catálogo declare alérgenos por producto (`HU-26`).
+ - El bloqueo se aplica sobre la **condición** (el alérgeno), no sobre una lista fija de productos.
+ - Un producto incorporado al catálogo **después** de configurado el bloqueo queda cubierto automáticamente si declara ese alérgeno.
+ - Depende de que el catálogo declare alérgenos por producto (`HU-26`).
 - **Origen:** `ALC-IN-08`, `FUN-3`, `OBJ-E5`, `INV-5`
 
 #### `[HU-12]` Retiro de una restricción
@@ -258,8 +258,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Solo el acudiente puede retirar una restricción.
-  - El retiro queda asentado, por ser una acción auditable sobre la seguridad del estudiante.
+ - Solo el acudiente puede retirar una restricción.
+ - El retiro queda asentado, por ser una acción auditable sobre la seguridad del estudiante.
 - **Origen:** `S11` (fila «Configurar y **retirar** restricciones alimentarias»), `ALC-IN-19`
 
 #### `[HU-61]` Retiro del límite diario
@@ -270,9 +270,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Solo el acudiente puede retirarlo.
-  - Retirarlo deja al estudiante **sin límite**, que es distinto de un límite de cero.
-  - El retiro queda asentado: quién, cuándo y **de cuánto era**.
+ - Solo el acudiente puede retirarlo.
+ - Retirarlo deja al estudiante **sin límite**, que es distinto de un límite de cero.
+ - El retiro queda asentado: quién, cuándo y **de cuánto era**.
 - **Origen:** `DEC-13`, `ALC-IN-07`, `ALC-IN-19`, `S11`
 
 > **Por qué esta historia existe, y por qué no estaba.** `[S11]` daba al acudiente «**fijar** límite diario» y, en otra fila, «configurar y **retirar** restricciones alimentarias». Retirar quedó atado a las alimentarias, así que `HU-12` alcanzaba al producto y al alérgeno pero no al cupo: se podía subir o bajar, nunca quitar. `DEC-13` amplía esa fila.
@@ -287,9 +287,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El cajero **ve** las restricciones vigentes al cobrar, pero no dispone de ninguna acción para desactivarlas ni omitirlas.
-  - La administración de la cafetería tampoco puede modificarlas.
-  - La institución educativa tampoco puede modificarlas.
+ - El cajero **ve** las restricciones vigentes al cobrar, pero no dispone de ninguna acción para desactivarlas ni omitirlas.
+ - La administración de la cafetería tampoco puede modificarlas.
+ - La institución educativa tampoco puede modificarlas.
 - **Origen:** `ALC-IN-09`, `FUN-3`, `OBJ-E5`, `INV-4`, `S11`
 
 ---
@@ -306,8 +306,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-1` (beneficiario) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El código lo genera el sistema, no una persona.
-  - La generación es aleatoria y **no** secuencial: un código no permite deducir otro.
+ - El código lo genera el sistema, no una persona.
+ - La generación es aleatoria y **no** secuencial: un código no permite deducir otro.
 - **Origen:** `ALC-IN-12`, `FUN-4`, `INV-7`
 
 #### `[HU-15]` Identificación por escaneo de la tarjeta
@@ -318,9 +318,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El lector físico está integrado con el sistema.
-  - El escaneo identifica al estudiante y trae su información de venta (`HU-17`).
-  - La validación se realiza a escala reducida, con un número limitado de tarjetas (prueba de concepto).
+ - El lector físico está integrado con el sistema.
+ - El escaneo identifica al estudiante y trae su información de venta (`HU-17`).
+ - La validación se realiza a escala reducida, con un número limitado de tarjetas (prueba de concepto).
 - **Origen:** `ALC-IN-11`, `ALC-IN-13`, `FUN-4`, `ENT-02`, `ALC-OUT-05`
 
 #### `[HU-16]` Identificación alternativa por documento
@@ -331,8 +331,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - La búsqueda por documento es una alternativa al escaneo, con el mismo resultado.
-  - Las restricciones, el saldo y el límite se aplican igual que en la vía con tarjeta.
+ - La búsqueda por documento es una alternativa al escaneo, con el mismo resultado.
+ - Las restricciones, el saldo y el límite se aplican igual que en la vía con tarjeta.
 - **Origen:** `FUN-4` («…escaneando su tarjeta **o buscándolo por documento**»)
 
 ---
@@ -349,8 +349,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Al identificar al estudiante se muestran los tres datos: saldo, consumo del día y restricciones.
-  - El cajero ve el saldo **solo al cobrar**, no como consulta libre.
+ - Al identificar al estudiante se muestran los tres datos: saldo, consumo del día y restricciones.
+ - El cajero ve el saldo **solo al cobrar**, no como consulta libre.
 - **Origen:** `FUN-4`, `ALC-IN-09`, `S11` (fila «Consultar saldo de un estudiante» → cajero: «Solo al cobrar»)
 
 #### `[HU-18]` Venta rechazada por alérgeno bloqueado
@@ -361,9 +361,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) / `USR-3` (opera) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La validación ocurre en tiempo real, en el momento de la venta.
-  - La venta se **rechaza**; el cajero no dispone de una vía para forzarla.
-  - Es el escenario crítico `TST-1` del plan de pruebas.
+ - La validación ocurre en tiempo real, en el momento de la venta.
+ - La venta se **rechaza**; el cajero no dispone de una vía para forzarla.
+ - Es el escenario crítico `TST-1` del plan de pruebas.
 - **Origen:** `ALC-IN-14`, `ALC-IN-09`, `INV-4`, `INV-5`, `TST-1`, `ENT-05`
 
 #### `[HU-19]` Venta rechazada por saldo insuficiente
@@ -374,9 +374,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) / `USR-3` (opera) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Si los fondos son insuficientes, la venta no se realiza.
-  - El saldo nunca queda negativo, bajo ninguna combinación de operaciones.
-  - Es parte del escenario crítico `TST-2`.
+ - Si los fondos son insuficientes, la venta no se realiza.
+ - El saldo nunca queda negativo, bajo ninguna combinación de operaciones.
+ - Es parte del escenario crítico `TST-2`.
 - **Origen:** `ALC-IN-14`, `FUN-2`, `OBJ-E4`, `INV-1`, `TST-2`
 
 #### `[HU-20]` Venta rechazada por límite diario superado
@@ -387,9 +387,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) / `USR-3` (opera) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El consumo del día se evalúa contra el límite en cada venta.
-  - Si el cupo del día es insuficiente, la venta no se realiza, aunque haya saldo.
-  - Es parte del escenario crítico `TST-2`.
+ - El consumo del día se evalúa contra el límite en cada venta.
+ - Si el cupo del día es insuficiente, la venta no se realiza, aunque haya saldo.
+ - Es parte del escenario crítico `TST-2`.
 - **Origen:** `ALC-IN-14`, `ALC-IN-07`, `FUN-2`, `TST-2`
 
 #### `[HU-21]` Descuento simultáneo de saldo y existencias
@@ -400,8 +400,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` (beneficiario) / `USR-3` (opera) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Ambos descuentos ocurren en la misma operación: no puede quedar uno sin el otro.
-  - La venta queda asentada en el historial de movimientos de la billetera y del producto.
+ - Ambos descuentos ocurren en la misma operación: no puede quedar uno sin el otro.
+ - La venta queda asentada en el historial de movimientos de la billetera y del producto.
 - **Origen:** `ALC-IN-17`, `ALC-IN-19`, `FUN-4`, `INV-2`, `INV-3`
 
 #### `[HU-22]` Venta con información nutricional congelada
@@ -412,8 +412,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La venta almacena la información nutricional vigente al momento de registrarse.
-  - Una edición posterior del catálogo no altera las ventas ya asentadas.
+ - La venta almacena la información nutricional vigente al momento de registrarse.
+ - Una edición posterior del catálogo no altera las ventas ya asentadas.
 - **Origen:** `ALC-IN-20` («…tal como estaba declarada al momento de la venta»), `OBJ-E3`
 
 #### `[HU-58]` Fotografía visible al cobrar
@@ -424,12 +424,30 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La fotografía aparece en la vista de cobro (`HU-17`), junto al saldo, el consumo del día y las restricciones.
-  - Si el estudiante no tiene fotografía, la venta procede igual.
-  - Es un control **preventivo**: complementa la desactivación de `HU-47` y `HU-48`, que solo actúa una vez reportada la pérdida.
+ - La fotografía aparece en la vista de cobro (`HU-17`), junto al saldo, el consumo del día y las restricciones.
+ - Si el estudiante no tiene fotografía, la venta procede igual.
+ - Es un control **preventivo**: complementa la desactivación de `HU-47` y `HU-48`, que solo actúa una vez reportada la pérdida.
 - **Origen:** `DEC-8`, `FUN-4`
 
 ---
+
+#### `[HU-60]` Venta rechazada por producto bloqueado
+
+> **Como** acudiente
+> **Quiero** que la caja rechace la venta de un producto que bloqueé
+> **Para** que el bloqueo sea real y no una anotación que nadie hace cumplir
+
+- **Actor:** `USR-2` · **Prioridad:** Must
+- **Criterios de aceptación:**
+ - La venta de un producto bloqueado para ese estudiante **se rechaza**, y no a medias: no se descuenta saldo ni existencias.
+ - La validación ocurre **dentro** de la transacción de venta, junto a las de saldo y existencias (`DT-6`).
+ - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-50`.
+ - El cajero **no dispone de ninguna acción** para omitirla (`INV-4`).
+- **Origen:** `ALC-IN-08`, `ALC-IN-09`, `FUN-3`, `OBJ-E5`, `INV-4`
+
+> **Por qué existe esta historia, y por qué no estaba.** `ALC-IN-09` pide aplicar las restricciones **en el momento de la venta**, y la trazabilidad lo mapeaba a `HU-13`, `HU-17` y `HU-18`: la primera dice que el cajero no puede desactivarlas, la segunda que las ve, y la tercera rechaza **solo por alérgeno**. La lista de `HU-10` se quedaba sin quién la hiciera cumplir. Se detectó al construir `PR-02` del Sprint 3 y se registró entonces.
+>
+> No es una función que faltara: el primer criterio de `HU-13` dice que el cajero no dispone de ninguna acción para **omitir** una restricción, y sin este rechazo el sistema se la omitía solo, sin que el cajero tuviera que hacer nada.
 
 ### [EPI-6] Pedidos anticipados
 
@@ -443,9 +461,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El pedido se asocia al perfil del estudiante.
-  - Se paga en el momento de reservarse (pago simulado).
-  - Se gestiona desde la aplicación del acudiente.
+ - El pedido se asocia al perfil del estudiante.
+ - Se paga en el momento de reservarse (pago simulado).
+ - Se gestiona desde la aplicación del acudiente.
 - **Origen:** `ALC-IN-10`, `FUN-5`, `ALC-OUT-02`
 
 #### `[HU-24]` Consulta de reservas pendientes
@@ -456,7 +474,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` / `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Las reservas pendientes son consultables desde la cafetería.
+ - Las reservas pendientes son consultables desde la cafetería.
 - **Origen:** `FUN-5`
 
 #### `[HU-25]` Registro de la entrega del pedido
@@ -467,8 +485,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - La entrega se registra en el punto de venta.
-  - El pedido ya pagado no vuelve a descontar saldo al entregarse.
+ - La entrega se registra en el punto de venta.
+ - El pedido ya pagado no vuelve a descontar saldo al entregarse.
 - **Origen:** `ALC-IN-10`, `FUN-5`
 
 ---
@@ -485,9 +503,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Cada producto admite precio, categoría, información nutricional y alérgenos declarados.
-  - Es requisito previo del bloqueo por alérgeno (`HU-11`) y de los reportes nutricionales (`HU-31`).
-  - Solo la administración de la cafetería gestiona el catálogo.
+ - Cada producto admite precio, categoría, información nutricional y alérgenos declarados.
+ - Es requisito previo del bloqueo por alérgeno (`HU-11`) y de los reportes nutricionales (`HU-31`).
+ - Solo la administración de la cafetería gestiona el catálogo.
 - **Origen:** `ALC-IN-15`, `FUN-6`, `S11`
 
 #### `[HU-27]` Ingreso de mercancía por ajuste manual
@@ -498,9 +516,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El inventario opera sobre **unidades vendibles**, no sobre insumos ni recetas.
-  - El aumento se registra como ajuste manual de la administración.
-  - Un producto preparado en la cafetería entra como existencia mediante este ajuste, sin descomponerlo en insumos.
+ - El inventario opera sobre **unidades vendibles**, no sobre insumos ni recetas.
+ - El aumento se registra como ajuste manual de la administración.
+ - Un producto preparado en la cafetería entra como existencia mediante este ajuste, sin descomponerlo en insumos.
 - **Origen:** `ALC-IN-16`, `FUN-6`, `ALC-OUT-11`, `ALC-OUT-12`, `ALC-OUT-15`
 
 #### `[HU-28]` Registro de merma con motivo obligatorio
@@ -511,8 +529,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El motivo es **obligatorio**: sin él la disminución no se registra.
-  - Aplica a toda disminución manual, no solo a la merma.
+ - El motivo es **obligatorio**: sin él la disminución no se registra.
+ - Aplica a toda disminución manual, no solo a la merma.
 - **Origen:** `ALC-IN-16`, `ALC-IN-18`, `INV-8`
 
 #### `[HU-29]` Existencias explicables desde el historial
@@ -523,8 +541,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Todo movimiento de inventario queda asentado con su motivo.
-  - Las existencias mostradas coinciden exactamente con el historial (`TST-4`).
+ - Todo movimiento de inventario queda asentado con su motivo.
+ - Las existencias mostradas coinciden exactamente con el historial (`TST-4`).
 - **Origen:** `ALC-IN-19`, `FUN-6`, `OBJ-E6`, `INV-3`, `TST-4`
 
 #### `[HU-59]` Imagen del producto
@@ -535,8 +553,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - La imagen se gestiona junto al resto del producto (`HU-26`).
-  - No es obligatoria: un producto sin imagen se vende igual.
+ - La imagen se gestiona junto al resto del producto (`HU-26`).
+ - No es obligatoria: un producto sin imagen se vende igual.
 - **Origen:** `DEC-8`, `INT-2`
 
 ---
@@ -553,8 +571,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El historial muestra cada venta con la información nutricional registrada en ese momento (`HU-22`).
-  - Solo el acudiente accede al consumo de los estudiantes a su cargo.
+ - El historial muestra cada venta con la información nutricional registrada en ese momento (`HU-22`).
+ - Solo el acudiente accede al consumo de los estudiantes a su cargo.
 - **Origen:** `ALC-IN-20`, `FUN-7`, `OBJ-E3`, `S11`
 
 #### `[HU-31]` Alertas de frecuencia de consumo
@@ -565,8 +583,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Las alertas se generan por **reglas determinísticas**, no por un modelo probabilístico.
-  - Se calculan sobre la frecuencia de consumo por categoría.
+ - Las alertas se generan por **reglas determinísticas**, no por un modelo probabilístico.
+ - Se calculan sobre la frecuencia de consumo por categoría.
 - **Origen:** `ALC-IN-21`, `FUN-7`, `OBJ-E3`
 
 #### `[HU-32]` Comparación con valores de referencia
@@ -577,8 +595,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - La referencia es la publicada por la autoridad sanitaria colombiana.
-  - El cálculo es determinístico y reproducible.
+ - La referencia es la publicada por la autoridad sanitaria colombiana.
+ - El cálculo es determinístico y reproducible.
 - **Origen:** `ALC-IN-21`, `FUN-7`
 
 #### `[HU-33]` Resumen de gasto frente a saldo recargado
@@ -589,7 +607,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El resumen contrasta gasto contra saldo recargado en el periodo.
+ - El resumen contrasta gasto contra saldo recargado en el periodo.
 - **Origen:** `ALC-IN-21`, `FUN-7`
 
 #### `[HU-34]` Aviso de carácter orientativo
@@ -600,8 +618,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (destinatario) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El aviso aparece **en la interfaz**, junto a las recomendaciones.
-  - Declara que no constituyen valoración médica ni nutricional individualizada.
+ - El aviso aparece **en la interfaz**, junto a las recomendaciones.
+ - Declara que no constituyen valoración médica ni nutricional individualizada.
 - **Origen:** `ALC-IN-21`, `ALC-OUT-20`, `INV-9`
 
 #### `[HU-35]` Reporte de ventas
@@ -612,8 +630,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El reporte se construye sobre las transacciones registradas, no sobre datos capturados aparte.
-  - Solo la administración de la cafetería accede.
+ - El reporte se construye sobre las transacciones registradas, no sobre datos capturados aparte.
+ - Solo la administración de la cafetería accede.
 - **Origen:** `ALC-IN-22`, `FUN-7`, `S11`
 
 #### `[HU-36]` Reporte de movimientos de inventario
@@ -624,7 +642,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El reporte cubre los movimientos registrados con su motivo.
+ - El reporte cubre los movimientos registrados con su motivo.
 - **Origen:** `ALC-IN-22`, `ALC-IN-19`, `FUN-7`
 
 #### `[HU-37]` Reporte de auditoría
@@ -635,7 +653,7 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El reporte se construye sobre las transacciones registradas.
+ - El reporte se construye sobre las transacciones registradas.
 - **Origen:** `ALC-IN-22`, `FUN-7`
 
 #### `[HU-38]` Consulta de restricciones por los cuatro roles
@@ -646,8 +664,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3`, `USR-4`, `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Los cuatro roles de la matriz `S11` pueden **consultar** restricciones.
-  - Ninguno salvo el acudiente puede configurarlas ni retirarlas (`HU-13`).
+ - Los cuatro roles de la matriz `S11` pueden **consultar** restricciones.
+ - Ninguno salvo el acudiente puede configurarlas ni retirarlas (`HU-13`).
 - **Origen:** `S11` (fila «Consultar restricciones de un estudiante»: Sí en las cuatro columnas), `INV-4`
 
 ---
@@ -664,10 +682,10 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La cuenta de la institución se crea en el seed del sistema.
-  - El seed dispara una invitación por correo.
-  - La institución define su propia contraseña mediante esa invitación.
-  - El prototipo opera sobre **una** institución de referencia.
+ - La cuenta de la institución se crea en el seed del sistema.
+ - El seed dispara una invitación por correo.
+ - La institución define su propia contraseña mediante esa invitación.
+ - El prototipo opera sobre **una** institución de referencia.
 - **Origen:** `DEC-3`, `INVD-1`, `ALC-OUT-10`
 
 #### `[HU-40]` Alta de cuentas de cajero y administrador
@@ -678,9 +696,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Solo la institución educativa puede crear cuentas de `USR-3` y `USR-4`.
-  - No existe autorregistro para ningún rol del sistema.
-  - El alta dispara la invitación por correo de `HU-41`.
+ - Solo la institución educativa puede crear cuentas de `USR-3` y `USR-4`.
+ - No existe autorregistro para ningún rol del sistema.
+ - El alta dispara la invitación por correo de `HU-41`.
 - **Origen:** `DEC-2`, `DEC-3`, `INVD-1`, `ALC-IN-05`
 
 #### `[HU-41]` Contraseña por invitación para el personal
@@ -691,9 +709,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3`, `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La invitación se envía al dar de alta la cuenta.
-  - El titular define su propia contraseña.
-  - Ninguna contraseña del sistema es conocida por quien creó la cuenta.
+ - La invitación se envía al dar de alta la cuenta.
+ - El titular define su propia contraseña.
+ - Ninguna contraseña del sistema es conocida por quien creó la cuenta.
 - **Origen:** `DEC-3`, `INVD-1`
 
 #### `[HU-42]` Desactivación y reactivación de cuentas de personal
@@ -704,9 +722,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Una cuenta desactivada no puede iniciar sesión ni operar.
-  - La institución puede reactivarla.
-  - El historial de operaciones de esa cuenta se conserva.
+ - Una cuenta desactivada no puede iniciar sesión ni operar.
+ - La institución puede reactivarla.
+ - El historial de operaciones de esa cuenta se conserva.
 - **Origen:** `DEC-2`
 
 ---
@@ -723,9 +741,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La asignación es automática al dar de alta al estudiante, sea por carga masiva o individual.
-  - El código lo genera el sistema de forma aleatoria y no secuencial (`HU-14`).
-  - El código queda listo para imprimirse como código de barras.
+ - La asignación es automática al dar de alta al estudiante, sea por carga masiva o individual.
+ - El código lo genera el sistema de forma aleatoria y no secuencial (`HU-14`).
+ - El código queda listo para imprimirse como código de barras.
 - **Origen:** `DEC-4`, `ALC-IN-12`, `INV-7`
 
 #### `[HU-44]` Vista de administración de estudiantes
@@ -736,9 +754,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Permite matricular un estudiante individual, además de la carga masiva de `HU-01`.
-  - Permite modificar los campos de un estudiante ya cargado.
-  - Es una función exclusiva de la institución educativa.
+ - Permite matricular un estudiante individual, además de la carga masiva de `HU-01`.
+ - Permite modificar los campos de un estudiante ya cargado.
+ - Es una función exclusiva de la institución educativa.
 - **Origen:** `DEC-4`, `ALC-IN-01`, `S11`
 
 #### `[HU-45]` Consulta del código de tarjeta vigente
@@ -749,8 +767,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La consulta se hace desde la vista de administración de estudiantes.
-  - Muestra el código **vigente**; los códigos reemplazados no son válidos (`HU-46`).
+ - La consulta se hace desde la vista de administración de estudiantes.
+ - Muestra el código **vigente**; los códigos reemplazados no son válidos (`HU-46`).
 - **Origen:** `DEC-4`, `ENT-02`
 
 #### `[HU-46]` Reasignación del código de tarjeta
@@ -761,9 +779,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La reasignación genera un código nuevo, aleatorio y no secuencial.
-  - **El código anterior queda invalidado de inmediato** y no vuelve a ser válido nunca.
-  - Una venta intentada con el código anterior no identifica a nadie.
+ - La reasignación genera un código nuevo, aleatorio y no secuencial.
+ - **El código anterior queda invalidado de inmediato** y no vuelve a ser válido nunca.
+ - Una venta intentada con el código anterior no identifica a nadie.
 - **Origen:** `DEC-4`, `INVD-4`, `INV-7`
 
 #### `[HU-47]` Desactivación de un estudiante por la institución
@@ -774,8 +792,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La institución puede desactivar en cualquier momento.
-  - El efecto es inmediato en el punto de venta (`HU-50`).
+ - La institución puede desactivar en cualquier momento.
+ - El efecto es inmediato en el punto de venta (`HU-50`).
 - **Origen:** `DEC-5`, `INVD-2`
 
 #### `[HU-48]` Desactivación de un estudiante por el acudiente
@@ -786,8 +804,8 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - El acudiente puede desactivar en cualquier momento a los estudiantes a su cargo.
-  - El acudiente **no** dispone de la acción de reactivar (`HU-49`).
+ - El acudiente puede desactivar en cualquier momento a los estudiantes a su cargo.
+ - El acudiente **no** dispone de la acción de reactivar (`HU-49`).
 - **Origen:** `DEC-5`, `INVD-2`, `INVD-3`
 
 #### `[HU-49]` Reactivación exclusiva de la institución
@@ -798,27 +816,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Solo la institución reactiva, **con independencia de quién haya desactivado**.
-  - El acudiente que desactivó debe comunicarse con la institución para el desbloqueo.
+ - Solo la institución reactiva, **con independencia de quién haya desactivado**.
+ - El acudiente que desactivó debe comunicarse con la institución para el desbloqueo.
 - **Origen:** `DEC-5`, `INVD-3`
-
-#### `[HU-60]` Venta rechazada por producto bloqueado
-
-> **Como** acudiente
-> **Quiero** que la caja rechace la venta de un producto que bloqueé
-> **Para** que el bloqueo sea real y no una anotación que nadie hace cumplir
-
-- **Actor:** `USR-2` · **Prioridad:** Must
-- **Criterios de aceptación:**
-  - La venta de un producto bloqueado para ese estudiante **se rechaza**, y no a medias: no se descuenta saldo ni existencias.
-  - La validación ocurre **dentro** de la transacción de venta, junto a las de saldo y existencias (`DT-6`).
-  - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-50`.
-  - El cajero **no dispone de ninguna acción** para omitirla (`INV-4`).
-- **Origen:** `ALC-IN-08`, `ALC-IN-09`, `FUN-3`, `OBJ-E5`, `INV-4`
-
-> **Por qué existe esta historia, y por qué no estaba.** `ALC-IN-09` pide aplicar las restricciones **en el momento de la venta**, y la trazabilidad lo mapeaba a `HU-13`, `HU-17` y `HU-18`: la primera dice que el cajero no puede desactivarlas, la segunda que las ve, y la tercera rechaza **solo por alérgeno**. La lista de `HU-10` se quedaba sin quién la hiciera cumplir. Se detectó al construir `PR-02` del Sprint 3 y se registró entonces.
->
-> No es una función que faltara: el primer criterio de `HU-13` dice que el cajero no dispone de ninguna acción para **omitir** una restricción, y sin este rechazo el sistema se la omitía solo, sin que el cajero tuviera que hacer nada.
 
 #### `[HU-50]` Venta rechazada por estudiante desactivado
 
@@ -828,10 +828,10 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` (beneficiario) / `USR-3` (opera) · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Un estudiante desactivado o dado de baja no puede comprar.
-  - Tampoco puede retirar pedidos anticipados.
-  - **Tampoco puede recibir recargas** mientras esté desactivado (`DEC-14`, `INVD-7`).
-  - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-60`.
+ - Un estudiante desactivado o dado de baja no puede comprar.
+ - Tampoco puede retirar pedidos anticipados.
+ - **Tampoco puede recibir recargas** mientras esté desactivado (`DEC-14`, `INVD-7`).
+ - El motivo del rechazo se distingue de los de `HU-18`, `HU-19`, `HU-20` y `HU-60`.
 - **Origen:** `DEC-5`, `DEC-7`, `INVD-2`, `INVD-7`
 
 > **El tercer criterio decía lo contrario, y `DEC-14` lo corrigió.** «Sí puede recibir recargas, por ser inocuo» se construyó así en `PR-13`; al verlo funcionando, el equipo concluyó que la premisa no se sostiene: una tarjeta se desactiva porque **se perdió**, y acumular saldo sobre un medio de pago fuera de control no es inocuo cuando el sistema no sabe devolver dinero (`ALC-OUT-01`). El saldo que ya tenía sigue siendo suyo y lo gastará al reactivarse (`HU-49`).
@@ -844,9 +844,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - La baja es **lógica**: el historial de consumo y el de movimientos se conservan íntegros.
-  - Es un estado **distinto** de la desactivación de `HU-47`: «se retiró» no es «perdió la tarjeta».
-  - Un estudiante de baja no puede comprar ni recargar.
+ - La baja es **lógica**: el historial de consumo y el de movimientos se conservan íntegros.
+ - Es un estado **distinto** de la desactivación de `HU-47`: «se retiró» no es «perdió la tarjeta».
+ - Un estudiante de baja no puede comprar ni recargar.
 - **Origen:** `DEC-7`, `INVD-2`, `INV-2`
 
 #### `[HU-52]` Saldo congelado y consultable tras la baja
@@ -857,9 +857,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-2` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El saldo remanente queda congelado y sigue siendo consultable.
-  - No se puede comprar ni recargar sobre él.
-  - **La devolución del dinero queda fuera del sistema** (`ALC-OUT-01`, `ALC-OUT-02`).
+ - El saldo remanente queda congelado y sigue siendo consultable.
+ - No se puede comprar ni recargar sobre él.
+ - **La devolución del dinero queda fuera del sistema** (`ALC-OUT-01`, `ALC-OUT-02`).
 - **Origen:** `DEC-7`, `ALC-OUT-01`, `ALC-OUT-02`, `INV-2`
 
 #### `[HU-57]` Fotografía del estudiante
@@ -870,9 +870,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-5` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La fotografía se carga y actualiza desde la vista de administración de estudiantes (`HU-44`).
-  - **No es obligatoria:** su ausencia no impide ninguna operación.
-  - En el prototipo son avatares generados, nunca personas reales (`INVD-6`).
+ - La fotografía se carga y actualiza desde la vista de administración de estudiantes (`HU-44`).
+ - **No es obligatoria:** su ausencia no impide ninguna operación.
+ - En el prototipo son avatares generados, nunca personas reales (`INVD-6`).
 - **Origen:** `DEC-8`, `INVD-6`, `ALC-OUT-07`
 
 ---
@@ -889,11 +889,11 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - La venta no exige identificación ni registro previo del cliente.
-  - **Descuenta inventario** como cualquier otra venta.
-  - **No aplica restricciones alimentarias**: no hay acudiente que las haya configurado.
-  - No descuenta ninguna billetera.
-  - Queda registrada y entra en los reportes de ventas (`HU-35`).
+ - La venta no exige identificación ni registro previo del cliente.
+ - **Descuenta inventario** como cualquier otra venta.
+ - **No aplica restricciones alimentarias**: no hay acudiente que las haya configurado.
+ - No descuenta ninguna billetera.
+ - Queda registrada y entra en los reportes de ventas (`HU-35`).
 - **Origen:** `DEC-1`, `S5` (`USR-6`), `ALC-IN-17`, `ALC-IN-22`
 
 #### `[HU-54]` Medio de pago en toda venta
@@ -904,10 +904,10 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Must
 - **Criterios de aceptación:**
-  - Toda venta registra su medio de pago: `billetera`, `efectivo` o `transferencia`.
-  - Las ventas de estudiante son siempre `billetera`.
-  - La **transferencia** va de la app bancaria del cliente a la cuenta de la cafetería: **no pasa por el sistema y no es una recarga**; el sistema solo deja constancia.
-  - Ninguna de las dos modalidades implica manejo de dinero real en el prototipo.
+ - Toda venta registra su medio de pago: `billetera`, `efectivo` o `transferencia`.
+ - Las ventas de estudiante son siempre `billetera`.
+ - La **transferencia** va de la app bancaria del cliente a la cuenta de la cafetería: **no pasa por el sistema y no es una recarga**; el sistema solo deja constancia.
+ - Ninguna de las dos modalidades implica manejo de dinero real en el prototipo.
 - **Origen:** `DEC-1`, `ALC-OUT-01`, `ALC-OUT-02`
 
 #### `[HU-55]` Cierre de caja diario
@@ -918,12 +918,12 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-3` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - El sistema calcula el total de ventas en **efectivo** del día a partir de las ventas registradas.
-  - El cajero registra el efectivo contado y la base que dejó para dar cambio.
-  - El sistema calcula y registra la diferencia.
-  - **Si la diferencia es distinta de cero, el motivo es obligatorio** (mismo criterio que `ALC-IN-18`).
-  - Las ventas por **transferencia no entran** en el cuadre: ese dinero nunca pasó por la caja.
-  - No hay apertura formal de turno: el cuadre es diario.
+ - El sistema calcula el total de ventas en **efectivo** del día a partir de las ventas registradas.
+ - El cajero registra el efectivo contado y la base que dejó para dar cambio.
+ - El sistema calcula y registra la diferencia.
+ - **Si la diferencia es distinta de cero, el motivo es obligatorio** (mismo criterio que `ALC-IN-18`).
+ - Las ventas por **transferencia no entran** en el cuadre: ese dinero nunca pasó por la caja.
+ - No hay apertura formal de turno: el cuadre es diario.
 - **Origen:** `DEC-6`, `INVD-5`, `ALC-IN-18`, `PA-7`
 
 #### `[HU-56]` Reporte de cierres de caja
@@ -934,9 +934,9 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
 
 - **Actor:** `USR-4` · **Prioridad:** Should
 - **Criterios de aceptación:**
-  - Los cierres quedan registrados y son consultables.
-  - El reporte alimenta la auditoría de `ALC-IN-22`.
-  - El efectivo esperado de un día se explica a partir de sus ventas en efectivo registradas.
+ - Los cierres quedan registrados y son consultables.
+ - El reporte alimenta la auditoría de `ALC-IN-22`.
+ - El efectivo esperado de un día se explica a partir de sus ventas en efectivo registradas.
 - **Origen:** `DEC-6`, `INVD-5`, `ALC-IN-22`
 
 ---
@@ -963,7 +963,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 14 | `HU-14` | Código de tarjeta aleatorio | EPI-4 | USR-1 | Must | ☑ |
 | 15 | `HU-15` | Identificación por escaneo | EPI-4 | USR-3 | Must | ☑ |
 | 16 | `HU-17` | Vista de cobro | EPI-5 | USR-3 | Must | ☑ |
-| 17 | `HU-58` | Fotografía visible al cobrar | EPI-11 | USR-3 | Must | ☑ |
+| 17 | `HU-58` | Fotografía visible al cobrar | EPI-5 | USR-3 | Must | ☑ |
 | 18 | `HU-21` | Descuento simultáneo saldo + existencias | EPI-5 | USR-4 | Must | ☑ |
 | 19 | `HU-18` | Venta rechazada por alérgeno (`TST-1`) | EPI-5 | USR-2 | Must | ☑ |
 | 20 | `HU-19` | Venta rechazada por saldo (`TST-2`) | EPI-5 | USR-2 | Must | ☑ |
@@ -1009,7 +1009,19 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 60 | `HU-56` | Reporte de cierres de caja | EPI-11 | USR-4 | Should | ☑ |
 | 61 | `HU-59` | Imagen del producto | EPI-7 | USR-4 | Should | ☑ |
 
-**Las 61 terminadas**: las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, **más `HU-10`, `HU-60`, `HU-11`, `HU-12`, `HU-61`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-09`, `HU-47`, `HU-48`, `HU-49` y `HU-50`** del Sprint 3 (`PR-02`, `PR-15`, `PR-03`, `PR-04`, `PR-16`, `PR-06`, `PR-07`, `PR-08`, `PR-09` —este con dos—, `PR-10`, `PR-11`, `PR-12` y `PR-13`), **y `HU-17`**, que el Sprint 2 dejó abierta y `PR-06` salda. Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **El Sprint 2 queda cerrado del todo**: `HU-17` era la única que arrastraba, le faltaba el bloque de restricciones, y `PR-06` del Sprint 3 se lo dio. Sus 14 de 14 historias, con una de retraso — que es lo que el `ANEXO A` de aquel sprint backlog anticipó. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` se cerró con `PR-06` del Sprint 3**, no con `PR-09` ni `PR-10` del Sprint 2: su primer criterio pide los tres datos al identificar, y el tercero —las restricciones vigentes— no existía hasta que `TT-94`, `TT-97` y `TT-100` lo construyeron. **Y `HU-28` y `HU-29`** del Sprint 4, que cierran `PR-02` y `PR-03`: la merma se registra con su motivo —`INV-8` la impone la base, no el formulario (`TT-140`)— y las existencias de cualquier producto se explican renglón a renglón desde su historial. **Con `HU-29` queda demostrado `TST-4`, y con él los cuatro escenarios críticos de `ENT-05`**: `TST-3` en el Sprint 2, `TST-1` y `TST-2` en el 3, y este. El plan de pruebas queda completo. **Y `HU-23` y `HU-24`**, que cierran `PR-04` y `PR-05`: el acudiente reserva y paga por adelantado —y la reserva pasa por la misma validación que el cobro, así que hereda las seis comprobaciones de la venta sin que la historia mencione ninguna—, y el personal de la cafetería consulta la cola de lo pendiente, compartida por el cajero y la administración en una sola pantalla (`DT-34`). **Y `HU-25`** con `PR-06`: el cajero registra la entrega en el punto de venta y **el pedido ya pagado no vuelve a descontar saldo** — el único fallo del sprint que ninguna invariante detecta, y que solo caza `TT-151`. Con ella, **`FUN-5` queda entero**: reservar, consultar y entregar. **Y `HU-30`** del Sprint 5, que cierra `PR-01`: el acudiente consulta qué compró su hijo **con la información nutricional que cada producto declaraba ese día**, no la de hoy (`DT-8`). Es la primera historia que lee la instantánea que `TT-84` congeló tres sprints antes, y la primera que se puede romper sin que nada falle —leer el producto actual devuelve cifras bien formadas, solo que de otro momento—: por eso tiene prueba sobre el selector **y** sobre la plantilla. Con ella nace la app `reportes`, la última del plan de `DT-15`. **Y `HU-31` y `HU-34` con `PR-02`, que son dos marcas y no una.** Las alertas de frecuencia por categoría salen de una regla determinística escrita y justificada antes de programarla (`TT-158`, `docs/reglas-de-frecuencia-de-consumo.md`): días distintos en una ventana de 14, el mismo umbral para todas las categorías. **El umbral único es lo que mantiene la regla fuera de `ALC-OUT-20`** — uno más bajo para `Snacks` que para `Frutas` sería afirmar que una conviene menos, que es la valoración nutricional que el alcance excluye. `HU-34` va en el mismo PR porque `INV-9` exige el descargo **desde la primera recomendación publicada**, y no se cumple con un párrafo en una pantalla: el aviso y las alertas son el mismo fragmento, así que no hay forma de publicar una sin el otro. **Y `HU-32` con `PR-03`**, que es la historia con la fuente externa: los agregados nutricionales se comparan con la **Resolución 810 de 2021** del Ministerio de Salud —artículo 15, `Tabla 9` y `Tabla 10`, columna «niños mayores de 4 años y adultos»—, leída en dos compilaciones oficiales y registrada con su cita en `./valores-de-referencia-nutricional.md`. **Se usa la columna del etiquetado y no la recomendación por edad y sexo de la Resolución 3803 de 2016**, y esa es la decisión que mantiene la comparación fuera de `ALC-OUT-20`: el VRN es el mismo para toda la población mayor de cuatro años y no afirma lo que un niño necesita, así que comparar contra él es una regla de tres pública y no un diagnóstico. Las tres salvedades —azúcares totales frente a un máximo de añadidos, la cafetería no es toda la dieta, y los productos sin ficha quedan fuera del agregado y se dice cuántos— se declaran en pantalla en vez de taparse. **Y `HU-33` con `PR-04`**, que cierra los reportes del acudiente: lo recargado contra lo gastado en el periodo, sacado del mismo libro del que sale el saldo y sin ningún dato nuevo que capturar (`INV-2`, `DT-4`). Trae **la única cifra de la pantalla que no es del periodo** —el saldo, que es la suma de toda la vida de la billetera— y la frase que evita el malentendido: gastar más de lo recargado en catorce días **no es una deuda**, porque `INV-1` no deja que una venta deje el saldo en negativo. **Con ella, `EPI-8` queda cerrada para `USR-2`**: historial, frecuencia, agregados y gasto. **Y `HU-35` con `PR-05`**, el primero de los reportes de la cafetería: el libro de ventas en el admin, con el consolidado **del listado que se está mirando** —filtros, búsqueda y navegación por fechas incluidos— y sus desgloses por medio de pago y por origen. Entra en `INT-3` sin abrir una tercera excepción a `DT-2`, por el camino que `TT-141` estrenó. **Nadie escribe una venta desde ahí**: `ventas` pasa a `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`, así que el permiso no existe en ningún grupo — una venta se registra en el punto de venta, con su transacción, o no existe (`INV-1`, `INV-2`, `INV-3`). **Y `HU-36` con `PR-06`**, que resultó ser la pantalla que ya existía: el libro del admin enseñaba entradas, ventas y mermas con su motivo desde `TT-69`, así que el «en un solo lugar» de la historia estaba cumplido. Lo que le faltaba para ser un reporte era acotar un periodo y **decir cuánto suma lo que se está mirando** — eso es `TT-169` y `TT-170`. El consolidado enseña además **cuántas mermas van sin motivo**, que es siempre cero porque lo impone una `CheckConstraint` (`INV-8`): la invariante puesta donde la administración puede verla. **Y `HU-55` con `PR-07`**, la única historia del Sprint 5 que añade un modelo y la que convierte el proceso de `PA-7` en otra cosa: hasta hoy la cafetería cuadraba el efectivo contra **su estimación** de lo vendido, y ahora lo cuadra contra ventas registradas. `INVD-5` no se sostiene con un cálculo bien hecho sino con **una ausencia**: `cerrar_caja` no tiene parámetro para el efectivo esperado y el formulario no tiene campo, así que no hay camino por el que la cifra entre digitada — y hay una prueba de ausencia, con su contraprueba, que lo fija. **Las transferencias quedan fuera del cuadre** (`DEC-6`): ese dinero va de banco a banco y nunca pasó por el cajón. Y el motivo obligatorio cuando la diferencia no es cero lo impone una `CheckConstraint`, como la merma de `INV-8`: el servicio da el mensaje y la base da la garantía. Lo que queda escrito de todo ello es `./reglas-del-cierre-de-caja.md`. **Y `HU-56` con `PR-08`**, que cierra los reportes de la cafetería: el histórico de cuadres en el admin, con el mismo camino de `TT-141` y el mismo consolidado del listado que se está mirando. Trae **dos cifras de descuadre y no una**, y esa es la decisión de la historia: la suma con signo se compensa sola —un sobrante y un faltante iguales dan cero— y un mes con veinte descuadres se leería como un mes que cuadra. Arriba va el descuadre **total**, que es lo que permite detectar el patrón que la historia pide. El tercer criterio —que el efectivo esperado de un día se explique desde sus ventas en efectivo (`INVD-5`)— **no se cumple enseñando la cifra**: cada cierre enlaza al reporte de ventas de esa jornada ya filtrado por efectivo, y hay una prueba que sigue el enlace y comprueba que lo que trae suma exactamente esa cifra. **Y `HU-37` con `PR-09`, que cierra el backlog: las 61 historias del proyecto están terminadas.** El reporte de auditoría es una sola línea de tiempo con las cuatro clases de operación —ventas, entregas de pedidos, movimientos de inventario y cierres—, y su único criterio significa algo concreto: **no hay tabla de auditoría**. Ninguna operación se escribe dos veces, porque dos fuentes de la misma verdad acaban divergiendo (`DT-19`) y la segunda es la que nadie mira cuando falla; esto lee los libros que ya existen y los mezcla al leerlos, que es la decisión de `DT-4` y `DT-5` aplicada a la trazabilidad. **Los movimientos de tipo venta quedan fuera y eso no deja ningún hueco**: un cobro asienta la venta y su salida a la vez, así que incluirlos pondría cada venta dos veces con el mismo instante y el mismo actor. La **entrega** sí entra, y es la que más fácil se cae — no crea venta ni mueve saldo, solo cambia un estado y descuenta existencias. El «para» de la historia —rastrear quién hizo qué— se cumple en tres de las cuatro clases y **se declara donde no**: `MovimientoInventario` recibe el actor, lo comprueba y no lo guarda, así que el ingreso y la merma dicen qué y cuándo pero no quién. Está en el `ANEXO B` de `./decisiones-de-alcance.md`. **43 Must · 18 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
+**Las 61 terminadas.**
+
+**Sprints 1 y 2.** Las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **El Sprint 2 queda cerrado del todo**: `HU-17` era la única que arrastraba, le faltaba el bloque de restricciones, y `PR-06` del Sprint 3 se lo dio. Sus 14 de 14 historias, con una de retraso — que es lo que el `ANEXO A` de aquel sprint backlog anticipó. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` se cerró con `PR-06` del Sprint 3**, no con `PR-09` ni `PR-10` del Sprint 2: su primer criterio pide los tres datos al identificar, y el tercero —las restricciones vigentes— no existía hasta que `TT-94`, `TT-97` y `TT-100` lo construyeron.
+
+**Sprint 3.** **`HU-10`, `HU-60`, `HU-11`, `HU-12`, `HU-61`, `HU-13`, `HU-38`, `HU-18`, `HU-20`, `HU-09`, `HU-47`, `HU-48`, `HU-49` y `HU-50`** del Sprint 3 (`PR-02`, `PR-15`, `PR-03`, `PR-04`, `PR-16`, `PR-06`, `PR-07`, `PR-08`, `PR-09` —este con dos—, `PR-10`, `PR-11`, `PR-12` y `PR-13`), **y `HU-17`**, que el Sprint 2 dejó abierta y `PR-06` salda.
+
+**Sprint 4.** **`HU-28` y `HU-29`**, que cierran `PR-02` y `PR-03`: la merma se registra con su motivo —`INV-8` la impone la base, no el formulario (`TT-140`)— y las existencias de cualquier producto se explican renglón a renglón desde su historial. **Con `HU-29` queda demostrado `TST-4`, y con él los cuatro escenarios críticos de `ENT-05`**: `TST-3` en el Sprint 2, `TST-1` y `TST-2` en el 3, y este. El plan de pruebas queda completo. **Y `HU-23` y `HU-24`**, que cierran `PR-04` y `PR-05`: el acudiente reserva y paga por adelantado —y la reserva pasa por la misma validación que el cobro, así que hereda las seis comprobaciones de la venta sin que la historia mencione ninguna—, y el personal de la cafetería consulta la cola de lo pendiente, compartida por el cajero y la administración en una sola pantalla (`DT-34`). **Y `HU-25`** con `PR-06`: el cajero registra la entrega en el punto de venta y **el pedido ya pagado no vuelve a descontar saldo** — el único fallo del sprint que ninguna invariante detecta, y que solo caza `TT-151`. Con ella, **`FUN-5` queda entero**: reservar, consultar y entregar.
+
+**Sprint 5 · los reportes del acudiente.** **`HU-30`** cierra `PR-01`: el acudiente consulta qué compró su hijo **con la información nutricional que cada producto declaraba ese día**, no la de hoy (`DT-8`). Es la primera historia que lee la instantánea que `TT-84` congeló tres sprints antes, y la primera que se puede romper sin que nada falle —leer el producto actual devuelve cifras bien formadas, solo que de otro momento—: por eso tiene prueba sobre el selector **y** sobre la plantilla. Con ella nace la app `reportes`, la última del plan de `DT-15`. **Y `HU-31` y `HU-34` con `PR-02`, que son dos marcas y no una.** Las alertas de frecuencia por categoría salen de una regla determinística escrita y justificada antes de programarla (`TT-158`, `docs/reglas-de-frecuencia-de-consumo.md`): días distintos en una ventana de 14, el mismo umbral para todas las categorías. **El umbral único es lo que mantiene la regla fuera de `ALC-OUT-20`** — uno más bajo para `Snacks` que para `Frutas` sería afirmar que una conviene menos, que es la valoración nutricional que el alcance excluye. `HU-34` va en el mismo PR porque `INV-9` exige el descargo **desde la primera recomendación publicada**, y no se cumple con un párrafo en una pantalla: el aviso y las alertas son el mismo fragmento, así que no hay forma de publicar una sin el otro. **Y `HU-32` con `PR-03`**, que es la historia con la fuente externa: los agregados nutricionales se comparan con la **Resolución 810 de 2021** del Ministerio de Salud —artículo 15, `Tabla 9` y `Tabla 10`, columna «niños mayores de 4 años y adultos»—, leída en dos compilaciones oficiales y registrada con su cita en `./valores-de-referencia-nutricional.md`. **Se usa la columna del etiquetado y no la recomendación por edad y sexo de la Resolución 3803 de 2016**, y esa es la decisión que mantiene la comparación fuera de `ALC-OUT-20`: el VRN es el mismo para toda la población mayor de cuatro años y no afirma lo que un niño necesita, así que comparar contra él es una regla de tres pública y no un diagnóstico. Las tres salvedades —azúcares totales frente a un máximo de añadidos, la cafetería no es toda la dieta, y los productos sin ficha quedan fuera del agregado y se dice cuántos— se declaran en pantalla en vez de taparse. **Y `HU-33` con `PR-04`**, que cierra los reportes del acudiente: lo recargado contra lo gastado en el periodo, sacado del mismo libro del que sale el saldo y sin ningún dato nuevo que capturar (`INV-2`, `DT-4`). Trae **la única cifra de la pantalla que no es del periodo** —el saldo, que es la suma de toda la vida de la billetera— y la frase que evita el malentendido: gastar más de lo recargado en catorce días **no es una deuda**, porque `INV-1` no deja que una venta deje el saldo en negativo. **Con ella, `EPI-8` queda cerrada para `USR-2`**: historial, frecuencia, agregados y gasto.
+
+**Sprint 5 · la cafetería y el cierre de caja.** **`HU-35` con `PR-05`**, el primero de los reportes de la cafetería: el libro de ventas en el admin, con el consolidado **del listado que se está mirando** —filtros, búsqueda y navegación por fechas incluidos— y sus desgloses por medio de pago y por origen. Entra en `INT-3` sin abrir una tercera excepción a `DT-2`, por el camino que `TT-141` estrenó. **Nadie escribe una venta desde ahí**: `ventas` pasa a `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`, así que el permiso no existe en ningún grupo — una venta se registra en el punto de venta, con su transacción, o no existe (`INV-1`, `INV-2`, `INV-3`). **Y `HU-36` con `PR-06`**, que resultó ser la pantalla que ya existía: el libro del admin enseñaba entradas, ventas y mermas con su motivo desde `TT-69`, así que el «en un solo lugar» de la historia estaba cumplido. Lo que le faltaba para ser un reporte era acotar un periodo y **decir cuánto suma lo que se está mirando** — eso es `TT-169` y `TT-170`. El consolidado enseña además **cuántas mermas van sin motivo**, que es siempre cero porque lo impone una `CheckConstraint` (`INV-8`): la invariante puesta donde la administración puede verla. **Y `HU-55` con `PR-07`**, la única historia del Sprint 5 que añade un modelo y la que convierte el proceso de `PA-7` en otra cosa: hasta hoy la cafetería cuadraba el efectivo contra **su estimación** de lo vendido, y ahora lo cuadra contra ventas registradas. `INVD-5` no se sostiene con un cálculo bien hecho sino con **una ausencia**: `cerrar_caja` no tiene parámetro para el efectivo esperado y el formulario no tiene campo, así que no hay camino por el que la cifra entre digitada — y hay una prueba de ausencia, con su contraprueba, que lo fija. **Las transferencias quedan fuera del cuadre** (`DEC-6`): ese dinero va de banco a banco y nunca pasó por el cajón. Y el motivo obligatorio cuando la diferencia no es cero lo impone una `CheckConstraint`, como la merma de `INV-8`: el servicio da el mensaje y la base da la garantía. Lo que queda escrito de todo ello es `./reglas-del-cierre-de-caja.md`. **Y `HU-56` con `PR-08`**, que cierra los reportes de la cafetería: el histórico de cuadres en el admin, con el mismo camino de `TT-141` y el mismo consolidado del listado que se está mirando. Trae **dos cifras de descuadre y no una**, y esa es la decisión de la historia: la suma con signo se compensa sola —un sobrante y un faltante iguales dan cero— y un mes con veinte descuadres se leería como un mes que cuadra. Arriba va el descuadre **total**, que es lo que permite detectar el patrón que la historia pide. El tercer criterio —que el efectivo esperado de un día se explique desde sus ventas en efectivo (`INVD-5`)— **no se cumple enseñando la cifra**: cada cierre enlaza al reporte de ventas de esa jornada ya filtrado por efectivo, y hay una prueba que sigue el enlace y comprueba que lo que trae suma exactamente esa cifra. **Y `HU-37` con `PR-09`, que cierra el backlog: las 61 historias del proyecto están terminadas.** El reporte de auditoría es una sola línea de tiempo con las cuatro clases de operación —ventas, entregas de pedidos, movimientos de inventario y cierres—, y su único criterio significa algo concreto: **no hay tabla de auditoría**. Ninguna operación se escribe dos veces, porque dos fuentes de la misma verdad acaban divergiendo (`DT-19`) y la segunda es la que nadie mira cuando falla; esto lee los libros que ya existen y los mezcla al leerlos, que es la decisión de `DT-4` y `DT-5` aplicada a la trazabilidad. **Los movimientos de tipo venta quedan fuera y eso no deja ningún hueco**: un cobro asienta la venta y su salida a la vez, así que incluirlos pondría cada venta dos veces con el mismo instante y el mismo actor. La **entrega** sí entra, y es la que más fácil se cae — no crea venta ni mueve saldo, solo cambia un estado y descuenta existencias. El «para» de la historia —rastrear quién hizo qué— se cumple en tres de las cuatro clases y **se declara donde no**: `MovimientoInventario` recibe el actor, lo comprueba y no lo guarda, así que el ingreso y la merma dicen qué y cuándo pero no quién. Está en el `ANEXO B` de `./decisiones-de-alcance.md`.
+
+**43 Must · 18 Should · 0 Could.** De ellas, **38 provienen del anteproyecto** (`ALC-IN`, `FUN`) y **21 de las decisiones de alcance** (`DEC-1` … `DEC-8`), que todavía no están incorporadas a `[S9.1]`.
 
 > **`PR-06` cerró DOS historias: `HU-13` y `HU-17`.** Es la única vez en el proyecto que un
 > PR salda una historia de un sprint anterior, y estaba señalada como la marca más fácil
@@ -1339,7 +1351,23 @@ Era la contradicción más seria del anteproyecto: un usuario declarado con una 
 
 Documento producido por el equipo el 2026-08-28. No reexpresa ningún original: es material derivado de las versiones estructuradas del corpus.
 
-**Versión 2.1** — añade `HU-57`, `HU-58` y `HU-59`, derivadas de `DEC-8`. La 2.0 tenía 38 historias derivadas únicamente del anteproyecto y seis vacíos sin resolver. La 2.0 añade 18 historias (`HU-39` … `HU-56`) que derivan de `./decisiones-de-alcance.md`, el registro de las decisiones con que el equipo cerró esos vacíos. Las 38 historias originales **no se modificaron ni se renumeraron**.
+**Versión 3.0 — el backlog queda cerrado.** Las 61 historias están terminadas y este documento pasa a ser archivo: lo que le queda al Sprint 5 son entregables, no historias.
+
+La revisión de cierre encontró dos historias clasificadas en la épica equivocada —`HU-58` y `HU-60`—, y **cada sección acertaba en una y fallaba en la otra**, así que los totales por épica se compensaban y ninguna cuenta lo delataba: solo aparece al cruzar la ficha de `[S3]` contra la fila de `[S4]`. También rehízo la tabla de dependencias del `ANEXO D`, que listaba 25 de las 33 reales y dos que no eran entre sprints.
+
+El recorrido del documento:
+
+| Versión | Historias | Qué cambió |
+|---|---|---|
+| 1.0 | 38 | Derivadas únicamente del anteproyecto, con seis vacíos sin resolver |
+| 2.0 | 56 | `HU-39` … `HU-56`, de las decisiones con que el equipo cerró esos vacíos |
+| 2.1 | 59 | `HU-57`, `HU-58` y `HU-59`, derivadas de `DEC-8` |
+| 2.2 … 2.9 | 59 → 61 | Marcas de estado, una por PR que cerró historias. `HU-60` y `HU-61` entraron en la 2.3: los dos huecos que la planeación del Sprint 3 no vio |
+| 3.0 | 61 | **Las 61 terminadas.** Revisión de cierre |
+
+Las 38 historias originales **no se modificaron ni se renumeraron** en ninguna de esas versiones.
+
+> **El número de versión se dejó de subir en la 2.9.** `PR-07`, `PR-08` y `PR-09` marcaron `HU-55`, `HU-56` y `HU-37` sin tocarlo. No es grave —el estado vive en las marcas, no en el número— pero conviene saberlo al leer el historial: entre la 2.9 y esta 3.0 hay tres PR.
 
 Las 38 historias se obtuvieron recorriendo exhaustivamente `[S9.1]` (`ALC-IN-01` … `ALC-IN-22`) y `[S10.2]` (`FUN-1` … `FUN-7`) de `./smartfood.md`, reexpresando cada elemento del alcance desde el punto de vista del usuario que recibe su valor, según la plantilla de `D07` de `corpus:semana-5-gestion-de-proyectos-con-metodologias-agiles.md`. Los actores provienen de la tabla `USR-1..6` de `[S5]`; los permisos, de la matriz `[S11]`; las invariantes, del bloque `INV-1..9` de `[S10.2]`; los escenarios críticos, de `TST-1..4`.
 
@@ -1353,11 +1381,11 @@ La única excepción declarada es `[S5]`, la agrupación en sprints, marcada `[P
 
 ## [ANEXO D] Verificación del orden de construcción
 
-El grafo de dependencias de las 56 historias se comprobó por script sobre el orden de `[S5]`:
+El grafo de dependencias de las 61 historias se comprobó por script sobre el orden de `[S5]`:
 
 | Comprobación | Resultado |
 |---|---|
-| Historias colocadas | 59 de 59, ninguna repetida |
+| Historias colocadas | 61 de 61, ninguna repetida |
 | Historias antes de algo de lo que dependen | **0** |
 | Dependencias que cruzan de sprint hacia adelante | **0** |
 
@@ -1365,33 +1393,39 @@ Las dependencias entre sprints —todas hacia atrás— son:
 
 | Historia | Sprint | Depende de | Sprint |
 |---|---|---|---|
-| `HU-06` Recarga | 2 | `HU-03` Invitación al acudiente | 1 |
-| `HU-27` Ingreso de mercancía | 2 | `HU-26` Catálogo | 1 |
-| `HU-15` Identificación por escaneo | 2 | `HU-43` Código en la carga | 1 |
-| `HU-16` Identificación por documento | 2 | `HU-01` Carga masiva | 1 |
-| `HU-17` Vista de cobro | 2 | `HU-26` Catálogo | 1 |
-| `HU-22` Nutricional congelada | 2 | `HU-26` Catálogo | 1 |
-| `HU-52` Saldo congelado tras la baja | 2 | `HU-51` Baja lógica | 1 |
+| `HU-06` Recarga de la billetera | 2 | `HU-03` Invitación por correo y definición de contraseña | 1 |
+| `HU-52` Saldo congelado y consultable tras la baja | 2 | `HU-51` Baja lógica del estudiante retirado | 1 |
+| `HU-27` Ingreso de mercancía por ajuste manual | 2 | `HU-26` Administración del catálogo | 1 |
+| `HU-15` Identificación por escaneo de la tarjeta | 2 | `HU-43` Código de tarjeta asignado en la carga | 1 |
+| `HU-16` Identificación alternativa por documento | 2 | `HU-01` Carga masiva de estudiantes y acudientes | 1 |
+| `HU-17` Vista de cobro con saldo, consumo y restricciones | 2 | `HU-26` Administración del catálogo | 1 |
 | `HU-58` Fotografía visible al cobrar | 2 | `HU-57` Fotografía del estudiante | 1 |
-| `HU-09` Límite diario | 3 | `HU-06` Recarga | 2 |
-| `HU-10` Bloqueo de producto | 3 | `HU-26` Catálogo | 1 |
-| `HU-60` Rechazo por producto bloqueado | 3 | `HU-10` Bloqueo de producto | 3 |
-| `HU-61` Retiro del límite diario | 2 | `HU-09` Límite diario | 3 |
-| `HU-11` Bloqueo por alérgeno | 3 | `HU-26` Catálogo | 1 |
-| `HU-13` Restricciones no desactivables | 3 | `HU-17` Vista de cobro | 2 |
-| `HU-18` Rechazo por alérgeno | 3 | `HU-21` Descuento simultáneo | 2 |
-| `HU-20` Rechazo por límite | 3 | `HU-21` Descuento simultáneo | 2 |
-| `HU-47` Desactivación por la institución | 3 | `HU-44` Vista de administración | 1 |
-| `HU-50` Rechazo por desactivado | 3 | `HU-21` Descuento simultáneo | 2 |
-| `HU-28` Merma con motivo | 4 | `HU-27` Ingreso de mercancía | 2 |
-| `HU-29` Existencias explicables | 4 | `HU-21`, `HU-27` | 2 |
-| `HU-23` Reserva anticipada | 4 | `HU-06` Recarga, `HU-26` Catálogo | 2, 1 |
-| `HU-25` Entrega del pedido | 4 | `HU-21` Descuento simultáneo | 2 |
-| `HU-30` Historial de consumo | 5 | `HU-22` Nutricional congelada | 2 |
-| `HU-33` Resumen de gasto | 5 | `HU-06` Recarga | 2 |
-| `HU-35` Reporte de ventas | 5 | `HU-21`, `HU-53`, `HU-54` | 2 |
-| `HU-36` Movimientos de inventario | 5 | `HU-27`, `HU-28`, `HU-29` | 2, 4 |
-| `HU-55` Cierre de caja | 5 | `HU-53`, `HU-54` | 2 |
+| `HU-22` Venta con información nutricional congelada | 2 | `HU-26` Administración del catálogo | 1 |
+| `HU-09` Límite diario de gasto | 3 | `HU-06` Recarga de la billetera | 2 |
+| `HU-10` Bloqueo de un producto puntual | 3 | `HU-26` Administración del catálogo | 1 |
+| `HU-11` Bloqueo por alérgeno | 3 | `HU-26` Administración del catálogo | 1 |
+| `HU-13` Restricciones no desactivables por la cafetería | 3 | `HU-17` Vista de cobro con saldo, consumo y restricciones | 2 |
+| `HU-18` Venta rechazada por alérgeno bloqueado (`TST-1`) | 3 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-20` Venta rechazada por límite diario superado (`TST-2`) | 3 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-60` Venta rechazada por producto bloqueado | 3 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-47` Desactivación de un estudiante por la institución | 3 | `HU-44` Vista de administración de estudiantes | 1 |
+| `HU-50` Venta rechazada por estudiante desactivado | 3 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-28` Registro de merma con motivo obligatorio | 4 | `HU-27` Ingreso de mercancía por ajuste manual | 2 |
+| `HU-29` Existencias explicables desde el historial (`TST-4`) | 4 | `HU-27` Ingreso de mercancía por ajuste manual | 2 |
+| `HU-29` Existencias explicables desde el historial (`TST-4`) | 4 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-23` Reserva y pago anticipado | 4 | `HU-06` Recarga de la billetera | 2 |
+| `HU-23` Reserva y pago anticipado | 4 | `HU-26` Administración del catálogo | 1 |
+| `HU-25` Registro de la entrega del pedido | 4 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-30` Historial de consumo para el acudiente | 5 | `HU-22` Venta con información nutricional congelada | 2 |
+| `HU-33` Resumen de gasto frente a saldo recargado | 5 | `HU-06` Recarga de la billetera | 2 |
+| `HU-35` Reporte de ventas | 5 | `HU-21` Descuento simultáneo de saldo y existencias | 2 |
+| `HU-35` Reporte de ventas | 5 | `HU-53` Venta a cliente genérico | 2 |
+| `HU-35` Reporte de ventas | 5 | `HU-54` Medio de pago en toda venta | 2 |
+| `HU-36` Reporte de movimientos de inventario | 5 | `HU-27` Ingreso de mercancía por ajuste manual | 2 |
+| `HU-36` Reporte de movimientos de inventario | 5 | `HU-28` Registro de merma con motivo obligatorio | 4 |
+| `HU-36` Reporte de movimientos de inventario | 5 | `HU-29` Existencias explicables desde el historial (`TST-4`) | 4 |
+| `HU-55` Cierre de caja diario | 5 | `HU-54` Medio de pago en toda venta | 2 |
+| `HU-55` Cierre de caja diario | 5 | `HU-53` Venta a cliente genérico | 2 |
 
 **Las cuatro historias raíz** —sin ninguna dependencia— son `HU-39` (seed institucional), `HU-05`
 (autorregistro bloqueado), `HU-14` (generación del código) y `HU-26` (catálogo). Son los cuatro

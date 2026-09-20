@@ -688,7 +688,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ---
 
-## [S6] Lo que todavía no existe
+## [S6] Qué está construido, y qué no lo estará
 
 **Nada del producto.** Con `HU-37` quedan terminadas **las 61 historias del proyecto**: lo
 que viene después del Sprint 5 es entrega, no desarrollo.

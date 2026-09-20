@@ -13,6 +13,8 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
+**El producto está terminado.** Con `PR-09` quedan cerradas **las 61 historias** del proyecto —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. Si una tarea de aquí en adelante propone tocar el producto, es señal de que está mal entendida.
+
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
 ## Antes de escribir código, lee esto
@@ -229,7 +231,14 @@ lo dice el error.
 - **Lo que se anota ANTES de un `values()` también entra en el `GROUP BY`.** Es la otra
   cara de lo anterior: `annotate(dia=…).values("categoria").annotate(Count(…))` agrupa por
   categoría **y por día** —una fila por día, todas con un uno—. `alias()` deja filtrar por
-  la expresión sin seleccionarla, que es lo que hay que usar.
+  la expresión sin seleccionarla, que es lo que hay que usar. **Y si lo que agrupa no es una
+  columna** —«cuadró, sobró o faltó» es el signo de una resta—, la salida es contar con
+  `Count(Case(When(…)))` en un solo `aggregate()`: sin `values()` no hay `GROUP BY` que envenenar.
+- **Si una regla tiene que existir en Python y en SQL, hay prueba que las compara.**
+  `CierreDeCaja.diferencia` resta una fila y `DIFERENCIA_DEL_CIERRE` resta el listado entero para
+  ordenar y agregar: ahí `DT-19` no tiene salida —sumar en Python obligaría a traerse todos los
+  cierres—, así que lo que se fija es que las dos dicen lo mismo. Sin eso, el listado ordena por
+  una cifra y enseña otra, **las dos bien formadas**.
 - **`aggregate()` rechaza un nombre que choque con un campo del modelo** («The annotation
   conflicts with a field»). Prefija: `total_energia_kcal`.
 - **Un `Count` sobre un `QuerySet` que une con una tabla hija necesita `distinct=True`.**
@@ -270,6 +279,13 @@ lo dice el error.
   `True`, porque cada prueba va envuelta en una transacción. Para fijar «se validó dentro
   del bloqueo» hay que mirar el **orden de las consultas** con `CaptureQueriesContext`: el
   `SELECT … FOR UPDATE` antes de la lectura que decide.
+- **Una comprobación de rol compartida acaba nombrando la función equivocada.** `_solo_el_cajero`
+  contestaba «registrar ventas en el punto de venta» a quien intentó cuadrar la caja, y
+  `_solo_la_administracion` decía «los reportes de ventas e inventario» a quien pidió la
+  auditoría: el rol era el correcto y el mensaje citaba otra historia. Pásale **qué acción
+  nombrar**, y redáctalo con el infinitivo delante —«Consultar X **es** de…»— o no concuerda con
+  un sujeto singular. Las tres veces se vio ejecutándolo con cada rol, nunca en una prueba que
+  solo espera `PermissionDenied`.
 - **En una vista que escribe, autoriza ANTES de llamar al servicio.** Si quien autoriza es
   un selector de lectura —`padron()` exige el rol institución—, llámalo primero: al revés,
   un acudiente puede desactivar a su propio hijo por la ruta del padrón y recibir un `403`
@@ -334,9 +350,10 @@ uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huér
 ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
 —ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
 
-La suite completa pasa de 1.000 pruebas y **tarda entre tres y seis minutos**: por encima del tiempo de
-espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
-le dio tiempo — dale margen o corre solo la app que tocaste.
+La suite completa son **1.489 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
+le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
+menos de esas 1.489, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
@@ -396,6 +413,11 @@ Si el script lleva comillas dobles, **escríbelo a un fichero** y lánzalo con
 `uv run python fichero.py` (con `sys.path` y `django.setup()` delante): dentro de `-c '…'`
 el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso.
 
+**Y `response.context` es `None` fuera del runner de pruebas.** La puebla la señal
+`template_rendered`, que solo se conecta con `django.test.utils.setup_test_environment()`.
+Sin esa llamada la respuesta llega con `200`, y leerla revienta con un
+`TypeError: 'NoneType' object is not subscriptable` que no menciona la causa.
+
 **Para mirar una pantalla de verdad** sin navegador manual: la receta —renderizar con
 `django.test.Client` y fotografiar con Chrome sin interfaz— está en `[S5.2]` de
 `docs/desarrollo.md`, con los tres detalles sin los cuales **la captura miente**.
@@ -403,11 +425,13 @@ el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso
 que la suite no vio: un título duplicado, acentos graves literales, el mes capitalizado y
 `|dinero:"COP"` en cifras pequeñas. Ninguno rompía una prueba; los cuatro se veían.
 
-En el Sprint 5 encontró seis más, y **uno era de cifras**: un desglose que decía «1 venta» en
-cada fila con catorce en la tabla, con el total de al lado correcto. Los otros cinco:
-columnas tituladas «method», el documento de un menor enseñado en una ficha, dos cabeceras
-pegadas, una barra de color que se leía como una alarma y un «consúltalas con quien **lo**
-atiende» que nombraba en masculino a una estudiante.
+En el Sprint 5 lleva **once**, y **dos eran de cifras**: un desglose que decía «1 venta» en cada
+fila con catorce en la tabla —con el total de al lado correcto— y cuatro columnas de dinero
+crudas, «31500,00», junto a una ya formateada. Los otros nueve: columnas tituladas «method», el
+documento de un menor en una ficha, **el correo de un cajero en la barra de filtros**, dos
+cabeceras pegadas, unas migas montadas sobre la barra lateral, una barra de color que se leía
+como una alarma, un «consúltalas con quien **lo** atiende» que nombraba en masculino a una
+estudiante, y dos rechazos por rol que citaban otra historia. **Ninguno rompía una prueba.**
 
 **Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
