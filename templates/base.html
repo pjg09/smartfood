@@ -60,7 +60,12 @@
   {% block cabecera %}{% endblock %}
 </head>
 
-<body class="min-h-full bg-fondo font-texto text-texto antialiased">
+{% comment %} El token CSRF viaja en cabecera para TODA petición de HTMX. Sin esto, un
+   `hx-post` que no viva dentro de un `<form>` —el catálogo del punto de venta,
+   sin ir más lejos— sale sin token y Django lo rechaza con 403. Las pruebas no
+   lo cazan: el cliente de pruebas de Django no aplica CSRF. {% endcomment %}
+<body class="min-h-full bg-fondo font-texto text-texto antialiased"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
   {% include "partials/iconos.html" %}
 
