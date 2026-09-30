@@ -66,6 +66,10 @@ INSTITUCION_EMAIL = "institucion@example.com"
 class Command(BaseCommand):
     help = "Siembra la institución de referencia y dispara su invitación (HU-39, TT-10)."
 
+    # Lo que `handle` recibirá en `verbosity`. Declarado aquí para que
+    # `_informar` no dependa del orden en que se llamen los métodos.
+    verbosidad = 1
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--email-institucion",
@@ -114,7 +118,22 @@ class Command(BaseCommand):
             ),
         )
 
+    def _informar(self, texto):
+        """Escribe en `stdout` salvo que se haya pedido silencio.
+
+        `verbosity=0` significa «no cuentes nada»: es lo que pasan las pruebas,
+        y lo que deja legible el resumen de la suite.
+        """
+        if self.verbosidad:
+            self.stdout.write(texto)
+
     def handle(self, *args, **opciones):
+        # `verbosity` no es decorativo aquí: las pruebas llaman al comando con
+        # `verbosity=0` y sin esto su registro entero —institución, personal,
+        # familias y catálogo, por cada `setUp`— se cuela en la salida de la
+        # suite y sepulta el resumen. Todo lo que el comando cuenta pasa por
+        # `_informar`, que es el único sitio donde se decide callar.
+        self.verbosidad = opciones["verbosity"]
         contrasena = opciones["contrasena_de_desarrollo"]
 
         # Una cadena vacía significa que se pidió contraseña pero la variable de
@@ -137,22 +156,22 @@ class Command(BaseCommand):
         )
 
         if creada:
-            self.stdout.write(self.style.SUCCESS(f"Institución «{institucion.nombre}» creada."))
+            self._informar(self.style.SUCCESS(f"Institución «{institucion.nombre}» creada."))
         else:
-            self.stdout.write(f"La institución «{institucion.nombre}» ya existía.")
+            self._informar(f"La institución «{institucion.nombre}» ya existía.")
 
         if contrasena:
-            self.stdout.write(f"  cuenta     : {institucion.usuario.email}")
-            self.stdout.write(self.style.WARNING(f"  contraseña : {contrasena}"))
-            self.stdout.write(
+            self._informar(f"  cuenta     : {institucion.usuario.email}")
+            self._informar(self.style.WARNING(f"  contraseña : {contrasena}"))
+            self._informar(
                 "  Se muestra UNA vez y no se guarda en claro en ninguna parte. "
                 "Anótala donde corresponda (docs/desarrollo.md)."
             )
-            self.stdout.write("  No se envió invitación por correo (DEC-10).")
+            self._informar("  No se envió invitación por correo (DEC-10).")
         elif creada:
-            self.stdout.write(f"  Invitación enviada a {institucion.usuario.email}.")
+            self._informar(f"  Invitación enviada a {institucion.usuario.email}.")
         else:
-            self.stdout.write("  No se reenvía la invitación.")
+            self._informar("  No se reenvía la invitación.")
 
         if not opciones["estudiantes"]:
             return
@@ -197,7 +216,7 @@ class Command(BaseCommand):
             )
             creadas += 1
 
-        self.stdout.write(
+        self._informar(
             self.style.SUCCESS(f"Personal de la cafetería: {creadas} cuenta(s) nueva(s).")
             if creadas
             else "El personal de la cafetería ya estaba sembrado."
@@ -254,14 +273,14 @@ class Command(BaseCommand):
                     )
                     avatares += 1
 
-        self.stdout.write(
+        self._informar(
             self.style.SUCCESS(
                 f"Familias: {acudientes} acudiente(s) y {estudiantes} estudiante(s) "
                 f"nuevo(s), {avatares} avatar(es) generado(s)."
             )
         )
         if avatares:
-            self.stdout.write(
+            self._informar(
                 "  Los avatares se dibujan aquí: ninguna fotografía del prototipo "
                 "corresponde a una persona real (INVD-6)."
             )
@@ -298,7 +317,7 @@ class Command(BaseCommand):
                 )
                 imagenes += 1
 
-        self.stdout.write(
+        self._informar(
             self.style.SUCCESS(
                 f"Catálogo: {Categoria.objects.count()} categoría(s), "
                 f"{Alergeno.objects.count()} alérgeno(s), {creados} producto(s) "

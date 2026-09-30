@@ -10,7 +10,7 @@ comando: que **todo lo que produce es ficticio** (`ALC-OUT-07`, `INVD-6`,
 despliegue.
 """
 
-from io import BytesIO
+from io import BytesIO, StringIO
 
 from django.conf import settings
 from django.core.files.storage import storages
@@ -199,3 +199,47 @@ class SembrarSoloLaInstitucionTest(TestCase):
         self.assertEqual(Usuario.objects.count(), 1)
         self.assertEqual(Estudiante.objects.count(), 0)
         self.assertEqual(Producto.objects.count(), 0)
+
+
+class VerbosidadTest(TestCase):
+    """`verbosity=0` calla de verdad.
+
+    El comando lo ignoraba, así que su registro entero —institución, personal,
+    familias y catálogo— salía por la terminal en cada `setUp` de las pruebas
+    que siembran, y el resumen de la suite quedaba enterrado bajo veinte copias
+    del mismo bloque.
+
+    La contraprueba de abajo es la que hace que esto proteja algo: exigir solo
+    silencio pasaría sola el día que el comando dejara de contar nada.
+    """
+
+    def _sembrar(self, **extra):
+        salida = StringIO()
+        with self.captureOnCommitCallbacks(execute=True):
+            call_command(
+                "sembrar",
+                contrasena_de_desarrollo="clave-de-prueba-2026",
+                estudiantes=2,
+                sin_imagenes=True,
+                stdout=salida,
+                no_color=True,
+                **extra,
+            )
+        return salida.getvalue()
+
+    @override_settings(STORAGES=EN_MEMORIA)
+    def test_con_verbosidad_cero_no_escribe_nada(self):
+        self.assertEqual(self._sembrar(verbosity=0), "")
+
+    @override_settings(STORAGES=EN_MEMORIA)
+    def test_por_defecto_cuenta_las_tres_partes(self):
+        salida = self._sembrar()
+
+        for parte in (
+            "Institución",
+            "contraseña",
+            "Personal de la cafetería",
+            "Familias",
+            "Catálogo",
+        ):
+            self.assertIn(parte, salida)
