@@ -214,6 +214,21 @@ lo dice el error.
   Por eso **lo que deba refrescarse tras un intercambio va DENTRO del fragmento**, no al
   lado: fuera se queda enseñando lo de antes, que en un historial de auditoría es peor que
   no enseñarlo.
+- **El cliente de pruebas de Django no aplica CSRF, así que un `hx-post` sin token pasa todas
+  las pruebas y falla solo en el navegador.** El catálogo del punto de venta estuvo así hasta
+  el 2026-09-21: sus botones llevan `hx-post` y no cuelgan de ningún `<form>` —de donde HTMX
+  saca el token—, así que añadir un producto respondía `403` con la suite entera en verde.
+  El token va en `hx-headers` del `<body>` de `base.html` —el único `<body>` del proyecto, del
+  que heredan los cuatro armazones—, y cubre cualquier `hx-post` presente o futuro sin
+  envolverlo en un formulario. Lo vigila `ventas/tests_csrf.py` con
+  `Client(enforce_csrf_checks=True)`: **con el cliente de siempre no hay prueba posible**, y
+  es justo por lo que esto vivió medio proyecto. Sus seis casos cubren las tres mitades —la
+  pantalla entrega el token, la petición no pasa sin él, y el catálogo sigue sin `<form>`—,
+  porque comprobar solo la última dejaría el atributo sin vigilancia.
+- **Una ruta que devuelve un fragmento no se abre a mano.** `/mis-estudiantes/<id>/` y las de
+  `…/tabla/` responden un trozo de HTML sin `<head>`: abiertas directamente salen **sin
+  estilos** —`document.styleSheets.length` es 0— y parece que Tailwind está roto. No lo está:
+  hay que llegar a ellas por el clic que las pide. Cuenta al tomar capturas y al probar a mano.
 - **`htmx-indicator` oculta con `opacity`, no con `display`.** Un «Guardando…» en su propia
   fila reserva su alto siempre y deja un hueco permanente. Va en la línea de un rótulo o
   del título, nunca solo.
