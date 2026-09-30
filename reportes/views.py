@@ -13,12 +13,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from billetera.templatetags.dinero import dinero
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from reportes import reglas
+from reportes.selectors import UMBRAL_DE_EXISTENCIAS_BAJAS
+from reportes.selectors import panel_de_la_cafeteria as selectores_del_panel
 from reportes.selectors import (
     OPERACIONES_MAXIMAS,
     agregados_nutricionales,
@@ -172,5 +176,106 @@ def auditoria_de_la_operacion(request):
             "hubo_mas": hubo_mas,
             "limite": OPERACIONES_MAXIMAS,
             "resumen": resumen_de_auditoria(operaciones),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def panel_de_la_cafeteria(request):
+    """La pantalla de aterrizaje de `USR-4` (`DEC-16`).
+
+    **Es el índice del rol, no un reporte más.** Los cuatro reportes responden
+    «qué pasó en este periodo, con estos filtros»; esta responde «cómo va hoy y
+    qué conviene mirar», que es otra pregunta y se hace todos los días. Por eso
+    no tiene filtros: cada bloque enlaza al reporte que sí los tiene.
+
+    Vive en el admin por lo mismo que la auditoría (`TT-178`): quien la consulta
+    ya trabaja ahí, y sacarla fuera sería la tercera excepción a `DT-2` sin
+    ninguna razón que la sostenga.
+
+    **Se autoriza dos veces y las dos hacen falta.** `is_staff` decide si el
+    armazón del admin tiene sentido para quien llama; el selector decide si
+    puede ver el dato. Un cajero tiene lo segundo en contra aunque tuviera lo
+    primero.
+    """
+    if not request.user.is_staff:
+        raise PermissionDenied(
+            "El panel de la cafetería vive en la administración (INT-3)."
+        )
+
+    panel = selectores_del_panel(actor=request.user)
+
+    return render(
+        request,
+        "admin/reportes/panel.html",
+        {
+            **admin.site.each_context(request),
+            "title": "Panel de la cafetería",
+            "panel": panel,
+            "umbral": UMBRAL_DE_EXISTENCIAS_BAJAS,
+            "tarjetas": _tarjetas_de_la_jornada(panel),
+            "mas_vendidos": panel.mas_vendidos,
+        },
+    )
+
+
+def _tarjetas_de_la_jornada(panel):
+    """Los cinco rótulos de la fila de arriba.
+
+    Se arman en la vista porque son **presentación**: rótulo, frase de apoyo y a
+    dónde lleva cada una. Las cifras vienen ya calculadas del selector; aquí no
+    se suma nada.
+
+    La franja usa `serie-*` y nunca un color de estado: es decoración, y el
+    rojo y el ámbar significan otra cosa en este producto.
+    """
+    por_medio = dict((etiqueta, total) for etiqueta, _, total in panel.de_hoy.por_medio_de_pago)
+    ventas = reverse("admin:ventas_venta_changelist")
+
+    return (
+        {
+            "rotulo": "En caja hoy",
+            "cifra": dinero(por_medio.get("Efectivo")),
+            "apoyo": "Cobrado en efectivo",
+            "serie": "serie-1",
+            "enlace": ventas,
+            "accion": "Ver ventas",
+        },
+        {
+            "rotulo": "Transferencias hoy",
+            "cifra": dinero(por_medio.get("Transferencia")),
+            "apoyo": "Cobrado en transferencia",
+            "serie": "serie-2",
+            "enlace": ventas,
+            "accion": "Ver ventas",
+        },
+        {
+            "rotulo": "Con billetera hoy",
+            "cifra": dinero(por_medio.get("Billetera")),
+            "apoyo": "Descontado del saldo de las familias",
+            "serie": "serie-3",
+            "enlace": ventas,
+            "accion": "Ver ventas",
+        },
+        {
+            "rotulo": "Ventas de hoy",
+            "cifra": panel.de_hoy.cuantas,
+            "apoyo": (
+                f"Ticket medio de {dinero(panel.ticket_medio)}"
+                if panel.ticket_medio is not None
+                else "Todavía no se ha cobrado nada"
+            ),
+            "serie": "serie-4",
+            "enlace": ventas,
+            "accion": "Ver ventas",
+        },
+        {
+            "rotulo": "Recargado hoy",
+            "cifra": dinero(panel.recargado_hoy),
+            "apoyo": "Lo que las familias añadieron a las billeteras",
+            "serie": "serie-5",
+            "enlace": None,
+            "accion": "",
         },
     )

@@ -73,16 +73,18 @@ class NingunaPlantillaEscribeUnColorSueltoTest(TestCase):
     vuelve a ser lo que cada quien tuviera a mano. Esta prueba es lo que lo
     impide.
 
-    Dos excepciones, y las dos por el mismo motivo —no cargan la hoja de
-    estilos, así que un token ahí no resolvería a nada—:
+    **Una sola excepción**, `correo/invitacion.html`: los clientes de correo
+    descartan las variables CSS y las hojas externas, así que un token ahí no
+    resolvería a nada.
 
-      · `correo/invitacion.html`: los clientes de correo descartan las
-        variables CSS y las hojas externas.
-      · `admin/base_site.html`: incluir Tailwind en el admin traería su
-        `preflight` y desarmaría `INT-3` (`DT-2`).
+    `admin/base_site.html` **dejó de ser la segunda** (`DT-36`). Lo era porque
+    el admin no podía cargar Tailwind —su `preflight` lo desarmaba—, así que
+    llevaba los colores copiados a mano; ahora carga `estilos/admin.css`, que es
+    Tailwind sin `preflight`, y los toma de `estilos/tokens.css` como todo lo
+    demás.
     """
 
-    EXCEPCIONES = {"correo/invitacion.html", "admin/base_site.html"}
+    EXCEPCIONES = {"correo/invitacion.html"}
 
     # `#abc` y `#aabbcc`, delimitados: así `href="#acceso"` o `#i-alerta` no
     # cuentan como color.

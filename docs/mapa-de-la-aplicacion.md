@@ -38,14 +38,15 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las treinta y nueve rutas
+## [S2] Las cuarenta y una rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
 
 | Ruta | Qué es | Quién | Tarea |
 |---|---|---|---|
-| `/` | Portada; reparte según el rol de quien mira | Todos | `TT-05` |
+| `/` | Portada **pública y única**: no cambia con la sesión. Con una abierta, reparte a `/panel/` (`DEC-16`) | Todos | `TT-05` |
+| `/panel/` | Reparte a quien entra hacia su propio panel. Es el destino de `LOGIN_REDIRECT_URL` (`DEC-16`) | Con sesión |  `DEC-16` |
 | `/login/` | Entrar. Redirige si ya hay sesión | Todos | `TT-56` |
 | `/salir/` | Cerrar sesión. **Solo POST**: un `GET` responde `405` | Todos | `TT-56` |
 | `/invitacion/<uid>/<token>/` | Definir la contraseña propia desde la invitación | Quien tenga el enlace | `TT-11` |
@@ -81,6 +82,7 @@ los mismos colores desde `DT-23`.
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
+| `/admin/panel/` | Panel de la cafetería: la jornada, existencias por agotarse y el mes (`DEC-16`) | Administración | `DEC-16` |
 | `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cuatro clases de operación, con quién hizo qué y cuándo | **Solo administración** | `TT-178` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
@@ -128,9 +130,25 @@ Cuatro filas piden explicación:
   *no sensible*: es la fotografía de una empanada. Exigir sesión no protegería nada y
   rompería la caché que `INT-2` necesita. La clave no se adivina: la genera el servidor.
 
+### [S2.2] Dónde aterriza cada rol
+
+`DEC-16`. Quien entra no elige a dónde ir: `/panel/` lo lleva a su trabajo. Es `[S11]` leído
+como navegación, y la tabla es la que fija `cuentas/tests_navegacion.py`.
+
+| Rol | Aterriza en |
+|---|---|
+| Institución (`USR-5`) | `/padron/` |
+| Administración de la cafetería (`USR-4`) | `/admin/panel/` |
+| Cajero (`USR-3`) | `/punto-de-venta/` |
+| Acudiente (`USR-2`) | `/mis-estudiantes/` |
+
+**Y `/admin/` son 89 pantallas**, no una: trece modelos registrados por seis o siete URLs
+cada uno —listado, añadir, editar, borrar, historial—. Esta tabla no las enumera porque las
+genera Django a partir de los modelos; lo que cada rol alcanza de ellas está en `[S3]`.
+
 ### [S2.1] De qué armazón cuelga cada pantalla
 
-Tres armazones sobre una base común (`DT-23`, `DT-16`). Cuál usa una pantalla no es
+Cuatro armazones sobre una base común (`DT-23`, `DT-16`). Cuál usa una pantalla no es
 decoración: decide si lleva barra lateral, si la cabecera puede ir sobre un bloque oscuro y
 qué pasa al imprimirla.
 

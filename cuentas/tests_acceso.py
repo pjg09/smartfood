@@ -48,7 +48,9 @@ class PantallaDeAccesoTest(TestCase):
             reverse("acceso"),
             {"username": "acudiente@example.com", "password": CLAVE},
         )
-        self.assertRedirects(respuesta, reverse("inicio"))
+        # `DEC-16`: se entra al reparto por rol, que a su vez lleva al panel
+        # del acudiente. Por eso el destino responde `302` y no `200`.
+        self.assertRedirects(respuesta, reverse("panel"), target_status_code=302)
         self.assertEqual(self.client.session["_auth_user_id"], str(self.usuario.pk))
 
     def test_una_contrasena_equivocada_no_entra(self):

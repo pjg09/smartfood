@@ -15,11 +15,11 @@
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
 | fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 35 (`DT-1` … `DT-35`) |
+| decisiones | 36 (`DT-1` … `DT-36`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
-| version | 1.9 |
+| version | 2.0 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -788,6 +788,40 @@ Además, `TT-06` (envío de correo) y `TT-15` (permisos según `[S11]`) se apoya
 ## [ANEXO C] Nota de procedencia
 
 Decisiones tomadas por el equipo el 2026-08-29, tras revisar qué exigen las invariantes del anteproyecto (`INV-1` … `INV-9`) y las derivadas de las decisiones de alcance (`INVD-1` … `INVD-5`).
+
+#### `[DT-36]` El admin se envuelve, no se reescribe: dos hojas y un solo juego de tokens
+
+**Cierra:** cómo se cumple `DEC-16` —un solo dashboard por rol— sin construir a mano las 89 pantallas que `DT-2` decidió no construir.
+
+**El hecho que lo obliga.** `DEC-16` pide que lo que vive en el admin se alcance desde la misma barra que el resto y se parezca al resto. Hasta ahora eso era imposible por una razón concreta: **el admin no podía cargar la hoja de la aplicación**, porque `@import "tailwindcss"` trae `preflight` —el reset de márgenes, tipos y tablas— y eso desarma los estilos con los que Django pinta sus pantallas. La salida que había era copiar los colores a mano en `admin/base_site.html`, que por eso era el tercer sitio del proyecto con valores literales.
+
+**Decidido:**
+
+- **Hay dos hojas y comparten los tokens.** `estilos/tokens.css` guarda la paleta cruda, los temas y el bloque `@theme`; lo importan `estilos/fuente.css` (la aplicación) y `estilos/admin.css` (el admin). **Un color de la marca está escrito una sola vez en todo el proyecto**, y `admin/base_site.html` deja de tener ninguno.
+- **La hoja del admin es Tailwind sin `preflight`**, importando solo `theme` y `utilities`:
+
+  ```css
+  @layer theme;
+  @import "tailwindcss/theme.css" layer(theme);
+  @import "tailwindcss/utilities.css";
+  ```
+
+- **Las utilidades van FUERA de capa, y no es un descuido.** El admin trae `.hidden { display: none !important }` sin capa, y una regla sin capa gana a cualquier regla dentro de una **por mucho que venga después**. Con las utilidades en `@layer utilities`, la barra lateral no se pintaba.
+- **Se compila con `manage.py estilos_del_admin`**, porque `tailwind build` solo conoce la hoja que declara `TAILWIND_CLI_SRC_CSS`.
+- **El cromo del admin toma sus valores de los tokens**: sus variables (`--primary`, `--header-bg`…) se redefinen contra `var(--color-…)`.
+- **Crear y editar abren una modal** sobre la pantalla, con el formulario que el admin ya sirve en modo `_popup`. El título de la modal es el `<h1>` del admin, subido desde el contenido: dejarlo dentro pintaba dos encabezados.
+- **Lo que Django genera se viste con CSS, no reescribiéndolo.** El listado toma la tabla de `[S2.2]` —cabecera en `primario-suave`, `px-4 py-3`, filas alternas—, el panel lateral la barra de filtros de `[S2.5]`, y «Añadir» deja de ser un sólido: `[S2.1]` dice que en una pantalla cuya pieza principal es la tabla, un botón relleno se lleva la mirada por delante de los datos, y el padrón ya lo resolvía con superficie y borde. Las medidas son las suyas, no unas nuevas.
+
+**Lo que NO se decide aquí.** No se reescribe ninguna pantalla del admin: dentro de la modal el formulario sigue siendo el suyo, con su HTML y sus estilos. `DT-2` sigue entero.
+
+**Tres trampas que costaron una ronda cada una**, y las tres fallan en silencio:
+
+1. **La especificidad del `:not()` es la de su argumento más específico.** El admin subraya enlaces con `a:not([role="button"], #header a, #nav-sidebar a, #content-main.app-list a, .object-tools a)`, que pesa (1,1,2) por ese `#content-main.app-list a`. `.armazon a` y `#container .armazon a` perdían: la regla estaba escrita, compilada y servida, y no hacía nada.
+2. **`hidden` de Tailwind choca con el `.hidden` del admin**, que es `!important`. La barra salía con su degradado y su `z-index` correctos y `display: none`. La salida es `max-tablet:hidden`, que esquiva el nombre en vez de pelear.
+3. **`formulario.action` no devuelve cadena vacía cuando el atributo falta**: devuelve la URL del documento. Al guardar desde la modal, el POST iba al listado, que responde `200` con la tabla, y la modal se llenaba consigo misma. Se lee el atributo, no la propiedad.
+
+**Consecuencia asumida.** Envolver no es reescribir: el parecido llega hasta donde llega sin tocar las 89 pantallas, y quien mire dentro de un formulario verá el del admin. A cambio, la navegación deja de tener dos mitades y el trabajo cabe en las semanas que quedan.
+
 
 El documento separa deliberadamente las decisiones **forzadas** de las **de conveniencia**. Once de las catorce son forzadas: no son preferencias del equipo sino la única forma de cumplir un requisito ya acordado. Las tres de conveniencia —framework, arquitectura de interfaz y despliegue— llevan declarada su alternativa descartada y el motivo.
 

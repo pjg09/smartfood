@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 15 (`DEC-1` … `DEC-15`) |
+| decisiones | 16 (`DEC-1` … `DEC-16`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-15` |
+| S1 | Decisiones | `DEC-1` … `DEC-16` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -332,6 +332,24 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 > **«Retirar `ENT-01`» sería retirar el proyecto, y no es lo que se decide.** `ENT-01` es el prototipo funcional entero: retirarlo dejaría el semestre sin entregable. Lo que se retira es **una condición suya**, la de estar desplegado. La distinción importa al leer `ENT-01` en `[S9.3]` de `./smartfood.md`, que no se puede alterar y sigue pidiéndolo desplegado: el alcance vigente es ese texto **más** esta decisión, leídos juntos.
 
+### `[DEC-16]` Un dashboard por rol: la portada es pública y el acceso reparte
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-09-22. **No amplía la matriz `[S11]`**: no concede a ningún rol nada que no tuviera. Reordena por dónde se llega a lo que ya podía hacer.*
+
+**El hecho que lo obliga.** La navegación creció por acumulación. Cada historia añadió su pantalla donde le tocaba —unas como pantalla propia (`DT-27`, `DT-34`), la mayoría dentro del admin (`INT-3`, `DT-2`)— y nadie decidió nunca cómo se recorre el conjunto. El resultado, visto de golpe: la portada se reescribía a sí misma según quién la mirara, el acceso dejaba a todo el mundo en ella, y desde el panel de un rol se saltaba al admin como si fueran dos aplicaciones distintas, con dos cromos distintos.
+
+**Decidido:**
+
+- **La portada es una sola y es pública.** No cambia con la sesión. Quien tiene una no llega a verla: `/` lo reparte a su panel.
+- **Al entrar se aterriza en el trabajo propio**, no en una pantalla que obliga a elegir. El reparto vive en `cuentas.views.panel` y es `[S11]` leído como navegación: institución al padrón, cajero al punto de venta, acudiente a sus estudiantes, administración a su panel.
+- **Cada rol es un solo dashboard.** Todo lo que un rol alcanza se llega desde su barra lateral, incluido lo que vive dentro del admin. Deja de haber «el panel» y «el admin» como dos sitios.
+- **El admin no se reescribe: se envuelve.** Sus pantallas siguen siendo las suyas —son **89**, trece modelos por seis o siete URLs cada uno— y lo que se les pone encima es el armazón de la aplicación y los colores del sistema visual. Reescribirlas a mano contradiría el motivo por el que `DT-2` eligió Django, que fue **no** escribir ese código, y no cabe en el plazo que queda.
+- **Crear y editar no redirigen: abren una modal** sobre la pantalla en la que se está, en toda la aplicación.
+
+**Lo que NO se decide aquí.** No se retira el admin ni se toca `INT-3`: `DT-2` sigue en pie y las pantallas generadas siguen siendo las que cubren catálogo, inventario, reportes y carga. Tampoco cambia ningún permiso: lo que un rol no podía hacer, sigue sin poder hacerlo, y la matriz `[S11]` se lee igual que antes.
+
+**Consecuencia asumida.** Envolver no es reescribir: dentro de una pantalla del admin, el formulario sigue siendo el suyo. El parecido con el sistema visual llega hasta donde llega sin tocar 89 pantallas, y la diferencia seguirá siendo visible para quien la busque. A cambio, la navegación deja de tener dos mitades y el trabajo cabe en las semanas que quedan antes de `EVA-5`.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -371,6 +389,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-13` | Retiro completo del límite diario por el acudiente, con asiento. Amplía la fila del límite de `[S11]`, que solo decía «fijar» |
 | `DEC-14` | **No añade alcance: lo recorta.** Retira la recarga al estudiante desactivado, corrigiendo el tercer criterio de `HU-50` |
 | `DEC-15` | **No añade alcance: lo recorta.** Retira de `ENT-01` la condición de estar desplegado; el prototipo se demuestra en local |
+| `DEC-16` | **No añade alcance.** Reordena la navegación: portada pública única, aterrizaje por rol y un solo dashboard por rol. No toca `[S11]` |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

@@ -1320,3 +1320,174 @@ def resumen_de_auditoria(operaciones):
         ),
         sin_actor=sum(1 for operacion in operaciones if not operacion.tiene_actor),
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EL PANEL DE LA CAFETERÍA (`DEC-16`)
+# ──────────────────────────────────────────────────────────────────────────────
+
+#: Por debajo de esto, un producto entra en el aviso de existencias del panel.
+#: **Es una ayuda de pantalla, no una regla del negocio**: nada se bloquea al
+#: cruzarlo y nadie lo configura. Vive aquí, junto a quien lo usa, para que
+#: cambiarlo sea una línea y no una búsqueda.
+UMBRAL_DE_EXISTENCIAS_BAJAS = 10
+
+#: Cuántos productos y cuántas ventas caben en el panel sin volverse un listado.
+#: Quien quiera el listado entero tiene su reporte, que es donde están los
+#: filtros y las fechas.
+CUANTOS_EN_EL_PANEL = 8
+
+
+@dataclass(frozen=True)
+class PanelDeLaCafeteria:
+    """Lo que el panel enseña de un vistazo.
+
+    Es **solo lectura y solo de hechos ya asentados**: cada cifra sale del mismo
+    sitio del que sale su reporte, así que el panel no puede decir una cosa y el
+    reporte otra.
+    """
+
+    hoy: object
+    de_hoy: object
+    recargado_hoy: object
+    ticket_medio: object
+    de_treinta_dias: object
+    existencias_bajas: tuple
+    mas_vendidos: tuple
+    ultimas_ventas: tuple
+
+
+def panel_de_la_cafeteria(*, actor, hoy=None):
+    """El resumen de la operación para `USR-4` (`DEC-16`).
+
+    **Recibe `hoy` y no lo lee del reloj**: es lo que permite fijar una jornada
+    en las pruebas sin depender de a qué hora se ejecuten, y lo que evita que
+    una prueba falle sola de madrugada.
+
+    No trae nada que no esté ya en un reporte. Lo único que añade es el orden:
+    primero la jornada, después lo que conviene mirar —existencias a punto de
+    agotarse—, y al final el mes. Cada bloque enlaza a su reporte, que es donde
+    están los filtros.
+    """
+    _solo_la_administracion(actor, que="el panel de la cafetería", regla="[S11], DEC-16")
+
+    hoy = hoy or timezone.localdate()
+    ventas_de_hoy = ventas_registradas(actor=actor, desde=hoy, hasta=hoy)
+    de_hoy = resumen_de_ventas(ventas_de_hoy)
+
+    treinta_dias = hoy - timedelta(days=29)
+    de_treinta_dias = resumen_de_ventas(
+        ventas_registradas(actor=actor, desde=treinta_dias, hasta=hoy)
+    )
+
+    # El ticket medio es una división, y el caso de cero ventas no es un error:
+    # es una jornada que todavía no ha empezado.
+    ticket_medio = None
+    if de_hoy.cuantas and de_hoy.total is not None:
+        ticket_medio = (de_hoy.total / de_hoy.cuantas).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP
+        )
+
+    recargado_hoy = MovimientoBilletera.objects.filter(
+        tipo=TipoDeMovimiento.RECARGA,
+        creado_en__gte=timezone.make_aware(datetime.combine(hoy, time.min)),
+        creado_en__lt=timezone.make_aware(
+            datetime.combine(hoy + timedelta(days=1), time.min)
+        ),
+    ).aggregate(total=Sum("monto"))["total"]
+
+    return PanelDeLaCafeteria(
+        hoy=hoy,
+        de_hoy=de_hoy,
+        recargado_hoy=recargado_hoy,
+        ticket_medio=ticket_medio,
+        de_treinta_dias=de_treinta_dias,
+        existencias_bajas=_existencias_bajas(),
+        mas_vendidos=_mas_vendidos(treinta_dias, hoy),
+        # `Venta` **no tiene columna `total`**: el importe es la suma de sus
+        # líneas congeladas (`DT-8`, `DT-19`), así que se anota.
+        #
+        # El `distinct=True` del recuento es **defensivo y hoy no cambia nada**:
+        # con una sola unión —la de `lineas`, que comparten las dos
+        # anotaciones— contar filas ya da el número de renglones. Se deja
+        # porque el día que alguien añada aquí una segunda unión, sin él este
+        # recuento se multiplicaría **con las cifras de dinero intactas**. Lo
+        # que sí depende de un `distinct` de verdad es `cuantas`, y eso vive en
+        # `resumen_de_ventas` con su propia prueba.
+        ultimas_ventas=tuple(
+            Venta.objects.order_by("-creado_en").annotate(
+                renglones=Count("lineas", distinct=True),
+                total_cobrado=Sum(IMPORTE_DE_LA_LINEA),
+            )[:CUANTOS_EN_EL_PANEL]
+        ),
+    )
+
+
+def _existencias_bajas():
+    """Los productos activos que bajan del umbral, de menos a más.
+
+    Las existencias **no son una columna** (`INV-3`, `DT-5`): se suman desde el
+    historial, y por eso se piden en una sola consulta con
+    `existencias_por_producto` en vez de una por fila.
+    """
+    from catalogo.models import Producto
+    from inventario.selectors import existencias_por_producto
+
+    productos = list(Producto.objects.filter(activo=True))
+    existencias = existencias_por_producto(productos)
+
+    bajos = [
+        (p, existencias.get(p.id, 0))
+        for p in productos
+        if existencias.get(p.id, 0) <= UMBRAL_DE_EXISTENCIAS_BAJAS
+    ]
+    bajos.sort(key=lambda par: par[1])
+    return tuple(bajos[:CUANTOS_EN_EL_PANEL])
+
+
+def _mas_vendidos(desde, hasta):
+    """Los productos con más unidades servidas en el periodo.
+
+    Agrupa por `producto__nombre`: la línea congela el precio y lo nutricional
+    (`DT-8`), pero **no el nombre**, así que un producto renombrado aparece aquí
+    con su nombre de hoy. Para el panel es lo que se quiere —quien lo mira busca
+    lo que hay en la vitrina—; el reporte de ventas es el que responde qué se
+    cobró y a cuánto.
+    """
+    lineas = LineaVenta.objects.filter(
+        venta__creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min)),
+        venta__creado_en__lt=timezone.make_aware(
+            datetime.combine(hasta + timedelta(days=1), time.min)
+        ),
+    )
+
+    # **Su propia expresión, y no `IMPORTE_DE_LA_LINEA`**: aquella recorre
+    # `lineas__precio_unitario` porque se usa desde `Venta`, y aquí la consulta
+    # ya es sobre las líneas. Reutilizarla daría un `FieldError` — de los que
+    # avisan, al menos.
+    importe = ExpressionWrapper(
+        F("precio_unitario") * F("cantidad"),
+        output_field=DecimalField(max_digits=12, decimal_places=2),
+    )
+
+    filas = list(
+        lineas.order_by()  # El `ordering` del Meta envenenaría el GROUP BY.
+        .values("producto__nombre")
+        .annotate(unidades=Sum("cantidad"), importe=Sum(importe))
+        .order_by("-unidades")[:CUANTOS_EN_EL_PANEL]
+    )
+
+    # La proporción de la barra sale de aquí y no de la plantilla: una plantilla
+    # de Django no divide, y el sistema visual pide que el recorte se haga en el
+    # selector (`[S2.8]`). Se mide contra el más vendido, no contra el total:
+    # lo que la barra compara es «cuánto se vende esto frente a lo que más».
+    mayor = filas[0]["unidades"] if filas else 0
+    return tuple(
+        {
+            "nombre": fila["producto__nombre"],
+            "unidades": fila["unidades"],
+            "importe": fila["importe"],
+            "porcentaje": round(fila["unidades"] * 100 / mayor) if mayor else 0,
+        }
+        for fila in filas
+    )

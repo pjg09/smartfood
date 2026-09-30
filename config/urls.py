@@ -13,6 +13,7 @@ from django.views.generic import TemplateView
 from billetera.views import recarga
 from catalogo.views import imagen_del_producto
 from config.salud import salud
+from cuentas.views import inicio, panel
 from personas.views import (
     desactivacion_de_estudiante,
     desactivacion_por_el_acudiente,
@@ -23,7 +24,11 @@ from personas.views import (
     panel_del_acudiente,
     tarjeta_del_estudiante,
 )
-from reportes.views import auditoria_de_la_operacion, consumo_del_estudiante
+from reportes.views import (
+    auditoria_de_la_operacion,
+    consumo_del_estudiante,
+    panel_de_la_cafeteria,
+)
 from restricciones.views import (
     alergenos_bloqueados,
     bloqueo_de_alergeno,
@@ -61,6 +66,10 @@ urlpatterns = [
     # una tabla, y este reporte es el de cuatro. Vive **dentro** del admin —su
     # armazón, sus estilos, su barra—, así que **no es una tercera excepción a
     # `DT-2`**: las dos que hay son pantallas propias fuera de él.
+    # El panel de la cafetería (`DEC-16`), por el mismo camino y por el mismo
+    # motivo: **antes** de `admin.site.urls`, o el admin se queda la URL y
+    # responde su propio 404. Es la pantalla donde aterriza `USR-4` al entrar.
+    path("admin/panel/", panel_de_la_cafeteria, name="panel-de-la-cafeteria"),
     path("admin/auditoria/", auditoria_de_la_operacion, name="auditoria"),
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
@@ -308,5 +317,9 @@ urlpatterns = [
     # hay fragmento HTMX que separar (`DT-16`) — y como escribe, termina en una
     # redirección para que recargar el navegador no intente cuadrar dos veces.
     path("punto-de-venta/cierre/", cierre_de_caja, name="cierre-de-caja"),
-    path("", TemplateView.as_view(template_name="inicio.html"), name="inicio"),
+    # El reparto por rol (`DEC-16`). Es el destino del acceso, y también al
+    # que va a parar quien abre `/` con la sesión abierta: la portada es una
+    # sola y no cambia con quién mire.
+    path("panel/", panel, name="panel"),
+    path("", inicio, name="inicio"),
 ]

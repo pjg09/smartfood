@@ -90,18 +90,6 @@
            `escritorio:rejilla-caja`, y aquí la salida es la contraria: como el
            efecto SÍ tiene que depender de un estado, se escribe con piezas que
            Tailwind pueda variar. {% endcomment %}
-        {% if user.is_authenticated %}
-          <a href="{% url 'inicio' %}"
-             class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
-                    transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
-                    group-data-[arriba=si]:border group-data-[arriba=si]:border-sobre-oscuro/25
-                    group-data-[arriba=si]:bg-sobre-oscuro/10 group-data-[arriba=si]:backdrop-blur
-                    group-data-[arriba=si]:text-sobre-oscuro
-                    group-data-[arriba=si]:hover:bg-sobre-oscuro/20">
-            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
-            Ir a mi panel
-          </a>
-        {% else %}
           <a href="{% url 'acceso' %}"
              class="inline-flex h-10 items-center gap-2 rounded-full px-4 text-base font-medium
                     transition-colors bg-primario text-sobre-primario hover:bg-primario-fuerte
@@ -112,7 +100,6 @@
             <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
             Entrar
           </a>
-        {% endif %}
       </nav>
     </div>
   </header>
