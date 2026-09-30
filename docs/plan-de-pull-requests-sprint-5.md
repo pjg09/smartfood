@@ -11,9 +11,9 @@
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | **5 de 5 — el último** · semanas 14 – 15 · **Entrega final · semana 16** (`EVA-5`, 30 %) |
 | tareas cubiertas | 33 de 33 (`TT-155` … `TT-187`) |
-| pull requests | 13 (`PR-01` … `PR-13`) |
+| pull requests | 13 (`PR-01` … `PR-13`), más **4 fuera del backlog** (`[S7]`) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 ### [S0.1] Qué es este documento y qué no es
 
@@ -522,3 +522,36 @@ Es el sprint con **más frentes independientes** de los cinco.
    la forma que `HU-32` asume, hay que declarar qué se usó en su lugar. No inventar cifras.
 6. **Este plan no reordena nada.** Si alguien propone mover una tarea de PR, hay que
    comprobar el `ANEXO C` del sprint backlog antes.
+
+---
+
+## [S7] Trabajo fuera del backlog: el rediseño de la navegación
+
+**Cuatro Pull Requests integrados el 2026-09-30 que no salen de ninguna tarea de este
+sprint**, y por eso van aparte: sumarlos a las 33 falsearía el avance, y no contarlos
+escondería que `main` tiene código que el plan no previó.
+
+Los pidió el dueño del producto al ver la aplicación de un tirón, y se registraron como
+alcance **antes** de construirlos, que es lo que `[S1]` de `./decisiones-de-alcance.md`
+exige de cualquier trabajo que no venga de una historia.
+
+| PR | Rama | Qué entrega | Registro |
+|---|---|---|---|
+| `#359` | `fix/TT-08-el-seed-respeta-verbosity` | `sembrar` calla con `verbosity=0`; la prueba de la contraseña deja de depender del color de la terminal | `TT-08` |
+| `#360` | `test/TT-81-token-csrf-de-htmx` | La prueba que le faltaba al token CSRF de `#358`: seis casos con `enforce_csrf_checks` | `TT-81` |
+| `#361` | `feat/DEC-16-un-dashboard-por-rol` | Portada única y pública, aterrizaje por rol, el admin envuelto en el armazón de la aplicación y el panel de la cafetería | `DEC-16`, `DT-36` |
+| `#362` | `feat/DEC-17-pantallas-propias-de-la-institucion` | Acudientes y restricciones dejan el admin y toman el sistema visual | `DEC-17` |
+
+**Ninguno amplía `[S11]`.** Los cuatro entregan lo que la matriz ya concedía; lo que cambia
+es por dónde se llega y cómo se ve. `DEC-17` **corrige a `DEC-16`** en un punto —allí se
+decidió envolver el admin sin reescribirlo, y aquello reescribe las pantallas de un rol— y
+deja escrita la raya: una pantalla propia sustituye a una del admin **solo cuando alguien la
+usa a diario**.
+
+**Qué queda abierto.** El rol institución tiene tres secciones que siguen en el admin y que
+`DEC-17` deja para después, porque escriben y necesitan formulario propio: **usuarios**,
+**institución** y el alta y edición de **estudiantes**. No hay tarea que las cubra: si se
+construyen, hace falta decidir antes si entran en este sprint o en la entrega.
+
+> **Esto no cambia el avance de `[S3]`.** Las 33 tareas del sprint siguen siendo 33, y las
+> finalizadas, las que digan sus marcas. Este anexo cuenta trabajo, no tareas.

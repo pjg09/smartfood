@@ -38,7 +38,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las cuarenta y una rutas
+## [S2] Las cuarenta y cinco rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -56,6 +56,10 @@ los mismos colores desde `DT-23`.
 | `/padron/<id>/desactivar/` | `POST`. Desactiva a un estudiante: su tarjeta deja de comprar | Institución | `TT-120`, `DT-29` |
 | `/padron/<id>/reactivar/` | `POST`. Lo devuelve a activo. **Solo la institución**, venga la desactivación de donde venga (`INVD-3`) | Institución | `TT-123`, `DT-30` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
+| `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`) | Institución | `DEC-17` |
+| `/acudientes/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DEC-17` |
+| `/restricciones/` | Qué tiene bloqueado cada estudiante, **en consulta** (`HU-38`, `INV-4`) | Institución, administración | `DEC-17` |
+| `/restricciones/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución, administración | `DEC-17` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
@@ -204,6 +208,11 @@ coincidir porque dejaría media pantalla en cada tema.
 | `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
 | `/admin/auditoria/` (sin modelo) | 403 | **200** (solo consulta) | 403 | 403 |
 | `auth.group` | **403** | 403 | 302 | 302 |
+
+**Dos filas de esta tabla ya no son el camino de nadie** (`DEC-17`): la institución consulta
+acudientes en `/acudientes/` y las restricciones en `/restricciones/`, que son pantallas
+propias con el sistema visual. Los permisos del admin se conservan —son los mismos y los
+impone la misma capa— pero quien trabaja ya no pasa por ahí.
 
 Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Diez lecturas que
 conviene no perder:

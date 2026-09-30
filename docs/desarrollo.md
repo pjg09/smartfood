@@ -474,6 +474,7 @@ cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional
 | Borrarla **con los datos** | `docker compose down -v` |
 | Servidor de desarrollo | `uv run python manage.py runserver` |
 | **Recompilar estilos al vuelo** | `uv run python manage.py tailwind watch` |
+| **Recompilar los del admin** (`DT-36`) | `uv run python manage.py estilos_del_admin` |
 | Migrar | `uv run python manage.py migrate` |
 | Crear migraciones | `uv run python manage.py makemigrations` |
 | Pruebas | `uv run python manage.py test` |
@@ -486,6 +487,23 @@ cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional
 
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
+
+**Y son DOS hojas, no una** (`DT-36`). `tailwind build` y `tailwind watch` solo conocen la de
+la aplicación, la que declara `TAILWIND_CLI_SRC_CSS`. La del admin —Tailwind **sin
+`preflight`**, porque ese reset desarma sus pantallas— se compila con su propio comando:
+
+```bash
+uv run python manage.py estilos_del_admin            # assets/css/admin.css
+uv run python manage.py estilos_del_admin --watch    # mientras se trabaja
+uv run python manage.py collectstatic --noinput      # o se sigue sirviendo la anterior
+```
+
+**Si tocas una plantilla de `templates/admin/` y no corres ese comando, el cambio no se ve y
+nada lo indica**: la pantalla sale bien, con la hoja de antes. Las dos hojas comparten
+`estilos/tokens.css`, así que un color de la marca sigue estando escrito una sola vez.
+
+`assets/css/admin.css` es artefacto de build y está en `.gitignore`, igual que
+`assets/css/tailwind.css`.
 
 ### [S3.1] Capturas del prototipo para un entregable
 
