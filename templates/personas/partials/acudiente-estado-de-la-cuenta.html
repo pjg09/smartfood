@@ -1,0 +1,21 @@
+{% comment %} Si el acudiente ya puede entrar (`HU-03`, `DEC-9`).
+
+   **Se pregunta por la contraseña y no por `is_active`**: la cuenta nace activa
+   con la carga, lo que le falta es que su titular haya definido su clave desde
+   la invitación. Son dos cosas distintas y mezclarlas diría que alguien está
+   bloqueado cuando lo que pasa es que nunca ha entrado.
+
+   El ámbar es el del límite a punto de agotarse, no el rojo: no hay nada roto
+   —la invitación existe—, hay algo pendiente.
+{% endcomment %}
+{% if acudiente.usuario.tiene_contrasena_definida %}
+  <span class="inline-flex items-center gap-1.5 text-base font-medium text-exito-fuerte">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+    Activa
+  </span>
+{% else %}
+  <span class="inline-flex items-center gap-1.5 text-base font-medium text-aviso-fuerte">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    Sin activar
+  </span>
+{% endif %}

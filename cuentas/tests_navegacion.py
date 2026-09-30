@@ -225,12 +225,14 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
     def test_y_trae_las_entradas_del_rol_que_mira(self):
         """La barra del admin es la misma del resto, no una copia.
 
-        Se comprueban las dos clases de entrada que conviven: una pantalla
-        propia —el padrón— y una sección que vive dentro del admin.
+        Se comprueban las dos clases de entrada que conviven desde `DEC-17`:
+        una pantalla propia —el padrón— y una que sigue dentro del admin. La de
+        acudientes ya no vale como ejemplo: dejó de ser del admin.
         """
         from django.urls import reverse as resolver
 
         cuerpo = self._pantalla_del_admin()
 
         self.assertIn(resolver("padron"), cuerpo)
-        self.assertIn(resolver("admin:personas_acudiente_changelist"), cuerpo)
+        self.assertIn(resolver("acudientes"), cuerpo)
+        self.assertIn(resolver("admin:cuentas_usuario_changelist"), cuerpo)

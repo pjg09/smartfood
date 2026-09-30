@@ -408,10 +408,10 @@ uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huér
 ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
 —ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.489 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.535 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.489, no corrió entera.
+menos de esas 1.535, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

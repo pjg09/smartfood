@@ -1,0 +1,64 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} `DEC-17`. La lista de acudientes de la institución (`HU-44`).
+
+   **Misma composición que el padrón** (`DT-23`, `DT-25`, `DT-27`): encabezado de
+   pantalla, buscador de ancho completo con su icono, el recuento al lado y
+   debajo la tabla de datos. No es una pantalla nueva que inventa nada: es la
+   misma que secretaría ya conoce, sobre la otra mitad de la carga.
+
+   **No tiene ni una acción que escriba, y eso es lo que dice `[S11]`**: sobre
+   `personas.acudiente` la institución solo tiene `view`. La cuenta se crea con
+   la carga (`HU-01`), se activa por invitación (`HU-03`) y se desactiva desde
+   usuarios (`HU-42`). Un botón aquí sería prometer algo que la capa de datos
+   rechaza.
+{% endcomment %}
+
+{% block titulo %}Acudientes | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Acudientes</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Quién responde por cada estudiante y quién ha activado ya su cuenta.
+      </p>
+    </header>
+
+    {% comment %} El buscador pide a cada tecla, con medio segundo de espera. Va en un
+       `<form method="get">` de verdad: sin JavaScript sigue buscando al pulsar
+       Enter, porque la vista lee `busqueda` de la URL venga de donde venga. {% endcomment %}
+    <form method="get" action="{% url 'acudientes' %}"
+          hx-get="{% url 'acudientes-tabla' %}"
+          hx-trigger="input changed delay:400ms from:#busqueda"
+          hx-target="#acudientes-tabla"
+          hx-swap="outerHTML"
+          hx-indicator="#buscando-acudientes"
+          class="flex flex-col gap-3">
+
+      <div class="flex flex-col gap-3 tablet:flex-row tablet:items-end">
+        <div class="flex grow flex-col gap-1">
+          <label for="busqueda" class="text-base font-medium text-texto">Buscar</label>
+          <div class="relative">
+            <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+                 aria-hidden="true"><use href="#i-buscar"></use></svg>
+            <input type="search" id="busqueda" name="busqueda" value="{{ busqueda }}"
+                   autocomplete="off"
+                   placeholder="Nombre, documento o correo"
+                   class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                          text-base text-texto transition-colors
+                          placeholder:text-texto-suave
+                          hover:border-acento focus:border-acento focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 tablet:shrink-0 tablet:pb-1">
+          <p id="buscando-acudientes" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
+        </div>
+      </div>
+    </form>
+
+    {% include "personas/partials/acudientes-tabla.html" %}
+  </div>
+{% endblock %}

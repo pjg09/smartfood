@@ -6,11 +6,11 @@ devuelven objetos del ORM o datos, nunca respuestas HTTP.
 """
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from cuentas.models import Rol
 from personas.codigo import ALFABETO, LONGITUD
-from personas.models import EstadoDelEstudiante, Estudiante
+from personas.models import Acudiente, EstadoDelEstudiante, Estudiante
 
 
 def estudiantes_a_cargo(*, usuario):
@@ -240,3 +240,54 @@ def cuentas_sin_activar(estudiantes):
         for estudiante in estudiantes
         if not estudiante.acudiente.usuario.tiene_contrasena_definida
     )
+
+
+def acudientes_de_la_institucion(*, actor, busqueda=""):
+    """Los acudientes con menores matriculados (`HU-44`, `[S11]`, `DEC-17`).
+
+    **Es una lectura y nada más.** La matriz solo concede `view` sobre
+    `personas.acudiente`: la cuenta se da de alta con la carga (`HU-01`), se
+    activa por invitación (`HU-03`) y se desactiva desde `cuentas.usuario`
+    (`HU-42`). Esta pantalla responde «¿de quién es hijo este estudiante?» y
+    «¿este acudiente ya puede entrar?», que son las dos que secretaría hace.
+
+    **Exclusivo de la institución**, y la comprobación va aquí y no en la vista
+    por lo mismo que en `padron`: `DT-11` pone el control de acceso en la capa
+    de datos. Esta lista lleva nombre, documento y correo de adultos a cargo de
+    menores; no es una lista que pueda ver la cafetería.
+
+    `cuantos` se anota en la misma consulta: con una propiedad por fila serían
+    tantas consultas como acudientes.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar los acudientes exige identificarse.")
+    if actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "La lista de acudientes es de la institución educativa y de nadie "
+            "más (HU-44, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    acudientes = Acudiente.objects.select_related("usuario").annotate(
+        cuantos=Count("estudiantes", distinct=True)
+    )
+
+    busqueda = busqueda.strip()
+    if busqueda:
+        acudientes = acudientes.filter(
+            Q(nombre__icontains=busqueda)
+            | Q(documento__icontains=busqueda)
+            | Q(usuario__email__icontains=busqueda)
+        )
+
+    return acudientes.order_by("nombre")
+
+
+def acudientes_sin_activar(acudientes):
+    """Cuántos de esos acudientes todavía no han definido su contraseña.
+
+    El mismo dato que el padrón da sobre los estudiantes, visto por el otro
+    lado. Se cuenta sobre la lista ya resuelta, no con otra consulta.
+    """
+    return sum(1 for a in acudientes if not a.usuario.has_usable_password())
