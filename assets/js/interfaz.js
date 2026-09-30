@@ -24,16 +24,34 @@
    */
   var CLAVE_TEMA = "smartfood:tema";
 
+  // El mismo tema, dicho en los dos idiomas. La aplicación escribe `data-tema`
+  // con valores en español; el admin de Django lee `data-theme` con los suyos y
+  // guarda su preferencia en `localStorage.theme` (`admin/js/theme.js`).
+  //
+  // **Se escriben los dos, y no es una duplicación caprichosa**: desde `DEC-16`
+  // el armazón de la aplicación vive también dentro del admin, así que una
+  // pantalla tiene las dos mitades. Con un solo atributo, cambiar el tema
+  // dejaba la barra en un tema y el listado en el otro.
+  var TEMA_DEL_ADMIN = { claro: "light", oscuro: "dark", sistema: "auto" };
+  var CLAVE_TEMA_DEL_ADMIN = "theme";
+
   function aplicarTema(valor) {
+    var raiz = document.documentElement;
+
     if (valor === "claro" || valor === "oscuro") {
-      document.documentElement.setAttribute("data-tema", valor);
+      raiz.setAttribute("data-tema", valor);
       localStorage.setItem(CLAVE_TEMA, valor);
     } else {
       // «Sistema» es la AUSENCIA de atributo, no un tercer valor: así la media
       // query de `prefers-color-scheme` vuelve a mandar sola.
-      document.documentElement.removeAttribute("data-tema");
+      raiz.removeAttribute("data-tema");
       localStorage.removeItem(CLAVE_TEMA);
     }
+
+    // El admin sí tiene un tercer valor con nombre —`auto`—, así que aquí no se
+    // quita el atributo: se le dice cuál.
+    raiz.setAttribute("data-theme", TEMA_DEL_ADMIN[valor] || "auto");
+    localStorage.setItem(CLAVE_TEMA_DEL_ADMIN, TEMA_DEL_ADMIN[valor] || "auto");
   }
 
   function temaGuardado() {
@@ -498,6 +516,155 @@
     });
   }
 
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // CREAR Y EDITAR EN UNA MODAL, DENTRO DEL ADMIN (`DEC-16`)
+  //
+  // Crear o editar algo no saca a nadie de donde está: el formulario se abre
+  // encima del listado y al guardar la modal se cierra y la tabla se refresca.
+  //
+  // **Se apoya en el modo `_popup` que el admin ya tiene.** Es el mismo que usa
+  // para añadir un objeto relacionado desde un desplegable: la misma página sin
+  // cabecera ni barra, y al guardar devuelve `admin/popup_response.html`, que
+  // trae un `<script id="django-admin-popup-response-constants">`. Detectar ese
+  // script es lo que dice «se guardó», sin inventar ningún contrato nuevo.
+  //
+  // Lo que NO se hace es reescribir el formulario: dentro de la modal es el del
+  // admin, con su HTML y sus estilos. Cambiar eso es construir a mano las 89
+  // pantallas, que es justo lo que `DT-2` decidió no hacer.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  function montarModalDelAdmin() {
+    var modal = document.querySelector("[data-modal-admin]");
+    if (!modal) return;
+
+    var cuerpo = modal.querySelector("[data-modal-cuerpo]");
+    var titulo = modal.querySelector("[data-modal-titulo]");
+
+    // A qué URL se pidió el formulario. **Hace falta guardarla**: el formulario
+    // del admin no lleva `action`, y `formulario.action` en JavaScript no
+    // devuelve cadena vacía sino la URL del documento — que aquí es el listado.
+    // Sin esto, guardar hacía POST al listado, que responde `200` con la tabla,
+    // y la modal se llenaba con el listado dentro de sí misma. Ni error, ni
+    // dato perdido: la pantalla simplemente hacía algo absurdo.
+    var urlDelFormulario = null;
+
+    function conPopup(url) {
+      // `_popup=1` le pide al admin la versión sin cromo. Se añade respetando
+      // lo que la URL ya traiga: los listados filtrados llevan su propia
+      // cadena de consulta y perderla cambiaría a qué se vuelve.
+      return url + (url.indexOf("?") === -1 ? "?" : "&") + "_popup=1";
+    }
+
+    function cerrar() {
+      modal.close();
+      cuerpo.innerHTML = "";
+    }
+
+    function seGuardo(html) {
+      return html.indexOf("django-admin-popup-response-constants") !== -1;
+    }
+
+    function montarFormulario() {
+      var formulario = cuerpo.querySelector("form");
+      if (!formulario) return;
+
+      formulario.addEventListener("submit", function (evento) {
+        evento.preventDefault();
+        var datos = new FormData(formulario);
+
+        // El botón que se pulsó cuenta: «Guardar y añadir otro» y «Guardar y
+        // continuar» son valores del formulario, y sin ellos el admin siempre
+        // entendería «Guardar».
+        var pulsado = evento.submitter;
+        if (pulsado && pulsado.name) datos.append(pulsado.name, pulsado.value);
+
+        var destino = formulario.getAttribute("action") || urlDelFormulario;
+
+        fetch(conPopup(destino), {
+          method: "POST",
+          body: datos,
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        })
+          .then(function (r) { return r.text(); })
+          .then(function (html) {
+            if (seGuardo(html)) {
+              // Recargar es lo correcto aquí: lo que hay detrás es un listado
+              // del admin, que no es un fragmento que se pueda intercambiar.
+              window.location.reload();
+              return;
+            }
+            // Si no se guardó, la respuesta ES el formulario con sus errores.
+            cuerpo.innerHTML = extraerContenido(html);
+            montarFormulario();
+          });
+      });
+    }
+
+    function extraerContenido(html) {
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var contenido = doc.querySelector("#content") || doc.body;
+
+      // **El título del admin pasa a ser el de la modal, y se quita de dentro.**
+      // El admin pinta `title` como `<h1>`, así que sin esto la modal enseñaba
+      // dos encabezados: «Editar» arriba y «Modificar estudiante» debajo. El
+      // suyo es el que dice la verdad —nombra el modelo—, así que se sube.
+      var encabezado = contenido.querySelector("h1");
+      if (encabezado) {
+        titulo.textContent = encabezado.textContent.trim();
+        encabezado.remove();
+      }
+
+      return contenido.innerHTML;
+    }
+
+    function abrir(url, rotulo) {
+      urlDelFormulario = url;
+      titulo.textContent = rotulo;
+      cuerpo.innerHTML = "";
+      modal.showModal();
+
+      fetch(conPopup(url), {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        credentials: "same-origin",
+      })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          cuerpo.innerHTML = extraerContenido(html);
+          montarFormulario();
+        });
+    }
+
+    // Se escucha en el documento y no enlace por enlace: los listados del admin
+    // se repintan al filtrar y al paginar, y un `addEventListener` por nodo se
+    // queda atrás en cuanto la tabla cambia.
+    document.addEventListener("click", function (evento) {
+      var enlace = evento.target.closest("a");
+      if (!enlace || evento.metaKey || evento.ctrlKey) return;
+
+      var url = enlace.getAttribute("href") || "";
+      var esAlta = /\/add\/$/.test(url);
+      var esEdicion = /\/change\/$/.test(url);
+      if (!esAlta && !esEdicion) return;
+
+      // El popup del propio admin —el de los campos relacionados— ya funciona y
+      // no se le estorba.
+      if (url.indexOf("_popup=1") !== -1) return;
+
+      evento.preventDefault();
+      abrir(url, esAlta ? "Añadiendo…" : "Cargando…");
+    });
+
+    modal.addEventListener("click", function (evento) {
+      // Pulsar fuera del panel cierra, que es lo que un `<dialog>` no hace solo.
+      if (evento.target === modal) cerrar();
+    });
+
+    var cerrarlo = modal.querySelector("[data-modal-cerrar]");
+    if (cerrarlo) cerrarlo.addEventListener("click", cerrar);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
@@ -509,5 +676,6 @@
     montarFocoPermanente();
     montarModosDeBusqueda();
     montarMediosDePago();
+    montarModalDelAdmin();
   });
 })();

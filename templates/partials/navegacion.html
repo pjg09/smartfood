@@ -14,7 +14,10 @@
 
    Qué es cada cosa:
      entradas           las secciones del rol, ya filtradas
-     ruta_actual        el `view_name` de la petición, para marcar la activa
+     entradas.activa    si es la sección donde está quien mira, ya resuelto en
+                        el tag: una entrada del admin sigue activa mientras se
+                        edita una ficha, y eso es un `startswith` que el
+                        lenguaje de plantillas no tiene
      colapsable         si las etiquetas se esconden al colapsar la barra
      siempre_colapsada  solo iconos, sin alternancia posible (el punto de venta)
 
@@ -24,11 +27,11 @@
    alternar». En el cajón de móvil los dos son falsos: allí las etiquetas se ven
    siempre, porque una columna de iconos sueltos en un teléfono no se entiende.
 {% endcomment %}
-<nav aria-label="Secciones" class="flex h-full flex-col gap-1 py-6">
+<nav aria-label="Secciones" class="flex h-full flex-col gap-1 overflow-y-auto py-6">
   {% for entrada in entradas %}
     <a href="{% url entrada.ruta %}"
        {% if colapsable or siempre_colapsada %}title="{{ entrada.etiqueta }}"{% endif %}
-       {% if entrada.ruta == ruta_actual %}aria-current="page"{% endif %}
+       {% if entrada.activa %}aria-current="page"{% endif %}
        class="relative flex h-14 items-center overflow-hidden rounded-lg transition-all duration-300
               {% if siempre_colapsada %}
                 mx-2 justify-center px-3
@@ -36,7 +39,7 @@
                 mx-4 px-6
                 {% if colapsable %}colapsada:mx-2 colapsada:justify-center colapsada:px-3{% endif %}
               {% endif %}
-              {% if entrada.ruta == ruta_actual %}
+              {% if entrada.activa %}
                 bg-linear-135 from-nav-activo to-nav-activo-fin font-semibold
                 text-sobre-nav-activo shadow-md
               {% else %}
@@ -45,7 +48,7 @@
               {% endif %}">
       {% comment %} La pestaña clara del borde izquierdo solo tiene sentido con la etiqueta
          al lado: en una columna de iconos centrados queda como una raya suelta. {% endcomment %}
-      {% if entrada.ruta == ruta_actual and not siempre_colapsada %}
+      {% if entrada.activa and not siempre_colapsada %}
         <span aria-hidden="true"
               class="absolute inset-y-0 left-0 w-1 rounded-r-sm bg-sobre-nav-activo
                      {% if colapsable %}colapsada:hidden{% endif %}"></span>

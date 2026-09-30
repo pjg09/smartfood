@@ -269,9 +269,19 @@ pero se parecen a cosas que sí.
 
 ### [S2.9] Consolidado de reporte
 
-Los reportes de la cafetería viven en el admin (`HU-35`, `HU-36`, `HU-56`), así que **no
-llevan Tailwind**: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en línea, como en
-`admin/catalogo/producto/historial.html`.
+Los reportes de la cafetería viven en el admin (`HU-35`, `HU-36`, `HU-56`), y **desde `DT-36`
+el admin sí carga Tailwind**: `estilos/admin.css` es la misma hoja sin `preflight`, con los
+mismos tokens. Una pantalla propia dentro del admin —el panel de `DEC-16`— se escribe con
+estas composiciones como cualquier otra.
+
+**Y los listados y formularios que genera Django también lo llevan**, aunque su HTML siga
+siendo suyo: `estilos/admin.css` los viste con estas mismas composiciones —la tabla de
+`[S2.2]`, la barra de filtros de `[S2.5]`, el botón de `[S2.1]`— con las medidas del padrón,
+que es la tabla de referencia. Lo que no se puede conseguir con CSS sobre su marcado se queda
+como está: reescribir sus 89 pantallas es lo que `DT-2` decidió no hacer.
+
+Los consolidados antiguos —`admin/catalogo/producto/historial.html`— siguen escritos con las
+clases del admin y no hay ninguna prisa por reescribirlos.
 
 La forma es siempre la misma: **la cifra grande**, al lado **una frase que dice de dónde
 sale** —y que cambia con los filtros de la pantalla—, y debajo **tablas de desglose**.

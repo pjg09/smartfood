@@ -28,20 +28,66 @@ class Entrada:
     `ruta` es el nombre de la URL, no la URL: se resuelve en la plantilla con
     `{% url %}`, que es lo que hace que renombrar una ruta no deje aquí un
     enlace roto y silencioso.
+
+    `familia` marca la entrada como actual también en las rutas que cuelgan de
+    ella. Hace falta por el admin: un modelo no es una ruta sino seis —listado,
+    añadir, editar, borrar, historial— y quien está editando un producto sigue
+    estando en «Productos». Sin esto, la barra se queda sin ninguna entrada
+    marcada en cuanto se pulsa «Editar», que es la mitad del tiempo.
     """
 
     ruta: str
     etiqueta: str
     icono: str
+    familia: str = ""
 
 
-# El inicio lo ve todo el mundo, incluido quien no ha entrado.
+def _es_la_actual(entrada, ruta_actual):
+    """Si esta entrada es donde está quien mira."""
+    if not ruta_actual:
+        return False
+    if entrada.familia:
+        return ruta_actual.startswith(entrada.familia)
+    return entrada.ruta == ruta_actual
+
+
+def _pintables(entradas, ruta_actual):
+    """Las entradas con su estado ya resuelto.
+
+    Se calcula aquí y no en la plantilla porque `startswith` no existe en el
+    lenguaje de plantillas, y porque el estado de la barra es una decisión, no
+    una condición de presentación repetida cuatro veces en el HTML.
+    """
+    return [
+        {
+            "ruta": e.ruta,
+            "etiqueta": e.etiqueta,
+            "icono": e.icono,
+            "activa": _es_la_actual(e, ruta_actual),
+        }
+        for e in entradas
+    ]
+
+
+# El inicio es la portada pública. **Ya no está en el menú de ningún rol**
+# (`DEC-16`): quien tiene sesión no la ve —`/` lo reparte a su panel—, así que
+# una entrada «Inicio» prometía una pantalla y llevaba a otra. Se conserva como
+# destino de reserva para un rol sin menú propio.
 INICIO = Entrada("inicio", "Inicio", "i-inicio")
 
-# Administración es el admin de Django: `INT-3` no lleva plantillas propias
-# (`DT-2`), y para el personal de la cafetería y la institución es donde está su
-# trabajo, no un enlace secundario.
-ADMINISTRACION = Entrada("admin:index", "Administración", "i-ajustes")
+
+def _del_admin(modelo, etiqueta, icono):
+    """Una sección que vive dentro del admin (`INT-3`, `DT-2`).
+
+    `DEC-16`: cada rol es **un** dashboard, así que llegar a «Productos» no
+    puede exigir salir a otra aplicación y buscarlo en un índice. La entrada es
+    normal; lo único propio es la `familia`, el prefijo que comparten las seis
+    rutas de un modelo.
+    """
+    return Entrada(
+        f"admin:{modelo}_changelist", etiqueta, icono, familia=f"admin:{modelo}_"
+    )
+
 
 # `USR-3` cobra en el punto de venta (`INT-2`). El icono es un escáner y no la
 # tarjeta: la tarjeta es la credencial del estudiante, y lo que el cajero
@@ -59,28 +105,47 @@ RESERVAS = Entrada("reservas", "Reservas", "i-cafeteria")
 # eso esta entrada está en los dos sitios donde está el cajero y en ninguno más.
 CIERRE_DE_CAJA = Entrada("cierre-de-caja", "Cierre de caja", "i-efectivo")
 
+# Cada menú es **lo que ese rol alcanza, entero**, y el orden es el de su
+# trabajo: primero lo que abre a diario, después lo que toca cuando algo cambia.
+# Lo que no aparece aquí es lo que `[S11]` no le concede, y la barra no lo
+# esconde por seguridad —eso lo hacen el servicio y el selector (`DT-11`)— sino
+# porque un enlace a un `403` no es navegación.
 MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
-    Rol.ACUDIENTE: (INICIO, Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes")),
-    # `USR-5` carga el padrón (`HU-01`) y administra estudiantes y personal.
+    Rol.ACUDIENTE: (Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes"),),
+    # `USR-5`: el padrón que secretaría abre a diario (`DT-27`), la carga de
+    # principio de curso (`HU-01`) y las cuatro fichas que administra.
     Rol.INSTITUCION: (
-        INICIO,
-        # El padrón va **antes** que la carga y que el admin: es lo que
-        # secretaría abre a diario (`DT-27`). Cargar es de principio de curso y
-        # administrar, de cuando algo cambia.
         Entrada("padron", "Padrón", "i-estudiantes"),
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
-        ADMINISTRACION,
+        _del_admin("personas_estudiante", "Estudiantes", "i-identificacion"),
+        _del_admin("personas_acudiente", "Acudientes", "i-personas"),
+        _del_admin("restricciones_restriccionesdelestudiante", "Restricciones", "i-restriccion"),
+        _del_admin("cuentas_usuario", "Usuarios", "i-candado"),
+        _del_admin("personas_institucion", "Institución", "i-colegio"),
     ),
-    # `USR-4` administra el catálogo desde `INT-3`, y consulta la cola de
-    # reservas (`HU-24`), que no vive en el admin — ver `DT-34`.
-    Rol.ADMINISTRADOR: (INICIO, RESERVAS, ADMINISTRACION),
+    # `USR-4`: la cafetería. El catálogo y el inventario son lo que administra;
+    # ventas, cierres y auditoría, lo que consulta. La cola de reservas no vive
+    # en el admin (`DT-34`) y va con lo demás igualmente.
+    Rol.ADMINISTRADOR: (
+        Entrada("panel-de-la-cafeteria", "Panel", "i-grafica"),
+        Entrada("reservas", "Reservas", "i-cafeteria"),
+        _del_admin("catalogo_producto", "Productos", "i-manzana"),
+        _del_admin("catalogo_categoria", "Categorías", "i-etiqueta"),
+        _del_admin("catalogo_alergeno", "Alérgenos", "i-alerta"),
+        _del_admin("inventario_movimientoinventario", "Inventario", "i-inventario"),
+        _del_admin("inventario_merma", "Mermas", "i-restriccion"),
+        _del_admin("ventas_venta", "Ventas", "i-recibo"),
+        _del_admin("ventas_cierredecaja", "Cierres de caja", "i-efectivo"),
+        _del_admin("restricciones_restriccionesdelestudiante", "Restricciones", "i-escudo"),
+        Entrada("auditoria", "Auditoría", "i-documento"),
+    ),
     # `USR-3` cobra, y cobrar ocurre entero en `INT-2`. **Sin entrada a la
     # administración**: no tiene un solo permiso sobre ningún modelo, así que
     # el admin le enseñaba un índice vacío. Un enlace a una pantalla sin nada
     # dentro es peor que no tenerlo — invita a buscar allí lo que está en su
     # propia caja.
-    Rol.CAJERO: (INICIO, PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA),
+    Rol.CAJERO: (PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA),
 }
 
 # La barra del punto de venta. **Es una lista aparte**, y tiene tres entradas:
@@ -146,8 +211,7 @@ def menu_de_navegacion(context, colapsable=True):
     coincidencia = getattr(peticion, "resolver_match", None)
 
     return {
-        "entradas": entradas,
-        "ruta_actual": getattr(coincidencia, "view_name", None),
+        "entradas": _pintables(entradas, getattr(coincidencia, "view_name", None)),
         "colapsable": colapsable,
     }
 
@@ -169,8 +233,9 @@ def menu_del_punto_de_venta(context):
     coincidencia = getattr(peticion, "resolver_match", None)
 
     return {
-        "entradas": MENU_DEL_PUNTO_DE_VENTA,
-        "ruta_actual": getattr(coincidencia, "view_name", None),
+        "entradas": _pintables(
+            MENU_DEL_PUNTO_DE_VENTA, getattr(coincidencia, "view_name", None)
+        ),
         "colapsable": False,
         "siempre_colapsada": True,
     }

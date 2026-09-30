@@ -103,17 +103,55 @@ demostración se queda en la pantalla de identificación.
 
 ### [S2.1] Entorno local
 
-| | |
-|---|---|
-| Interfaz | http://localhost:8000/admin/ (`INT-3`) o http://localhost:8000/login/ |
-| Usuario | `institucion@example.com` |
-| Contraseña | `smartfood-local-2026` |
-| Rol | `institucion` (`USR-5`), con acceso a la administración |
+La aplicación se sirve en <http://localhost:8000>, con dos puertas: `/login/` y `/admin/`
+(`INT-3`). Cuál alcanza cada rol está en la tabla.
+
+**Una sola contraseña para todas las cuentas del seed**: la que se le pasó a
+`--contrasena-de-desarrollo`, que en la base de `[S1]` es `smartfood-local-2026`. No está
+escrita en el código —`sembrar` no tiene ninguna por defecto (`DEC-11`)—, así que si
+sembraste con otra, la buena es esa.
+
+| Rol | Cuenta | Por dónde entra | Dónde aterriza |
+|---|---|---|---|
+| Institución (`USR-5`) | `institucion@example.com` | `/login/` **o** `/admin/` | `/padron/` |
+| Administración de la cafetería (`USR-4`) | `administracion@example.com` | `/login/` **o** `/admin/` | `/admin/panel/` |
+| Cajero (`USR-3`) | `cajero@example.com` | **solo `/login/`** | `/punto-de-venta/` |
+| Acudiente (`USR-2`) | `nombre.apellido<n>@example.com` | **solo `/login/`** | `/mis-estudiantes/` |
+
+**El cajero no entra al admin y no es un permiso que falte**: no es `is_staff`, así que
+`/admin/` le responde una redirección a su propia pantalla de acceso. Lo suyo es `INT-2`, el
+punto de venta, y `[S11]` no le concede nada del admin. Lo mismo el acudiente, cuya interfaz
+es `INT-1` y no el admin (`DT-2`).
+
+**Los correos de los acudientes dependen de cuántos sembraste.** Salen de
+`correo_de()` en `config/datos_ficticios.py` con el patrón `nombre.apellido<índice>@example.com`
+—el índice empieza en cero—, así que con `--estudiantes 12` no son los mismos que con 8. Los de
+tu base, con el aviso de cuáles pueden entrar con la contraseña y cuáles solo por invitación:
+
+```bash
+uv run python manage.py shell -c '
+from cuentas.models import Rol, Usuario
+for u in Usuario.objects.filter(rol=Rol.ACUDIENTE).order_by("email"):
+    print(u.email, "·", "clave del seed" if u.has_usable_password() else "solo por invitación")
+'
+```
+
+**Los acudientes cargados por CSV no tienen contraseña y no la van a tener**: nacen sin ella
+a propósito y entran por su enlace de invitación, que se saca de uno en uno (`[S2.4]`,
+`DEC-3`). Son los que aparecen arriba como «solo por invitación», y son los únicos con los
+que se puede demostrar `HU-03`.
+
+**Las rutas no están aquí: están en `[S2]` de `./mapa-de-la-aplicacion.md`**, las treinta y
+nueve, con quién alcanza cada una y de qué tarea salió. No se repiten en este documento a
+propósito — dos tablas de rutas se desincronizan en la primera pantalla que alguien añada, y
+entonces ninguna de las dos sirve para responder quién llega a dónde.
 
 **Hay dos puertas y no son intercambiables** (`TT-56`, `DEC-12`). `/admin/login/` exige
-`is_staff` y solo sirve a la institución y al personal de la cafetería. `/login/` es la
-pantalla común a los cuatro roles y es **la única por la que entra el acudiente**, que no
-accede a la administración porque `INT-1` no es el admin (`DT-2`).
+`is_staff` y solo sirve a la institución y a la administración de la cafetería — **el cajero
+no, aunque sea personal de la cafetería**: `[S3]` de `./mapa-de-la-aplicacion.md` le da `302`
+en todo el admin. `/login/` es la pantalla común a los cuatro roles y es **la única por la
+que entran el cajero y el acudiente**, que no acceden a la administración porque `INT-1` e
+`INT-2` no son el admin (`DT-2`).
 
 **Esta credencial se escribe aquí a propósito y no es un descuido.** Solo sirve contra
 `localhost`, sobre datos ficticios (`ALC-OUT-07`), en una base que se borra con un
@@ -448,6 +486,37 @@ cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional
 
 Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
 nueva no aparece en la hoja compilada y el cambio no se ve.
+
+### [S3.1] Capturas del prototipo para un entregable
+
+Los avances del curso piden evidencias en imagen, y las pantallas hay que capturarlas con
+sesión iniciada. **No hace falta instalar nada**: no hay `pip`, pero sí `uv` y el Chrome del
+sistema, así que Playwright se monta al vuelo y se le pasa ese Chrome.
+
+```bash
+uv run --with playwright python - <<'PY'
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch(executable_path="/usr/bin/google-chrome")
+    pg = b.new_page()
+    pg.goto("http://localhost:8000/login/")
+    pg.fill('input[name="username"]', "cajero@example.com")
+    pg.fill('input[name="password"]', "smartfood-local-2026")
+    pg.click('button[type="submit"]'); pg.wait_for_load_state("networkidle")
+    pg.goto("http://localhost:8000/punto-de-venta/")
+    pg.screenshot(path="captura.png")
+    b.close()
+PY
+```
+
+Tres cosas que ahorran una ronda:
+
+- **`device_scale_factor=2`** en el `new_context`, o la imagen se ve borrosa impresa.
+- **Las rutas que son fragmentos no se abren con `goto`**: salen sin estilos, y parece un
+  fallo de Tailwind que no lo es. A la ficha de un estudiante se llega pulsándolo desde
+  `/mis-estudiantes/`. Está explicado en «Trampas de este stack» del `CLAUDE.md` de la raíz.
+- **Para añadir al carrito, el selector es el botón, no el nombre del producto**:
+  `button[hx-vals*="<id-del-producto>"]`. Pulsar el texto no dispara nada.
 
 **Si compilas a mano, usa `tailwind build --force`.** Sin la opción, el comando compara la
 fecha de `estilos/fuente.css` con la de la hoja compilada y responde «All 1 stylesheet(s)

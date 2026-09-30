@@ -172,9 +172,10 @@ PASSWORD_RESET_TIMEOUT = env.int("DJANGO_CADUCIDAD_INVITACION", default=60 * 60 
 # rutas de registro no existen (`DT-10`).
 LOGIN_URL = "acceso"
 
-# Tras entrar y tras salir, la portada. Es lo que reparte por rol, y así ningún
-# rol aterriza en una pantalla que no le corresponde.
-LOGIN_REDIRECT_URL = "inicio"
+# Tras entrar, el panel de quien entra (`DEC-16`): `cuentas.views.panel` lo
+# reparte según el rol, así que nadie aterriza en una portada que le obliga a
+# elegir a dónde ir. Al salir, la portada, que es la cara pública del producto.
+LOGIN_REDIRECT_URL = "panel"
 LOGOUT_REDIRECT_URL = "inicio"
 
 # Base absoluta para los enlaces que viajan por correo. Un enlace de invitación

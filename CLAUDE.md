@@ -132,10 +132,11 @@ sin ser una excepción a `DT-2`: las dos que hay son pantallas propias *fuera* d
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
-inventa aquí. **Los colores literales viven en tres sitios y solo en tres**:
-`estilos/fuente.css`, más `templates/correo/invitacion.html` —el correo no admite variables
-CSS— y `templates/admin/base_site.html` —el admin no carga Tailwind—. Cambiar la marca son
-los tres. En las plantillas se usan alias de intención (`bg-superficie`, `text-texto`,
+inventa aquí. **Los colores literales viven en dos sitios y solo en dos**: `estilos/tokens.css`
+—la paleta y los temas, que comparten las **dos** hojas: la de la aplicación y la del admin
+(`DT-36`)— y `templates/correo/invitacion.html`, porque el correo no admite variables CSS.
+`templates/admin/base_site.html` **ya no es el tercero**: el admin carga `estilos/admin.css`,
+que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las plantillas se usan alias de intención (`bg-superficie`, `text-texto`,
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
@@ -303,6 +304,37 @@ lo dice el error.
   una pantalla que se cuida de no enseñarlo en ninguna columna. Dale el suyo. Y
   `default_permissions = ("view",)` hace que los permisos de escritura **ni existan**, que
   es más fuerte que no concederlos.
+- **Una regla sin capa gana a cualquiera dentro de un `@layer`, venga después o no.**
+  El admin trae `.hidden { display: none !important }` en `admin/css/base.css` sin capa, así
+  que con las utilidades en `@layer utilities` la barra lateral salía con su degradado, su
+  `z-index` y `display: none`. Por eso `estilos/admin.css` importa `utilities` **fuera de
+  capa**, y por eso el armazón del admin usa `max-tablet:hidden` en vez de `hidden`: esquiva
+  el nombre en lugar de pelear por especificidad (`DT-36`).
+- **El admin pinta TODO `a` con `--link-fg`, y eso alcanza al armazón metido dentro.**
+  No es solo el subrayado: es el color. En la barra lateral —oscura en los dos temas— las
+  entradas salían en el azul oscuro de enlace y **desaparecían en tema claro**; en oscuro
+  coincidían por casualidad, así que el defecto solo existía en la mitad de los casos. El
+  color del armazón se declara por token con la misma especificidad alta que el subrayado.
+- **Sustituir `{% block header %}` del admin se lleva por delante `usertools`**, y ahí vive
+  su conmutador de tema. La pantalla sale bien y se queda clavada en lo que diga el sistema
+  operativo, sin forma de cambiarlo. Lo cubre el selector de la aplicación, que desde
+  `DEC-16` escribe **los dos idiomas del tema**: `data-tema` en español para los tokens y
+  `data-theme` (`light`/`dark`/`auto`) más `localStorage.theme` para el cromo del admin. Con
+  uno solo, la barra se quedaba en un tema y el listado en el otro.
+- **La especificidad de un `:not()` es la de su argumento más específico.** El admin subraya
+  con `a:not(…, #content-main.app-list a, …)`, que pesa (1,1,2): `.armazon a` y hasta
+  `#container .armazon a` pierden. La regla se escribe, se compila, se sirve **y no hace
+  nada**. Se vio preguntándole al navegador por `getComputedStyle`, no leyendo el CSS.
+- **`formulario.action` en JavaScript no devuelve cadena vacía cuando el atributo falta**:
+  devuelve la URL del documento. El formulario del admin no lleva `action`, así que guardar
+  desde la modal hacía `POST` al listado, que responde `200` con la tabla, y la modal se
+  llenaba con el listado dentro de sí misma. Se lee `getAttribute("action")`.
+- **Lo que una plantilla hija escribe fuera de un `{% block %}` no se renderiza.** Django lo
+  descarta sin avisar: el `<dialog>` de la modal estaba en `admin/base_site.html`, se veía en
+  el fichero, y `document.querySelector` no lo encontraba nunca.
+- **Tras tocar plantillas del admin hay que `manage.py estilos_del_admin`**, no
+  `tailwind build`: son dos hojas y aquel solo conoce la de `TAILWIND_CLI_SRC_CSS` (`DT-36`).
+  Y después, `collectstatic`, o se sirve la anterior.
 
 ## Cómo ejecutar
 

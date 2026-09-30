@@ -1,0 +1,737 @@
+/* La hoja del admin (`INT-3`, `DEC-16`, `DT-36`).
+ *
+ * **Es Tailwind SIN `preflight`**, y esa es toda la razón de que este fichero
+ * exista. El admin de Django trae sus propios estilos escritos contra su propio
+ * HTML; el reset de Tailwind —márgenes, tipos, tablas, `box-sizing`— lo
+ * desarmaría entero. Importando solo `theme` y `utilities` se obtienen las
+ * utilidades y los tokens de la marca sin tocar una sola regla del admin.
+ *
+ * Con esto, la barra lateral y la cabecera de la aplicación se pintan DENTRO
+ * del admin con las mismas clases que fuera: no hay una copia del armazón para
+ * cada lado, que es lo que se queda atrás al primer ajuste.
+ *
+ * Lo que NO trae, a propósito:
+ *   · `preflight`        desarmaría el admin (arriba).
+ *   · `@layer base`      la tipografía base de la aplicación pisaría la suya.
+ *   · `@layer components` son clases de pantallas propias; aquí no hay ninguna.
+ *
+ * Compilar:  uv run python manage.py estilos_del_admin
+ */
+
+@layer theme;
+@import "tailwindcss/theme.css" layer(theme);
+
+/* **Las utilidades van SIN capa, y no es un descuido.** El admin trae su propio
+ * `.hidden { display: none }` en `admin/css/base.css`, escrito fuera de toda
+ * capa: una regla sin capa gana a cualquier regla dentro de una, por mucho que
+ * la de la capa venga después. Con las utilidades en `@layer utilities`, el
+ * `hidden` del admin ganaba a `tablet:block` y la barra lateral **no se
+ * pintaba, sin ningún error**: `display: none` con el degradado y el `z-index`
+ * correctamente aplicados, que es lo que costó encontrarlo.
+ *
+ * Fuera de capa compiten en igualdad y decide el orden de carga, que es el que
+ * queremos: esta hoja se enlaza después de las del admin. */
+@import "tailwindcss/utilities.css";
+
+/* Los mismos tokens que la aplicación. Un color de la marca está escrito una
+ * sola vez en todo el proyecto. */
+@import "./tokens.css";
+
+/* Dónde buscar clases. El armazón que se pinta aquí sale de `templates/`, y las
+ * entradas de la barra, de `cuentas/templatetags/interfaz.py`. */
+@source "../templates";
+@source "../cuentas";
+
+/* ==========================================================================
+ * EL CROMO DEL ADMIN, CONTRA LOS TOKENS
+ *
+ * El admin está escrito contra sus propias variables CSS desde Django 4.2
+ * (`--primary`, `--header-bg`, `--body-fg`…). Redefinirlas es lo que le cambia
+ * la piel entera sin tocar ninguna de sus 89 pantallas.
+ *
+ * **Ahora apuntan a los tokens**, no a valores copiados: antes este fichero era
+ * el tercer sitio del proyecto con colores literales y había que acordarse de
+ * él al cambiar la marca.
+ *
+ * El tema oscuro del admin sigue siendo el suyo: Django lo resuelve con
+ * `prefers-color-scheme` y su propio `data-theme`, y la aplicación escribe
+ * `data-tema`. Son dos mecanismos y no se fuerzan a coincidir.
+ * ========================================================================== */
+
+/* Contrastes comprobados de lo que el cambio toca: blanco sobre el marino de la
+ * cabecera, 12,03; el teal en su versión oscurecida —`--color-primario-fuerte`—,
+ * 6,11 sobre blanco. **El teal pleno da 3,79 y no llega a AA**, así que no se usa
+ * para texto ni para fondos con texto encima. */
+html[data-theme="light"], :root {
+  --primary: var(--color-primario-fuerte);
+  --secondary: var(--color-nav-fondo);
+  --accent: var(--color-acento);
+  --primary-fg: var(--color-sobre-primario);
+
+  --body-fg: var(--color-texto);
+  --body-bg: var(--color-fondo);
+  --body-quiet-color: var(--color-texto-suave);
+  --body-loud-color: var(--color-texto);
+
+  --header-color: var(--color-sobre-primario);
+  --header-branding-color: var(--color-acento);
+  --header-bg: var(--color-nav-fondo);
+  --header-link-color: var(--color-sobre-primario);
+
+  --breadcrumbs-fg: var(--color-texto-suave);
+  --breadcrumbs-link-fg: var(--color-primario-fuerte);
+  --breadcrumbs-bg: var(--color-superficie);
+
+  --link-fg: var(--color-primario-fuerte);
+  --link-hover-color: var(--color-primario);
+  --link-selected-fg: var(--color-primario);
+
+  --hairline-color: var(--color-borde);
+  --border-color: var(--color-borde);
+
+  --button-bg: var(--color-primario);
+  --button-fg: var(--color-sobre-primario);
+  --button-hover-bg: var(--color-primario-fuerte);
+  --default-button-bg: var(--color-primario-fuerte);
+  --default-button-hover-bg: var(--color-primario);
+  --close-button-bg: var(--color-texto-suave);
+  --close-button-hover-bg: var(--color-texto);
+  --delete-button-bg: var(--color-error);
+  --delete-button-hover-bg: var(--color-error-fuerte);
+
+  --object-tools-bg: var(--color-primario);
+  --object-tools-fg: var(--color-sobre-primario);
+  --object-tools-hover-bg: var(--color-primario-fuerte);
+
+  --selected-bg: var(--color-superficie-hover);
+  --selected-row: var(--color-aviso-suave);
+
+  --darkened-bg: var(--color-superficie-hover);
+  --font-family-primary: var(--font-texto);
+  --font-family-monospace: var(--font-mono);
+}
+
+/* ==========================================================================
+ * EL ARMAZÓN DE LA APLICACIÓN, DENTRO DEL ADMIN
+ *
+ * Lo que sigue son las tres piezas que el admin no tiene y la aplicación sí:
+ * sitio para la barra lateral, una cabecera que no es la suya, y el ancho del
+ * lienzo. Se escribe aquí y no con utilidades en la plantilla porque hay que
+ * mover elementos que Django genera y cuyos identificadores no controlamos.
+ * ========================================================================== */
+
+/* El lienzo del admin deja hueco a la barra lateral y a la cabecera flotante,
+ * igual que `base-aplicacion.html` en la aplicación. */
+#container {
+  padding-top: 4.5rem;
+}
+
+@media (min-width: 48rem) {
+  #container {
+    padding-top: 6.5rem;
+    padding-left: 19.5rem;
+    transition: padding-left 500ms;
+  }
+  :root[data-barra-colapsada="si"] #container {
+    padding-left: 7rem;
+  }
+}
+
+/* La navegación propia del admin sobra: la barra lateral ya lleva a las mismas
+ * secciones, y dos listas de lo mismo en la misma pantalla es justo el «dos
+ * dashboards» que `DEC-16` viene a quitar. */
+#nav-sidebar,
+#toggle-nav-sidebar {
+  display: none !important;
+}
+
+/* El admin arranca su contenido pegado al techo; aquí hay una cabecera flotante
+ * de 72 px más su margen. */
+#content, .colM, #content-start {
+  padding-top: 0;
+}
+
+/* ==========================================================================
+ * LAS TIPOGRAFÍAS
+ *
+ * Los mismos ficheros que la aplicación, con las mismas rutas relativas que
+ * `fuente.css`: el navegador los reutiliza de su caché.
+ * ========================================================================== */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("../fuentes/inter-400-600-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fuentes/poppins-600-latin.woff2") format("woff2");
+}
+
+/* ==========================================================================
+ * LO QUE YA ESTABA EN `admin/base_site.html`
+ *
+ * Tema oscuro, composición, tablas y botones. Vivía dentro de la plantilla
+ * porque no había una hoja del admin donde ponerlo; ahora la hay.
+ * ========================================================================== */
+
+/* Las mismas tipografías auto-hospedadas de la aplicación. Se declaran otra
+   vez porque el admin no carga la hoja de Tailwind; los ficheros son los
+   mismos, así que el navegador los reutiliza de su caché. */
+
+/* --- TEMA OSCURO ---
+   **Van DOS bloques con los mismos valores, y no es un descuido.** Django
+   resuelve su tema oscuro con `@media (prefers-color-scheme: dark) { :root }`
+   y con `html[data-theme="dark"]` para la elección explícita del botón; como
+   este `<style>` va después de sus hojas, un `:root` nuestro sin la media
+   query GANA a los dos y deja los colores claros sobre el fondo negro de
+   Django: texto azul marino sobre negro y el panel de acciones en blanco.
+   Comprobado en pantalla, no deducido.
+
+   En oscuro el acento se aclara y el texto que va encima pasa a ser oscuro:
+   el blanco sobre teal se queda en 3,79 y no cumple AA. Es la misma regla
+   que sigue la aplicación. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #278fa2;
+    --primary-fg: #060c14;
+    --secondary: #102239;
+    --accent: #7fd4e2;
+
+    --body-fg: #eff1f4;
+    --body-quiet-color: #a8b3c1;
+    --body-medium-color: #c6cdd6;
+    --body-loud-color: #ffffff;
+    --body-bg: #0c1929;
+
+    --header-color: #b8c6d6;
+    --header-bg: #102239;
+    /* **Explícito, y no `var(--primary-fg)` como lo deja Django.** En oscuro el
+       primario pasa a ser el teal y su tinta pasa a ser oscura (#060c14), que es
+       lo correcto ENCIMA de un botón teal — pero la cabecera es marina en los DOS
+       temas, así que ahí esa misma tinta deja «ver el sitio / cambiar contraseña /
+       terminar sesión» casi negros sobre azul oscuro. Es la trampa que resuelven
+       las constantes `sobre-oscuro`. Da 10,9 de contraste sobre el marino. */
+    --header-link-color: #f4f7fa;
+    --breadcrumbs-bg: #0d1b2e;
+    --breadcrumbs-fg: #b8c6d6;
+    --breadcrumbs-link-fg: #f4f7fa;
+
+    --link-fg: #5dabb9;
+    --link-hover-color: #84c2bb;
+    --link-selected-fg: #7fd4e2;
+
+    --hairline-color: #162f4e;
+    --border-color: #23364f;
+    --darkened-bg: #102239;
+    --selected-bg: #162f4e;
+    --selected-row: #1d3352;
+
+    --error-fg: #e07e7e;
+    --delete-button-bg: #9e3333;
+    --delete-button-hover-bg: #7a2828;
+    --button-bg: #1d6b7a;
+    --button-hover-bg: #278fa2;
+    --default-button-bg: #278fa2;
+    --default-button-hover-bg: #1d6b7a;
+    --object-tools-bg: #1d6b7a;
+    --object-tools-hover-bg: #278fa2;
+
+    --message-info-bg: #0d2632;
+    --message-success-bg: #16252a;
+    --message-warning-bg: #25211d;
+    --message-error-bg: #2c1b24;
+  }
+}
+
+html[data-theme="dark"] {
+  --primary: #278fa2;
+  --primary-fg: #060c14;
+  --secondary: #102239;
+  --accent: #7fd4e2;
+
+  --body-fg: #eff1f4;
+  --body-quiet-color: #a8b3c1;
+  --body-medium-color: #c6cdd6;
+  --body-loud-color: #ffffff;
+  --body-bg: #0c1929;
+
+  --header-color: #b8c6d6;
+  --header-bg: #102239;
+  /* **Explícito, y no `var(--primary-fg)` como lo deja Django.** En oscuro el
+     primario pasa a ser el teal y su tinta pasa a ser oscura (#060c14), que es
+     lo correcto ENCIMA de un botón teal — pero la cabecera es marina en los DOS
+     temas, así que ahí esa misma tinta deja «ver el sitio / cambiar contraseña /
+     terminar sesión» casi negros sobre azul oscuro. Es la trampa que resuelven
+     las constantes `sobre-oscuro`. Da 10,9 de contraste sobre el marino. */
+  --header-link-color: #f4f7fa;
+  --breadcrumbs-bg: #0d1b2e;
+  --breadcrumbs-fg: #b8c6d6;
+  --breadcrumbs-link-fg: #f4f7fa;
+
+  --link-fg: #5dabb9;
+  --link-hover-color: #84c2bb;
+  --link-selected-fg: #7fd4e2;
+
+  --hairline-color: #162f4e;
+  --border-color: #23364f;
+  --darkened-bg: #102239;
+  --selected-bg: #162f4e;
+  --selected-row: #1d3352;
+
+  --error-fg: #e07e7e;
+  --delete-button-bg: #9e3333;
+  --delete-button-hover-bg: #7a2828;
+  --button-bg: #1d6b7a;
+  --button-hover-bg: #278fa2;
+  --default-button-bg: #278fa2;
+  --default-button-hover-bg: #1d6b7a;
+  --object-tools-bg: #1d6b7a;
+  --object-tools-hover-bg: #278fa2;
+
+  --message-info-bg: #0d2632;
+  --message-success-bg: #16252a;
+  --message-warning-bg: #25211d;
+  --message-error-bg: #2c1b24;
+}
+
+/* El nombre del sitio, con la tipografía de titulares y «Food» en el acento,
+   igual que en la aplicación. */
+#site-name a {
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+#site-name .marca-acento { color: var(--accent); }
+
+/* ── La composición, no solo los colores (`DT-27`) ──────────────────────
+   Hasta aquí este fichero solo redefinía variables, y eso dejaba el admin
+   con los colores de la marca y la gramática de Django: lista plana en la
+   barra lateral, títulos en el tipo del cuerpo y tablas apretadas. Lo que
+   sigue acerca la **forma** a la del resto del producto sin tocar una sola
+   plantilla de Django —todo es CSS sobre las clases que el admin ya emite—.
+
+   El límite es el mismo de `DT-2`: **esto viste el admin, no lo reconstruye.**
+   Cuando una pantalla necesita ser otra cosa, se construye aparte, y de eso
+   hay exactamente una (`/padron/`).
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Los títulos, en el tipo de display de la marca. El admin los pone en el
+   tipo del cuerpo y a 1,2 rem, que al lado de una pantalla nuestra se lee
+   como otra aplicación. */
+#content h1, .module h2, .module caption, #content-main h1 {
+  font-family: "Poppins", "Inter", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+#content h1 { font-size: 1.6rem; }
+
+/* La barra lateral: píldoras redondeadas como el menú de la aplicación, con
+   la activa en el acento. Django la emite como una tabla de módulos, así que
+   lo que se redondea son sus filas. */
+#nav-sidebar .module th,
+#nav-sidebar .module td { border-radius: 8px; }
+/* Los rótulos de sección pierden el fondo marino y se quedan como
+   antetítulo. **El color es `--body-fg` y no `--body-quiet-color`**: sobre
+   fondo transparente el gris apagado que Django usa para texto secundario
+   baja de 4,5:1 y deja de leerse. Perder el fondo obliga a subir el texto. */
+#nav-sidebar .module caption {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--body-fg);
+  opacity: 0.75;
+}
+#nav-sidebar .current-model {
+  background: var(--primary);
+  border-radius: 8px;
+}
+#nav-sidebar .current-model a { color: var(--primary-fg); font-weight: 600; }
+
+/* ==========================================================================
+ * EL CONTENIDO DEL ADMIN, CON EL SISTEMA VISUAL
+ *
+ * Hasta aquí el admin llevaba el armazón de la aplicación por fuera y su
+ * propio aspecto por dentro. Lo que sigue viste **lo que Django genera** con
+ * las composiciones de `docs/sistema-visual.md`, sin tocar una sola de sus
+ * plantillas: la tabla de `[S2.2]`, los botones, la barra de filtros de
+ * `[S2.5]` y los formularios.
+ *
+ * Las medidas no se inventan: son las mismas del padrón
+ * (`personas/partials/padron-tabla.html`), que es la tabla de referencia —
+ * `px-4 py-3`, cabecera en `primario-suave`, filas alternas en
+ * `superficie-hover` y `primario-suave` al pasar por encima.
+ *
+ * **Lo que no se toca es el marcado.** Si algo no se puede conseguir con CSS
+ * sobre el HTML del admin, se queda como está: reescribir sus pantallas es lo
+ * que `DT-2` decidió no hacer y `DT-36` volvió a descartar.
+ * ========================================================================== */
+
+/* --- La tabla de resultados (`[S2.2]`) ----------------------------------- */
+
+#changelist .results {
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+#result_list {
+  border: 0;
+  width: 100%;
+}
+
+#result_list thead th,
+#result_list thead td {
+  background: var(--color-primario-suave);
+  border-bottom: 1px solid var(--color-borde);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+#result_list thead th a {
+  color: var(--color-texto-suave);
+  font-weight: 600;
+}
+
+#result_list tbody td,
+#result_list tbody th {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-borde);
+  vertical-align: middle;
+}
+
+#result_list tbody tr:last-child td,
+#result_list tbody tr:last-child th { border-bottom: 0; }
+
+/* Filas alternas y realce al pasar por encima. El admin ya alterna con
+ * `.row1`/`.row2`; se le dan los tonos de la marca. */
+#result_list tbody tr.row1 { background: var(--color-superficie); }
+#result_list tbody tr.row2 { background: var(--color-superficie-hover); }
+#result_list tbody tr:hover { background: var(--color-primario-suave); }
+
+/* Dos `id` en el selector, y hacen falta: el `a:not(…)` del admin pesa (1,1,2)
+ * y subraya todo lo que no esquive su lista. */
+#container #result_list tbody th a,
+#container #result_list tbody td a:not(.button) {
+  color: var(--color-texto);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#container #result_list tbody th a:hover,
+#container #result_list tbody td a:not(.button):hover {
+  color: var(--color-primario-fuerte);
+  text-decoration: underline;
+}
+
+/* **La columna que se cortaba.** El enlace «Imprimir tarjeta» de la lista de
+ * estudiantes parte en dos palabras y el admin no le da ancho, así que se leía
+ * «Imprir / tarjet». No se toca el `list_display`: se le impide partir. */
+#result_list td .button, #result_list td a.button { white-space: nowrap; }
+
+/* --- Botones (`[S2.1]`, la acción de una pantalla) ----------------------- */
+
+.button, input[type=submit], input[type=button],
+.submit-row input, a.button {
+  border-radius: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  box-shadow: none;
+}
+
+/* **«Añadir» no es un botón relleno, y eso es del sistema visual, no una
+ * preferencia.** `[S2.1]`: en una pantalla cuya pieza principal es la tabla, un
+ * sólido arriba se lleva la mirada por delante de los datos. El padrón lo
+ * resuelve con superficie, borde y el icono en acento; aquí, igual. */
+#container .object-tools a,
+#container .object-tools a:link,
+#container .object-tools a:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  color: var(--color-texto);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.5rem 1rem;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+#container .object-tools a:hover {
+  border-color: var(--color-primario);
+  background: var(--color-superficie-hover);
+  color: var(--color-texto);
+}
+
+/* El `+` y los demás iconos que el admin pinta con `::before` se quedan, con el
+ * color del acento y sin el hueco que deja su posicionamiento. */
+#container .object-tools a::before {
+  color: var(--color-acento-fuerte);
+  position: static;
+  margin: 0;
+}
+
+.object-tools { margin-top: 0; }
+
+.object-tools a:hover,
+.button:hover, input[type=submit]:hover, a.button:hover {
+  transform: translateY(-1px);
+  transition: transform 150ms, background 150ms;
+}
+
+/* --- Buscador y barra de acciones (`[S2.5]`) ----------------------------- */
+
+#toolbar,
+#changelist .actions {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+#changelist .actions { margin-bottom: 0.75rem; color: var(--color-texto-suave); }
+
+#toolbar form input[type=text],
+#changelist-search input[type=text],
+input[type=text], input[type=email], input[type=number], input[type=password],
+input[type=url], input[type=tel], input[type=date], input[type=time],
+textarea, select {
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  padding: 0.5rem 0.75rem;
+}
+
+/* El `select` no admite el mismo relleno que un `input`: con `padding` vertical
+ * y la altura que le da el admin, el texto se recorta por abajo. */
+select {
+  padding: 0.375rem 0.625rem;
+  line-height: 1.5;
+  height: auto;
+}
+
+input[type=text]:focus, input[type=email]:focus, input[type=number]:focus,
+textarea:focus, select:focus {
+  outline: 2px solid var(--color-primario);
+  outline-offset: 1px;
+  border-color: var(--color-primario);
+}
+
+/* --- El panel de filtros (`[S2.5]`) -------------------------------------- */
+
+#changelist-filter {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#changelist-filter h2 {
+  background: var(--color-primario-suave);
+  color: var(--color-texto-suave);
+  border-bottom: 1px solid var(--color-borde);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  margin: 0;
+}
+
+#changelist-filter h3 {
+  color: var(--color-texto);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0 1rem;
+}
+
+#changelist-filter li { padding: 0 1rem; }
+
+#changelist-filter li.selected {
+  border-left: 3px solid var(--color-primario);
+  padding-left: calc(1rem - 3px);
+}
+
+#changelist-filter a { color: var(--color-texto-suave); text-decoration: none; }
+#changelist-filter li.selected a { color: var(--color-primario-fuerte); font-weight: 600; }
+
+/* --- Formularios y fichas (`[S2.2]` de la ficha) ------------------------- */
+
+.module {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.module > h2, .module caption, .inline-group h2 {
+  background: var(--color-primario-suave);
+  color: var(--color-texto-suave);
+  border-bottom: 1px solid var(--color-borde);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+}
+
+.form-row { border-bottom: 1px solid var(--color-borde); padding: 0.875rem 1rem; }
+.form-row:last-child { border-bottom: 0; }
+
+.submit-row {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+/* --- Paginación y migas -------------------------------------------------- */
+
+.paginator {
+  border-top: 0;
+  background: transparent;
+  padding: 0.75rem 0;
+  color: var(--color-texto-suave);
+}
+
+.paginator a:link, .paginator a:visited {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  color: var(--color-texto);
+  padding: 0.25rem 0.625rem;
+  text-decoration: none;
+}
+
+.paginator .this-page {
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
+  border-radius: 6px;
+  padding: 0.25rem 0.625rem;
+}
+
+/* ==========================================================================
+ * QUE EL CROMO DEL ADMIN NO SE META EN EL ARMAZÓN
+ *
+ * El admin estiliza `a` y `button` por tipo, así que sus reglas alcanzan a la
+ * barra lateral y a la cabecera, que no son suyas: los enlaces salían
+ * subrayados y el botón de cerrar sesión, con el fondo gris de sus formularios.
+ * Se acota por el ancestro, no con `!important`.
+ *
+ * **Descendiente y no hijo directo**: el armazón no siempre cuelga de
+ * `#container` al mismo nivel, y `>` dejaba de casar sin decir nada.
+ * ========================================================================== */
+
+/* **Este selector es largo a propósito.** El admin subraya con
+ * `a:not([role="button"], #header a, #nav-sidebar a, #content-main.app-list a,
+ * .object-tools a)`, y la especificidad de un `:not()` es la de su argumento
+ * más específico: ese `#content-main.app-list a` pesa (1,1,1), así que la regla
+ * entera pesa (1,1,2). Con `.armazon a` —(0,1,1)— o con `#container .armazon a`
+ * —(1,1,1)— los enlaces de la barra seguían subrayados **sin que nada fallara**:
+ * la regla estaba escrita, compilada y servida, y simplemente perdía. */
+body #container aside.armazon a,
+body #container header.armazon a,
+body #container div.armazon a,
+body #container aside.armazon button,
+body #container header.armazon button,
+body #container div.armazon button {
+  text-decoration: none;
+}
+
+/* **Y el color, por el mismo motivo y con el mismo peso.** El admin pinta todo
+ * `a` con `--link-fg`, que en tema claro es oscuro: sobre la barra lateral
+ * —que es oscura en los dos temas— las entradas desaparecían. En oscuro
+ * coincidía por casualidad y no se veía el defecto.
+ *
+ * Se nombran los dos estados porque son dos tokens distintos, y el activo va
+ * sobre el degradado de marca. */
+body #container aside.armazon a,
+body #container div.armazon a {
+  color: var(--color-nav-texto);
+}
+
+body #container aside.armazon a[aria-current="page"],
+body #container div.armazon a[aria-current="page"] {
+  color: var(--color-sobre-nav-activo);
+}
+
+/* En la cabecera el único enlace con color propio es el del cambio de
+ * contraseña; el del logotipo lo pintan los `span` de `partials/marca.html`,
+ * que el admin no toca. */
+body #container header.armazon a {
+  color: var(--color-texto-suave);
+}
+
+/* Solo los botones que NO tienen fondo propio. El de las tres rayas lleva el
+ * degradado de marca en sus utilidades y aquí se lo estaríamos borrando. */
+#container .armazon form button {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  font-weight: inherit;
+  text-transform: none;
+}
+
+#container .armazon {
+  font-family: var(--font-texto);
+}
+
+/* ==========================================================================
+ * EL PANEL DE LA CAFETERÍA DENTRO DEL ADMIN
+ *
+ * Dos cosas que el admin le hace a una pantalla propia metida en su lienzo.
+ * ========================================================================== */
+
+/* El lienzo del admin no se encoge solo: con el hueco de la barra lateral como
+ * `padding`, su contenido seguía midiendo el ancho entero y **se salía por la
+ * derecha**, cortando la última tarjeta de cada fila. */
+#container {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+#content, #content-main {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* El admin reserva 40 px a cada lado del lienzo. Con la barra lateral por
+ * delante son 80 px que le faltan a la tabla, y en un listado con panel de
+ * filtros eso es justo lo que separa «cabe» de «hay que arrastrar». */
+#content { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+/* Las listas del panel no son listas del admin: sin esto salen con la viñeta
+ * cuadrada que él pone en `ul > li` y con su sangría. **El selector nombra al
+ * `li`** porque el suyo también lo hace: con `.armazon-panel ul` la regla se
+ * aplicaba al `ul` y la viñeta seguía, que la pinta el hijo. */
+.armazon-panel ul,
+.armazon-panel ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.armazon-panel ul > li,
+.armazon-panel ol > li {
+  list-style-type: none;
+  padding: 0;
+}

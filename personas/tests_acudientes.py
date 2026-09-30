@@ -181,7 +181,9 @@ class LaInvitacionDeLaCargaEsUtilizableTest(BaseDeCarga):
             reverse("acceso"),
             {"username": self.acudiente.email, "password": CLAVE_DEL_ACUDIENTE},
         )
-        self.assertRedirects(respuesta, reverse("inicio"))
+        # `DEC-16`: se entra al reparto por rol, que a su vez lleva al panel
+        # del acudiente. Por eso el destino responde `302` y no `200`.
+        self.assertRedirects(respuesta, reverse("panel"), target_status_code=302)
 
     def test_el_enlace_deja_de_valer_en_cuanto_se_usa(self):
         """`TT-18` ya lo probó; aquí se comprueba sobre el enlace de la carga."""

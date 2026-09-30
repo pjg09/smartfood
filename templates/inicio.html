@@ -78,31 +78,6 @@
         </p>
 
         <div class="mt-9 flex flex-col gap-3 tablet:flex-row">
-          {% if user.is_authenticated %}
-            {% comment %} Con sesión abierta, la portada no vuelve a ofrecer «entrar»: lleva a
-               donde esa persona trabaja. {% endcomment %}
-            {% if user.es_acudiente %}
-              <a href="{% url 'mis-estudiantes' %}"
-                 class="brillo-accion group inline-flex h-12 items-center justify-center gap-2
-                        rounded-md bg-accion-clara px-6 text-lg font-medium
-                        text-sobre-accion-clara transition-transform duration-200
-                        hover:-translate-y-0.5">
-                <svg class="h-5 w-5" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
-                Mis estudiantes
-              </a>
-            {% endif %}
-            {% if user.is_staff %}
-              {% comment %} `INT-3` es el admin de Django (`DT-2`): el personal y la
-                 institución operan desde allí, no desde plantillas propias. {% endcomment %}
-              <a href="{% url 'admin:index' %}"
-                 class="inline-flex h-12 items-center justify-center gap-2 rounded-md
-                        border border-sobre-oscuro/25 px-6 text-lg font-medium
-                        text-sobre-oscuro transition-colors hover:bg-sobre-oscuro/10">
-                <svg class="h-5 w-5" aria-hidden="true"><use href="#i-ajustes"></use></svg>
-                Administración
-              </a>
-            {% endif %}
-          {% else %}
             {% comment %} La acción principal es CLARA, no teal: sobre este fondo el teal con
                texto blanco se queda en 3,79 de contraste y no llega a AA. Y un
                sólido claro sobre bloque oscuro es el punto de mayor contraste de
@@ -122,7 +97,6 @@
                       text-sobre-oscuro transition-colors hover:bg-sobre-oscuro/10">
               Cómo se consigue una cuenta
             </a>
-          {% endif %}
         </div>
 
         {% comment %} Capacidades del sistema, no cifras de tracción: las tres se pueden
