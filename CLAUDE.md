@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado.** Con `PR-09` quedan cerradas **las 61 historias** del proyecto —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. Si una tarea de aquí en adelante propone tocar el producto, es señal de que está mal entendida.
+**El producto está terminado.** Con `PR-09` quedan cerradas **las 61 historias** del proyecto —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362): lo pidió el dueño del producto y se registró como alcance **antes** de construirlo. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
 
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
@@ -45,6 +45,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
+| `docs/trampas-del-stack.md` | **Las cincuenta trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -114,10 +115,11 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con dos excepciones declaradas**: el padrón de la institución, que es la pantalla que
-secretaría abre a diario (`DT-27`), y la cola de reservas pendientes, que comparten dos roles
-que no comparten interfaz (`DT-34`). **Una tercera tendría que explicar por qué no es ya un
-patrón en vez de una excepción.**
+**con cuatro pantallas propias fuera de él**: el padrón de la institución, que es la que
+secretaría abre a diario (`DT-27`), la cola de reservas pendientes, que comparten dos roles
+que no comparten interfaz (`DT-34`), y —desde `DEC-17`— los acudientes y las restricciones.
+**`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
+solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`).
 
 **Los reportes de la cafetería no son una tercera excepción**: los cuatro viven dentro del
 admin, por el camino que `TT-141` abrió para el historial de existencias y repiten `TT-168`
@@ -125,10 +127,11 @@ admin, por el camino que `TT-141` abrió para el historial de existencias y repi
 y fechas, y lo que se añade es el consolidado **del listado que se está mirando**, calculado
 sobre el mismo `QuerySet` que pinta la tabla.
 
-**El cuarto no tiene modelo, y por eso es el único con ruta propia**: la auditoría
-(`TT-178`) cruza cuatro tablas, así que es una vista registrada en `config/urls.py`
-**antes** de `admin.site.urls` —Django resuelve en orden— y usa el armazón del admin. Sigue
-sin ser una excepción a `DT-2`: las dos que hay son pantallas propias *fuera* del admin.
+**Dos no tienen modelo, y por eso son las únicas con ruta propia**: la auditoría
+(`TT-178`), que cruza cuatro tablas, y el panel de la cafetería (`DEC-16`), donde aterriza
+`USR-4`. Las dos van registradas en `config/urls.py` **antes** de `admin.site.urls` —Django
+resuelve en orden— y usan el armazón del admin, así que no son excepciones a `DT-2`: las
+excepciones son las que viven *fuera* de él.
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -150,217 +153,38 @@ y un medidor **recorta la barra a 100, nunca el número**.
 microservicios, GraphQL, autenticación propia, app nativa, ni nada que toque dinero real. Los
 descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
-### Trampas de este stack, ya pagadas
+### Las cinco trampas que se tropiezan a diario
 
-Una entra aquí si **costó una ronda de diagnóstico**: casi todas fallan en silencio —no dan
-error y lo que sale es plausible—. Lo que revienta con un mensaje claro no necesita línea:
-lo dice el error.
+**Las cincuenta están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+plantillas y estilos, el admin, el ORM, y pruebas y capturas. Casi todas **fallan en
+silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
+raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
 
-- **Un `@transaction.atomic` suelto decora lo siguiente que haya, aunque sea una
-  clase.** Insertar una clase entre el decorador y su `def` la convierte en función; el
-  error salta lejos y no menciona el decorador. Mira qué hay justo encima antes de
-  insertar algo en `services.py`.
-- **`instance.pk` no distingue un alta.** La clave primaria es UUIDv7 generado en la
-  aplicación (`DT-17`): una instancia recién construida **ya la tiene**. Pregunta por
-  `instance._state.adding`.
-- **Ocultar un campo del admin no se hace borrándolo del formulario.** El admin arma sus
-  secciones desde `base_fields`, antes de que exista instancia: un `del self.fields[...]`
-  revienta al renderizar. Se decide en `get_fields()` / `get_fieldsets()`.
-- **Un `ManyToMany` con `through` no se edita desde el admin**, y el campo del formulario que
-  lo sustituya **no puede llamarse igual** que el del modelo: la comprobación `E013` mira el
-  modelo, no el formulario.
-- **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas se
-  sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
-- **Un `Decimal` en un `<input type="number">` necesita `|unlocalize`.** En `es-CO`
-  Django escribe «8000,00» y el navegador **pinta el campo vacío, sin error**: quien entra
-  a cambiar un valor cree que no había ninguno.
-- **El mes ya llega en minúscula, y eso lo sostiene un parche.** Django traduce los doce
-  meses capitalizados en su catálogo `es_CO` —el que manda con `LANGUAGE_CODE = "es-co"`—, y
-  `locale/es_CO/` los corrige. Por eso `{{ x|date:"F" }}` y `{% now "F" %}` responden
-  «septiembre» y no «Septiembre». El `|lower` de las plantillas **se conserva** a propósito:
-  ese parche está pensado para borrarse cuando Django lo arregle, y las fechas del producto
-  no deben depender de él. La inicial de una frase se pone con `first-letter:uppercase`,
-  nunca cortando la cadena — con acentos se rompe.
-- **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
-  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
-  a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
-  la de la hoja y contesta «up to date», que es cierto para la fuente y falso para lo que
-  importa —las clases salen de las plantillas, y ésas no las mira—.
-- **Tras tocar `locale/…/django.po` hay que `compilemessages`** (necesita
-  `sudo apt install gettext`): Django lee el `.mo`, así que sin recompilar el cambio no se
-  ve y nada falla. **Son dos catálogos y no se eligen al azar**: `locale/es/` parchea lo que
-  Django deja sin traducir, y `locale/es_CO/` corrige lo que traduce mal. Una corrección
-  escrita en `es` no gana — con `LANGUAGE_CODE = "es-co"` el catálogo que manda es el
-  `es_CO` y el `es` solo es la reserva, así que la pisa el de Django.
-- **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra. `bg-slate-500`
-  no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se sustituyen por
-  `tablet:`, `escritorio:` y `amplio:`. Hay prueba que vigila las dos cosas
-  (`config/tests_plantillas.py`). **Y tampoco pinta un alias inventado que suene a los que sí
-  hay** —`bg-superficie-hundida` frente a `bg-superficie-hover`—: los alias son los de
-  `estilos/fuente.css` y no se deducen.
-- **El rojo y el ámbar significan algo**: saldo insuficiente o alérgeno bloqueado (`INV-1`,
-  `INV-5`) y límite a punto de agotarse. Para adornar hay cinco colores de serie sin
-  significado; gastar los de estado en decoración les quita fuerza donde hacen falta.
-- **Las variantes de Tailwind no alcanzan a las clases de `@layer components`.**
-  `escritorio:rejilla-caja` no se compila **y no da ningún error**: la pantalla se queda en
-  una columna. El punto de ruptura va dentro de la propia clase, en `estilos/fuente.css`.
-  Si el efecto sí depende de un estado —el botón de cristal de la cabecera pública sobre el
-  héroe—, la salida es la contraria: escribirlo con utilidades que Tailwind pueda variar.
-- **`@container` marca al ANCESTRO más cercano, y las dos formas de fallar son silenciosas.**
-  En la misma caja que la rejilla, las consultas no encuentran contra qué medirse. Demasiado
-  arriba es peor: miden el lienzo entero en vez de la columna. Cada zona que responda a su
-  propio ancho lleva el suyo.
-- **`hx-swap-oob` solo funciona en elementos de primer nivel de la respuesta.** Anidado no
-  da error: no intercambia, y la zona se queda con lo anterior sin ningún aviso.
-  Por eso **lo que deba refrescarse tras un intercambio va DENTRO del fragmento**, no al
-  lado: fuera se queda enseñando lo de antes, que en un historial de auditoría es peor que
-  no enseñarlo.
-- **El cliente de pruebas de Django no aplica CSRF, así que un `hx-post` sin token pasa todas
-  las pruebas y falla solo en el navegador.** El catálogo del punto de venta estuvo así hasta
-  el 2026-09-21: sus botones llevan `hx-post` y no cuelgan de ningún `<form>` —de donde HTMX
-  saca el token—, así que añadir un producto respondía `403` con la suite entera en verde.
-  El token va en `hx-headers` del `<body>` de `base.html` —el único `<body>` del proyecto, del
-  que heredan los cuatro armazones—, y cubre cualquier `hx-post` presente o futuro sin
-  envolverlo en un formulario. Lo vigila `ventas/tests_csrf.py` con
-  `Client(enforce_csrf_checks=True)`: **con el cliente de siempre no hay prueba posible**, y
-  es justo por lo que esto vivió medio proyecto. Sus seis casos cubren las tres mitades —la
-  pantalla entrega el token, la petición no pasa sin él, y el catálogo sigue sin `<form>`—,
-  porque comprobar solo la última dejaría el atributo sin vigilancia.
-- **Una ruta que devuelve un fragmento no se abre a mano.** `/mis-estudiantes/<id>/` y las de
-  `…/tabla/` responden un trozo de HTML sin `<head>`: abiertas directamente salen **sin
-  estilos** —`document.styleSheets.length` es 0— y parece que Tailwind está roto. No lo está:
-  hay que llegar a ellas por el clic que las pide. Cuenta al tomar capturas y al probar a mano.
-- **`htmx-indicator` oculta con `opacity`, no con `display`.** Un «Guardando…» en su propia
-  fila reserva su alto siempre y deja un hueco permanente. Va en la línea de un rótulo o
-  del título, nunca solo.
+Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
+
+- **La paleta de fábrica de Tailwind no existe**: `--color-*: initial` la borra.
+  `bg-slate-500` no pinta nada **y no da ningún error**; lo mismo `sm:` y `lg:`, que se
+  sustituyen por `tablet:`, `escritorio:` y `amplio:`. **Y tampoco pinta un alias inventado
+  que suene a los que sí hay** —`bg-superficie-hundida` frente a `bg-superficie-hover`—: los
+  alias son los de `estilos/tokens.css` y no se deducen. Hay prueba que vigila las dos
+  primeras cosas (`config/tests_plantillas.py`).
+- **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas
+  se sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
+- **Un `order_by()` explícito entra en el `GROUP BY` de un `values().annotate()`**, y el
+  `ordering` del `Meta` ya no (Django lo dejó de hacer en 3.1). Una fila por venta, todas con
+  un uno, **y el total de al lado correcto**: no se ve en las pruebas ni en el código. Limpia
+  con `.order_by()` antes de agrupar. Su gemela —lo anotado **antes** de un `values()`
+  también entra— y las demás de agregación están en `[S3]` del documento.
 - **El dinero se escribe en un solo sitio**, `billetera/templatetags/dinero.py`: `$25.000`,
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
   misma pantalla enseña dos monedas.
-- **`self.style` de un comando colorea según el tty del PROCESO, no según el `stdout=` que
-  recibe.** Django mira `sys.stdout.isatty()`, así que una prueba que pasa un `StringIO` y
-  parsea la salida recibe códigos ANSI cuando la suite se corre a mano en la terminal, y
-  ninguno cuando se redirige a un fichero: `startswith("contraseña")` deja de casar y la
-  prueba **solo falla de forma interactiva**. Pásale `no_color=True` a `call_command`. Pasó
-  con la línea de la contraseña de `sembrar`.
-- **Un comando que no lee `verbosity` no calla aunque se lo pidan.** `BaseCommand` recibe la
-  opción pero no la aplica: `self.stdout.write` escribe igual con `verbosity=0`, así que el
-  registro del seed salía por la terminal en cada `setUp` y enterraba el resumen de la suite
-  —de ahí la costumbre de mandarla a un fichero—. Toda escritura de `sembrar` pasa por
-  `_informar`, que es el único sitio donde se decide callar.
-- **Un `order_by()` explícito entra en el `GROUP BY` de un `values().annotate()`**, y el
-  `ordering` del `Meta` ya no (Django lo dejó de hacer en 3.1). El admin **siempre** ordena
-  el listado explícitamente, así que un desglose calculado sobre `cl.queryset` se agrupa
-  además por la fecha: una fila por venta, todas con un uno. **El total de al lado sigue
-  bien** —`aggregate()` no arrastra el orden—, así que no se ve en las pruebas ni en el
-  código: se vio en la captura, con catorce ventas en la tabla y tres desgloses de una.
-  Limpia con `.order_by()` antes de agrupar.
-- **Lo que se anota ANTES de un `values()` también entra en el `GROUP BY`.** Es la otra
-  cara de lo anterior: `annotate(dia=…).values("categoria").annotate(Count(…))` agrupa por
-  categoría **y por día** —una fila por día, todas con un uno—. `alias()` deja filtrar por
-  la expresión sin seleccionarla, que es lo que hay que usar. **Y si lo que agrupa no es una
-  columna** —«cuadró, sobró o faltó» es el signo de una resta—, la salida es contar con
-  `Count(Case(When(…)))` en un solo `aggregate()`: sin `values()` no hay `GROUP BY` que envenenar.
-- **Si una regla tiene que existir en Python y en SQL, hay prueba que las compara.**
-  `CierreDeCaja.diferencia` resta una fila y `DIFERENCIA_DEL_CIERRE` resta el listado entero para
-  ordenar y agregar: ahí `DT-19` no tiene salida —sumar en Python obligaría a traerse todos los
-  cierres—, así que lo que se fija es que las dos dicen lo mismo. Sin eso, el listado ordena por
-  una cifra y enseña otra, **las dos bien formadas**.
-- **`aggregate()` rechaza un nombre que choque con un campo del modelo** («The annotation
-  conflicts with a field»). Prefija: `total_energia_kcal`.
-- **Un `Count` sobre un `QuerySet` que une con una tabla hija necesita `distinct=True`.**
-  Sumar importes obliga a unir con las líneas, y sin él una venta de tres renglones cuenta
-  como tres **con las cifras de dinero intactas**: solo miente el recuento.
-- **Un campo de relación en el admin se pinta con el `__str__` del modelo apuntado.**
-  `Estudiante.__str__` es «Nombre (documento)», así que una ficha que liste `estudiante`
-  enseña el documento del menor aunque el listado se cuide de no hacerlo — y enlazado.
-  Declara `fields` con un método propio que diga solo el nombre. Pasó en `TT-168`.
-  **Y `list_filter` es la otra puerta, que no se arregla con la primera**: un
-  `list_filter = ["cajero"]` pinta el `__str__` de cada uno en la barra lateral — el correo,
-  con `Usuario` — por mucho que la columna diga el nombre. Ahí hace falta un
-  `SimpleListFilter` propio. Pasó en `TT-176`.
-- **En el admin, una columna de dinero sin `dinero` sale cruda.** El admin pinta un
-  `DecimalField` tal cual —«31500,00»— y al lado una columna calculada sale «$31.500»: **dos
-  formatos en la misma fila**, que es justo lo que el filtro existe para evitar. No falla y
-  se ve bien hasta que se miran las dos juntas. Declara un método por cifra. Pasó en
-  `TT-176`, y antes en `LineaVentaInline`.
-- **Al tocar la matriz `[S11]` hace falta `manage.py sincronizar_permisos`.** Los permisos
-  van al grupo del rol, no al usuario: sin ese comando el admin responde `403` sobre el
-  modelo nuevo y nada indica por qué.
-- **`makemigrations` se cuelga al añadir un campo no nulo** a una tabla con filas: abre un
-  prompt que nadie contesta. La salida es poner `default=` en el modelo, generar, quitar el
-  `default` y añadir `preserve_default=False` a mano en la migración.
-- **Una `CheckConstraint` nueva falla la migración si alguna fila la viola**, y la causa
-  casi siempre es una fila escrita a mano. Por eso pgAdmin o `dbshell` sirven para mirar,
-  no para escribir: las reglas de los servicios —`INVD-2`, `asentar()`— no las impone
-  Postgres, y lo que creas ahí es lo que rompe el `migrate` de la semana siguiente.
-- **htmx no intercambia lo que llega en `4xx`.** Un rechazo con `400` deja la pantalla
-  exactamente igual y a quien pulsó sin saber por qué no pasó nada. El precedente del
-  repositorio es devolver `200` **con el motivo dentro del fragmento** —lo hacen el cobro y
-  el padrón—: el estado de la petición y lo que hay que enseñar son dos preguntas distintas.
-- **`select_for_update()` revienta si `select_related` trae una FK nullable.** Postgres
-  responde «FOR UPDATE cannot be applied to the nullable side of an outer join», y el mensaje
-  **no nombra al culpable**, que es el `select_related`. La salida es acotar el bloqueo a la
-  fila que importa: `select_for_update(of=("self",))`.
-- **`connection.in_atomic_block` no sirve como prueba**: bajo `TestCase` **siempre** es
-  `True`, porque cada prueba va envuelta en una transacción. Para fijar «se validó dentro
-  del bloqueo» hay que mirar el **orden de las consultas** con `CaptureQueriesContext`: el
-  `SELECT … FOR UPDATE` antes de la lectura que decide.
-- **Una comprobación de rol compartida acaba nombrando la función equivocada.** `_solo_el_cajero`
-  contestaba «registrar ventas en el punto de venta» a quien intentó cuadrar la caja, y
-  `_solo_la_administracion` decía «los reportes de ventas e inventario» a quien pidió la
-  auditoría: el rol era el correcto y el mensaje citaba otra historia. Pásale **qué acción
-  nombrar**, y redáctalo con el infinitivo delante —«Consultar X **es** de…»— o no concuerda con
-  un sujeto singular. Las tres veces se vio ejecutándolo con cada rol, nunca en una prueba que
-  solo espera `PermissionDenied`.
-- **En una vista que escribe, autoriza ANTES de llamar al servicio.** Si quien autoriza es
-  un selector de lectura —`padron()` exige el rol institución—, llámalo primero: al revés,
-  un acudiente puede desactivar a su propio hijo por la ruta del padrón y recibir un `403`
-  **con el cambio ya escrito**. Pasó al compartir el camino de dos transiciones.
-- **El admin ya pinta `title` del contexto como encabezado.** Añadir un `<h1>` propio en
-  una plantilla que extiende `admin/base_site.html` lo enseña dos veces.
-- **Las migas del admin son `<ol><li>`, no un `<div>`.** Django 6 las pinta así y su hoja
-  estiliza **la lista**: un `{% block breadcrumbs %}` con `<div class="breadcrumbs">` deja el
-  rótulo pegado al borde izquierdo, montado sobre la barra lateral, **sin ningún error**. Se
-  vio comparando dos capturas (`TT-178`).
-- **Los acentos graves de Markdown no son nada en una plantilla.** `` `HU-25` `` se sirve con
-  las comillas puestas. Dentro de `{% comment %}` da igual; en el texto visible, no.
-- **Un proxy registrado en el admin hereda el `__str__` del modelo base**, y el admin lo
-  pinta en el título y en las migas: con `Estudiante` eso enseña el documento del menor en
-  una pantalla que se cuida de no enseñarlo en ninguna columna. Dale el suyo. Y
-  `default_permissions = ("view",)` hace que los permisos de escritura **ni existan**, que
-  es más fuerte que no concederlos.
-- **Una regla sin capa gana a cualquiera dentro de un `@layer`, venga después o no.**
-  El admin trae `.hidden { display: none !important }` en `admin/css/base.css` sin capa, así
-  que con las utilidades en `@layer utilities` la barra lateral salía con su degradado, su
-  `z-index` y `display: none`. Por eso `estilos/admin.css` importa `utilities` **fuera de
-  capa**, y por eso el armazón del admin usa `max-tablet:hidden` en vez de `hidden`: esquiva
-  el nombre en lugar de pelear por especificidad (`DT-36`).
-- **El admin pinta TODO `a` con `--link-fg`, y eso alcanza al armazón metido dentro.**
-  No es solo el subrayado: es el color. En la barra lateral —oscura en los dos temas— las
-  entradas salían en el azul oscuro de enlace y **desaparecían en tema claro**; en oscuro
-  coincidían por casualidad, así que el defecto solo existía en la mitad de los casos. El
-  color del armazón se declara por token con la misma especificidad alta que el subrayado.
-- **Sustituir `{% block header %}` del admin se lleva por delante `usertools`**, y ahí vive
-  su conmutador de tema. La pantalla sale bien y se queda clavada en lo que diga el sistema
-  operativo, sin forma de cambiarlo. Lo cubre el selector de la aplicación, que desde
-  `DEC-16` escribe **los dos idiomas del tema**: `data-tema` en español para los tokens y
-  `data-theme` (`light`/`dark`/`auto`) más `localStorage.theme` para el cromo del admin. Con
-  uno solo, la barra se quedaba en un tema y el listado en el otro.
-- **La especificidad de un `:not()` es la de su argumento más específico.** El admin subraya
-  con `a:not(…, #content-main.app-list a, …)`, que pesa (1,1,2): `.armazon a` y hasta
-  `#container .armazon a` pierden. La regla se escribe, se compila, se sirve **y no hace
-  nada**. Se vio preguntándole al navegador por `getComputedStyle`, no leyendo el CSS.
-- **`formulario.action` en JavaScript no devuelve cadena vacía cuando el atributo falta**:
-  devuelve la URL del documento. El formulario del admin no lleva `action`, así que guardar
-  desde la modal hacía `POST` al listado, que responde `200` con la tabla, y la modal se
-  llenaba con el listado dentro de sí misma. Se lee `getAttribute("action")`.
-- **Lo que una plantilla hija escribe fuera de un `{% block %}` no se renderiza.** Django lo
-  descarta sin avisar: el `<dialog>` de la modal estaba en `admin/base_site.html`, se veía en
-  el fichero, y `document.querySelector` no lo encontraba nunca.
-- **Tras tocar plantillas del admin hay que `manage.py estilos_del_admin`**, no
-  `tailwind build`: son dos hojas y aquel solo conoce la de `TAILWIND_CLI_SRC_CSS` (`DT-36`).
-  Y después, `collectstatic`, o se sirve la anterior.
+- **Si el cambio «no se ve», casi siempre es que no se compiló.** Al tocar plantillas deja
+  `uv run python manage.py tailwind watch` en otra terminal; a mano, **`tailwind build
+  --force`** (sin la opción contesta «up to date», que es falso para lo que importa). Si la
+  plantilla es del admin, el comando es otro: **`manage.py estilos_del_admin`** —son dos
+  hojas (`DT-36`)— y después `collectstatic`. **El `watch` muere en cuanto su stdin no es una
+  terminal**, sin decirlo: el detalle y la salida están en `[S1]` del documento.
 
 ## Cómo ejecutar
 
@@ -417,10 +241,13 @@ menos de esas 1.535, no corrió entera.
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
 servicio»— pasa sola el día que deja de proteger.
 
-**La suite completa, a un fichero y luego `grep`.** Con un pipe, la salida del seed se
-entremezcla con el resumen y se pierde el `Ran N tests`. Y una ejecución interrumpida
-**sigue viva**: retiene `test_smartfood` y la siguiente falla con «is being accessed by
-other users» — que no es un fallo de las pruebas.
+**La salida de la suite son nueve líneas**, y leerla en la terminal basta: `sembrar` respeta
+`verbosity` desde `#359`. Mandarla a un fichero sigue siendo cómodo para revisarla con
+calma, pero ya no es obligatorio para encontrar el `Ran N tests`.
+
+Lo que no cambió: una ejecución interrumpida **sigue viva** y retiene `test_smartfood`, así
+que la siguiente falla con «is being accessed by other users» — que no es un fallo de las
+pruebas.
 
 **Al cerrar un sprint, cruza cada `HU-nn` citada en el código y en las plantillas con su
 estado `☑`** en el backlog de historias. Caza las marcas de «esto llega con `HU-nn`» que
@@ -535,6 +362,15 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - **No encadenes un PR sobre otro sin integrar.** Con squash merge, `main` recibe un commit
   nuevo y la rama apilada conflictúa aunque el contenido sea idéntico. Si no queda otra:
   `git rebase --onto main <punta-vieja-del-PR-anterior>` y `push --force-with-lease`.
+- **Varias ramas que insertan en el MISMO punto de una lista de este fichero conflictúan en
+  el segundo merge**, aunque el contenido sea compatible: git no puede decidir el orden. La
+  lista de trampas no lo tiene, así que basta con que cada rama ancle tras una entrada
+  distinta. Se comprueba antes de subir, mergeando las ramas en una temporal.
+- **El conteo de pruebas se actualiza en el ÚLTIMO PR de la tanda.** Puesto en cada uno es la
+  misma línea cambiada en todos: conflicto seguro.
+- Al repartir por temáticas, los ficheros que **toca casi cualquier PR** y hay que despiezar a
+  mano son `config/urls.py`, `cuentas/templatetags/interfaz.py`, `assets/js/interfaz.js`,
+  `docs/decisiones-de-alcance.md` y este.
 - **Datos ficticios siempre** (`ALC-OUT-07`). Ningún dato real de ningún estudiante entra en este
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).

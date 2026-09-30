@@ -294,3 +294,21 @@ La serie `TT-` continúa: este sprint va de `TT-155` a `TT-187`.
 **Trece raíces** sin dependencia dentro del sprint: diez técnicas —`TT-155`, `TT-158`, `TT-162`, `TT-167`, `TT-169`, `TT-171`, `TT-179`, `TT-180`, `TT-181` y `TT-182`— más las tres de gestión.
 
 Es el sprint con más frentes independientes de los cinco: los reportes de la cafetería (`TT-167`, `TT-169`), el cierre de caja (`TT-171`) y todo el cierre del proyecto (`[S5]`) no se tocan entre sí hasta `TT-177` y `TT-183`.
+
+---
+
+## [S8] Trabajo fuera de este backlog
+
+El 2026-09-30 se integraron **cuatro Pull Requests que no salen de ninguna de estas 33
+tareas**: el rediseño de la navegación que pidió el dueño del producto —portada única,
+aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución—.
+
+Se registraron como alcance antes de construirlos (`DEC-16`, `DEC-17`, `DT-36`) y **no
+alteran el recuento de este sprint**: las tareas siguen siendo 33 y su avance, el que digan
+sus marcas. El detalle de qué entregó cada PR está en `[S7]` de
+`./plan-de-pull-requests-sprint-5.md`.
+
+**Lo que dejan abierto**: tres secciones del rol institución —usuarios, institución y el alta
+y edición de estudiantes— siguen en el admin porque escriben y necesitan formulario propio.
+No hay tarea que las cubra; construirlas exigiría decidir antes si entran en este sprint o
+en la entrega.
