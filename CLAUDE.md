@@ -221,6 +221,17 @@ lo dice el error.
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
   misma pantalla enseña dos monedas.
+- **`self.style` de un comando colorea según el tty del PROCESO, no según el `stdout=` que
+  recibe.** Django mira `sys.stdout.isatty()`, así que una prueba que pasa un `StringIO` y
+  parsea la salida recibe códigos ANSI cuando la suite se corre a mano en la terminal, y
+  ninguno cuando se redirige a un fichero: `startswith("contraseña")` deja de casar y la
+  prueba **solo falla de forma interactiva**. Pásale `no_color=True` a `call_command`. Pasó
+  con la línea de la contraseña de `sembrar`.
+- **Un comando que no lee `verbosity` no calla aunque se lo pidan.** `BaseCommand` recibe la
+  opción pero no la aplica: `self.stdout.write` escribe igual con `verbosity=0`, así que el
+  registro del seed salía por la terminal en cada `setUp` y enterraba el resumen de la suite
+  —de ahí la costumbre de mandarla a un fichero—. Toda escritura de `sembrar` pasa por
+  `_informar`, que es el único sitio donde se decide callar.
 - **Un `order_by()` explícito entra en el `GROUP BY` de un `values().annotate()`**, y el
   `ordering` del `Meta` ya no (Django lo dejó de hacer en 3.1). El admin **siempre** ordena
   el listado explícitamente, así que un desglose calculado sobre `cl.queryset` se agrupa

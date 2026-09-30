@@ -138,7 +138,13 @@ class ContrasenaDeDesarrolloTest(TestCase):
 
         salida = StringIO()
         with self.captureOnCommitCallbacks(execute=True):
-            call_command("sembrar", "--contrasena-de-desarrollo", "", stdout=salida)
+            # `no_color`: la línea de la contraseña se escribe con `style.WARNING`,
+            # y si la suite corre en una terminal Django la envuelve en códigos
+            # ANSI. Sin esto, la línea deja de empezar por «contraseña» y el
+            # parseo de abajo falla solo cuando se ejecuta a mano.
+            call_command(
+                "sembrar", "--contrasena-de-desarrollo", "", stdout=salida, no_color=True
+            )
 
         self.assertEqual(len(mail.outbox), 0, "una clave vacía no debe disparar correo")
         self.assertIn("contraseña", salida.getvalue())
