@@ -1,0 +1,133 @@
+{% load dinero %}
+{% comment %} `DEC-17`. La tabla de restricciones y su recuento (`HU-38`, `TT-111`).
+
+   Fragmento, no página (`DT-16`). **Tabla de datos** (`[S2.2]`), con fichas por
+   debajo de `tablet`.
+
+   «Sin límite» y no «$0»: son opuestos (`HU-61`). «Ninguno» y no un hueco: un
+   estudiante sin bloqueos es una respuesta, no un dato que falte.
+{% endcomment %}
+
+<div id="restricciones-tabla" class="flex flex-col gap-3">
+
+  <p class="text-base text-texto-suave" data-recuento-de-restricciones>
+    <strong class="font-semibold text-texto">{{ filas|length }}</strong>
+    de {{ cuantos }}
+    {% if cuantos == 1 %}estudiante{% else %}estudiantes{% endif %}
+    {% if con_restricciones %}
+      <span aria-hidden="true" class="px-1 text-borde">·</span>
+      <span class="inline-flex items-center gap-1.5 font-medium text-texto">
+        <svg class="h-4 w-4 text-serie-2" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+        {{ con_restricciones }} con alguna restricción
+      </span>
+    {% endif %}
+  </p>
+
+  {% if not filas %}
+    <p class="rounded-md border border-borde bg-superficie px-4 py-6 text-center text-base text-texto-suave">
+      {% if busqueda %}
+        Ningún estudiante coincide con «{{ busqueda }}».
+      {% else %}
+        Todavía no hay estudiantes matriculados.
+      {% endif %}
+    </p>
+  {% else %}
+
+    <ul class="flex flex-col gap-3 tablet:hidden">
+      {% for fila in filas %}
+        <li class="overflow-hidden rounded-md border border-borde bg-superficie">
+          <div class="px-4 py-3">
+            <span class="font-semibold text-texto">{{ fila.estudiante.nombre }}</span>
+          </div>
+          <dl class="flex flex-col gap-2 bg-superficie-hover px-4 py-3 text-sm">
+            <div>
+              <dt class="text-texto-suave">Límite diario</dt>
+              <dd class="text-texto">
+                {% if fila.restricciones.limite %}
+                  {{ fila.restricciones.limite.monto|dinero }}
+                {% else %}Sin límite{% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-texto-suave">Productos bloqueados</dt>
+              <dd class="text-texto">
+                {% for r in fila.restricciones.productos %}
+                  {{ r.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                {% empty %}Ninguno{% endfor %}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-texto-suave">Alérgenos bloqueados</dt>
+              <dd class="text-texto">
+                {% for r in fila.restricciones.alergenos %}
+                  {{ r.alergeno.nombre }}{% if not forloop.last %}, {% endif %}
+                {% empty %}Ninguno{% endfor %}
+              </dd>
+            </div>
+          </dl>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+      <div class="overflow-x-auto">
+        <table class="tabla-datos tabla-md">
+          <thead>
+            <tr class="border-b border-borde bg-primario-suave">
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+                  Estudiante
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-limite"></use></svg>
+                  Límite diario
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-manzana"></use></svg>
+                  Productos bloqueados
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-alerta"></use></svg>
+                  Alérgenos bloqueados
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in filas %}
+              <tr data-fila-de-restricciones
+                  class="border-b border-borde transition-colors last:border-b-0
+                         even:bg-superficie-hover hover:bg-primario-suave">
+                <td class="px-4 py-3 font-semibold text-texto">{{ fila.estudiante.nombre }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-texto">
+                  {% if fila.restricciones.limite %}
+                    {{ fila.restricciones.limite.monto|dinero }}
+                  {% else %}
+                    <span class="text-texto-suave">Sin límite</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-texto">
+                  {% for r in fila.restricciones.productos %}
+                    {{ r.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}<span class="text-texto-suave">Ninguno</span>{% endfor %}
+                </td>
+                <td class="px-4 py-3 text-texto">
+                  {% for r in fila.restricciones.alergenos %}
+                    {{ r.alergeno.nombre }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}<span class="text-texto-suave">Ninguno</span>{% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</div>

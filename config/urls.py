@@ -15,6 +15,7 @@ from catalogo.views import imagen_del_producto
 from config.salud import salud
 from cuentas.views import inicio, panel
 from personas.views import (
+    acudientes_de_la_carga,
     desactivacion_de_estudiante,
     desactivacion_por_el_acudiente,
     reactivacion_de_estudiante,
@@ -31,6 +32,7 @@ from reportes.views import (
 )
 from restricciones.views import (
     alergenos_bloqueados,
+    restricciones_de_los_estudiantes,
     bloqueo_de_alergeno,
     bloqueo_de_producto,
     limite_diario,
@@ -133,6 +135,25 @@ urlpatterns = [
     # resuelve Django y no puede falsear el cliente.
     path("padron/", padron_de_estudiantes, name="padron"),
     path("padron/tabla/", padron_de_estudiantes, name="padron-tabla"),
+
+    # `DEC-17`. Los acudientes, con la misma composición que el padrón. Dos
+    # rutas a la misma vista por lo mismo que allí: lo que cambia es el
+    # envoltorio, no lo que se responde (`DT-16`).
+    path("acudientes/", acudientes_de_la_carga, name="acudientes"),
+    path("acudientes/tabla/", acudientes_de_la_carga, name="acudientes-tabla"),
+
+    # `DEC-17`. Las restricciones en consulta, con el sistema visual. Sustituye
+    # al proxy del admin de `TT-112`.
+    path(
+        "restricciones/",
+        restricciones_de_los_estudiantes,
+        name="restricciones-de-estudiantes",
+    ),
+    path(
+        "restricciones/tabla/",
+        restricciones_de_los_estudiantes,
+        name="restricciones-tabla",
+    ),
     # `TT-120`, `HU-47`, `DT-29`. **La única escritura del padrón**, y por eso
     # tiene ruta propia: `DT-27` dejó la pantalla en solo lectura y `DT-29`
     # corrige esa parte para la desactivación inmediata. Devuelve el fragmento

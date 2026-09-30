@@ -18,6 +18,8 @@ from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
 from personas.models import Estudiante, Institucion
 from personas.selectors import (
+    acudientes_de_la_institucion,
+    acudientes_sin_activar,
     cuentas_sin_activar,
     estudiante_a_cargo,
     estudiante_para_la_institucion,
@@ -481,3 +483,48 @@ def padron_de_estudiantes(request):
         return render(request, "personas/partials/padron-tabla.html", contexto)
 
     return render(request, "personas/padron.html", contexto)
+
+
+def _contexto_de_los_acudientes(actor, *, busqueda=""):
+    """Lo que la tabla de acudientes necesita, venga de la página o del buscador.
+
+    La misma función para los dos caminos, por lo mismo que en el padrón:
+    armarlo dos veces es cómo acaban enseñando cosas distintas.
+    """
+    acudientes = list(acudientes_de_la_institucion(actor=actor, busqueda=busqueda))
+
+    return {
+        "acudientes": acudientes,
+        "busqueda": busqueda,
+        "cuantos": len(acudientes),
+        "sin_activar": acudientes_sin_activar(acudientes),
+    }
+
+
+@login_required
+@require_http_methods(["GET"])
+def acudientes_de_la_carga(request):
+    """La lista de acudientes de la institución (`DEC-17`, `HU-44`).
+
+    **Quién puede verla lo decide el selector**, que es donde vive la regla
+    (`DT-15`, `DT-11`): aquí no se comprueba el rol dos veces.
+
+    Dos rutas a la misma función —`/acudientes/` y `/acudientes/tabla/`—, igual
+    que el padrón: lo que cambia es el envoltorio, no lo que se responde, y lo
+    dice `resolver_match.url_name` y no una cabecera que el cliente pueda
+    falsear (`DT-16`).
+
+    **Solo lee.** `[S11]` concede `view` sobre `personas.acudiente` y nada más:
+    la cuenta se crea con la carga (`HU-01`), se activa por invitación (`HU-03`)
+    y se desactiva desde el listado de usuarios (`HU-42`). Aquí no hay ni un
+    botón que escriba, y esa ausencia es la pantalla diciendo lo mismo que la
+    matriz.
+    """
+    contexto = _contexto_de_los_acudientes(
+        request.user, busqueda=request.GET.get("busqueda", "")
+    )
+
+    if request.resolver_match.url_name == "acudientes-tabla":
+        return render(request, "personas/partials/acudientes-tabla.html", contexto)
+
+    return render(request, "personas/acudientes.html", contexto)

@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 16 (`DEC-1` … `DEC-16`) |
+| decisiones | 17 (`DEC-1` … `DEC-17`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.6 |
+| version | 1.7 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-16` |
+| S1 | Decisiones | `DEC-1` … `DEC-17` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -350,6 +350,23 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** Envolver no es reescribir: dentro de una pantalla del admin, el formulario sigue siendo el suyo. El parecido con el sistema visual llega hasta donde llega sin tocar 89 pantallas, y la diferencia seguirá siendo visible para quien la busque. A cambio, la navegación deja de tener dos mitades y el trabajo cabe en las semanas que quedan antes de `EVA-5`.
 
+### `[DEC-17]` Las pantallas de la institución se construyen, no se maquillan
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-09-22. **No amplía `[S11]`**: cada pantalla enseña y deja hacer exactamente lo que la matriz ya concedía. **Corrige a `DEC-16`** en un punto: allí se decidió envolver el admin sin reescribirlo, y esto reescribe las pantallas de un rol.*
+
+**El hecho que lo obliga.** `DEC-16` envolvió el admin: armazón propio por fuera, y por dentro sus listados y formularios vestidos con CSS. Puesto delante de `/padron/`, el resultado no se sostiene: el padrón tiene buscador con icono, recuento de «cuántos de cuántos», estado con color y significado, y fichas cuando la pantalla se estrecha; el admin genera otra estructura, y ninguna cantidad de CSS la convierte en aquella. **El skin acerca; no iguala.**
+
+**Decidido:**
+
+- **Las secciones del rol institución pasan a ser pantallas propias**, con la composición del padrón (`DT-27`) y del sistema visual (`DT-25`): acudientes, restricciones, usuarios, institución y la ficha del estudiante.
+- **Ninguna añade capacidades.** Lo que `[S11]` concedía como `view` sigue siendo solo consulta, y la ausencia de acciones en esas pantallas es la matriz dicha en la interfaz — la regla la sigue imponiendo la capa de datos (`DT-11`).
+- **El admin no se retira.** Sigue sirviendo a la administración de la cafetería y sigue siendo el camino de todo lo que no se construya: `DT-2` no se toca, y lo envuelto por `DEC-16` se queda envuelto.
+- **El orden es por coste y por uso**: primero las de solo consulta —acudientes y restricciones—, que no necesitan formulario; después las que escriben.
+
+**Lo que NO se decide aquí.** No se reescribe el admin de la cafetería: catálogo, inventario, ventas y cierres siguen donde están, con el armazón y el skin de `DEC-16`. Reescribir las 89 pantallas sigue descartado por lo mismo que en `DT-2`.
+
+**Consecuencia asumida.** Cada pantalla propia es código que hay que mantener y probar, y duplica en la interfaz lo que el admin ya sabía hacer. Se acepta para el rol que trabaja a diario en estas pantallas —secretaría—, no para todos. **Y hay una raya clara**: una pantalla propia solo sustituye a una del admin cuando alguien la usa a diario; el resto se queda envuelto.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -390,6 +407,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-14` | **No añade alcance: lo recorta.** Retira la recarga al estudiante desactivado, corrigiendo el tercer criterio de `HU-50` |
 | `DEC-15` | **No añade alcance: lo recorta.** Retira de `ENT-01` la condición de estar desplegado; el prototipo se demuestra en local |
 | `DEC-16` | **No añade alcance.** Reordena la navegación: portada pública única, aterrizaje por rol y un solo dashboard por rol. No toca `[S11]` |
+| `DEC-17` | **No añade alcance.** Sustituye pantallas del admin por pantallas propias para el rol institución, con lo mismo que `[S11]` ya concedía |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

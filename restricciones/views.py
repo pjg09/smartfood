@@ -29,11 +29,13 @@ from catalogo.selectors import productos_en_el_catalogo
 from personas.models import Estudiante
 from personas.selectors import estudiante_a_cargo
 from restricciones.selectors import (
+    estudiantes_con_sus_restricciones,
     historial_de_restricciones,
     identificadores_de_alergenos_bloqueados,
     identificadores_de_productos_bloqueados,
     limite_diario_de,
     productos_cubiertos_por_alergeno,
+    restricciones_precargadas,
 )
 from restricciones.services import (
     MONTO_MAXIMO,
@@ -381,3 +383,51 @@ def _contexto_de_alergenos(estudiante):
         "total_bloqueados": len(bloqueados),
         "productos_cubiertos": productos_cubiertos_por_alergeno(estudiante).count(),
     }
+
+
+@login_required
+@require_http_methods(["GET"])
+def restricciones_de_los_estudiantes(request):
+    """El listado de restricciones con el sistema visual (`DEC-17`, `HU-38`).
+
+    **Sustituye al proxy del admin** (`TT-112`), que enseñaba lo mismo dentro de
+    otra interfaz. La regla de acceso no cambia y no se repite aquí: la impone
+    `estudiantes_con_sus_restricciones` (`DT-11`, `DT-15`), que la concede a la
+    institución y a la administración de la cafetería, y a nadie más.
+
+    **Solo lee, y no por omisión.** `INV-4` es explícito: las restricciones las
+    pone y las quita el acudiente (`HU-10`, `HU-11`, `HU-61`), y ni la cafetería
+    ni la institución pueden tocarlas. Esta pantalla no tiene una sola acción, y
+    esa ausencia es la invariante dicha en la interfaz — la de verdad la sostiene
+    la capa de datos.
+
+    Dos rutas a la misma función, como el padrón: la página y el fragmento del
+    buscador (`DT-16`).
+    """
+    busqueda = request.GET.get("busqueda", "").strip()
+    estudiantes = list(estudiantes_con_sus_restricciones(actor=request.user))
+
+    if busqueda:
+        # Sobre la lista ya traída: son los estudiantes del colegio, no un
+        # listado que crezca sin techo, y volver a consultar perdería el
+        # `prefetch` que evita tres consultas por fila.
+        estudiantes = [e for e in estudiantes if busqueda.lower() in e.nombre.lower()]
+
+    filas = [
+        {"estudiante": e, "restricciones": restricciones_precargadas(e)}
+        for e in estudiantes
+    ]
+
+    contexto = {
+        "filas": filas,
+        "busqueda": busqueda,
+        "cuantos": len(filas),
+        "con_restricciones": sum(1 for f in filas if f["restricciones"].hay_alguna),
+    }
+
+    if request.resolver_match.url_name == "restricciones-tabla":
+        return render(
+            request, "restricciones/partials/restricciones-tabla.html", contexto
+        )
+
+    return render(request, "restricciones/restricciones.html", contexto)

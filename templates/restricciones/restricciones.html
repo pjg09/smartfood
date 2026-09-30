@@ -1,0 +1,61 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} `DEC-17`. Las restricciones de los estudiantes, en consulta (`HU-38`).
+
+   Misma composición que el padrón (`DT-23`, `DT-25`): encabezado, buscador con
+   su icono, recuento y tabla. Sustituye al proxy del admin de `TT-112`, que
+   enseñaba lo mismo dentro de otra interfaz.
+
+   **No tiene ni una acción, y eso es `INV-4`.** Las restricciones las pone y
+   las quita el acudiente (`HU-10`, `HU-11`, `HU-61`); la institución y la
+   cafetería las consultan. La invariante la sostiene la capa de datos; esta
+   pantalla se limita a no prometer lo contrario.
+{% endcomment %}
+
+{% block titulo %}Restricciones | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Restricciones</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Qué tiene bloqueado cada estudiante. Las define su acudiente; aquí solo se consultan.
+      </p>
+    </header>
+
+    <form method="get" action="{% url 'restricciones-de-estudiantes' %}"
+          hx-get="{% url 'restricciones-tabla' %}"
+          hx-trigger="input changed delay:400ms from:#busqueda"
+          hx-target="#restricciones-tabla"
+          hx-swap="outerHTML"
+          hx-indicator="#buscando-restricciones"
+          class="flex flex-col gap-3">
+
+      <div class="flex flex-col gap-3 tablet:flex-row tablet:items-end">
+        <div class="flex grow flex-col gap-1">
+          <label for="busqueda" class="text-base font-medium text-texto">Buscar</label>
+          <div class="relative">
+            <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+                 aria-hidden="true"><use href="#i-buscar"></use></svg>
+            {% comment %} **Solo por nombre, y no por documento.** El admin buscaba por
+               documento exacto; aquí no se ofrece: es el documento de un menor y
+               esta pantalla la abre también la cafetería. {% endcomment %}
+            <input type="search" id="busqueda" name="busqueda" value="{{ busqueda }}"
+                   autocomplete="off" placeholder="Nombre del estudiante"
+                   class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                          text-base text-texto transition-colors
+                          placeholder:text-texto-suave
+                          hover:border-acento focus:border-acento focus:outline-none">
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 tablet:shrink-0 tablet:pb-1">
+          <p id="buscando-restricciones" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
+        </div>
+      </div>
+    </form>
+
+    {% include "restricciones/partials/restricciones-tabla.html" %}
+  </div>
+{% endblock %}

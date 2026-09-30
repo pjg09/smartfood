@@ -1,0 +1,128 @@
+{% comment %} `DEC-17`. La tabla de acudientes y su línea de recuento (`HU-44`).
+
+   Fragmento, no página (`DT-16`): lo devuelve `/acudientes/tabla/` a cada tecla
+   del buscador y reemplaza solo esta zona. La página lo incluye al pintarse.
+
+   **Tabla de datos** (`[S2.2]`): cabecera tintada con un icono por columna,
+   filas alternas, y **fichas por debajo de `tablet`**, que es donde una tabla
+   de cuatro columnas deja de leerse.
+{% endcomment %}
+
+<div id="acudientes-tabla" class="flex flex-col gap-3">
+
+  {% comment %} «28 de 28» y no «28»: quien busca necesita saber que hay más de lo que
+     ve. Las cuentas sin activar van en esta línea por el mismo motivo que en el
+     padrón — la carga genera la invitación pero no la entrega (`DEC-9`). {% endcomment %}
+  <p class="text-base text-texto-suave" data-recuento-de-acudientes>
+    <strong class="font-semibold text-texto">{{ acudientes|length }}</strong>
+    de {{ cuantos }}
+    {% if cuantos == 1 %}acudiente{% else %}acudientes{% endif %}
+    {% if sin_activar %}
+      <span aria-hidden="true" class="px-1 text-borde">·</span>
+      <span class="inline-flex items-center gap-1.5 font-medium text-aviso-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        {{ sin_activar }} sin activar
+      </span>
+    {% endif %}
+  </p>
+
+  {% if not acudientes %}
+    <p class="rounded-md border border-borde bg-superficie px-4 py-6 text-center text-base text-texto-suave">
+      {% if busqueda %}
+        Ningún acudiente coincide con «{{ busqueda }}».
+      {% else %}
+        Todavía no hay acudientes. Llegan con la carga de estudiantes.
+      {% endif %}
+    </p>
+  {% else %}
+
+    {% comment %} Hasta `tablet`, una ficha por acudiente: arriba lo que se busca de un
+       vistazo y abajo el detalle sobre fondo hundido. {% endcomment %}
+    <ul class="flex flex-col gap-3 tablet:hidden">
+      {% for acudiente in acudientes %}
+        <li class="overflow-hidden rounded-md border border-borde bg-superficie">
+          <div class="flex items-start justify-between gap-3 px-4 py-3">
+            <span class="font-semibold text-texto">{{ acudiente.nombre }}</span>
+            {% include "personas/partials/acudiente-estado-de-la-cuenta.html" %}
+          </div>
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-2 bg-superficie-hover px-4 py-3 text-sm">
+            <div>
+              <dt class="text-texto-suave">Documento</dt>
+              <dd class="font-mono tabular-nums text-texto">{{ acudiente.documento }}</dd>
+            </div>
+            <div>
+              <dt class="text-texto-suave">A cargo</dt>
+              <dd class="text-texto">
+                {{ acudiente.cuantos }}
+                {% if acudiente.cuantos == 1 %}estudiante{% else %}estudiantes{% endif %}
+              </dd>
+            </div>
+            <div class="col-span-2">
+              <dt class="text-texto-suave">Correo</dt>
+              <dd class="break-all text-texto">{{ acudiente.usuario.email }}</dd>
+            </div>
+          </dl>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+      <div class="overflow-x-auto">
+        <table class="tabla-datos tabla-md">
+          <thead>
+            <tr class="border-b border-borde bg-primario-suave">
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-personas"></use></svg>
+                  Acudiente
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-identificacion"></use></svg>
+                  Documento
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+                  Estudiantes a cargo
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-escudo"></use></svg>
+                  Estado de la cuenta
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for acudiente in acudientes %}
+              <tr data-fila-de-acudiente
+                  class="border-b border-borde transition-colors last:border-b-0
+                         even:bg-superficie-hover hover:bg-primario-suave">
+                <td class="px-4 py-3">
+                  <span class="block font-semibold text-texto">{{ acudiente.nombre }}</span>
+                  <span class="block text-sm break-all text-texto-suave">
+                    {{ acudiente.usuario.email }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 font-mono text-base tabular-nums whitespace-nowrap text-texto-suave">
+                  {{ acudiente.documento }}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-texto">
+                  {{ acudiente.cuantos }}
+                  {% if acudiente.cuantos == 1 %}estudiante{% else %}estudiantes{% endif %}
+                </td>
+                <td class="px-4 py-3">
+                  {% include "personas/partials/acudiente-estado-de-la-cuenta.html" %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</div>
