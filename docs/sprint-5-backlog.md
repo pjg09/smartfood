@@ -300,8 +300,8 @@ Es el sprint con más frentes independientes de los cinco: los reportes de la ca
 ## [S8] Trabajo fuera de este backlog
 
 El 2026-09-30 se integraron **cuatro Pull Requests que no salen de ninguna de estas 33
-tareas**: el rediseño de la navegación que pidió el dueño del producto —portada única,
-aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución—.
+tareas**, los primeros de seis: el rediseño de la navegación que pidió el dueño del
+producto —portada única, aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución—.
 
 Se registraron como alcance antes de construirlos (`DEC-16`, `DEC-17`, `DT-36`) y **no
 alteran el recuento de este sprint**: las tareas siguen siendo 33 y su avance, el que digan
@@ -312,3 +312,10 @@ sus marcas. El detalle de qué entregó cada PR está en `[S7]` de
 y edición de estudiantes— siguen en el admin porque escriben y necesitan formulario propio.
 No hay tarea que las cubra; construirlas exigiría decidir antes si entran en este sprint o
 en la entrega.
+
+**Después entraron dos más.** `#364` dejó el stack entero en un `docker compose` y la suite
+en la CI (`DT-37`, `DT-38`), sin tocar el producto. Y el 2026-10-01, **uno con historia
+propia**: el correo local y la recuperación de contraseña (`DEC-18`, `DEC-19`). Trae `HU-62`
+—registrada con su decisión antes de construirla— y devuelve a `HU-03` el criterio que `DEC-9`
+recortó. **Tampoco altera el recuento**: `HU-62` no
+tiene tareas `TT-nn` en este backlog, igual que el rediseño. El detalle, en el mismo `[S7]`.
