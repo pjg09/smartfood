@@ -111,8 +111,9 @@ existe modo público en ningún plan**, así que la separación por política qu
 `DT-18` no era realizable ni pagando. `DT-21` lo resolvió con un bucket y dos prefijos,
 `privado/` y `publico/`, y dos almacenamientos lógicos en Django.
 
-> **`DT-21` sigue vigente y no depende del proveedor.** En local esa topología es MinIO en
-> el mismo `docker compose` que PostgreSQL, que es lo que el equipo usa desde `TT-02`.
+> **`DT-21` sigue vigente y no depende del proveedor.** En local esa topología vive en el
+> mismo `docker compose` que PostgreSQL: primero fue MinIO, y desde `DT-38` es SeaweedFS,
+> porque las imágenes de MinIO dejaron de publicarse.
 
 ### [S2.3] Los servicios se dormían
 

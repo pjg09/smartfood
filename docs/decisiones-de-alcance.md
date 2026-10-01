@@ -33,7 +33,7 @@
 | ID | Sección | Contenido |
 |---|---|---|
 | S1 | Decisiones | `DEC-1` … `DEC-19` |
-| S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
+| S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
 | ANEXO B | Puntos que siguen abiertos | Lo que estas decisiones no resuelven |

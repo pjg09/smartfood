@@ -21,8 +21,8 @@ cinco sprints de dos semanas.
 | Historias terminadas | ✅ **las 62 de 62**. Las 61 del backlog desde el 2026-09-19 —las cerró `HU-37`, el reporte de auditoría—; `HU-62`, la recuperación de contraseña, entró y se cerró el 2026-10-01 con `DEC-19`. El desglose de qué PR cerró cada una está en `[S4]` de [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) |
 | Sprint 4 | ✅ cerrado el 2026-09-19: **18 de 18 tareas y 7 de 7 PR**. Inventario trazable, pedidos anticipados y `TST-4` |
 | Plan de pruebas | Los cuatro escenarios críticos `TST-1` … `TST-4` están **construidos y cubiertos por la suite** desde el Sprint 4. `ENT-05` pide además **ejecutarlos y dejar evidencia**, y eso es `TT-179`, **todavía sin empezar** (`PR-10`) |
-| **Sprint 5** | 🔨 **en curso**, semanas 14–15. **El producto del backlog está terminado**: 24 de 33 tareas y 9 de 13 PR, y lo que queda (`PR-10`…`PR-13`) no toca el código. **Sí lo tocó el rediseño de la navegación** —cuatro PR fuera del backlog, integrados el 2026-09-30 y registrados antes como `DEC-16`, `DEC-17` y `DT-36`: portada única, aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución (`[S7]` de su plan de PR)—. **El estado de cada tarea vive en su plan de PR** |
-| **Lo siguiente** | **Entrega final** (`EVA-5`, 30 % de la nota), semana 16 |
+| **Sprint 5** | 🔨 **en curso**, semanas 14–15. **El producto del backlog está terminado**: 24 de 33 tareas y 9 de 13 PR, y lo que queda (`PR-10`…`PR-13`) no toca el código. **Fuera del backlog, seis PR**, todos registrados antes de construirse (`[S7]` de su plan de PR): el **rediseño de la navegación** (`#359`…`#362`, `DEC-16`, `DEC-17`, `DT-36`); el **stack entero en `docker compose`** con la suite completa en la CI y SeaweedFS en lugar de MinIO (`#364`, `DT-37`, `DT-38`); y el **correo local con la recuperación de contraseña** (`#365`, `DEC-18`, `DEC-19`), que trajo **`HU-62`**. **El estado de cada tarea vive en su plan de PR** |
+| **Lo siguiente** | Los cuatro PR que quedan del Sprint 5, ninguno de código: plan de pruebas (`PR-10`, `ENT-05`), artefactos de gestión (`PR-11`), informe final (`PR-12`, `ENT-06` y `ENT-07`) y cierre (`PR-13`). Después, la **entrega final** (`EVA-5`, 30 % de la nota), semana 16 |
 | Entorno desplegado | ❌ **no hay, y no lo habrá** — ver abajo |
 
 > **Al cerrar el Sprint 3 el control parental funciona de verdad.** El acudiente fija el
@@ -146,8 +146,10 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 | Documento | Para qué |
 |---|---|
-| [`desarrollo.md`](./docs/desarrollo.md) | Reconstrucción local, credenciales y comandos |
-| [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
+| [`desarrollo.md`](./docs/desarrollo.md) | El entorno: levantarlo, credenciales, comandos, la CI en local y qué hacer cuando algo no arranca |
+| [`probar-cada-funcionalidad.md`](./docs/probar-cada-funcionalidad.md) | Cómo ver funcionando cada cosa en local: acudientes, recuperación de contraseña, reservas, mermas, alertas… |
+| [`escribir-pruebas.md`](./docs/escribir-pruebas.md) | Dónde va una prueba, cómo se ejecuta y los siete patrones que ya costaron una ronda |
+| [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Todas las rutas, quién alcanza cada una y el recorrido de demostración |
 | [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
 | [`despliegue.md`](./docs/despliegue.md) | Por qué no hay entorno desplegado, y qué costó el que hubo |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
@@ -194,7 +196,11 @@ está en [`convenciones-de-git.md`](./docs/convenciones-de-git.md).
 Antes de abrir un PR, los tres tienen que pasar:
 
 ```bash
-uv run python manage.py check
-uv run python manage.py makemigrations --check --dry-run
-uv run python manage.py test --noinput
+docker compose exec -T app python manage.py check
+docker compose exec -T app python manage.py makemigrations --check --dry-run
+docker compose exec -T app python manage.py test --noinput
 ```
+
+**La CI los repite en cada PR**, dentro del stack levantado desde cero, y **sin ellos en
+verde no se publica versión**. Para ejecutar ese mismo trabajo en local antes de subir,
+`[S5.3]` de [`desarrollo.md`](./docs/desarrollo.md).

@@ -204,7 +204,8 @@ está bien», que es una valoración (`[S1]`).
 - **El resumen de gasto.** Es `HU-33`: otra pregunta y otros datos —el libro de la billetera,
   no las líneas de venta—.
 - **Notificar.** Nada de esto sale a buscar al acudiente: las alertas se ven cuando entra a
-  la pantalla. El correo del prototipo es solo para invitaciones (`DEC-9`).
+  la pantalla. El correo del prototipo es solo para dar acceso: invitaciones (`DEC-18`) y
+  recuperación de contraseña (`DEC-19`).
 
 ---
 

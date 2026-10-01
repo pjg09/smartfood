@@ -55,8 +55,10 @@ y un puntero a este fichero. El resto está aquí, agrupado por dónde muerde.
   CSS resultante no cambia** —un comentario nuevo no la toca, así que mirar la fecha del
   fichero no prueba nada— y **no purga las clases que dejan de usarse** dentro de una misma
   sesión. Para lo segundo, `tailwind build --force`.
-- **Al tocar plantillas, deja `uv run python manage.py tailwind watch` en otra terminal.**
-  Sin él, una clase nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
+- **Al tocar plantillas, las hojas se recompilan solas mientras el servicio `estilos` del
+  compose esté levantado** (`DT-37`); si no lo hacen, `docker compose logs estilos`. Sin el
+  compose, deja `uv run python manage.py tailwind watch` en otra terminal: sin él, una clase
+  nueva no está en la hoja compilada y el cambio «no se ve». Si compilas
   a mano, **`tailwind build --force`**: sin la opción compara la fecha de `fuente.css` con
   la de la hoja y contesta «up to date», que es cierto para la fuente y falso para lo que
   importa —las clases salen de las plantillas, y ésas no las mira—.

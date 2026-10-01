@@ -96,9 +96,14 @@ Todos los datos de todos los ejemplos son ficticios (`ALC-OUT-07`), y el dominio
    y los estudiantes, y los vincula.
 4. La cuenta del acudiente nace **sin contraseña utilizable** (`INV-6`, `INVD-1`).
 
-**El correo de invitación no se entrega en la carga masiva** (`DEC-9`): las direcciones
-son ficticias y no corresponden a ningún buzón. La entrega real se demuestra con las altas
-de una en una.
+5. **Al confirmar la transacción, envía a cada acudiente nuevo su invitación** (`HU-03`,
+   `DEC-18`). Una carga que falla o se revierte no invita a nadie. Un acudiente que ya
+   existía no recibe otra.
+
+Las direcciones del archivo son ficticias y no corresponden a ningún buzón: en el prototipo
+el correo lo atrapa el Mailpit del `docker compose` y no sale de la máquina. **Con
+`EMAIL_URL` apuntando a un proveedor real no se carga un archivo**: cada dirección ficticia
+sería un rebote (`DEC-9`).
 
 ---
 
