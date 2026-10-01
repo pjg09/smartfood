@@ -27,8 +27,8 @@ from cuentas.permisos import PERMISOS_POR_ROL, nombre_del_grupo
 ROLES_DE_PERSONAL = frozenset({Rol.CAJERO, Rol.ADMINISTRADOR})
 
 
-def construir_enlace_de_invitacion(usuario):
-    """Devuelve la URL absoluta con la que el titular define su contraseña.
+def _enlace_con_token(nombre_de_ruta, usuario):
+    """URL absoluta de una ruta que recibe `uidb64` y `token`.
 
     Reutiliza el generador de tokens de Django en lugar de inventar uno. No es
     pereza: `CLAUDE.md` descarta explícitamente construir autenticación propia,
@@ -37,13 +37,29 @@ def construir_enlace_de_invitacion(usuario):
     aquí se usan, no se dan por decididas.
     """
     ruta = reverse(
-        "definir-contrasena",
+        nombre_de_ruta,
         kwargs={
             "uidb64": urlsafe_base64_encode(force_bytes(usuario.pk)),
             "token": default_token_generator.make_token(usuario),
         },
     )
     return f"{settings.URL_BASE.rstrip('/')}{ruta}"
+
+
+def construir_enlace_de_invitacion(usuario):
+    """Devuelve la URL absoluta con la que el titular define su contraseña."""
+    return _enlace_con_token("definir-contrasena", usuario)
+
+
+def construir_enlace_de_recuperacion(usuario):
+    """La URL con la que el titular elige una contraseña nueva (`HU-62`).
+
+    **El mismo token que la invitación** (`DEC-19`): de un solo uso, porque se
+    deriva del hash de la contraseña actual, y con la misma caducidad. Lo que
+    cambia es la pantalla a la que lleva, que habla de recuperar y no de
+    activar.
+    """
+    return _enlace_con_token("restablecer-contrasena", usuario)
 
 
 def generar_invitacion(usuario):
@@ -90,6 +106,27 @@ def invitar(usuario):
             "nombre": usuario.nombre or usuario.email,
             "rol": usuario.get_rol_display(),
             "enlace": construir_enlace_de_invitacion(usuario),
+            "dias_de_validez": settings.PASSWORD_RESET_TIMEOUT // (60 * 60 * 24),
+        },
+    )
+
+
+def enviar_recuperacion(usuario):
+    """Manda al titular el enlace para elegir una contraseña nueva (`HU-62`).
+
+    **No decide a quién**: eso lo hace el formulario de Django
+    (`PasswordResetForm.get_users`), que solo devuelve cuentas activas con la
+    contraseña ya definida (`DEC-19`). Aquí se recibe una de esas y se le
+    escribe. Va por `config/correo.py`, como la invitación: el mismo camino de
+    envío, el mismo registro si falla.
+    """
+    enviar_correo(
+        destinatario=usuario.email,
+        asunto="Elige una contraseña nueva para SmartFood",
+        plantilla="correo/recuperacion",
+        contexto={
+            "nombre": usuario.nombre or usuario.email,
+            "enlace": construir_enlace_de_recuperacion(usuario),
             "dias_de_validez": settings.PASSWORD_RESET_TIMEOUT // (60 * 60 * 24),
         },
     )
@@ -313,9 +350,11 @@ __all__ = [
     "Rol",
     "asignar_grupo_del_rol",
     "construir_enlace_de_invitacion",
+    "construir_enlace_de_recuperacion",
     "crear_cuenta",
     "crear_cuenta_de_personal",
     "desactivar_cuenta",
+    "enviar_recuperacion",
     "generar_invitacion",
     "invitar",
     "reactivar_cuenta",

@@ -73,9 +73,10 @@ class NingunaPlantillaEscribeUnColorSueltoTest(TestCase):
     vuelve a ser lo que cada quien tuviera a mano. Esta prueba es lo que lo
     impide.
 
-    **Una sola excepción**, `correo/invitacion.html`: los clientes de correo
+    **Una sola excepción**, `correo/base.html`: los clientes de correo
     descartan las variables CSS y las hojas externas, así que un token ahí no
-    resolvería a nada.
+    resolvería a nada. Es la cáscara de los dos correos —invitación y
+    recuperación (`HU-62`)—, y por eso los colores siguen en un solo fichero.
 
     `admin/base_site.html` **dejó de ser la segunda** (`DT-36`). Lo era porque
     el admin no podía cargar Tailwind —su `preflight` lo desarmaba—, así que
@@ -84,7 +85,7 @@ class NingunaPlantillaEscribeUnColorSueltoTest(TestCase):
     demás.
     """
 
-    EXCEPCIONES = {"correo/invitacion.html"}
+    EXCEPCIONES = {"correo/base.html"}
 
     # `#abc` y `#aabbcc`, delimitados: así `href="#acceso"` o `#i-alerta` no
     # cuentan como color.

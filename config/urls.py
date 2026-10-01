@@ -5,6 +5,7 @@ cuentas se crean por seed o por invitación. Si alguna vez aparece aquí una rut
 de alta pública, es un error, no una funcionalidad.
 """
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as vistas_de_auth
 from django.urls import path, reverse_lazy
@@ -13,7 +14,7 @@ from django.views.generic import TemplateView
 from billetera.views import recarga
 from catalogo.views import imagen_del_producto
 from config.salud import salud
-from cuentas.views import inicio, panel
+from cuentas.views import RecuperacionDeContrasenaForm, inicio, panel
 from personas.views import (
     acudientes_de_la_carga,
     desactivacion_de_estudiante,
@@ -120,6 +121,44 @@ urlpatterns = [
         "invitacion/lista/",
         TemplateView.as_view(template_name="cuentas/contrasena-definida.html"),
         name="contrasena-definida",
+    ),
+    # Recuperación de la contraseña olvidada (`HU-62`, `DEC-19`). Las vistas de
+    # Django, como la invitación: no se escribe autenticación propia. Cuatro
+    # pasos —pedir, aviso, elegir la nueva, listo— y el mismo token que la
+    # invitación, de un solo uso y con la misma caducidad.
+    #
+    # **El aviso es el mismo exista o no la cuenta**: `PasswordResetView`
+    # redirige a él en los dos casos, así que la pantalla no dice quién tiene
+    # cuenta en la institución.
+    path(
+        "recuperar/",
+        vistas_de_auth.PasswordResetView.as_view(
+            form_class=RecuperacionDeContrasenaForm,
+            template_name="cuentas/recuperar-contrasena.html",
+            success_url=reverse_lazy("recuperacion-enviada"),
+        ),
+        name="recuperar-contrasena",
+    ),
+    path(
+        "recuperar/enviado/",
+        TemplateView.as_view(
+            template_name="cuentas/recuperacion-enviada.html",
+            extra_context={"dias_de_validez": settings.PASSWORD_RESET_TIMEOUT // (60 * 60 * 24)},
+        ),
+        name="recuperacion-enviada",
+    ),
+    path(
+        "recuperar/listo/",
+        TemplateView.as_view(template_name="cuentas/contrasena-restablecida.html"),
+        name="contrasena-restablecida",
+    ),
+    path(
+        "recuperar/<uidb64>/<token>/",
+        vistas_de_auth.PasswordResetConfirmView.as_view(
+            template_name="cuentas/restablecer-contrasena.html",
+            success_url=reverse_lazy("contrasena-restablecida"),
+        ),
+        name="restablecer-contrasena",
     ),
     # Carga masiva de estudiantes y acudientes (`TT-24`, `HU-01`).
     path("carga/", carga_de_estudiantes, name="carga-de-estudiantes"),
