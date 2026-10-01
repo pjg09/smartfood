@@ -297,7 +297,7 @@ Cómo mirar sin que lo que se mira engañe.
 
 Lo que costó meter la aplicación en el `docker compose` (`DT-37`). Casi todas fallan sin
 error: el stack levanta y lo que sale está mal, o sale bien y tarda sin motivo, o se cae
-veinte minutos después. La que sí da error lo da en la máquina de otro, no en la tuya.
+veinte minutos después. Las que sí dan error lo dan en la máquina de otro, no en la tuya.
 
 - **`runserver` con conexiones persistentes agota PostgreSQL.** Atiende cada petición en un
   hilo nuevo, y con `CONN_MAX_AGE` distinto de cero cada hilo deja su conexión abierta al
@@ -307,9 +307,9 @@ veinte minutos después. La que sí da error lo da en la máquina de otro, no en
   many clients already». El compose fija `DJANGO_CONN_MAX_AGE=0`; lo avisa la propia
   documentación de Django, y `config/tests_contenedor.py` lo vigila.
 
-- **Una URL firmada lleva el host dentro de la firma.** Django alcanza MinIO en
-  `minio:9000` y el navegador en `localhost:9000`: firmada contra el primero, el navegador no
-  resuelve el nombre; reescrita después al segundo, MinIO responde `403`. Y `custom_domain`
+- **Una URL firmada lleva el host dentro de la firma.** Django alcanza el almacenamiento en
+  `seaweedfs:8333` y el navegador en `localhost:9000`: firmada contra el primero, el navegador no
+  resuelve el nombre; reescrita después al segundo, el servidor responde `403`. Y `custom_domain`
   de `django-storages` cambia el host **quitando la firma**. La salida es firmar contra la
   dirección pública desde el principio: `S3_ENDPOINT_URL_PUBLICO` y `config/almacenamiento.py`.
   Las imágenes de producto no lo notan —las sirve la aplicación—, así que el catálogo se ve
@@ -336,3 +336,13 @@ veinte minutos después. La que sí da error lo da en la máquina de otro, no en
   /dev/null | …`— **no sirve con `&` y `wait`**: una tubería no termina hasta que termina
   `tail`, que no termina nunca, así que la muerte del vigilante no se ve. En
   `docker/vigilar-estilos.sh` va con `< <(tail -f /dev/null)`.
+- **Una imagen que tienes en caché puede no existir para nadie más.** Las de MinIO dejaron de
+  poder descargarse —«pull access denied», también `latest`— y en las máquinas del equipo
+  todo seguía levantando, porque estaban en caché. Ningún clon nuevo podía levantar ni la
+  infraestructura. Lo vio el primer runner sin caché (`DT-38`). Probar «desde cero» en tu
+  máquina no lo detecta: `docker compose down -v` borra volúmenes, **no imágenes**. Para eso
+  está la CI, o `docker manifest inspect <imagen>`, que pregunta al registro.
+- **Dentro de un contenedor, `localhost` es `::1` antes que `127.0.0.1`.** El `wget` de
+  Alpine prueba IPv6 primero y no reintenta por IPv4; SeaweedFS solo escucha en IPv4, así que
+  el healthcheck daba el servicio por caído con el API respondiendo desde fuera, y el compose
+  entero se quedaba en «dependency failed to start». Healthchecks contra `127.0.0.1`.

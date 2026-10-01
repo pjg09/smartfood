@@ -37,8 +37,8 @@ aplicación—; las siguientes, segundos.
 
 | Servicio | Qué hace |
 |---|---|
-| `postgres`, `minio` | La base (`DT-1`) y el almacenamiento de objetos (`DT-18`) |
-| `minio-inicializar` | Crea el bucket privado y sale (`TT-50`, `DT-21`) |
+| `postgres`, `seaweedfs` | La base (`DT-1`) y el almacenamiento de objetos compatible con S3 (`DT-18`, `DT-38`) |
+| `almacenamiento-inicializar` | Crea el bucket privado si no existe y sale (`TT-50`, `DT-21`) |
 | `estilos` | Compila **las dos** hojas de Tailwind (`DT-36`) y se queda vigilando las plantillas: es el `tailwind watch` de la segunda terminal |
 | `app` | `migrate`, `sincronizar_permisos`, `sembrar` con 12 estudiantes y la contraseña de `[S2.1]`, `collectstatic` y `runserver` |
 
@@ -60,7 +60,7 @@ Todos opcionales, en un `.env` en la raíz —el compose lo lee solo— o en la 
 | `UID`, `GID` | `1000` | **Si tu usuario no es el 1000** (`id -u`). Los contenedores escriben en el repositorio con este usuario; con otro, las hojas compiladas quedarían a nombre de alguien que no eres tú |
 | `SEMBRAR_ESTUDIANTES` | `12` | Cuántos estudiantes siembra |
 | `SEMBRAR_CONTRASENA` | `smartfood-local-2026` | La contraseña de las cuentas del seed. **Vacía, no siembra** |
-| `APP_PORT`, `POSTGRES_PORT`, `MINIO_API_PORT`, `MINIO_CONSOLE_PORT` | `8000`, `5432`, `9000`, `9001` | Si el puerto está ocupado |
+| `APP_PORT`, `POSTGRES_PORT`, `S3_PORT` | `8000`, `5432`, `9000` | Si el puerto está ocupado |
 
 **Una segunda pasada de `sembrar` restablece las contraseñas del seed** (`[S1.1]`), y el
 arranque la hace en cada `up`: si cambiaste la contraseña de una cuenta sembrada desde la
@@ -73,7 +73,7 @@ Hacen falta además [uv](https://docs.astral.sh/uv/getting-started/installation/
 
 ```bash
 cp .env.example .env
-docker compose up -d postgres minio minio-inicializar     # solo la infraestructura
+docker compose up -d postgres seaweedfs almacenamiento-inicializar   # solo la infraestructura
 uv sync
 uv run python manage.py migrate
 uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
@@ -609,9 +609,12 @@ navegador.
 |---|---|---|
 | **Aplicación** | http://localhost:8000 | las cuentas de `[S2.1]` |
 | PostgreSQL | `localhost:5432` | `smartfood` / `smartfood-local`, base `smartfood` |
-| MinIO (API S3) | `localhost:9000` | `smartfood` / `smartfood-local` |
-| MinIO (consola) | http://localhost:9001 | las mismas |
+| SeaweedFS (API S3) | `localhost:9000` | `smartfood` / `smartfood-local` |
 | Bucket | `smartfood`, prefijos `privado/` y `publico/` | lo crea `docker compose` |
+
+**No hay consola web del almacenamiento** (`DT-38`): la de SeaweedFS no pide credenciales y
+dejaría las fotografías a la vista. Para mirar el bucket, cualquier cliente S3 con las
+credenciales de la tabla contra `localhost:9000`.
 | Correo | Se imprime por la terminal | `EMAIL_URL=consolemail://` |
 
 Todas ficticias y solo válidas contra los contenedores de `compose.yaml`.
@@ -781,7 +784,7 @@ docker compose up -d                                   # vuelve a lo tuyo
 | `Permission denied` al escribir `assets/css/` desde el host | Los contenedores escribieron con otro usuario: pon tu `UID` y `GID` en `.env` (`[S1.0.1]`) |
 | `app` no llega a estar sano | `docker compose logs app`: casi siempre, una migración o `sembrar` que falla |
 | `ModuleNotFoundError` en el contenedor tras un `git pull` | La imagen es anterior al `uv.lock`: `docker compose up -d` la reconstruye; con `start` o `restart` no |
-| La fotografía de un estudiante no carga, y en el host sí | Falta `S3_ENDPOINT_URL_PUBLICO`: la URL se firmó contra `minio:9000`, que el navegador no resuelve (`DT-37`) |
+| La fotografía de un estudiante no carga, y en el host sí | Falta `S3_ENDPOINT_URL_PUBLICO`: la URL se firmó contra `seaweedfs:8333`, que el navegador no resuelve (`DT-37`) |
 | `Missing staticfiles manifest entry` en las pruebas | Nadie ha corrido `collectstatic` en este clon: el ejecutor fuerza `DEBUG=False` y el manifiesto hace falta. El compose lo hace al arrancar; en el host, a mano |
 | `the database system is starting up` | PostgreSQL despertando; reintenta en unos segundos |
 | Una clase de Tailwind no se aplica | Falta `tailwind build` o `tailwind watch` |
@@ -791,5 +794,8 @@ docker compose up -d                                   # vuelve a lo tuyo
 | El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |
 | `NoSuchBucket` al subir una imagen | `docker compose down -v` borró el bucket; vuelve a levantar |
+| Las fotografías y las imágenes de producto no cargan tras actualizar la rama | La base viene de cuando el almacenamiento era MinIO, y sus objetos no están en SeaweedFS (`DT-38`): `docker compose down -v` y `up` —datos ficticios, se resiembran solos— |
+| Al levantar, `port is already allocated` en el 9000 | Sigue vivo el contenedor de MinIO de antes de `DT-38`: `docker compose up -d --remove-orphans` |
+| `seaweedfs` no llega a estar sano y el API responde desde fuera | El healthcheck usa `localhost`, que dentro del contenedor es `::1`, y SeaweedFS escucha solo en IPv4: va con `127.0.0.1` |
 | El admin dice que no existe la tabla | Falta `migrate` |
 | El admin da 403 sobre un modelo nuevo | La matriz `[S11]` cambió y falta `sincronizar_permisos` |

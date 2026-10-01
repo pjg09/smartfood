@@ -7,7 +7,7 @@ inventario trazable.
 Proyecto de la asignatura *Proyecto Aplicado en TIC 1* — UPB, 202601. Equipo de cuatro,
 cinco sprints de dos semanas.
 
-**Django 6.1 · PostgreSQL 17 · HTMX · Tailwind · MinIO**
+**Django 6.1 · PostgreSQL 17 · HTMX · Tailwind · SeaweedFS (S3)**
 
 ---
 
@@ -80,7 +80,7 @@ cd smartfood
 docker compose up
 ```
 
-Levanta PostgreSQL, MinIO con su bucket, la aplicación y el compilador de estilos; migra,
+Levanta PostgreSQL, SeaweedFS con su bucket, la aplicación y el compilador de estilos; migra,
 siembra y sirve. Lo sembrado es el personal de la cafetería, doce estudiantes con sus
 acudientes y avatares, y el catálogo con imágenes. Todo ficticio (`ALC-OUT-07`), y cada
 arranque lo vuelve a ejecutar sin duplicar nada. El código va montado: guardar un fichero
@@ -149,7 +149,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
-| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las cincuenta y siete trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las cincuenta y nueve trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
 | [`reglas-del-pedido-anticipado.md`](./docs/reglas-del-pedido-anticipado.md) | Qué mueve reservar, consultar y entregar — y qué **no** mueve cada uno |
 | [`reglas-del-cierre-de-caja.md`](./docs/reglas-del-cierre-de-caja.md) | Qué entra en el cuadre de la caja y qué no, y **por qué el efectivo esperado no se digita** |

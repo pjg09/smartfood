@@ -45,7 +45,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las cincuenta y siete trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las cincuenta y nueve trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -155,7 +155,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las cincuenta y siete están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las cincuenta y nueve están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -195,7 +195,7 @@ Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
 docker compose up -d
 ```
 
-Levanta PostgreSQL, MinIO con su bucket, la aplicación en <http://localhost:8000> y el
+Levanta PostgreSQL, SeaweedFS con su bucket (`DT-38`), la aplicación en <http://localhost:8000> y el
 servicio `estilos`, que compila las dos hojas y se queda vigilando las plantillas. El
 arranque de la aplicación migra, sincroniza los permisos, **siembra** —con
 `smartfood-local-2026` y 12 estudiantes— y recopila los estáticos. El código va montado:
@@ -363,7 +363,7 @@ cabeceras pegadas, unas migas montadas sobre la barra lateral, una barra de colo
 como una alarma, un «consúltalas con quien **lo** atiende» que nombraba en masculino a una
 estudiante, y dos rechazos por rol que citaban otra historia. **Ninguno rompía una prueba.**
 
-**Las pruebas que tocan imágenes no hablan con MinIO:** usan `override_settings(STORAGES=…)`
+**Las pruebas que tocan imágenes no hablan con el almacenamiento:** usan `override_settings(STORAGES=…)`
 con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
 — este último ata el almacenamiento a la definición de la clase y el `override` no le llega.
 
