@@ -71,28 +71,20 @@ cinco sprints de dos semanas.
 
 ## Puesta en marcha
 
-Dos herramientas: [Docker](https://docs.docker.com/get-docker/) con Compose y
-[uv](https://docs.astral.sh/uv/getting-started/installation/). Nada más — uv descarga la
-versión de Python que hace falta.
+Una herramienta: [Docker](https://docs.docker.com/get-docker/) con Compose. Nada más —ni
+Python, ni uv, ni `.env`— (`DT-37`).
 
 ```bash
 git clone git@github.com:pjg09/smartfood.git
 cd smartfood
-
-cp .env.example .env      # los valores por defecto sirven tal cual en local
-docker compose up -d      # PostgreSQL, MinIO y el bucket
-uv sync                   # dependencias exactas de uv.lock
-
-uv run python manage.py migrate
-uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
-  --estudiantes 12
-uv run python manage.py runserver
+docker compose up
 ```
 
-`--estudiantes` no es opcional si quieres algo que mirar: sin él solo se crea la cuenta de
-la institución, y los listados salen vacíos. Con él quedan sembrados el personal de la
-cafetería, doce estudiantes con sus acudientes y avatares, y el catálogo con imágenes.
-Todo ficticio (`ALC-OUT-07`) y se puede volver a ejecutar sin duplicar nada.
+Levanta PostgreSQL, MinIO con su bucket, la aplicación y el compilador de estilos; migra,
+siembra y sirve. Lo sembrado es el personal de la cafetería, doce estudiantes con sus
+acudientes y avatares, y el catálogo con imágenes. Todo ficticio (`ALC-OUT-07`), y cada
+arranque lo vuelve a ejecutar sin duplicar nada. El código va montado: guardar un fichero
+recarga la aplicación y guardar una plantilla recompila la hoja, sin reconstruir nada.
 
 > **`sembrar` no crea existencias ni saldo**, así que el punto de venta todavía no puede
 > cobrar: los productos salen «Sin existencias» y cualquier venta se rechaza. Es correcto
@@ -101,12 +93,13 @@ Todo ficticio (`ALC-OUT-07`) y se puede volver a ejecutar sin duplicar nada.
 
 En `http://localhost:8000`. **Se entra por `/login/`**, que es la puerta de los cuatro
 roles; el admin de `/admin/` acepta a la institución y a la administración de la cafetería,
-nunca al acudiente ni al cajero —que cobra entero desde el punto de venta—. Empieza con `institucion@example.com` y la contraseña de arriba.
+nunca al acudiente ni al cajero —que cobra entero desde el punto de venta—. Empieza con `institucion@example.com` y la contraseña `smartfood-local-2026`.
 
 **Qué pantalla hay y quién alcanza cada una está en
 [`docs/mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md).** Los comandos del día
-a día, las credenciales de los demás roles y qué hacer cuando algo no arranca, en
-[`docs/desarrollo.md`](./docs/desarrollo.md). Aquí solo está lo justo para levantarlo.
+a día, las credenciales de los demás roles, cómo trabajar sin contenedor y qué hacer cuando
+algo no arranca, en [`docs/desarrollo.md`](./docs/desarrollo.md). Aquí solo está lo justo
+para levantarlo.
 
 ---
 
@@ -156,7 +149,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
-| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las cincuenta trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las cincuenta y siete trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
 | [`reglas-del-pedido-anticipado.md`](./docs/reglas-del-pedido-anticipado.md) | Qué mueve reservar, consultar y entregar — y qué **no** mueve cada uno |
 | [`reglas-del-cierre-de-caja.md`](./docs/reglas-del-cierre-de-caja.md) | Qué entra en el cuadre de la caja y qué no, y **por qué el efectivo esperado no se digita** |

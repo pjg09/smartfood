@@ -5,12 +5,12 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-TRAMPAS |
-| titulo | Lo que falla en silencio en Django, Tailwind, HTMX y el admin |
+| titulo | Lo que falla en silencio en Django, Tailwind, HTMX, el admin y los contenedores |
 | tipo_documento | Documento derivado. Registro de diagnósticos ya pagados |
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -284,3 +284,52 @@ Cómo mirar sin que lo que se mira engañe.
   nombrar**, y redáctalo con el infinitivo delante —«Consultar X **es** de…»— o no concuerda con
   un sujeto singular. Las tres veces se vio ejecutándolo con cada rol, nunca en una prueba que
   solo espera `PermissionDenied`.
+- **Las pruebas necesitan un `collectstatic` previo, y en un clon limpio no lo hay.** El
+  ejecutor fuerza `DEBUG=False`, y con `CompressedManifestStaticFilesStorage` cada plantilla
+  que cite una hoja pide su entrada del manifiesto: **285 errores** de «Missing staticfiles
+  manifest entry». En una máquina de trabajo no se ve nunca, porque `staticfiles/` quedó de
+  una captura anterior. Salió al correr la suite dentro del contenedor recién construido
+  (`DT-37`); el arranque del compose lo hace ahora, y en el host hay que hacerlo a mano.
+
+---
+
+## [S5] Contenedores
+
+Lo que costó meter la aplicación en el `docker compose` (`DT-37`). Las seis fallan sin
+error: el stack levanta y lo que sale está mal, o sale bien y tarda sin motivo, o se cae
+veinte minutos después.
+
+- **`runserver` con conexiones persistentes agota PostgreSQL.** Atiende cada petición en un
+  hilo nuevo, y con `CONN_MAX_AGE` distinto de cero cada hilo deja su conexión abierta al
+  morir. En el host no se notaba —nadie hace cien peticiones—, pero el healthcheck del
+  contenedor pide `/salud/` cada 5 s: en unos veinte minutos había **100 conexiones
+  inactivas**, el máximo de PostgreSQL, y todo lo demás —las pruebas, `psql`— recibía «too
+  many clients already». El compose fija `DJANGO_CONN_MAX_AGE=0`; lo avisa la propia
+  documentación de Django, y `config/tests_contenedor.py` lo vigila.
+
+- **Una URL firmada lleva el host dentro de la firma.** Django alcanza MinIO en
+  `minio:9000` y el navegador en `localhost:9000`: firmada contra el primero, el navegador no
+  resuelve el nombre; reescrita después al segundo, MinIO responde `403`. Y `custom_domain`
+  de `django-storages` cambia el host **quitando la firma**. La salida es firmar contra la
+  dirección pública desde el principio: `S3_ENDPOINT_URL_PUBLICO` y `config/almacenamiento.py`.
+  Las imágenes de producto no lo notan —las sirve la aplicación—, así que el catálogo se ve
+  bien y **solo fallan las fotografías de los estudiantes**.
+- **`provenance: false` en el `build:` del compose no desactiva nada.** Compose lo trata como
+  «sin valor» y buildx añade la atestación por defecto, que lleva la hora de construcción: la
+  imagen sale con otro ID en cada `up` aunque todas las capas vengan de caché, y los
+  contenedores **se recrean cada vez** —migrar, sembrar, recopilar: treinta segundos—. Lo que
+  funciona es la sintaxis de bake, `provenance: "disabled=true"`. Se comprueba con
+  `docker compose build --print`, que enseña el `attest` que de verdad se va a pasar.
+- **Dos servicios con `build:` y la misma `image:` se pisan.** Cada uno etiqueta la imagen con
+  su `com.docker.compose.service`, así que son dos imágenes distintas con el mismo nombre y
+  gana la que termina última: el ID cambia de un `up` a otro y vuelve la recreación de arriba.
+  Construye uno —`app`— y el otro la usa con `pull_policy: never`.
+- **`COPY . .` en una imagen de desarrollo recrea los contenedores con cada edición.** El
+  código ya llega montado, así que copiarlo no aporta nada y hace que tocar una plantilla
+  cambie la imagen. La imagen copia solo `pyproject.toml`, `uv.lock` y lo mínimo para bajar
+  Tailwind (`config/ajustes_de_construccion.py`).
+- **Un proceso en segundo plano de un script recibe `/dev/null` como stdin**, y `tailwind
+  watch` se para en cuanto su stdin se cierra (`[S1]`). La receta de `[S1]` —`tail -f
+  /dev/null | …`— **no sirve con `&` y `wait`**: una tubería no termina hasta que termina
+  `tail`, que no termina nunca, así que la muerte del vigilante no se ve. En
+  `docker/vigilar-estilos.sh` va con `< <(tail -f /dev/null)`.

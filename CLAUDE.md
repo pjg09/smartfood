@@ -45,7 +45,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las cincuenta trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las cincuenta y siete trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -81,7 +81,7 @@ está mal entendida o de que falta una decisión.
 ## Stack y arquitectura
 
 **Django + PostgreSQL + HTMX + Tailwind.** Monolito, un repositorio y **sin despliegue**: se
-ejecuta en local (`DEC-15`, `DT-31`). UUIDv7 como clave primaria en todas las tablas (generado en
+ejecuta en local, con un solo `docker compose up` (`DEC-15`, `DT-31`, `DT-37`). UUIDv7 como clave primaria en todas las tablas (generado en
 la aplicación), **excepto el código de tarjeta**.
 
 Una app por dominio, **y cada una se creó en el sprint que la necesitó**. Con `reportes`
@@ -155,8 +155,8 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las cincuenta están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
-plantillas y estilos, el admin, el ORM, y pruebas y capturas. Casi todas **fallan en
+**Las cincuenta y siete están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
 
@@ -179,8 +179,9 @@ Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
   sin espacio, y `{{ x|dinero:"COP" }}` cuando la cifra es grande. No lo formatees en
   JavaScript ni en una plantilla — con dos formateadores, el día que cambie el formato la
   misma pantalla enseña dos monedas.
-- **Si el cambio «no se ve», casi siempre es que no se compiló.** Al tocar plantillas deja
-  `uv run python manage.py tailwind watch` en otra terminal; a mano, **`tailwind build
+- **Si el cambio «no se ve», casi siempre es que no se compiló.** Con el compose, el servicio
+  `estilos` recompila las dos hojas solo: si no lo hace, `docker compose logs estilos`. Sin
+  él, deja `uv run python manage.py tailwind watch` en otra terminal; a mano, **`tailwind build
   --force`** (sin la opción contesta «up to date», que es falso para lo que importa). Si la
   plantilla es del admin, el comando es otro: **`manage.py estilos_del_admin`** —son dos
   hojas (`DT-36`)— y después `collectstatic`. **El `watch` muere en cuanto su stdin no es una
@@ -188,20 +189,30 @@ Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
 
 ## Cómo ejecutar
 
-Con `docker compose up -d` levantado, y siempre por `uv run`:
+**Todo el stack con un comando**, desde un clon limpio y sin `.env` (`DT-37`):
 
 ```bash
-set -a && source .env && set +a
-uv run python manage.py <lo que sea>
+docker compose up -d
 ```
 
-Para tener una base con la que trabajar —institución, personal, familias con avatares y
-catálogo, todo ficticio e idempotente—:
+Levanta PostgreSQL, MinIO con su bucket, la aplicación en <http://localhost:8000> y el
+servicio `estilos`, que compila las dos hojas y se queda vigilando las plantillas. El
+arranque de la aplicación migra, sincroniza los permisos, **siembra** —con
+`smartfood-local-2026` y 12 estudiantes— y recopila los estáticos. El código va montado:
+guardar recarga, y no hay que reconstruir nada salvo que cambien las dependencias, cosa que
+el propio `up` hace.
+
+Un comando de Django, dentro del contenedor o en el host —los dos valen—:
 
 ```bash
-uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
-  --estudiantes 12
+docker compose exec app python manage.py <lo que sea>
+
+set -a && source .env && set +a            # en el host: infraestructura del compose,
+uv run python manage.py <lo que sea>       # aplicación con uv (`[S1.0.2]` de desarrollo.md)
 ```
+
+**No arranques un `runserver` en el host con `app` levantado**: se pelean por el puerto 8000.
+El correo en consola sale en `docker compose logs -f app`.
 
 **`sembrar` no crea existencias ni saldo**, así que el punto de venta no puede cobrar recién
 sembrado: hay que ingresar mercancía (`inventario.services.ingresar_mercancia`) y recargar
@@ -210,11 +221,36 @@ alguna billetera (`billetera.services.recargar`). El atajo está en `docs/desarr
 Se entra por `/login/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
-Para mirarla a mano: `uv run python manage.py runserver` en <http://127.0.0.1:8000> y
-**`tailwind watch` en otra terminal**, o cada cambio de plantilla se verá con la hoja vieja.
-
 Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al
-arrancar, falla al abrir la pantalla que la usa.
+arrancar, falla al abrir la pantalla que la usa. Con el compose basta `docker compose up -d`
+—o `restart app`—, que migra al arrancar.
+
+### El compose vive al día
+
+**`docker compose up` tiene que levantar el stack en cualquier máquina, siempre.** Es la
+condición de que el prototipo se pueda demostrar (`DEC-15`), y se rompe sin tocar
+`compose.yaml`: basta cambiar otra cosa y no acordarse de él.
+
+**Un PR que cambie la infraestructura actualiza en el mismo PR** `compose.yaml`, el
+`Dockerfile` o los scripts de `docker/`. Cuenta como infraestructura —la tabla completa está
+en `[S5.3]` de `docs/desarrollo.md`—:
+
+- una variable que `config/settings.py` lee **sin `default=`**;
+- una dependencia que necesita una librería del sistema, o un cambio de versión de Python,
+  uv o Tailwind;
+- un paso que haya que dar antes de servir, o un comando que el arranque llama y cambia de
+  nombre u opciones;
+- un servicio nuevo, o una hoja de estilos nueva.
+
+**Y lo comprueba levantando desde cero**, con otro nombre de proyecto para no tocar la base
+de trabajo: la receta está en `[S5.3]` de `docs/desarrollo.md`. «Me levanta a mí» no vale: a
+ti te levanta con tus volúmenes, tu imagen y tu `.env`.
+
+Dos comprobaciones lo sostienen, y son lo que de verdad cuenta —una regla se olvida en el
+siguiente PR—: **`config/tests_contenedor.py`** en la suite, y **el flujo
+`integracion-continua`** de la CI, que levanta el stack desde cero en cada PR. **Un PR con
+ese flujo en rojo no se integra**, aunque el cambio «no tenga nada que ver»: si no levanta en
+la CI, no levanta en la máquina del siguiente.
 
 Para mirar el esquema: `uv run python manage.py dbshell`, y dentro `\dt` o
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
@@ -228,14 +264,23 @@ uv run python manage.py makemigrations --check --dry-run   # DoD-3, el que más 
 uv run python manage.py test --noinput   # sin --noinput, una BD de prueba huérfana lo cuelga
 ```
 
-**Son la única red.** La CI solo valida el título del PR y publica la versión al integrar:
-ningún workflow ejecuta las pruebas, así que lo que no compruebes aquí no lo comprueba nadie
-—ni en el PR, ni después del merge—. Tampoco hay linter ni formateador configurados.
+Con el compose, lo mismo con `docker compose exec app python manage.py …`. **En un clon
+recién hecho, en el host, la suite necesita antes un `collectstatic`**: el ejecutor fuerza
+`DEBUG=False` y sin manifiesto salen 285 errores (`[S4]` de `docs/trampas-del-stack.md`). El
+arranque del contenedor ya lo hace.
 
-La suite completa son **1.535 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+**La CI corre los tres en cada PR y en cada push a `main`**, dentro del stack de
+`docker compose` levantado desde cero (`integracion-continua.yml`), y **la versión solo se
+publica si pasan** (`[S3.0]` de `docs/convenciones-de-git.md`). Córrelos igual antes de
+subir: la CI tarda más de diez minutos en decirte lo que aquí sabes en cinco. La suite no se
+enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fichero se llame
+`tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
+avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
+
+La suite completa son **1.552 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.535, no corrió entera.
+menos de esas 1.552, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

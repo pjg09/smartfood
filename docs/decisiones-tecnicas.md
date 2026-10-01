@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 36 (`DT-1` … `DT-36`) |
+| decisiones | 37 (`DT-1` … `DT-37`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-35`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-37`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -828,3 +828,25 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 `[S2]` cubre el «modelo de datos» que `ENT-03` exige. Falta el «diagrama de arquitectura» y la reexpresión de la «matriz de roles y permisos», que ya existe en `[S11]` de `./smartfood.md` y no se duplica aquí.
 
 **Ninguna decisión introduce alcance.** No hay entidad en `[S2]` que soporte una funcionalidad que no esté en una historia, y `[S3]` permite comprobar que cada invariante tiene una decisión que la sostiene.
+
+#### `[DT-37]` La aplicación también corre en el `docker compose`: un solo comando levanta el stack
+
+**Corrige:** la premisa de `TT-02`, escrita en la cabecera de `compose.yaml`, de que la aplicación corre en el host con uv y el compose solo levanta la infraestructura.
+
+**Obliga:** que el prototipo se demuestre en local (`DEC-15`, `DT-31`) desde **cualquier** máquina del equipo. Con la aplicación en el host, levantar el proyecto eran siete comandos —copiar el `.env`, levantar la infraestructura, `uv sync`, `migrate`, `sembrar`, `runserver` y `tailwind watch` en otra terminal—, más `estilos_del_admin` y `sincronizar_permisos` según el caso. Cada uno se podía olvidar, y dos de los olvidos fallaban en silencio (`[S1]` de `./trampas-del-stack.md`).
+
+**La razón de `TT-02` era real, y se conserva.** Meter la aplicación en un contenedor añadía una reconstrucción a cada cambio. No la añade si el código **no está en la imagen**: el repositorio va montado encima de `/app`, `runserver` recarga al guardar y la imagen solo aporta lo que el repositorio no tiene —el entorno de Python de `uv.lock` y el binario de Tailwind—.
+
+**Decidido:**
+
+- **`docker compose up` levanta el stack entero** —PostgreSQL, MinIO con su bucket, la aplicación y el compilador de estilos— desde un clon limpio, **sin `.env`**: las variables de la aplicación están en `compose.yaml`, con valores ficticios que solo valen contra esos contenedores.
+- **El arranque de la aplicación es un script, no una lista de comandos** (`docker/arrancar-aplicacion.sh`): migra, sincroniza la matriz de permisos, siembra —`sembrar` es idempotente (`TT-08`)— y recopila los estáticos antes de servir.
+- **Las dos hojas de Tailwind (`DT-36`) tienen su propio servicio**, `estilos`, que las compila y se queda vigilando las plantillas. La aplicación no arranca hasta que las dos existen: sin ellas respondería `200` y saldría sin estilos.
+- **La imagen se reconstruye en cada `up`** (`pull_policy: build`). Con la caché de capas son segundos, y es lo que impide levantar una imagen anterior a un `uv.lock` nuevo. Para que eso no recree los contenedores sin motivo, la imagen **no copia el código** y **no lleva atestación de procedencia**, que incluye la hora de construcción.
+- **Las URL firmadas se firman contra la dirección que ve el navegador** (`config/almacenamiento.py`). Dentro del compose, Django alcanza MinIO en `minio:9000` y el navegador en `localhost:9000`; la firma incluye el host, así que ni sirve la interna ni se puede reescribir después. `custom_domain` de `django-storages` cambiaría el host pero **quita la firma**, y la fotografía de un menor no sale sin ella (`DEC-8`, `DT-18`).
+- **Los contenedores escriben con el usuario del host**, no como root: las hojas compiladas y los estáticos quedan en el repositorio y tienen que poder sobrescribirse después desde `uv run`.
+- **El compose no se queda atrás.** `config/tests_contenedor.py` vigila con la suite lo que se ve sin Docker —una variable obligatoria nueva en los ajustes que el compose no da, la versión de Python, un comando renombrado que el arranque llama—, y el flujo `integracion-continua` de la CI levanta el stack desde cero en cada PR y comprueba que sirve.
+
+**Lo que esta decisión no hace.** No despliega nada: la imagen es de desarrollo —`runserver`, `DEBUG`— y no funciona sin el repositorio montado. `DT-31` sigue entero. Tampoco prohíbe el camino anterior: con la infraestructura del compose levantada, `uv run` en el host funciona igual que antes contra los puertos publicados.
+
+**Consecuencia asumida.** Hay un servicio más que mantener, y la regla de que lo mantenga quien cambie la infraestructura está escrita en `CLAUDE.md`. Lo que la sostiene de verdad no es la regla sino las dos comprobaciones: una regla se olvida en el siguiente PR; una prueba que falla, no.
