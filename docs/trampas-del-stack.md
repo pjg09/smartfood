@@ -295,9 +295,9 @@ Cómo mirar sin que lo que se mira engañe.
 
 ## [S5] Contenedores
 
-Lo que costó meter la aplicación en el `docker compose` (`DT-37`). Las seis fallan sin
+Lo que costó meter la aplicación en el `docker compose` (`DT-37`). Casi todas fallan sin
 error: el stack levanta y lo que sale está mal, o sale bien y tarda sin motivo, o se cae
-veinte minutos después.
+veinte minutos después. La que sí da error lo da en la máquina de otro, no en la tuya.
 
 - **`runserver` con conexiones persistentes agota PostgreSQL.** Atiende cada petición en un
   hilo nuevo, y con `CONN_MAX_AGE` distinto de cero cada hilo deja su conexión abierta al
@@ -314,12 +314,15 @@ veinte minutos después.
   dirección pública desde el principio: `S3_ENDPOINT_URL_PUBLICO` y `config/almacenamiento.py`.
   Las imágenes de producto no lo notan —las sirve la aplicación—, así que el catálogo se ve
   bien y **solo fallan las fotografías de los estudiantes**.
-- **`provenance: false` en el `build:` del compose no desactiva nada.** Compose lo trata como
-  «sin valor» y buildx añade la atestación por defecto, que lleva la hora de construcción: la
-  imagen sale con otro ID en cada `up` aunque todas las capas vengan de caché, y los
-  contenedores **se recrean cada vez** —migrar, sembrar, recopilar: treinta segundos—. Lo que
-  funciona es la sintaxis de bake, `provenance: "disabled=true"`. Se comprueba con
-  `docker compose build --print`, que enseña el `attest` que de verdad se va a pasar.
+- **Una clave que solo conoce el Compose nuevo rompe a todos los viejos, y en local no se
+  ve.** `build.provenance` la entiende Compose 5; los Compose 2 —el del runner de GitHub, y
+  cualquiera hasta el v2.33 al menos— rechazan el fichero **entero** con «Additional property
+  provenance is not allowed», antes de construir nada. Así cayó la primera ejecución de la CI,
+  a los nueve segundos. Y la clave ni siquiera hacía falta: se puso contra una recreación de
+  contenedores que achacamos a la atestación de buildx, y la causa era la de la entrada
+  siguiente. **La atestación cambia el ID del índice de la imagen en cada construcción, pero
+  Compose no recrea por eso**: compara la imagen, no el índice que la envuelve. La CI valida
+  ahora `compose.yaml` con el Compose mínimo declarado, v2.20.3.
 - **Dos servicios con `build:` y la misma `image:` se pisan.** Cada uno etiqueta la imagen con
   su `com.docker.compose.service`, así que son dos imágenes distintas con el mismo nombre y
   gana la que termina última: el ID cambia de un `up` a otro y vuelve la recreación de arriba.

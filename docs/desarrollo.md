@@ -20,8 +20,8 @@ despliegue y `./despliegue.md` explica por qué.
 
 ## [S1] Reconstrucción desde cero
 
-Una herramienta instalada: **Docker** con Compose. Nada más —ni uv, ni Python, ni `.env`—
-(`DT-37`).
+Una herramienta instalada: **Docker** con **Compose 2.20 o posterior** (`docker compose
+version`). Nada más —ni uv, ni Python, ni `.env`— (`DT-37`).
 
 ```bash
 git clone git@github.com:pjg09/smartfood.git
