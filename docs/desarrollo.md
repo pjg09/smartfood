@@ -38,6 +38,7 @@ aplicación—; las siguientes, segundos.
 | Servicio | Qué hace |
 |---|---|
 | `postgres`, `seaweedfs` | La base (`DT-1`) y el almacenamiento de objetos compatible con S3 (`DT-18`, `DT-38`) |
+| `mailpit` | Atrapa todo el correo que el sistema envía y lo enseña en http://localhost:8025, sin entregar nada fuera (`DEC-18`) |
 | `almacenamiento-inicializar` | Crea el bucket privado si no existe y sale (`TT-50`, `DT-21`) |
 | `estilos` | Compila **las dos** hojas de Tailwind (`DT-36`) y se queda vigilando las plantillas: es el `tailwind watch` de la segunda terminal |
 | `app` | `migrate`, `sincronizar_permisos`, `sembrar` con 12 estudiantes y la contraseña de `[S2.1]`, `collectstatic` y `runserver` |
@@ -60,11 +61,12 @@ Todos opcionales, en un `.env` en la raíz —el compose lo lee solo— o en la 
 | `UID`, `GID` | `1000` | **Si tu usuario no es el 1000** (`id -u`). Los contenedores escriben en el repositorio con este usuario; con otro, las hojas compiladas quedarían a nombre de alguien que no eres tú |
 | `SEMBRAR_ESTUDIANTES` | `12` | Cuántos estudiantes siembra |
 | `SEMBRAR_CONTRASENA` | `smartfood-local-2026` | La contraseña de las cuentas del seed. **Vacía, no siembra** |
-| `APP_PORT`, `POSTGRES_PORT`, `S3_PORT` | `8000`, `5432`, `9000` | Si el puerto está ocupado |
+| `APP_PORT`, `POSTGRES_PORT`, `S3_PORT`, `MAILPIT_PORT`, `MAILPIT_SMTP_PORT` | `8000`, `5432`, `9000`, `8025`, `1025` | Si el puerto está ocupado |
 
-**Una segunda pasada de `sembrar` restablece las contraseñas del seed** (`[S1.1]`), y el
-arranque la hace en cada `up`: si cambiaste la contraseña de una cuenta sembrada desde la
-aplicación, vuelve a ser la de la tabla.
+**El arranque pasa `sembrar` en cada `up`, y eso solo restablece la contraseña de la
+institución** (`[S1.1]`). Al personal y a los acudientes que ya existen no los toca: si
+cambiaste la contraseña de una de esas cuentas —recuperándola (`[S2.4.1]`), por ejemplo—, se
+queda la nueva.
 
 ### [S1.0.2] Sin contenedor para la aplicación
 
@@ -73,7 +75,7 @@ Hacen falta además [uv](https://docs.astral.sh/uv/getting-started/installation/
 
 ```bash
 cp .env.example .env
-docker compose up -d postgres seaweedfs almacenamiento-inicializar   # solo la infraestructura
+docker compose up -d postgres seaweedfs almacenamiento-inicializar mailpit   # solo la infraestructura
 uv sync
 uv run python manage.py migrate
 uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
@@ -179,12 +181,12 @@ for u in Usuario.objects.filter(rol=Rol.ACUDIENTE).order_by("email"):
 ```
 
 **Los acudientes cargados por CSV no tienen contraseña y no la van a tener**: nacen sin ella
-a propósito y entran por su enlace de invitación, que se saca de uno en uno (`[S2.4]`,
-`DEC-3`). Son los que aparecen arriba como «solo por invitación», y son los únicos con los
+a propósito y entran por su enlace de invitación, que les llega al Mailpit del compose
+(`[S2.4]`, `DEC-18`). Son los que aparecen arriba como «solo por invitación», y son los únicos con los
 que se puede demostrar `HU-03`.
 
-**Las rutas no están aquí: están en `[S2]` de `./mapa-de-la-aplicacion.md`**, las treinta y
-nueve, con quién alcanza cada una y de qué tarea salió. No se repiten en este documento a
+**Las rutas no están aquí: están en `[S2]` de `./mapa-de-la-aplicacion.md`**, todas, con
+quién alcanza cada una y de qué tarea salió. No se repiten en este documento a
 propósito — dos tablas de rutas se desincronizan en la primera pantalla que alguien añada, y
 entonces ninguna de las dos sirve para responder quién llega a dónde.
 
@@ -229,11 +231,15 @@ invitación, sin excepción (`HU-41`, `HU-03`, `INVD-1`). Quien crea esas cuenta
 a conocer nunca su clave, y eso no se relaja.
 
 Para demostrar `HU-39` como está escrita —cuenta creada por seed, invitación por correo,
-titular define su contraseña— se dirige la invitación a un buzón real:
+titular define su contraseña— se siembra **sin** contraseña sobre una base vacía, y la
+invitación llega a Mailpit:
 
 ```bash
-uv run python manage.py sembrar --email-institucion tu-correo@ejemplo.com
+docker compose exec app python manage.py sembrar --email-institucion otra@example.com
 ```
+
+Con `EMAIL_URL` apuntando a un proveedor real y `--email-institucion` a un buzón tuyo, llega
+a una bandeja de verdad.
 
 ### [S2.3.1] Qué siembra `--estudiantes N`
 
@@ -255,29 +261,32 @@ misma contraseña que se le pase al comando.
 
 ### [S2.4] Entrar como acudiente
 
-Los acudientes nacen de la carga masiva (`HU-01`) y su invitación **se genera pero no se
-entrega** (`DEC-9`): sus direcciones son ficticias y no hay buzón que las reciba. Hay dos
-caminos, y sirven para cosas distintas.
+Los acudientes nacen de la carga masiva (`HU-01`), y **la carga le envía a cada uno su
+invitación** (`HU-03`, `DEC-18`). Sus direcciones son ficticias, así que no la recibe ningún
+buzón: la recibe Mailpit. Hay dos caminos, y sirven para cosas distintas.
 
-**Para demostrar `HU-03`** —el recorrido real: invitación, contraseña propia, acceso— hay
-que usar un acudiente **que no tenga contraseña**, y eso significa uno cargado por la
-pantalla de `/carga/`: esos nacen sin contraseña utilizable.
+**Para demostrar `HU-03`** —el recorrido real: invitación, contraseña propia, acceso—, se
+carga un archivo desde `/carga/` como institución, **sin** contraseña asignada. Después:
+
+1. En http://localhost:8025 hay un correo «Te damos acceso a SmartFood» por cada acudiente
+   nuevo del archivo.
+2. Su botón «Definir mi contraseña» lleva a `/invitacion/…`. Se define la contraseña.
+3. Se entra por `/login/` con ese correo y esa contraseña, y se aterriza en
+   `/mis-estudiantes/`.
 
 > **Los acudientes que siembra `--estudiantes N` no sirven para esto.** El seed les asigna
-> contraseña (`DEC-11`), así que `manage.py invitacion` los rechaza con «ya definió su
-> contraseña». Es correcto y es lo que se quiere para el día a día; para la demostración,
-> carga un archivo.
+> contraseña (`DEC-11`), así que no reciben invitación: no hay nada que activar. Es lo que
+> se quiere para el día a día; para la demostración, carga un archivo.
 
-Con un acudiente recién cargado, se saca su enlace:
+**Sin Mailpit a mano** —la aplicación en el host sin el compose—, el enlace de una cuenta se
+saca desde la terminal:
 
 ```bash
 uv run python manage.py invitacion marta.ruiz@example.com
 ```
 
-Imprime la URL de `/invitacion/…`. Se abre en el navegador, se define la contraseña y se
-entra por `/login/`. **Ese enlace es una credencial**: quien lo tenga puede fijar la
-contraseña de esa cuenta. Por eso se saca de uno en uno desde la terminal y no se lista en
-ninguna pantalla (`DEC-3`).
+**Ese enlace es una credencial**: quien lo tenga puede fijar la contraseña de esa cuenta. Por
+eso no aparece en el resultado de la carga ni en ninguna pantalla del sistema (`DEC-3`).
 
 **Para trabajar el día a día**, la carga admite contraseña asignada (`DEC-11`), y entonces
 no genera invitación porque la cuenta ya nace activada:
@@ -296,6 +305,23 @@ with open("estudiantes.csv", "rb") as f:
 
 Después, `/login/` con el correo del acudiente y esa contraseña lleva a
 `/mis-estudiantes/` (`TT-29`, `HU-04`).
+
+### [S2.4.1] Recuperar una contraseña olvidada
+
+En `/login/`, **¿Olvidaste tu contraseña?** (`HU-62`, `DEC-19`). Se escribe el correo de la
+cuenta y el enlace llega a Mailpit; con él se elige la contraseña nueva y se entra con ella.
+Para probarlo con las cuentas del seed: `cajero@example.com`, y el correo «Elige una
+contraseña nueva para SmartFood» en http://localhost:8025.
+
+**La pantalla responde lo mismo exista o no la cuenta**: no dice qué correos tienen cuenta,
+porque eso diría quién es acudiente de la institución. Por eso «no llega nada» tiene tres
+causas posibles y la pantalla no distingue ninguna: el correo no tiene cuenta, la cuenta
+está desactivada (`HU-42`), o todavía no definió su contraseña —esa sigue entrando por su
+invitación—.
+
+**Ningún `up` te devuelve la contraseña del seed de una cuenta que cambiaste así**: el
+personal y los acudientes ya sembrados no se tocan (`[S1.0.1]`). Si la necesitas otra vez,
+recupérala de nuevo o vuelve a empezar con `docker compose down -v`.
 
 ### [S2.5] Imprimir la tarjeta de un estudiante
 
@@ -517,7 +543,8 @@ Con el stack del compose. En la tabla, **`manage`** abrevia
 | **Levantar todo** | `docker compose up -d` |
 | Apagarlo | `docker compose down` |
 | Borrarlo **con los datos** | `docker compose down -v` |
-| Ver la aplicación —y **el correo**— | `docker compose logs -f app` |
+| Ver la aplicación | `docker compose logs -f app` |
+| **Ver el correo** que el sistema envía | http://localhost:8025 (`DEC-18`) |
 | Ver la compilación de estilos | `docker compose logs -f estilos` |
 | Reiniciar la aplicación | `docker compose restart app` |
 | Migrar | lo hace el arranque; a mano, `manage migrate` |
@@ -526,7 +553,7 @@ Con el stack del compose. En la tabla, **`manage`** abrevia
 | Consola de PostgreSQL | `manage dbshell` |
 | Consola de Django | `manage shell` |
 | Añadir dependencia | `uv add nombre-del-paquete` en el host, y `docker compose up -d` |
-| Probar el correo | `manage sendtestemail tu@correo.com` |
+| Probar el correo | `manage sendtestemail tu@correo.com`, y mirarlo en Mailpit |
 | **Sacar un enlace de invitación** | `manage invitacion correo@example.com` |
 | **Aplicar la matriz de permisos** | lo hace el arranque; a mano, `manage sincronizar_permisos` |
 
@@ -611,22 +638,24 @@ navegador.
 | PostgreSQL | `localhost:5432` | `smartfood` / `smartfood-local`, base `smartfood` |
 | SeaweedFS (API S3) | `localhost:9000` | `smartfood` / `smartfood-local` |
 | Bucket | `smartfood`, prefijos `privado/` y `publico/` | lo crea `docker compose` |
+| **Correo** (Mailpit) | http://localhost:8025, SMTP en `localhost:1025` | ninguna, y **solo desde esta máquina** |
+
+Todas ficticias y solo válidas contra los contenedores de `compose.yaml`.
 
 **No hay consola web del almacenamiento** (`DT-38`): la de SeaweedFS no pide credenciales y
 dejaría las fotografías a la vista. Para mirar el bucket, cualquier cliente S3 con las
 credenciales de la tabla contra `localhost:9000`.
-| Correo | Se imprime por la terminal | `EMAIL_URL=consolemail://` |
 
-Todas ficticias y solo válidas contra los contenedores de `compose.yaml`.
+**El correo no sale de tu máquina** (`DEC-18`). Todo lo que el sistema envía —las
+invitaciones de las altas y de la carga masiva, el enlace de recuperación de contraseña—
+lo atrapa Mailpit y se lee en http://localhost:8025. **Esa pantalla lista enlaces de
+invitación, que son credenciales** (`DEC-3`): por eso escucha solo en `127.0.0.1`, y por
+eso no hay que publicarla nunca en otra interfaz.
 
-**El correo no sale de tu máquina** mientras `EMAIL_URL` sea `consolemail://`. La
-invitación aparece en el registro de la aplicación —`docker compose logs -f app`, o la
-terminal donde corre `runserver` sin el compose—: copia el enlace `/invitacion/…` y ábrelo
-en el navegador.
-
-Eso vale para las altas de una en una, que **sí** mandan correo. La carga masiva no manda
-ninguno (`DEC-9`), así que ahí no hay nada que copiar de la terminal: el enlace se saca con
-`manage.py invitacion` (`[S2.4]`).
+Para probar contra un buzón de verdad —enseñar que una invitación llega a un Gmail—, se
+apunta `EMAIL_URL` a un proveedor real (`smtp+tls://usuario:clave@host:587`). **Nunca con
+una carga masiva de por medio**: las direcciones del archivo son ficticias, y cada rebote
+degrada la reputación del remitente (`DEC-9`).
 
 ---
 
@@ -792,7 +821,8 @@ docker compose up -d                                   # vuelve a lo tuyo
 | Una consulta de contenedor no se aplica y la rejilla queda en una columna | `@container` está en el MISMO elemento que la rejilla; va en el envoltorio |
 | Una clase de color no pinta nada, y no hay error | Es de la paleta de fábrica, que está borrada: usa un alias (`DT-23`) |
 | El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
-| El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |
+| El correo no aparece | Míralo en http://localhost:8025, no en tu bandeja. Si tampoco está ahí, `docker compose logs app`: un fallo de envío queda registrado y no tumba el alta |
+| Pido recuperar la contraseña y no llega nada a Mailpit | Es lo correcto si la cuenta no existe, está desactivada o no ha definido contraseña: la pantalla no lo distingue a propósito (`[S2.4.1]`) |
 | `NoSuchBucket` al subir una imagen | `docker compose down -v` borró el bucket; vuelve a levantar |
 | Las fotografías y las imágenes de producto no cargan tras actualizar la rama | La base viene de cuando el almacenamiento era MinIO, y sus objetos no están en SeaweedFS (`DT-38`): `docker compose down -v` y `up` —datos ficticios, se resiembran solos— |
 | Al levantar, `port is already allocated` en el 9000 | Sigue vivo el contenedor de MinIO de antes de `DT-38`: `docker compose up -d --remove-orphans` |

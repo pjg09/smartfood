@@ -290,6 +290,12 @@ Cómo mirar sin que lo que se mira engañe.
   manifest entry». En una máquina de trabajo no se ve nunca, porque `staticfiles/` quedó de
   una captura anterior. Salió al correr la suite dentro del contenedor recién construido
   (`DT-37`); el arranque del compose lo hace ahora, y en el host hay que hacerlo a mano.
+- **`PASSWORD_RESET_TIMEOUT=0` no hace caducar un token.** Django compara la edad del token
+  con `>`, así que uno creado y comprobado en el mismo segundo tiene edad cero y **sigue
+  valiendo**: la prueba de «el enlace caduca» falla por el motivo equivocado, o pasa sin
+  probar nada. Lo que funciona es adelantar el reloj del generador —`mock.patch.object(
+  PasswordResetTokenGenerator, "_now", …)`— más allá de la caducidad, con su contraprueba
+  antes de ella. Pasó con `HU-62`.
 
 ---
 

@@ -18,7 +18,7 @@ cinco sprints de dos semanas.
 | Sprint 1 | ✅ cerrado: 56 de 56 tareas y 18 de 18 historias |
 | Sprint 2 | ✅ cerrado el 2026-09-12: 37 de 37 tareas, 16 de 16 PR y **14 de 14 historias** — la última, `HU-17`, la saldó el Sprint 3 |
 | Sprint 3 | ✅ cerrado el 2026-09-17: **43 de 43 tareas y 16 de 16 PR**. Control parental, estado del estudiante y los escenarios críticos `TST-1` y `TST-2` |
-| Historias terminadas | ✅ **las 61 de 61**, desde el 2026-09-19. Las cerró `HU-37`, el reporte de auditoría, en el último PR de producto del proyecto. El desglose de qué PR cerró cada una está en `[S4]` de [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) |
+| Historias terminadas | ✅ **las 62 de 62**. Las 61 del backlog desde el 2026-09-19 —las cerró `HU-37`, el reporte de auditoría—; `HU-62`, la recuperación de contraseña, entró y se cerró el 2026-10-01 con `DEC-19`. El desglose de qué PR cerró cada una está en `[S4]` de [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) |
 | Sprint 4 | ✅ cerrado el 2026-09-19: **18 de 18 tareas y 7 de 7 PR**. Inventario trazable, pedidos anticipados y `TST-4` |
 | Plan de pruebas | Los cuatro escenarios críticos `TST-1` … `TST-4` están **construidos y cubiertos por la suite** desde el Sprint 4. `ENT-05` pide además **ejecutarlos y dejar evidencia**, y eso es `TT-179`, **todavía sin empezar** (`PR-10`) |
 | **Sprint 5** | 🔨 **en curso**, semanas 14–15. **El producto del backlog está terminado**: 24 de 33 tareas y 9 de 13 PR, y lo que queda (`PR-10`…`PR-13`) no toca el código. **Sí lo tocó el rediseño de la navegación** —cuatro PR fuera del backlog, integrados el 2026-09-30 y registrados antes como `DEC-16`, `DEC-17` y `DT-36`: portada única, aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución (`[S7]` de su plan de PR)—. **El estado de cada tarea vive en su plan de PR** |
@@ -80,11 +80,15 @@ cd smartfood
 docker compose up
 ```
 
-Levanta PostgreSQL, SeaweedFS con su bucket, la aplicación y el compilador de estilos; migra,
-siembra y sirve. Lo sembrado es el personal de la cafetería, doce estudiantes con sus
-acudientes y avatares, y el catálogo con imágenes. Todo ficticio (`ALC-OUT-07`), y cada
-arranque lo vuelve a ejecutar sin duplicar nada. El código va montado: guardar un fichero
-recarga la aplicación y guardar una plantilla recompila la hoja, sin reconstruir nada.
+Levanta PostgreSQL, SeaweedFS con su bucket, Mailpit para el correo, la aplicación y el
+compilador de estilos; migra, siembra y sirve. Lo sembrado es el personal de la cafetería,
+doce estudiantes con sus acudientes y avatares, y el catálogo con imágenes. Todo ficticio
+(`ALC-OUT-07`), y cada arranque lo vuelve a ejecutar sin duplicar nada. El código va
+montado: guardar un fichero recarga la aplicación y guardar una plantilla recompila la
+hoja, sin reconstruir nada.
+
+**El correo que el sistema envía —invitaciones y recuperación de contraseña— no sale de la
+máquina**: lo atrapa Mailpit y se lee en <http://localhost:8025> (`DEC-18`).
 
 > **`sembrar` no crea existencias ni saldo**, así que el punto de venta todavía no puede
 > cobrar: los productos salen «Sin existencias» y cualquier venta se rechaza. Es correcto
@@ -115,7 +119,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
 | [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto. **Nueve amplían el anteproyecto y dos lo recortan**; su `[S3]` dice cuál hace qué |
 | [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos. Una decisión posterior **no reescribe** a la anterior: se añade con su propio identificador y dice a cuál corrige |
-| [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 61 historias con sus criterios de aceptación |
+| [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 62 historias con sus criterios de aceptación |
 
 > **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
 > Ninguna de las decisiones de `[S1]` está incorporada al anteproyecto: para saber qué hace y
@@ -149,7 +153,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
-| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las cincuenta y nueve trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| [`trampas-del-stack.md`](./docs/trampas-del-stack.md) | Las sesenta trampas que ya costaron una ronda de diagnóstico. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | [`reglas-de-la-venta.md`](./docs/reglas-de-la-venta.md) | Qué comprueba la venta, **en qué orden y por qué** |
 | [`reglas-del-pedido-anticipado.md`](./docs/reglas-del-pedido-anticipado.md) | Qué mueve reservar, consultar y entregar — y qué **no** mueve cada uno |
 | [`reglas-del-cierre-de-caja.md`](./docs/reglas-del-cierre-de-caja.md) | Qué entra en el cuadre de la caja y qué no, y **por qué el efectivo esperado no se digita** |

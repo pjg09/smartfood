@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado.** Con `PR-09` quedan cerradas **las 61 historias** del proyecto —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362): lo pidió el dueño del producto y se registró como alcance **antes** de construirlo. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
+**El producto está terminado.** Con `PR-09` quedaron cerradas **las 61 historias** del backlog —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362) **y el correo local con la recuperación de contraseña** (`DEC-18`, `DEC-19`): la segunda trajo **`HU-62`, la historia 62**, y devolvió a `HU-03` el criterio que `DEC-9` recortó. Las dos se registraron como alcance **antes** de construirlas. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
 
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
@@ -45,12 +45,13 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las cincuenta y nueve trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las sesenta trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-**Nueve** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8` y `DEC-13`) y **dos lo recortan**
-(`DEC-14`, `DEC-15`); ninguna está incorporada a él. Para responder qué hace o no hace el sistema
+**Diez** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13` y `DEC-19`) y **dos lo
+recortan** (`DEC-14`, `DEC-15`); `DEC-18` devuelve lo que `DEC-9` recortó. Ninguna está
+incorporada a él. Para responder qué hace o no hace el sistema
 hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
 
 Las referencias con prefijo `corpus:` apuntan a documentos del corpus de la asignatura que **no
@@ -137,7 +138,7 @@ Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones 
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
 inventa aquí. **Los colores literales viven en dos sitios y solo en dos**: `estilos/tokens.css`
 —la paleta y los temas, que comparten las **dos** hojas: la de la aplicación y la del admin
-(`DT-36`)— y `templates/correo/invitacion.html`, porque el correo no admite variables CSS.
+(`DT-36`)— y `templates/correo/base.html`, la cáscara de los correos, que no admiten variables CSS.
 `templates/admin/base_site.html` **ya no es el tercero**: el admin carga `estilos/admin.css`,
 que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las plantillas se usan alias de intención (`bg-superficie`, `text-texto`,
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
@@ -155,7 +156,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las cincuenta y nueve están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las sesenta están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -195,7 +196,7 @@ Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
 docker compose up -d
 ```
 
-Levanta PostgreSQL, SeaweedFS con su bucket (`DT-38`), la aplicación en <http://localhost:8000> y el
+Levanta PostgreSQL, SeaweedFS con su bucket (`DT-38`), Mailpit (`DEC-18`), la aplicación en <http://localhost:8000> y el
 servicio `estilos`, que compila las dos hojas y se queda vigilando las plantillas. El
 arranque de la aplicación migra, sincroniza los permisos, **siembra** —con
 `smartfood-local-2026` y 12 estudiantes— y recopila los estáticos. El código va montado:
@@ -212,7 +213,8 @@ uv run python manage.py <lo que sea>       # aplicación con uv (`[S1.0.2]` de d
 ```
 
 **No arranques un `runserver` en el host con `app` levantado**: se pelean por el puerto 8000.
-El correo en consola sale en `docker compose logs -f app`.
+**El correo no sale de la máquina**: lo atrapa Mailpit y se lee en <http://localhost:8025>
+(`DEC-18`) —invitaciones, carga masiva y recuperación de contraseña—.
 
 **`sembrar` no crea existencias ni saldo**, así que el punto de venta no puede cobrar recién
 sembrado: hay que ingresar mercancía (`inventario.services.ingresar_mercancia`) y recargar
@@ -277,10 +279,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.552 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.572 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.552, no corrió entera.
+menos de esas 1.572, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
