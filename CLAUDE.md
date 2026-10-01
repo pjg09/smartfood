@@ -34,7 +34,9 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
-| `docs/mapa-de-la-aplicacion.md` | Qué pantallas hay, quién alcanza cada una y el recorrido de demostración |
+| `docs/probar-cada-funcionalidad.md` | **Cómo ver funcionando cada cosa en local**: entrar como acudiente, recuperar contraseña, reservas, mermas, alertas… Es lo que se repasa antes de una demostración |
+| `docs/escribir-pruebas.md` | **Dónde va una prueba, cómo se ejecuta y siete patrones** que ya costaron una ronda. Léelo antes de escribir una |
+| `docs/mapa-de-la-aplicacion.md` | **Todas las rutas**, quién alcanza cada una y el recorrido de demostración. Los puertos de los servicios están en `[S4]` de `desarrollo.md` |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
 | `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
 | `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar— y las siete reglas que ninguna historia dice |
@@ -212,9 +214,18 @@ set -a && source .env && set +a            # en el host: infraestructura del com
 uv run python manage.py <lo que sea>       # aplicación con uv (`[S1.0.2]` de desarrollo.md)
 ```
 
+Desde un agente, **siempre `exec -T`**: sin él, Docker pide una terminal que no hay y el comando
+falla. Un script de Django va por stdin —`docker compose exec -T app python manage.py shell <<'PY'`—
+y así las comillas dobles no rompen nada. Tras editar código, `runserver` se reinicia: un `curl`
+puede dar `000` unos segundos; espera a que `/salud/` conteste antes de concluir nada. **Una
+prueba que falla con `assertContains` vuelca la página entera**: filtra la suite con
+`grep -E '^(FAIL|ERROR):|^Ran|^OK|FAILED'` y abre el detalle solo de la que falle.
+
 **No arranques un `runserver` en el host con `app` levantado**: se pelean por el puerto 8000.
 **El correo no sale de la máquina**: lo atrapa Mailpit y se lee en <http://localhost:8025>
-(`DEC-18`) —invitaciones, carga masiva y recuperación de contraseña—.
+(`DEC-18`) —invitaciones, carga masiva y recuperación de contraseña—. Para comprobar que un
+correo salió de verdad, `curl 'localhost:8025/api/v1/search?query=to:<correo>'` devuelve
+`messages_count`, y `/api/v1/message/<ID>` su texto con el enlace dentro.
 
 **`sembrar` no crea existencias ni saldo**, así que el punto de venta no puede cobrar recién
 sembrado: hay que ingresar mercancía (`inventario.services.ingresar_mercancia`) y recargar
@@ -248,13 +259,19 @@ en `[S5.3]` de `docs/desarrollo.md`—:
 de trabajo: la receta está en `[S5.3]` de `docs/desarrollo.md`. «Me levanta a mí» no vale: a
 ti te levanta con tus volúmenes, tu imagen y tu `.env`.
 
+Dos cosas que tu máquina no detecta: **una imagen que ya no existe en el registro**, porque la
+tienes en caché —mira `docker manifest inspect <imagen>` antes de añadirla; así cayó MinIO—, y
+**una clave que solo conoce tu Compose** —valida con el v2.20.3, como la CI—. Para probar
+cambios sin commitear, copia el árbol con `git ls-files -co --exclude-standard -z | rsync -a
+--from0 --files-from=- ./ <dir>` y levanta allí con `COMPOSE_PROJECT_NAME=smartfood-limpio`.
+
 Dos comprobaciones lo sostienen, y son lo que de verdad cuenta —una regla se olvida en el
 siguiente PR—: **`config/tests_contenedor.py`** en la suite, y **el flujo
 `integracion-continua`** de la CI, que levanta el stack desde cero en cada PR. **Un PR con
 ese flujo en rojo no se integra**, aunque el cambio «no tenga nada que ver»: si no levanta en
 la CI, no levanta en la máquina del siguiente.
 
-Para mirar el esquema: `uv run python manage.py dbshell`, y dentro `\dt` o
+Para mirar el esquema: `docker compose exec postgres psql -U smartfood -d smartfood`, y dentro `\dt` o
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
 Postgres, que es donde viven las invariantes—.
 
@@ -274,7 +291,7 @@ arranque del contenedor ya lo hace.
 **La CI corre los tres en cada PR y en cada push a `main`**, dentro del stack de
 `docker compose` levantado desde cero (`integracion-continua.yml`), y **la versión solo se
 publica si pasan** (`[S3.0]` de `docs/convenciones-de-git.md`). Córrelos igual antes de
-subir: la CI tarda más de diez minutos en decirte lo que aquí sabes en cinco. La suite no se
+subir: la CI tarda unos siete minutos y medio en decirte lo que aquí sabes en cinco. La suite no se
 enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fichero se llame
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
@@ -288,86 +305,27 @@ menos de esas 1.572, no corrió entera.
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
 servicio»— pasa sola el día que deja de proteger.
 
-**La salida de la suite son nueve líneas**, y leerla en la terminal basta: `sembrar` respeta
-`verbosity` desde `#359`. Mandarla a un fichero sigue siendo cómodo para revisarla con
-calma, pero ya no es obligatorio para encontrar el `Ran N tests`.
-
-Lo que no cambió: una ejecución interrumpida **sigue viva** y retiene `test_smartfood`, así
-que la siguiente falla con «is being accessed by other users» — que no es un fallo de las
-pruebas.
+**La salida de la suite son nueve líneas.** Una ejecución interrumpida **sigue viva** y
+retiene `test_smartfood`: la siguiente falla con «is being accessed by other users», que no
+es un fallo de las pruebas.
 
 **Al cerrar un sprint, cruza cada `HU-nn` citada en el código y en las plantillas con su
 estado `☑`** en el backlog de historias. Caza las marcas de «esto llega con `HU-nn`» que
 sobrevivieron a su historia: en el Sprint 3 había seis, y una de ellas le decía al acudiente
 que esperara una pantalla que ya existía.
 
-Pruebas en `<app>/tests_<tema>.py`. **Todo lo que crea cuentas manda correo diferido con
-`transaction.on_commit`** (`config/correo.py`): un test que mire `mail.outbox` sin envolverse en
-`self.captureOnCommitCallbacks(execute=True)` verá la bandeja vacía y parecerá que no se envió.
+**Antes de escribir o tocar una prueba, lee `docs/escribir-pruebas.md`.** Dónde va y cómo
+se descubre, y siete patrones que ya costaron una ronda: el correo diferido con
+`on_commit`, la cuenta del admin por el camino real, las pruebas de ausencia sobre bytecode,
+la fecha inyectada, el fragmento y no la página, `data-*` y no la copia, e
+`InMemoryStorage`. También cómo comprobar un flujo con `django.test.Client`.
 
-**Una prueba que entra al admin crea la cuenta por el camino real**:
-`sincronizar_grupos_y_permisos()` y `crear_cuenta(..., accede_a_administracion=True)`. Poner
-`is_staff` a mano deja una cuenta que entra pero no tiene ningún permiso, y todo responde `403`.
-
-**Una prueba de ausencia sobre el código mira el bytecode, no `inspect.getsource`.** El
-fuente incluye el docstring, y ahí la ausencia **se explica**: buscar «no llama a X» encuentra
-la X de la explicación y la prueba pasa sola. `inspect.unwrap(f).__code__.co_names` lista lo
-que la función usa de verdad. Ponle contraprueba: que sí encuentre lo que sí usa.
-
-**Una prueba de ventana o de periodo recibe la fecha, no la lee del reloj.** El selector
-toma `hoy=` y las filas se fechan a mano sobre una jornada fija: si mira `timezone.now()`,
-falla sola una madrugada y nadie sabe por qué. Y `creado_en` es `auto_now_add` —no se puede
-fijar al crear—: se corrige después con `update()`.
-
-**Para fijar «no hay forma de pintar A sin B», renderiza el FRAGMENTO, no la página.**
-`render_to_string` sobre el `partial`, con y sin datos. Si alguien separa los dos bloques en
-dos plantillas, la página seguiría trayendo los dos y la prueba pasaría igual — así es como
-se sostiene `INV-9`, y así falla cuando se rompe.
-
-**Una prueba sobre una página entera busca un `data-*` propio, no un atributo genérico.**
-`assertNotContains(r, 'role="group"')` para decir «no se dibuja el selector de estudiante» se
-rompe el día que el armazón estrena otro grupo — y se rompió. Busca
-`data-selector-estudiante`, que sí es exclusivo de esa pantalla.
-**Y ojo con los nombres de atributo que Tailwind usa como variante**: buscar `disabled` casa
-con la clase `disabled:opacity-50`, así que la prueba pasa con el atributo ausente.
-**Y nunca sobre la copia**: `assertContains(r, "Bloquear productos")` se rompe en cuanto
-alguien mejora la redacción, en un PR que no tenía nada que ver. Afirma sobre la URL, sobre
-`response.context`, o sobre un `data-*`.
-
-Para comprobar un flujo real sin navegador —el admin, sobre todo— va bien `manage.py shell -c`
-con `django.test.Client`. Hace falta añadir el host que usa el cliente:
-
-```bash
-DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,testserver" uv run python manage.py shell -c '…'
-```
-
-Si el script lleva comillas dobles, **escríbelo a un fichero** y lánzalo con
-`uv run python fichero.py` (con `sys.path` y `django.setup()` delante): dentro de `-c '…'`
-el `"` rompe el entrecomillado y el error que sale es un `SyntaxError` engañoso.
-
-**Y `response.context` es `None` fuera del runner de pruebas.** La puebla la señal
-`template_rendered`, que solo se conecta con `django.test.utils.setup_test_environment()`.
-Sin esa llamada la respuesta llega con `200`, y leerla revienta con un
-`TypeError: 'NoneType' object is not subscriptable` que no menciona la causa.
-
-**Para mirar una pantalla de verdad** sin navegador manual: la receta —renderizar con
-`django.test.Client` y fotografiar con Chrome sin interfaz— está en `[S5.2]` de
-`docs/desarrollo.md`, con los tres detalles sin los cuales **la captura miente**.
-**Hazlo siempre que toques una pantalla.** En el Sprint 4, mirarla encontró cuatro defectos
-que la suite no vio: un título duplicado, acentos graves literales, el mes capitalizado y
-`|dinero:"COP"` en cifras pequeñas. Ninguno rompía una prueba; los cuatro se veían.
-
-En el Sprint 5 lleva **once**, y **dos eran de cifras**: un desglose que decía «1 venta» en cada
-fila con catorce en la tabla —con el total de al lado correcto— y cuatro columnas de dinero
-crudas, «31500,00», junto a una ya formateada. Los otros nueve: columnas tituladas «method», el
-documento de un menor en una ficha, **el correo de un cajero en la barra de filtros**, dos
-cabeceras pegadas, unas migas montadas sobre la barra lateral, una barra de color que se leía
-como una alarma, un «consúltalas con quien **lo** atiende» que nombraba en masculino a una
-estudiante, y dos rechazos por rol que citaban otra historia. **Ninguno rompía una prueba.**
-
-**Las pruebas que tocan imágenes no hablan con el almacenamiento:** usan `override_settings(STORAGES=…)`
-con `InMemoryStorage`. Por eso `foto_clave` e `imagen_clave` son `CharField` y no `FileField`
-— este último ata el almacenamiento a la definición de la clase y el `override` no le llega.
+**Para mirar una pantalla de verdad**: Playwright contra el stack levantado (`[S3.1]` de
+`docs/desarrollo.md`), con `color_scheme` explícito —Chrome sin interfaz sale siempre en
+oscuro—. La receta de `file://` (`[S5.2]`) queda para cuando no hay stack.
+**Hazlo siempre que toques una pantalla.** Mirarlas encontró quince defectos en los Sprints 4
+y 5 —dos de ellos cifras equivocadas con el total de al lado correcto— y **ninguno rompía
+una prueba**.
 
 ## Definición de Terminado
 
@@ -418,6 +376,9 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - Al repartir por temáticas, los ficheros que **toca casi cualquier PR** y hay que despiezar a
   mano son `config/urls.py`, `cuentas/templatetags/interfaz.py`, `assets/js/interfaz.js`,
   `docs/decisiones-de-alcance.md` y este.
+- Cuando los bloques de dos temas se entrelazan en un fichero, **no partas el parche**: escribe
+  la versión intermedia y métela en el índice con
+  `git update-index --cacheinfo 100644,$(git hash-object -w <intermedio>),<ruta>`.
 - **Datos ficticios siempre** (`ALC-OUT-07`). Ningún dato real de ningún estudiante entra en este
   repositorio ni en el entorno de pruebas. Es un requisito legal, no una preferencia: Ley 1581 de
   2012 sobre datos de menores (`ALC-OUT-08`).
@@ -489,5 +450,7 @@ Dos excepciones, porque ahí la historia **es** el contenido:
 - **Los registros de decisiones** —`DEC-n`, `DT-n`, `INVD-n`— no se reescriben: una decisión
   posterior que corrige a otra se añade con su propio identificador y dice a cuál corrige, como
   `DT-21` hace con `DT-18`. Borrar la anterior dejaría sin explicación por qué el código es así.
+  **Mientras la decisión no está integrada en `main`, se corrige en su propio PR**: todavía no
+  la ha leído nadie.
 - **Las listas de puntos abiertos y de hallazgos** —`ANEXO B`, los `UX-n` del recorrido— marcan el
   punto como resuelto y dicen dónde. Que el punto llegó a estar abierto es información.
