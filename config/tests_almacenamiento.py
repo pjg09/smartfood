@@ -1,6 +1,6 @@
 """Pruebas de la firma contra la dirección pública (`DT-37`).
 
-Prefirmar es un cálculo local: ninguna de estas pruebas habla con MinIO. Lo que
+Prefirmar es un cálculo local: ninguna de estas pruebas habla con el servidor S3. Lo que
 fijan es **qué host queda dentro de la firma**, que es lo que decide si el
 navegador puede abrir la fotografía de un estudiante.
 """
@@ -12,7 +12,7 @@ from django.test import SimpleTestCase
 
 from config.almacenamiento import AlmacenamientoS3
 
-INTERNA = "http://minio:9000"
+INTERNA = "http://seaweedfs:8333"
 PUBLICA = "http://localhost:9000"
 
 

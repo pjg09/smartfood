@@ -4,11 +4,12 @@ Vive en `config/` porque es infraestructura, como `config/imagenes.py`: lo usan
 `personas` y `catalogo` a través de los alias de `STORAGES` y ninguna lo posee.
 
 **El problema que resuelve.** Con la aplicación dentro de un contenedor, Django
-llega a MinIO por la red de `compose.yaml` —`http://minio:9000`— y el navegador
-por el puerto publicado —`http://localhost:9000`—. Son dos direcciones del
-mismo servicio, y la firma de una URL prefirmada **incluye el host**: firmada
-contra `minio:9000`, el navegador no resuelve el nombre; reescrita después a
-`localhost:9000`, MinIO la rechaza porque la firma ya no cuadra.
+llega al almacenamiento por la red de `compose.yaml` —`http://seaweedfs:8333`—
+y el navegador por el puerto publicado —`http://localhost:9000`—. Son dos
+direcciones del mismo servicio, y la firma de una URL prefirmada **incluye el
+host**: firmada contra `seaweedfs:8333`, el navegador no resuelve el nombre;
+reescrita después a `localhost:9000`, el servidor la rechaza porque la firma ya
+no cuadra.
 
 La salida es firmar directamente contra la dirección pública. Prefirmar no abre
 ninguna conexión —es un cálculo local con la clave—, así que el cliente de firma
@@ -30,7 +31,8 @@ class AlmacenamientoS3(S3Storage):
     """`S3Storage` con un `endpoint_url_publico` opcional para las URL firmadas.
 
     Sin él —la aplicación en el host, o las pruebas—, se comporta exactamente
-    como `S3Storage`: el navegador y Django ven MinIO en la misma dirección.
+    como `S3Storage`: el navegador y Django ven el almacenamiento en la misma
+    dirección.
     """
 
     def get_default_settings(self):

@@ -305,7 +305,7 @@ TAILWIND_CLI_PATH = Path(env("TAILWIND_CLI_PATH", default=str(BASE_DIR / ".tailw
 # prefijos. La forma viene de lo que permitía el PaaS que DT-31 retiró: sus
 # buckets eran privados sin excepción y el plan gratuito permitía uno por
 # proyecto (DT-21). Se conserva porque la paridad con local es el argumento de
-# DT-18, y en local esto es MinIO. Como en el código son dos alias distintos,
+# DT-18, y en local esto es SeaweedFS (DT-38). Como en el código son dos alias distintos,
 # pasar a dos buckets el día que haga falta es cambiar estas rutas.
 #
 # `publico` no significa accesible sin credenciales: significa «no sensible».
@@ -320,7 +320,7 @@ _s3_comun = {
     "endpoint_url": S3_ENDPOINT_URL,
     # La dirección con la que el NAVEGADOR alcanza el almacenamiento, para
     # firmar las URL que se le entregan. Vacía, es la misma que la de arriba.
-    # Solo difieren con la aplicación en un contenedor: `minio:9000` para
+    # Solo difieren con la aplicación en un contenedor: `seaweedfs:8333` para
     # Django, `localhost:9000` para el navegador (DT-37).
     "endpoint_url_publico": env("S3_ENDPOINT_URL_PUBLICO", default=""),
     "access_key": env("S3_ACCESS_KEY_ID", default=""),
