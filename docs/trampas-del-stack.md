@@ -5,12 +5,12 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-TRAMPAS |
-| titulo | Lo que falla en silencio en Django, Tailwind, HTMX y el admin |
+| titulo | Lo que falla en silencio en Django, Tailwind, HTMX, el admin y los contenedores |
 | tipo_documento | Documento derivado. Registro de diagnósticos ya pagados |
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -284,3 +284,65 @@ Cómo mirar sin que lo que se mira engañe.
   nombrar**, y redáctalo con el infinitivo delante —«Consultar X **es** de…»— o no concuerda con
   un sujeto singular. Las tres veces se vio ejecutándolo con cada rol, nunca en una prueba que
   solo espera `PermissionDenied`.
+- **Las pruebas necesitan un `collectstatic` previo, y en un clon limpio no lo hay.** El
+  ejecutor fuerza `DEBUG=False`, y con `CompressedManifestStaticFilesStorage` cada plantilla
+  que cite una hoja pide su entrada del manifiesto: **285 errores** de «Missing staticfiles
+  manifest entry». En una máquina de trabajo no se ve nunca, porque `staticfiles/` quedó de
+  una captura anterior. Salió al correr la suite dentro del contenedor recién construido
+  (`DT-37`); el arranque del compose lo hace ahora, y en el host hay que hacerlo a mano.
+
+---
+
+## [S5] Contenedores
+
+Lo que costó meter la aplicación en el `docker compose` (`DT-37`). Casi todas fallan sin
+error: el stack levanta y lo que sale está mal, o sale bien y tarda sin motivo, o se cae
+veinte minutos después. Las que sí dan error lo dan en la máquina de otro, no en la tuya.
+
+- **`runserver` con conexiones persistentes agota PostgreSQL.** Atiende cada petición en un
+  hilo nuevo, y con `CONN_MAX_AGE` distinto de cero cada hilo deja su conexión abierta al
+  morir. En el host no se notaba —nadie hace cien peticiones—, pero el healthcheck del
+  contenedor pide `/salud/` cada 5 s: en unos veinte minutos había **100 conexiones
+  inactivas**, el máximo de PostgreSQL, y todo lo demás —las pruebas, `psql`— recibía «too
+  many clients already». El compose fija `DJANGO_CONN_MAX_AGE=0`; lo avisa la propia
+  documentación de Django, y `config/tests_contenedor.py` lo vigila.
+
+- **Una URL firmada lleva el host dentro de la firma.** Django alcanza el almacenamiento en
+  `seaweedfs:8333` y el navegador en `localhost:9000`: firmada contra el primero, el navegador no
+  resuelve el nombre; reescrita después al segundo, el servidor responde `403`. Y `custom_domain`
+  de `django-storages` cambia el host **quitando la firma**. La salida es firmar contra la
+  dirección pública desde el principio: `S3_ENDPOINT_URL_PUBLICO` y `config/almacenamiento.py`.
+  Las imágenes de producto no lo notan —las sirve la aplicación—, así que el catálogo se ve
+  bien y **solo fallan las fotografías de los estudiantes**.
+- **Una clave que solo conoce el Compose nuevo rompe a todos los viejos, y en local no se
+  ve.** `build.provenance` la entiende Compose 5; los Compose 2 —el del runner de GitHub, y
+  cualquiera hasta el v2.33 al menos— rechazan el fichero **entero** con «Additional property
+  provenance is not allowed», antes de construir nada. Así cayó la primera ejecución de la CI,
+  a los nueve segundos. Y la clave ni siquiera hacía falta: se puso contra una recreación de
+  contenedores que achacamos a la atestación de buildx, y la causa era la de la entrada
+  siguiente. **La atestación cambia el ID del índice de la imagen en cada construcción, pero
+  Compose no recrea por eso**: compara la imagen, no el índice que la envuelve. La CI valida
+  ahora `compose.yaml` con el Compose mínimo declarado, v2.20.3.
+- **Dos servicios con `build:` y la misma `image:` se pisan.** Cada uno etiqueta la imagen con
+  su `com.docker.compose.service`, así que son dos imágenes distintas con el mismo nombre y
+  gana la que termina última: el ID cambia de un `up` a otro y vuelve la recreación de arriba.
+  Construye uno —`app`— y el otro la usa con `pull_policy: never`.
+- **`COPY . .` en una imagen de desarrollo recrea los contenedores con cada edición.** El
+  código ya llega montado, así que copiarlo no aporta nada y hace que tocar una plantilla
+  cambie la imagen. La imagen copia solo `pyproject.toml`, `uv.lock` y lo mínimo para bajar
+  Tailwind (`config/ajustes_de_construccion.py`).
+- **Un proceso en segundo plano de un script recibe `/dev/null` como stdin**, y `tailwind
+  watch` se para en cuanto su stdin se cierra (`[S1]`). La receta de `[S1]` —`tail -f
+  /dev/null | …`— **no sirve con `&` y `wait`**: una tubería no termina hasta que termina
+  `tail`, que no termina nunca, así que la muerte del vigilante no se ve. En
+  `docker/vigilar-estilos.sh` va con `< <(tail -f /dev/null)`.
+- **Una imagen que tienes en caché puede no existir para nadie más.** Las de MinIO dejaron de
+  poder descargarse —«pull access denied», también `latest`— y en las máquinas del equipo
+  todo seguía levantando, porque estaban en caché. Ningún clon nuevo podía levantar ni la
+  infraestructura. Lo vio el primer runner sin caché (`DT-38`). Probar «desde cero» en tu
+  máquina no lo detecta: `docker compose down -v` borra volúmenes, **no imágenes**. Para eso
+  está la CI, o `docker manifest inspect <imagen>`, que pregunta al registro.
+- **Dentro de un contenedor, `localhost` es `::1` antes que `127.0.0.1`.** El `wget` de
+  Alpine prueba IPv6 primero y no reintenta por IPv4; SeaweedFS solo escucha en IPv4, así que
+  el healthcheck daba el servicio por caído con el API respondiendo desde fuera, y el compose
+  entero se quedaba en «dependency failed to start». Healthchecks contra `127.0.0.1`.

@@ -18,7 +18,7 @@ Si al estudiante sin fotografía se le dibujara la silueta de siempre, el cajero
 leería que la comprobación se hizo y salió bien. El hueco dice que no se puede
 comprobar, que es lo que de verdad pasa.
 
-Las pruebas usan almacenamiento en memoria, no MinIO: lo que se comprueba es la
+Las pruebas usan almacenamiento en memoria, no el bucket: lo que se comprueba es la
 pantalla, y el bucket ya tiene sus pruebas en `personas/`.
 """
 

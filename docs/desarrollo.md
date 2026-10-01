@@ -7,10 +7,10 @@
 | doc_id | SMARTFOOD-TIC1-DESARROLLO |
 | titulo | Reconstrucción del entorno local, credenciales y comandos del día a día |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
-| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`) |
-| actualizado | 2026-09-17 |
+| documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`); `./decisiones-tecnicas.md` (`DT-37`) |
+| actualizado | 2026-09-30 |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 Es la libreta del desarrollo: **cómo levantar el entorno desde cero, con qué se entra y
 qué comandos hacen falta a diario.** Es el único entorno que hay: `DEC-15` retiró el
@@ -20,27 +20,69 @@ despliegue y `./despliegue.md` explica por qué.
 
 ## [S1] Reconstrucción desde cero
 
-Probado tal cual el 2026-08-30. Dos herramientas instaladas: **Docker** con Compose y
-[**uv**](https://docs.astral.sh/uv/getting-started/installation/). Nada más — uv descarga
-el Python que hace falta.
+Una herramienta instalada: **Docker** con **Compose 2.20 o posterior** (`docker compose
+version`). Nada más —ni uv, ni Python, ni `.env`— (`DT-37`).
 
 ```bash
 git clone git@github.com:pjg09/smartfood.git
 cd smartfood
+docker compose up            # o `up -d`, para dejarlo en segundo plano
+```
 
-cp .env.example .env          # los valores por defecto sirven tal cual
+En <http://localhost:8000>, con las cuentas de `[S2.1]`. Administración en `/admin/`, salud
+en `/salud/`. La primera vez tarda unos minutos —descarga imágenes y construye la de la
+aplicación—; las siguientes, segundos.
 
-docker compose up -d          # PostgreSQL, MinIO y el bucket
-uv sync                       # dependencias exactas de uv.lock
+**Qué hace ese comando**, para no tener que hacerlo a mano:
 
+| Servicio | Qué hace |
+|---|---|
+| `postgres`, `seaweedfs` | La base (`DT-1`) y el almacenamiento de objetos compatible con S3 (`DT-18`, `DT-38`) |
+| `almacenamiento-inicializar` | Crea el bucket privado si no existe y sale (`TT-50`, `DT-21`) |
+| `estilos` | Compila **las dos** hojas de Tailwind (`DT-36`) y se queda vigilando las plantillas: es el `tailwind watch` de la segunda terminal |
+| `app` | `migrate`, `sincronizar_permisos`, `sembrar` con 12 estudiantes y la contraseña de `[S2.1]`, `collectstatic` y `runserver` |
+
+**El código no está en la imagen: está montado.** Guardar un fichero recarga `runserver`, y
+guardar una plantilla recompila la hoja en un segundo. Reconstruir solo hace falta cuando
+cambian las dependencias, y eso lo hace el propio `up` (`pull_policy: build`): tras un
+`git pull` que traiga un `uv.lock` nuevo, `docker compose up` basta.
+
+**Cualquier `uv run python manage.py X` de este documento es, con el stack del compose,
+`docker compose exec app python manage.py X`.** Dentro del contenedor no hay `uv run`: el
+entorno ya está activado.
+
+### [S1.0.1] Ajustes del compose que se pueden cambiar
+
+Todos opcionales, en un `.env` en la raíz —el compose lo lee solo— o en la línea de comandos:
+
+| Variable | Por defecto | Para qué |
+|---|---|---|
+| `UID`, `GID` | `1000` | **Si tu usuario no es el 1000** (`id -u`). Los contenedores escriben en el repositorio con este usuario; con otro, las hojas compiladas quedarían a nombre de alguien que no eres tú |
+| `SEMBRAR_ESTUDIANTES` | `12` | Cuántos estudiantes siembra |
+| `SEMBRAR_CONTRASENA` | `smartfood-local-2026` | La contraseña de las cuentas del seed. **Vacía, no siembra** |
+| `APP_PORT`, `POSTGRES_PORT`, `S3_PORT` | `8000`, `5432`, `9000` | Si el puerto está ocupado |
+
+**Una segunda pasada de `sembrar` restablece las contraseñas del seed** (`[S1.1]`), y el
+arranque la hace en cada `up`: si cambiaste la contraseña de una cuenta sembrada desde la
+aplicación, vuelve a ser la de la tabla.
+
+### [S1.0.2] Sin contenedor para la aplicación
+
+El camino anterior sigue funcionando, y es el cómodo para depurar con un punto de ruptura.
+Hacen falta además [uv](https://docs.astral.sh/uv/getting-started/installation/) y el `.env`:
+
+```bash
+cp .env.example .env
+docker compose up -d postgres seaweedfs almacenamiento-inicializar   # solo la infraestructura
+uv sync
 uv run python manage.py migrate
 uv run python manage.py sembrar --contrasena-de-desarrollo 'smartfood-local-2026' \
   --estudiantes 12
-
-uv run python manage.py runserver
+uv run python manage.py runserver                          # y `tailwind watch` en otra terminal
 ```
 
-En `http://localhost:8000`. Administración en `/admin/`, salud en `/salud/`.
+**No mezcles los dos a la vez**: se pelean por el puerto 8000 y por la base de pruebas
+`test_smartfood`.
 
 ### [S1.1] Empezar de verdad de cero
 
@@ -50,7 +92,7 @@ En `http://localhost:8000`. Administración en `/admin/`, salud en `/salud/`.
 docker compose down -v        # -v borra los volúmenes: base y bucket
 ```
 
-Después, repetir desde `docker compose up -d`.
+Después, `docker compose up` otra vez: migra y siembra desde cero.
 
 > **`sembrar` es idempotente y no cambia lo que ya existe.** Si la institución ya está
 > creada con otro correo, una segunda pasada **no** lo actualiza: solo restablece la
@@ -467,30 +509,35 @@ cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional
 
 `uv run` activa el entorno virtual: no hace falta `source .venv/bin/activate`.
 
+Con el stack del compose. En la tabla, **`manage`** abrevia
+`docker compose exec app python manage.py`:
+
 | Qué | Comando |
 |---|---|
-| Levantar la infraestructura | `docker compose up -d` |
-| Apagarla | `docker compose down` |
-| Borrarla **con los datos** | `docker compose down -v` |
-| Servidor de desarrollo | `uv run python manage.py runserver` |
-| **Recompilar estilos al vuelo** | `uv run python manage.py tailwind watch` |
-| **Recompilar los del admin** (`DT-36`) | `uv run python manage.py estilos_del_admin` |
-| Migrar | `uv run python manage.py migrate` |
-| Crear migraciones | `uv run python manage.py makemigrations` |
-| Pruebas | `uv run python manage.py test` |
-| Consola de PostgreSQL | `uv run python manage.py dbshell` |
-| Consola de Django | `uv run python manage.py shell` |
-| Añadir dependencia | `uv add nombre-del-paquete` |
-| Probar el correo | `uv run python manage.py sendtestemail tu@correo.com` |
-| **Sacar un enlace de invitación** | `uv run python manage.py invitacion correo@example.com` |
-| **Aplicar la matriz de permisos** | `uv run python manage.py sincronizar_permisos` |
+| **Levantar todo** | `docker compose up -d` |
+| Apagarlo | `docker compose down` |
+| Borrarlo **con los datos** | `docker compose down -v` |
+| Ver la aplicación —y **el correo**— | `docker compose logs -f app` |
+| Ver la compilación de estilos | `docker compose logs -f estilos` |
+| Reiniciar la aplicación | `docker compose restart app` |
+| Migrar | lo hace el arranque; a mano, `manage migrate` |
+| Crear migraciones | `manage makemigrations` |
+| Pruebas | `manage test --noinput` |
+| Consola de PostgreSQL | `manage dbshell` |
+| Consola de Django | `manage shell` |
+| Añadir dependencia | `uv add nombre-del-paquete` en el host, y `docker compose up -d` |
+| Probar el correo | `manage sendtestemail tu@correo.com` |
+| **Sacar un enlace de invitación** | `manage invitacion correo@example.com` |
+| **Aplicar la matriz de permisos** | lo hace el arranque; a mano, `manage sincronizar_permisos` |
 
-Trabajando en plantillas, deja `tailwind watch` en una segunda terminal: sin él, una clase
-nueva no aparece en la hoja compilada y el cambio no se ve.
+**Las dos hojas se recompilan solas** mientras el servicio `estilos` esté levantado. Sin el
+compose —`[S1.0.2]`—, deja `uv run python manage.py tailwind watch` en una segunda terminal:
+sin él, una clase nueva no aparece en la hoja compilada y el cambio no se ve.
 
 **Y son DOS hojas, no una** (`DT-36`). `tailwind build` y `tailwind watch` solo conocen la de
 la aplicación, la que declara `TAILWIND_CLI_SRC_CSS`. La del admin —Tailwind **sin
-`preflight`**, porque ese reset desarma sus pantallas— se compila con su propio comando:
+`preflight`**, porque ese reset desarma sus pantallas— se compila con su propio comando, que
+el servicio `estilos` ya deja vigilando; sin el compose:
 
 ```bash
 uv run python manage.py estilos_del_admin            # assets/css/admin.css
@@ -560,17 +607,22 @@ navegador.
 
 | Servicio | Dónde | Credenciales |
 |---|---|---|
+| **Aplicación** | http://localhost:8000 | las cuentas de `[S2.1]` |
 | PostgreSQL | `localhost:5432` | `smartfood` / `smartfood-local`, base `smartfood` |
-| MinIO (API S3) | `localhost:9000` | `smartfood` / `smartfood-local` |
-| MinIO (consola) | http://localhost:9001 | las mismas |
+| SeaweedFS (API S3) | `localhost:9000` | `smartfood` / `smartfood-local` |
 | Bucket | `smartfood`, prefijos `privado/` y `publico/` | lo crea `docker compose` |
+
+**No hay consola web del almacenamiento** (`DT-38`): la de SeaweedFS no pide credenciales y
+dejaría las fotografías a la vista. Para mirar el bucket, cualquier cliente S3 con las
+credenciales de la tabla contra `localhost:9000`.
 | Correo | Se imprime por la terminal | `EMAIL_URL=consolemail://` |
 
 Todas ficticias y solo válidas contra los contenedores de `compose.yaml`.
 
 **El correo no sale de tu máquina** mientras `EMAIL_URL` sea `consolemail://`. La
-invitación aparece en la terminal donde corre `runserver` o el comando: copia el enlace
-`/invitacion/…` y ábrelo en el navegador.
+invitación aparece en el registro de la aplicación —`docker compose logs -f app`, o la
+terminal donde corre `runserver` sin el compose—: copia el enlace `/invitacion/…` y ábrelo
+en el navegador.
 
 Eso vale para las altas de una en una, que **sí** mandan correo. La carga masiva no manda
 ninguno (`DEC-9`), así que ahí no hay nada que copiar de la terminal: el enlace se saca con
@@ -583,12 +635,15 @@ ninguno (`DEC-9`), así que ahí no hay nada que copiar de la terminal: el enlac
 `main` está protegida: todo entra por PR (`./convenciones-de-git.md`).
 
 ```bash
-uv run python manage.py check
-uv run python manage.py makemigrations --check --dry-run   # sin cambios sin migrar
-uv run python manage.py test --noinput
+docker compose exec app python manage.py check
+docker compose exec app python manage.py makemigrations --check --dry-run   # sin cambios sin migrar
+docker compose exec app python manage.py test --noinput
 ```
 
-Los tres tienen que pasar. El segundo es `DoD-3` y es el que más se olvida: un modelo
+Los tres tienen que pasar —con `uv run python manage.py …` en el host, lo mismo—. La CI
+los repite en cada PR, y sin ellos en verde no se publica versión (`[S3.0]` de
+`./convenciones-de-git.md`). **Y si el
+PR toca la infraestructura, un cuarto**: que el stack levante desde cero (`[S5.3]`). El segundo es `DoD-3` y es el que más se olvida: un modelo
 editado sin su migración no da error hasta que otra persona levanta el proyecto.
 
 `--noinput` en el tercero: si una ejecución anterior se interrumpió a media prueba, la base
@@ -682,11 +737,55 @@ programa.
 
 ---
 
+### [S5.3] Si tocas la infraestructura
+
+**`docker compose up` tiene que levantar el stack en cualquier máquina, siempre** (`DT-37`).
+Lo que lo rompe casi nunca es editar `compose.yaml` o el `Dockerfile`: es cambiar otra cosa
+y no acordarse de ellos. Cuenta como infraestructura:
+
+| Si cambias… | Revisa |
+|---|---|
+| Una variable que lee `config/settings.py` **sin `default=`** | `x-aplicacion.environment` de `compose.yaml` y `.env.example` |
+| Una dependencia que necesita una librería del sistema | `Dockerfile` |
+| `.python-version`, la versión de uv o `TAILWIND_CLI_VERSION` | `Dockerfile` (la de Tailwind se lee sola, pero hay que reconstruir) |
+| Un paso que hay que hacer antes de servir —como `sincronizar_permisos`— | `docker/arrancar-aplicacion.sh` |
+| El nombre o las opciones de un comando que el arranque llama | `docker/arrancar-aplicacion.sh` y `docker/vigilar-estilos.sh` |
+| Un servicio nuevo —una cola, una caché— | `compose.yaml`, con su `healthcheck` y su `depends_on` |
+| Una hoja de estilos nueva | `docker/vigilar-estilos.sh` |
+
+**Dos cosas lo vigilan**, y ninguna depende de acordarse:
+
+- **`config/tests_contenedor.py`**, dentro de la suite: una variable obligatoria que el compose
+  no da, `localhost` donde tiene que ir un nombre de servicio, la versión de Python, el `.env`
+  dentro de la imagen, un comando del arranque que ya no existe.
+- **El flujo `integracion-continua` de la CI**, en cada PR: levanta el stack desde cero
+  —sin `.env`, sin imágenes, sin volúmenes—, comprueba que sirve páginas y hojas, que sembró y
+  que una fotografía firmada se abre desde fuera.
+
+Para comprobarlo en local antes de subir, **sin tocar tu base**: un nombre de proyecto
+distinto da volúmenes nuevos.
+
+```bash
+docker compose down                                    # libera los puertos; conserva tus datos
+docker compose -p smartfood-limpio up -d --wait --wait-timeout 420
+curl -f http://localhost:8000/salud/
+docker compose -p smartfood-limpio down -v             # borra SOLO los volúmenes de la prueba
+docker compose up -d                                   # vuelve a lo tuyo
+```
+
+---
+
 ## [S6] Cuando algo no arranca
 
 | Síntoma | Causa probable |
 |---|---|
 | `connection refused` al puerto 5432 | `docker compose up -d` no está levantado |
+| `port is already allocated` al levantar | Algo del host ocupa el puerto: otro `runserver`, otro PostgreSQL. Ciérralo o cambia el puerto (`[S1.0.1]`) |
+| `Permission denied` al escribir `assets/css/` desde el host | Los contenedores escribieron con otro usuario: pon tu `UID` y `GID` en `.env` (`[S1.0.1]`) |
+| `app` no llega a estar sano | `docker compose logs app`: casi siempre, una migración o `sembrar` que falla |
+| `ModuleNotFoundError` en el contenedor tras un `git pull` | La imagen es anterior al `uv.lock`: `docker compose up -d` la reconstruye; con `start` o `restart` no |
+| La fotografía de un estudiante no carga, y en el host sí | Falta `S3_ENDPOINT_URL_PUBLICO`: la URL se firmó contra `seaweedfs:8333`, que el navegador no resuelve (`DT-37`) |
+| `Missing staticfiles manifest entry` en las pruebas | Nadie ha corrido `collectstatic` en este clon: el ejecutor fuerza `DEBUG=False` y el manifiesto hace falta. El compose lo hace al arrancar; en el host, a mano |
 | `the database system is starting up` | PostgreSQL despertando; reintenta en unos segundos |
 | Una clase de Tailwind no se aplica | Falta `tailwind build` o `tailwind watch` |
 | `tailwind build` dice «up to date» y la clase sigue sin estar | Solo mira la fecha de `fuente.css`, no la de las plantillas: usa `--force` |
@@ -695,5 +794,8 @@ programa.
 | El tema oscuro se queda pegado | La preferencia vive en `localStorage`; el selector de la barra la cambia |
 | El correo no aparece | Mira la terminal, no tu bandeja: en local va a consola |
 | `NoSuchBucket` al subir una imagen | `docker compose down -v` borró el bucket; vuelve a levantar |
+| Las fotografías y las imágenes de producto no cargan tras actualizar la rama | La base viene de cuando el almacenamiento era MinIO, y sus objetos no están en SeaweedFS (`DT-38`): `docker compose down -v` y `up` —datos ficticios, se resiembran solos— |
+| Al levantar, `port is already allocated` en el 9000 | Sigue vivo el contenedor de MinIO de antes de `DT-38`: `docker compose up -d --remove-orphans` |
+| `seaweedfs` no llega a estar sano y el API responde desde fuera | El healthcheck usa `localhost`, que dentro del contenedor es `::1`, y SeaweedFS escucha solo en IPv4: va con `127.0.0.1` |
 | El admin dice que no existe la tabla | Falta `migrate` |
 | El admin da 403 sobre un modelo nuevo | La matriz `[S11]` cambió y falta `sincronizar_permisos` |

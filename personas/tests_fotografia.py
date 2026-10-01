@@ -7,7 +7,7 @@ criterio de la historia**: que la fotografía no sea obligatoria y su ausencia n
 impida ninguna operación. Eso no se prueba mirando el campo, se prueba haciendo
 las operaciones sin ella.
 
-Las pruebas usan un almacenamiento en memoria en lugar de MinIO: son de este PR,
+Las pruebas usan un almacenamiento en memoria en lugar del bucket: son de este PR,
 no del bucket, y `TT-50` ya tiene las suyas. Lo que sí se comprueba contra los
 ajustes reales es que el almacenamiento `privado` firma las URL y que la firma
 caduca pronto — la fotografía de un menor no puede quedar en una URL adivinable

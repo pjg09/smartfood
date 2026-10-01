@@ -10,7 +10,7 @@
 | tipo_documento | Convención de trabajo. No es un artefacto de Scrum |
 | cubre | `TT-01` — Repositorio, estrategia de ramas y convención de commits |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 Este documento es el contrato de cómo entra código a `main`. Lo que aquí se decide lo
 hace cumplir la automatización de `.github/workflows/`, no la buena voluntad.
@@ -226,7 +226,32 @@ la vía por la que los commits de una rama llegarían sueltos a `main`.
 ## [S3] Publicación de versiones
 
 `semantic-release` corre en **cada `push` a `main`**, es decir, cada vez que se integra
-un PR. Configuración en `.releaserc.json`, workflow en `.github/workflows/release.yml`.
+un PR, **y solo si la suite completa pasó antes en ese mismo commit**. Configuración en
+`.releaserc.json`, workflow en `.github/workflows/integracion-continua.yml`.
+
+### [S3.0] Sin pruebas en verde no hay versión
+
+El workflow tiene dos trabajos, y el segundo declara `needs:` sobre el primero:
+
+| Trabajo | Cuándo | Qué hace |
+|---|---|---|
+| `pruebas` | En **cada PR** —y en cada push a su rama— y en **cada push a `main`** | Levanta el stack con `docker compose` desde cero (`DT-37`), comprueba que sirve, y dentro de él corre `check`, `makemigrations --check` y **la suite entera** |
+| `release` | Solo en push a `main`, **solo si `pruebas` salió en verde** | `semantic-release` |
+
+**Si una prueba falla en `main`, el trabajo `release` sale como omitido y no se publica
+nada.** No hay que hacer nada para recuperarlo: el siguiente PR que integre con la suite
+en verde publica la versión con todos los commits pendientes, porque `semantic-release`
+lee desde la última etiqueta.
+
+**La suite no se enumera en ninguna parte.** `manage.py test` sin argumentos descubre todo
+`test*.py` en cada app, así que una prueba nueva entra en la CI sin tocar el workflow. Las
+dos formas de que una prueba se quede fuera sin avisar —un fichero que no casa con el patrón
+y una carpeta sin `__init__.py`— las vigila `config/tests_descubrimiento.py`.
+
+**Que la suite bloquee el merge del PR, no solo la versión, es un ajuste de GitHub**: en
+*Settings → Branches → main*, *Require status checks to pass* con el trabajo
+**«Pruebas en el stack de docker compose»**. Sin él, el PR se puede integrar en rojo y lo
+único que se para es la versión.
 
 | Aspecto | Decisión |
 |---|---|

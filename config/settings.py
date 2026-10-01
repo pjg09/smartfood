@@ -292,7 +292,10 @@ TAILWIND_CLI_VERSION = "4.3.3"
 # `@import "tailwindcss"`. El paquete lo avisa con su check W001.
 TAILWIND_CLI_SRC_CSS = BASE_DIR / "estilos" / "fuente.css"
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"
-TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
+# Configurable porque en el contenedor el repositorio está montado encima de
+# /app: el binario del host —de otro sistema u otra arquitectura— no le sirve,
+# y el suyo vive fuera del montaje, en la imagen (DT-37).
+TAILWIND_CLI_PATH = Path(env("TAILWIND_CLI_PATH", default=str(BASE_DIR / ".tailwind")))
 
 # --- Almacenamiento de objetos (TT-50, DT-18, DT-21) ----------------------
 
@@ -302,7 +305,7 @@ TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
 # prefijos. La forma viene de lo que permitía el PaaS que DT-31 retiró: sus
 # buckets eran privados sin excepción y el plan gratuito permitía uno por
 # proyecto (DT-21). Se conserva porque la paridad con local es el argumento de
-# DT-18, y en local esto es MinIO. Como en el código son dos alias distintos,
+# DT-18, y en local esto es SeaweedFS (DT-38). Como en el código son dos alias distintos,
 # pasar a dos buckets el día que haga falta es cambiar estas rutas.
 #
 # `publico` no significa accesible sin credenciales: significa «no sensible».
@@ -315,6 +318,11 @@ S3_BUCKET = env("S3_BUCKET", default="smartfood")
 _s3_comun = {
     "bucket_name": S3_BUCKET,
     "endpoint_url": S3_ENDPOINT_URL,
+    # La dirección con la que el NAVEGADOR alcanza el almacenamiento, para
+    # firmar las URL que se le entregan. Vacía, es la misma que la de arriba.
+    # Solo difieren con la aplicación en un contenedor: `seaweedfs:8333` para
+    # Django, `localhost:9000` para el navegador (DT-37).
+    "endpoint_url_publico": env("S3_ENDPOINT_URL_PUBLICO", default=""),
     "access_key": env("S3_ACCESS_KEY_ID", default=""),
     "secret_key": env("S3_SECRET_ACCESS_KEY", default=""),
     "region_name": env("S3_REGION", default="auto"),
@@ -336,7 +344,7 @@ STORAGES = {
     # fotografía de un menor no puede quedar en una URL adivinable ni en una que
     # siga sirviendo meses después (DEC-8, ALC-OUT-08).
     "privado": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "config.almacenamiento.AlmacenamientoS3",
         "OPTIONS": {
             **_s3_comun,
             "location": "privado",
@@ -346,7 +354,7 @@ STORAGES = {
     # Imágenes de producto (HU-59). No son sensibles, pero el bucket sigue
     # siendo privado: las sirve la aplicación (DT-21).
     "publico": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "config.almacenamiento.AlmacenamientoS3",
         "OPTIONS": {
             **_s3_comun,
             "location": "publico",

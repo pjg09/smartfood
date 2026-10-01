@@ -1,15 +1,65 @@
-# Entorno local reproducible (TT-02).
+# Entorno local reproducible (TT-02, DT-37).
 #
-# Solo los servicios de infraestructura: PostgreSQL (DT-1) y MinIO (DT-18). La
-# aplicación Django corre en el host con uv, no en un contenedor: el equipo la
-# ejecuta y la depura a diario, y meterla aquí añade un ciclo de reconstrucción
-# a cada cambio sin comprar reproducibilidad —esa la da uv.lock—.
+# El stack entero: PostgreSQL (DT-1), SeaweedFS con su bucket (DT-18, DT-38),
+# la aplicación Django y el compilador de estilos. Desde un clon limpio, sin
+# `.env` y sin nada instalado salvo Docker:
 #
-# Levantar:  docker compose up -d
-# Apagar:    docker compose down
-# Borrar todo, datos incluidos:  docker compose down -v
+#   docker compose up            # o `up -d` para dejarlo en segundo plano
+#
+# y la aplicación está en http://localhost:8000, migrada y sembrada.
+#
+# Apagar:                          docker compose down
+# Borrar todo, datos incluidos:    docker compose down -v
+# Un comando dentro:               docker compose exec app python manage.py …
+#
+# ESTE FICHERO TIENE QUE LEVANTAR SIEMPRE, EN CUALQUIER MÁQUINA. Si un cambio
+# añade una variable de entorno obligatoria, un servicio, un paso de arranque o
+# una dependencia del sistema, se refleja aquí —o en el `Dockerfile`— en el
+# mismo PR. Lo vigilan `config/tests_contenedor.py` y el flujo
+# `integracion-continua` de la CI, que levanta esto mismo desde cero.
 
 name: smartfood
+
+# Lo que comparten `app` y `estilos`: la misma imagen, el mismo código y los
+# mismos ajustes. Las dos cargan Django, y Django no arranca sin ellos.
+x-aplicacion: &aplicacion
+  image: smartfood-aplicacion
+  # Tu usuario, no root: lo que escribe en el repositorio —las hojas
+  # compiladas— tiene que poder tocarlo tu `uv run` después. Si tu usuario no
+  # es el 1000, pon UID y GID en `.env` (`id -u`, `id -g`).
+  user: "${UID:-1000}:${GID:-1000}"
+  restart: unless-stopped
+  volumes:
+    - .:/app
+  environment:
+    # Credenciales ficticias que solo valen contra estos contenedores.
+    DJANGO_SECRET_KEY: clave-solo-para-desarrollo-local-no-usar-fuera-de-aqui
+    DJANGO_DEBUG: "True"
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    # Por la red de compose: `postgres` y `seaweedfs` son nombres de servicio, no
+    # `localhost`, que dentro del contenedor es el propio contenedor.
+    DATABASE_URL: postgres://${POSTGRES_USER:-smartfood}:${POSTGRES_PASSWORD:-smartfood-local}@postgres:5432/${POSTGRES_DB:-smartfood}
+    # Conexiones NO persistentes. `runserver` atiende cada petición en un hilo
+    # nuevo, y con conexiones persistentes cada hilo deja la suya abierta al
+    # morir: el healthcheck, cada 5 s, agotaba las 100 de PostgreSQL en unos
+    # veinte minutos y todo lo demás recibía «too many clients already».
+    DJANGO_CONN_MAX_AGE: "0"
+    EMAIL_URL: consolemail://
+    DJANGO_DEFAULT_FROM_EMAIL: SmartFood <onboarding@resend.dev>
+    S3_ENDPOINT_URL: http://seaweedfs:8333
+    # El navegador no resuelve `seaweedfs`: las URL firmadas de las fotografías se
+    # firman contra el puerto publicado (config/almacenamiento.py, DT-37).
+    S3_ENDPOINT_URL_PUBLICO: http://localhost:${S3_PORT:-9000}
+    S3_BUCKET: ${S3_BUCKET:-smartfood}
+    S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-smartfood}
+    S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-smartfood-local}
+    S3_REGION: auto
+    S3_ADDRESSING_STYLE: path
+    # `sembrar` no tiene contraseña por defecto en el código (DEC-11): se la
+    # da este fichero, y es la de `[S2.1]` de docs/desarrollo.md. Vacía, no
+    # siembra.
+    SEMBRAR_CONTRASENA: ${SEMBRAR_CONTRASENA-smartfood-local-2026}
+    SEMBRAR_ESTUDIANTES: ${SEMBRAR_ESTUDIANTES:-12}
 
 services:
   postgres:
@@ -34,53 +84,121 @@ services:
       retries: 10
       start_period: 10s
 
-  minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: smartfood-minio
+  # Almacenamiento de objetos compatible con S3 (DT-18, DT-38). SeaweedFS y no
+  # MinIO: las imágenes de MinIO dejaron de publicarse y ningún clon nuevo
+  # podía descargarlas. Un solo proceso hace de maestro, volumen, filer y API S3.
+  #
+  # La identidad se escribe al arrancar desde las variables: el fichero de
+  # credenciales de SeaweedFS no lee el entorno. Sin identidad anónima, todo
+  # acceso sin firma recibe 403: el bucket es privado sin hacer nada más.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    container_name: smartfood-seaweedfs
     restart: unless-stopped
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartfood}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-smartfood-local}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-smartfood}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-smartfood-local}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        printf '{"identities":[{"name":"smartfood","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","List","Write","Tagging"]}]}' \
+          "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        exec weed server -dir=/data -s3 -s3.port=8333 -s3.config=/tmp/s3.json
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"       # API S3
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"   # consola web
+      - "${S3_PORT:-9000}:8333"   # API S3
     volumes:
-      - minio-datos:/data
+      - seaweedfs-datos:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      # 127.0.0.1 y no `localhost`: dentro del contenedor `localhost` resuelve
+      # primero a ::1, SeaweedFS solo escucha en IPv4, y el servicio se daría
+      # por caído con el API respondiendo.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # Crea el bucket y sale (TT-50). Sin esto, cada integrante tendría que crearlo
+  # a mano y el entorno dejaría de ser reproducible.
+  #
+  # UN bucket con dos prefijos, `privado/` y `publico/`, no dos buckets (DT-21):
+  # la topología que el código espera, y la que se replica aquí por paridad de
+  # control de acceso (DT-18).
+  almacenamiento-inicializar:
+    image: chrislusf/seaweedfs:4.48
+    container_name: smartfood-almacenamiento-inicializar
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      BUCKET: ${S3_BUCKET:-smartfood}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        listar() { echo "s3.bucket.list" | weed shell -master=seaweedfs:9333 2>/dev/null | awk '{print $$1}'; }
+        if listar | grep -qx "$$BUCKET"; then
+          echo "Bucket $$BUCKET ya existía."
+        else
+          echo "s3.bucket.create -name $$BUCKET" | weed shell -master=seaweedfs:9333
+          listar | grep -qx "$$BUCKET"
+          echo "Bucket $$BUCKET creado, privado."
+        fi
+    restart: "no"
+
+  # Compila las dos hojas de Tailwind (DT-36) y se queda vigilando las
+  # plantillas. Es el `tailwind watch` de la segunda terminal, ya abierto.
+  estilos:
+    <<: *aplicacion
+    container_name: smartfood-estilos
+    # La imagen la construye `app`, que siempre se construye antes de crear
+    # ningún contenedor. Construirla aquí también la etiquetaría dos veces con
+    # etiquetas de servicio distintas: la imagen cambiaría en cada `up` según
+    # cuál terminara último, y los contenedores se recrearían sin motivo.
+    pull_policy: never
+    command: ["bash", "docker/vigilar-estilos.sh"]
+    healthcheck:
+      # Listo cuando las dos hojas están compiladas: antes, la aplicación se
+      # serviría sin estilos y parecería un fallo de Tailwind que no lo es.
+      test: ["CMD", "test", "-f", "/tmp/estilos-listos"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+      start_period: 5s
+
+  # La aplicación: migra, sincroniza los permisos, siembra y sirve (DT-37).
+  # El repositorio va montado encima de /app, así que un cambio en el código
+  # recarga `runserver` sin reconstruir nada.
+  app:
+    <<: *aplicacion
+    container_name: smartfood-app
+    command: ["sh", "docker/arrancar-aplicacion.sh"]
+    build: .
+    # Reconstruye en cada `up`. Con la caché de capas tarda un par de segundos
+    # si nada cambió, y es lo que impide levantar una imagen vieja después de
+    # un `git pull` que añadió una dependencia a `uv.lock`.
+    #
+    # Nada de `build.provenance` ni de otra clave reciente: los Compose 2 no
+    # la conocen y rechazan el fichero ENTERO. La CI lo valida con v2.20.3.
+    pull_policy: build
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      almacenamiento-inicializar:
+        condition: service_completed_successfully
+      estilos:
+        condition: service_healthy
+    healthcheck:
+      # `/salud/` comprueba que la base contesta, no solo que el proceso vive
+      # (TT-04). El primer arranque siembra y tarda: de ahí el margen.
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/salud/', timeout=4)"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 10s
-
-  # Crea el bucket y sale (TT-50). Sin esto, cada integrante tendría que entrar
-  # a la consola de MinIO a mano y el entorno dejaría de ser reproducible.
-  #
-  # UN bucket con dos prefijos, `privado/` y `publico/`, no dos buckets: los
-  # buckets de Railway son privados sin excepción y no existe modo público en
-  # ningún plan, así que la separación por política que preveía DT-18 no es
-  # realizable allí. Se replica aquí la misma topología, porque la razón de usar
-  # MinIO en local es la paridad de control de acceso (DT-18, DT-21).
-  minio-inicializar:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
-    container_name: smartfood-minio-inicializar
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartfood}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-smartfood-local}
-      BUCKET: ${S3_BUCKET:-smartfood}
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD";
-      mc mb --ignore-existing local/$$BUCKET;
-      mc anonymous set none local/$$BUCKET;
-      echo 'Bucket' $$BUCKET 'listo, privado.';
-      "
-    restart: "no"
+      start_period: 180s
 
 volumes:
   postgres-datos:
-  minio-datos:
+  seaweedfs-datos:
