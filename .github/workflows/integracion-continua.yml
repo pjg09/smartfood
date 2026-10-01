@@ -69,7 +69,7 @@ jobs:
           curl --fail --silent --show-error --output /dev/null http://localhost:8000/static/css/tailwind.css
           curl --fail --silent --show-error --output /dev/null http://localhost:8000/static/css/admin.css
 
-      - name: Comprobar que sembró y que las fotografías se abren desde fuera
+      - name: Comprobar que sembró y que las fotografías se abren solo firmadas
         run: |
           set -euo pipefail
           URL="$(docker compose exec -T app python manage.py shell -c \
@@ -77,6 +77,10 @@ jobs:
             | tail -n 1)"
           echo "${URL%%\?*}"
           curl --fail --silent --show-error --output /dev/null "$URL"
+          # Y sin firma, no: el bucket es privado (DT-18, DT-21, DEC-8).
+          SIN_FIRMA="$(curl --silent --output /dev/null --write-out '%{http_code}' "${URL%%\?*}")"
+          echo "sin firma: $SIN_FIRMA"
+          test "$SIN_FIRMA" = 403
 
       - name: manage.py check
         run: docker compose exec -T app python manage.py check
