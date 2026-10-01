@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-09-19; `PR-06` del Sprint 5 — el reporte de consumo del acudiente completo (`HU-30` … `HU-34`) y los de ventas e inventario de la cafetería (`HU-35`, `HU-36`). Los códigos de `[S2]` y `[S3]` se volvieron a medir en la revisión de cierre del Sprint 3; los reportes se comprobaron ejecutando con los cinco perfiles |
+| actualizado | 2026-10-01; la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
-| version | 1.8 |
+| version | 1.9 |
 
 ### [S0.1] Qué responde este documento
 
@@ -31,6 +31,11 @@ puede entrar el acudiente: `/admin/login/` exige `is_staff` y lo rechaza siempre
 `/admin/` también acepta a la institución y al personal de la cafetería, y es donde
 trabajan: `INT-3` es el admin de Django y no lleva plantillas propias.
 
+**Quien olvidó su contraseña la recupera desde la misma puerta** (`HU-62`, `DEC-19`): el
+enlace «¿Olvidaste tu contraseña?» lleva a `/recuperar/`, y el correo con el enlace llega al
+Mailpit del compose (`DEC-18`). Solo lo reciben las cuentas activas que ya definieron su
+contraseña; las que no, siguen entrando por su invitación.
+
 **Las credenciales locales están en `[S2.1]` de `./desarrollo.md`.** No se repiten aquí para
 que no envejezcan en dos sitios. Las cuentas que siembra `manage.py sembrar --estudiantes N`
 son `institucion@example.com`, `administracion@example.com`, `cajero@example.com` y una por
@@ -38,7 +43,7 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las cuarenta y cinco rutas
+## [S2] Las sesenta y cuatro rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
 los mismos colores desde `DT-23`.
@@ -51,6 +56,10 @@ los mismos colores desde `DT-23`.
 | `/salir/` | Cerrar sesión. **Solo POST**: un `GET` responde `405` | Todos | `TT-56` |
 | `/invitacion/<uid>/<token>/` | Definir la contraseña propia desde la invitación | Quien tenga el enlace | `TT-11` |
 | `/invitacion/lista/` | Confirmación de que quedó definida | — | `TT-11` |
+| `/recuperar/` | Pedir el enlace para elegir una contraseña nueva. **No dice si el correo tiene cuenta** (`DEC-19`) | Todos | `HU-62` |
+| `/recuperar/enviado/` | El aviso tras pedirlo, el mismo exista o no la cuenta | Todos | `HU-62` |
+| `/recuperar/<uid>/<token>/` | Elegir la contraseña nueva con el enlace del correo | Quien tenga el enlace | `HU-62` |
+| `/recuperar/listo/` | Confirmación de que quedó cambiada | — | `HU-62` |
 | `/padron/` | Padrón: quién está matriculado y qué acudientes han activado su cuenta | Institución | `DT-27` |
 | `/padron/tabla/` | Fragmento HTMX de la tabla del padrón, filtrada | Institución | `DT-27` |
 | `/padron/<id>/desactivar/` | `POST`. Desactiva a un estudiante: su tarjeta deja de comprar | Institución | `TT-120`, `DT-29` |
@@ -159,7 +168,7 @@ qué pasa al imprimirla.
 | Armazón | Qué pinta | Pantallas |
 |---|---|---|
 | `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
-| `base-acceso.html` | Dos columnas: panel de marca y formulario | `/login/`, `/invitacion/…`, `/invitacion/lista/` |
+| `base-acceso.html` | Dos columnas: panel de marca y formulario | `/login/`, `/invitacion/…`, `/invitacion/lista/`, `/recuperar/…` |
 | `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37`, `/reservas/`, `/punto-de-venta/cierre/` |
 | `base-punto-de-venta.html` | Pantalla completa, sin diálogos, con foco permanente y una **columna de iconos que no se despliega** | `/punto-de-venta/` |
 | `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |

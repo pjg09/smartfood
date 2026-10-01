@@ -27,8 +27,8 @@ from cuentas.permisos import PERMISOS_POR_ROL, nombre_del_grupo
 ROLES_DE_PERSONAL = frozenset({Rol.CAJERO, Rol.ADMINISTRADOR})
 
 
-def construir_enlace_de_invitacion(usuario):
-    """Devuelve la URL absoluta con la que el titular define su contraseña.
+def _enlace_con_token(nombre_de_ruta, usuario):
+    """URL absoluta de una ruta que recibe `uidb64` y `token`.
 
     Reutiliza el generador de tokens de Django en lugar de inventar uno. No es
     pereza: `CLAUDE.md` descarta explícitamente construir autenticación propia,
@@ -37,7 +37,7 @@ def construir_enlace_de_invitacion(usuario):
     aquí se usan, no se dan por decididas.
     """
     ruta = reverse(
-        "definir-contrasena",
+        nombre_de_ruta,
         kwargs={
             "uidb64": urlsafe_base64_encode(force_bytes(usuario.pk)),
             "token": default_token_generator.make_token(usuario),
@@ -46,21 +46,33 @@ def construir_enlace_de_invitacion(usuario):
     return f"{settings.URL_BASE.rstrip('/')}{ruta}"
 
 
-def generar_invitacion(usuario):
-    """Genera la invitación de un usuario **sin entregarla** (`TT-28`, `DEC-9`).
+def construir_enlace_de_invitacion(usuario):
+    """Devuelve la URL absoluta con la que el titular define su contraseña."""
+    return _enlace_con_token("definir-contrasena", usuario)
 
-    `DEC-9` separa dos cosas que antes iban juntas: **generar** la invitación y
-    **entregarla**. La carga masiva hace la primera y no la segunda, porque las
-    direcciones de los acudientes son ficticias (`ALC-OUT-07`) y cada rebote
-    degrada la reputación del remitente.
 
-    Generar es construir el enlace: el token no se almacena, se deriva del
-    usuario. Que se pueda construir no es trivial —una cuenta con contraseña ya
-    definida no admite invitación, y el `password=""` que cierra `TT-13` haría
-    creer que la tiene—, así que esta función **falla** en vez de devolver un
-    enlace inservible. Llamada dentro de la transacción de la carga, esa falla
-    revierte el archivo entero en lugar de dejar acudientes que nadie puede
+def construir_enlace_de_recuperacion(usuario):
+    """La URL con la que el titular elige una contraseña nueva (`HU-62`).
+
+    **El mismo token que la invitación** (`DEC-19`): de un solo uso, porque se
+    deriva del hash de la contraseña actual, y con la misma caducidad. Lo que
+    cambia es la pantalla a la que lleva, que habla de recuperar y no de
     activar.
+    """
+    return _enlace_con_token("restablecer-contrasena", usuario)
+
+
+def generar_invitacion(usuario):
+    """Genera la invitación de un usuario **sin entregarla** (`TT-28`).
+
+    Es la mitad de `invitar` sin el correo: construir el enlace. La usa
+    `manage.py invitacion`, para sacar el enlace de una cuenta cuando no hay
+    servidor de correo a mano. El token no se almacena, se deriva del usuario.
+
+    Que se pueda construir no es trivial —una cuenta con contraseña ya definida
+    no admite invitación, y el `password=""` que cierra `TT-13` haría creer que
+    la tiene—, así que esta función **falla** en vez de devolver un enlace
+    inservible.
 
     Devuelve la URL absoluta. **Es una credencial**: quien la tiene puede fijar
     la contraseña de esa cuenta. No se muestra en ninguna pantalla ni se guarda
@@ -99,6 +111,27 @@ def invitar(usuario):
     )
 
 
+def enviar_recuperacion(usuario):
+    """Manda al titular el enlace para elegir una contraseña nueva (`HU-62`).
+
+    **No decide a quién**: eso lo hace el formulario de Django
+    (`PasswordResetForm.get_users`), que solo devuelve cuentas activas con la
+    contraseña ya definida (`DEC-19`). Aquí se recibe una de esas y se le
+    escribe. Va por `config/correo.py`, como la invitación: el mismo camino de
+    envío, el mismo registro si falla.
+    """
+    enviar_correo(
+        destinatario=usuario.email,
+        asunto="Elige una contraseña nueva para SmartFood",
+        plantilla="correo/recuperacion",
+        contexto={
+            "nombre": usuario.nombre or usuario.email,
+            "enlace": construir_enlace_de_recuperacion(usuario),
+            "dias_de_validez": settings.PASSWORD_RESET_TIMEOUT // (60 * 60 * 24),
+        },
+    )
+
+
 @transaction.atomic
 def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
                  contrasena_de_desarrollo=None, enviar_invitacion=True):
@@ -131,10 +164,10 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
         usuario.save(update_fields=["password"])
         return usuario
 
-    # `DEC-9`: la carga masiva **genera** la invitación pero no la entrega. El
-    # token no se almacena, se deriva del usuario, así que «generarla» es que el
-    # enlace se pueda construir cuando haga falta —y se puede—. Lo que no se
-    # hace es enviar correo a direcciones que no son de nadie.
+    # `enviar_invitacion=False` crea la cuenta invitable sin mandar el correo:
+    # el token no se almacena, se deriva del usuario, así que el enlace se puede
+    # construir después con `generar_invitacion`. Lo usan las pruebas, que no
+    # necesitan un correo por cada cuenta que preparan.
     if enviar_invitacion:
         invitar(usuario)
 
@@ -201,8 +234,8 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre="", contrasena_de_desa
 
     `contrasena_de_desarrollo` es la excepción que `DEC-11` declara para todas
     las altas del prototipo: asigna una clave conocida y **no envía invitación**.
-    Existe para el seed (`TT-08`), cuyas direcciones son ficticias y no
-    corresponden a ningún buzón (`ALC-OUT-07`, `DEC-9`). Por el camino normal
+    Existe para el seed (`TT-08`), que prepara cuentas para entrar a diario sin
+    pasar por la bandeja de correo (`ALC-OUT-07`). Por el camino normal
     —sin este argumento— `HU-41` se cumple entera.
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
@@ -317,9 +350,11 @@ __all__ = [
     "Rol",
     "asignar_grupo_del_rol",
     "construir_enlace_de_invitacion",
+    "construir_enlace_de_recuperacion",
     "crear_cuenta",
     "crear_cuenta_de_personal",
     "desactivar_cuenta",
+    "enviar_recuperacion",
     "generar_invitacion",
     "invitar",
     "reactivar_cuenta",

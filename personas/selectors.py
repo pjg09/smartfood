@@ -226,10 +226,10 @@ def padron(*, actor, busqueda="", incluir_retirados=False):
 def cuentas_sin_activar(estudiantes):
     """Cuántos de esos estudiantes tienen al acudiente sin activar su cuenta.
 
-    **Es el dato que trae a secretaría a esta pantalla.** La carga masiva genera
-    la invitación pero no la entrega (`DEC-9`), así que alguien tiene que saber
-    quién sigue sin poder entrar — si no, el acudiente descubre que no tiene
-    cuenta el día que su hijo se queda sin saldo.
+    **Es el dato que trae a secretaría a esta pantalla.** La carga masiva envía
+    la invitación (`DEC-18`), pero enviarla no es que se use, así que alguien
+    tiene que saber quién sigue sin poder entrar — si no, el acudiente descubre
+    que no tiene cuenta el día que su hijo se queda sin saldo.
 
     Se cuenta sobre la lista ya resuelta y no con otra consulta: la vista acaba
     de traer los acudientes con `select_related`, y volver a preguntar a la base

@@ -8,9 +8,31 @@ endpoint devuelve a veces una cosa y a veces la otra, se parte en dos.
 """
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordResetForm
 from django.shortcuts import redirect, render
 
 from cuentas.models import Rol
+from cuentas.services import enviar_recuperacion
+
+
+class RecuperacionDeContrasenaForm(PasswordResetForm):
+    """Pide el enlace para elegir una contraseña nueva (`HU-62`, `DEC-19`).
+
+    **De Django se queda con la regla de a quién se envía**, y es la que
+    `DEC-19` pide: `get_users` busca el correo sin distinguir mayúsculas y
+    descarta las cuentas desactivadas (`HU-42`) y las que no tienen contraseña
+    utilizable —las que todavía no usaron su invitación—. Si no encuentra a
+    nadie, no hace nada y no lo dice: la vista responde lo mismo exista o no la
+    cuenta.
+
+    **Lo único que cambia es cómo se envía.** El `send_mail` de Django manda
+    el correo en el acto y con sus plantillas en inglés; este delega en
+    `enviar_recuperacion`, que va por `config/correo.py` como la invitación.
+    """
+
+    def send_mail(self, subject_template_name, email_template_name, context,
+                  from_email, to_email, html_email_template_name=None):
+        enviar_recuperacion(context["user"])
 
 # Dónde trabaja cada rol. Es el reparto de `[S11]` leído como navegación: la
 # pantalla que abre quien entra es la de su trabajo, no una portada que le

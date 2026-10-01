@@ -1,0 +1,68 @@
+{% extends "base-acceso.html" %}
+
+{% comment %} `HU-62` (`DEC-19`). Pedir el enlace para elegir una contraseña nueva.
+
+   **La pantalla no dice si el correo tiene cuenta**, ni aquí ni en la siguiente:
+   la vista redirige al mismo aviso exista o no. Un formulario que contestara
+   «ese correo no está registrado» sería un listado de quién es acudiente de la
+   institución, y eso es un dato de menores por asociación (`ALC-OUT-08`). Por
+   eso el único error que se pinta es el de forma: un correo mal escrito.
+{% endcomment %}
+
+{% block titulo %}Recuperar la contraseña | SmartFood{% endblock %}
+
+{% block titulo_panel %}
+  ¿La olvidaste?<br><span class="texto-degradado">Elige otra</span>
+{% endblock %}
+
+{% block contenido %}
+  <h1 class="font-display text-3xl tracking-tight text-texto">¿Olvidaste tu contraseña?</h1>
+  <p class="mt-2 text-base text-texto-suave">
+    Escribe el correo de tu cuenta y te enviamos un enlace para elegir una nueva.
+  </p>
+
+  {% if form.errors %}
+    <div role="alert"
+         class="mt-6 flex items-start gap-3 rounded-md border border-error bg-error-suave p-3">
+      <svg class="mt-0.5 h-4 w-4 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <div class="text-sm text-error-fuerte">
+        {% for campo in form %}{% for error in campo.errors %}<p>{{ error }}</p>{% endfor %}{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" class="mt-6 flex flex-col gap-4" data-formulario-de-recuperacion>
+    {% csrf_token %}
+
+    <div class="flex flex-col gap-1">
+      <label for="{{ form.email.id_for_label }}" class="text-base font-medium text-texto">
+        Correo electrónico
+      </label>
+      <div class="relative">
+        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+             aria-hidden="true"><use href="#i-correo"></use></svg>
+        <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+               value="{{ form.email.value|default:'' }}"
+               autocomplete="email" autofocus required
+               placeholder="tu@correo.com"
+               class="h-11 w-full rounded-md border bg-superficie pr-3 pl-10 text-base text-texto
+                      transition-colors placeholder:text-texto-suave hover:border-acento
+                      focus:border-acento focus:outline-none
+                      {% if form.errors %}border-error{% else %}border-borde{% endif %}">
+      </div>
+    </div>
+
+    <button type="submit"
+            class="inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md
+                   bg-primario text-lg font-medium whitespace-nowrap text-sobre-primario
+                   transition-colors hover:bg-primario-fuerte">
+      Enviar el enlace
+    </button>
+  </form>
+
+  <a href="{% url 'acceso' %}"
+     class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-acento-fuerte hover:underline">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-atras"></use></svg>
+    Volver a entrar
+  </a>
+{% endblock %}

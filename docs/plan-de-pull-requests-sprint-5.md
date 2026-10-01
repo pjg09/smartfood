@@ -525,15 +525,18 @@ Es el sprint con **más frentes independientes** de los cinco.
 
 ---
 
-## [S7] Trabajo fuera del backlog: el rediseño de la navegación
+## [S7] Trabajo fuera del backlog
 
-**Cuatro Pull Requests integrados el 2026-09-30 que no salen de ninguna tarea de este
-sprint**, y por eso van aparte: sumarlos a las 33 falsearía el avance, y no contarlos
-escondería que `main` tiene código que el plan no previó.
+**Pull Requests que no salen de ninguna tarea de este sprint**, y por eso van aparte:
+sumarlos a las 33 falsearía el avance, y no contarlos escondería que `main` tiene código que
+el plan no previó. Son tres bloques: **el rediseño de la navegación** (`#359` … `#362`, el
+2026-09-30), **el entorno en contenedores** (`#364`) y **el correo local con la recuperación
+de contraseña**.
 
-Los pidió el dueño del producto al ver la aplicación de un tirón, y se registraron como
-alcance **antes** de construirlos, que es lo que `[S1]` de `./decisiones-de-alcance.md`
-exige de cualquier trabajo que no venga de una historia.
+Los del rediseño los pidió el dueño del producto al ver la aplicación de un tirón. Todos se
+registraron **antes** de construirlos —como alcance (`DEC-n`) o como decisión técnica
+(`DT-n`)—, que es lo que `[S1]` de `./decisiones-de-alcance.md` exige de cualquier trabajo que
+no venga de una historia.
 
 | PR | Rama | Qué entrega | Registro |
 |---|---|---|---|
@@ -541,8 +544,16 @@ exige de cualquier trabajo que no venga de una historia.
 | `#360` | `test/TT-81-token-csrf-de-htmx` | La prueba que le faltaba al token CSRF de `#358`: seis casos con `enforce_csrf_checks` | `TT-81` |
 | `#361` | `feat/DEC-16-un-dashboard-por-rol` | Portada única y pública, aterrizaje por rol, el admin envuelto en el armazón de la aplicación y el panel de la cafetería | `DEC-16`, `DT-36` |
 | `#362` | `feat/DEC-17-pantallas-propias-de-la-institucion` | Acudientes y restricciones dejan el admin y toman el sistema visual | `DEC-17` |
+| `#364` | `build/entorno-en-contenedores` | El stack entero con `docker compose up`, la suite completa en la CI antes de publicar versión, y SeaweedFS en lugar de MinIO | `DT-37`, `DT-38` |
+| — | `feat/correo-local-y-recuperacion` | Mailpit en el compose; la carga masiva vuelve a entregar las invitaciones; recuperación de la contraseña olvidada | `DEC-18`, `DEC-19`, **`HU-62`** |
 
-**Ninguno amplía `[S11]`.** Los cuatro entregan lo que la matriz ya concedía; lo que cambia
+**El último sí trae una historia, `HU-62`**, y es el único de la tabla que añade una capacidad:
+recuperar la contraseña olvidada. Se registró con `DEC-19` antes de construirla y se marca `☑`
+en `[S4]` del backlog de historias, **pero no tiene tareas `TT-nn`**: entró con el sprint cerrado
+de trabajo y no se repartió. Ese mismo PR devuelve a `HU-03` el criterio que `DEC-9` recortó
+(`DEC-18`).
+
+**Los cuatro del rediseño no amplían `[S11]`.** Entregan lo que la matriz ya concedía; lo que cambia
 es por dónde se llega y cómo se ve. `DEC-17` **corrige a `DEC-16`** en un punto —allí se
 decidió envolver el admin sin reescribirlo, y aquello reescribe las pantallas de un rol— y
 deja escrita la raya: una pantalla propia sustituye a una del admin **solo cuando alguien la

@@ -131,12 +131,12 @@ class CargaMasivaTest(TestCase):
         for acudiente in Acudiente.objects.all():
             self.assertFalse(acudiente.usuario.has_usable_password())
 
-    def test_la_carga_no_entrega_ningun_correo(self):
-        """`DEC-9`: las direcciones son ficticias, un rebote quema la cuenta."""
+    def test_la_carga_entrega_una_invitacion_por_acudiente(self):
+        """`DEC-18`: al servidor de correo local, que no entrega fuera."""
         with self.captureOnCommitCallbacks(execute=True):
             cargar_estudiantes_y_acudientes(actor=self.actor, archivo=archivo())
 
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), Acudiente.objects.count())
 
     def test_con_contrasena_de_desarrollo_las_cuentas_quedan_utilizables(self):
         """`DEC-11`. Sigue sin enviar correo."""

@@ -6,11 +6,10 @@
    contraseña con la invitación (`TT-11`). `INV-6` e `INVD-1` siguen enteras y no
    hay enlace a ningún registro, porque no existe (`DT-10`).
 
-   **Tampoco hay «olvidé mi contraseña»**, y es la única pieza de la referencia
-   visual que falta aquí a propósito: la ruta de recuperación no está construida
-   (`config/urls.py` solo publica la confirmación de la invitación), y un enlace
-   a una pantalla que responde 404 es peor que no ofrecerlo. Cuando exista, va
-   justo debajo del botón.
+   **Sí hay «¿olvidaste tu contraseña?»** (`HU-62`, `DEC-19`), justo debajo del
+   botón, que es donde lo pone la referencia visual: es lo que busca quien acaba
+   de fallar al entrar. No es un camino de alta: solo recibe enlace una cuenta
+   activa que ya definió su contraseña.
 {% endcomment %}
 
 {% block titulo %}Entrar | SmartFood{% endblock %}
@@ -96,6 +95,11 @@
                    transition-colors hover:bg-primario-fuerte">
       Entrar
     </button>
+
+    <a href="{% url 'recuperar-contrasena' %}" data-enlace-recuperar
+       class="self-center text-sm font-medium text-acento-fuerte hover:underline">
+      ¿Olvidaste tu contraseña?
+    </a>
   </form>
 
   <p class="mt-6 text-center text-sm text-texto-suave">

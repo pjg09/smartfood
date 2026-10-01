@@ -1,0 +1,39 @@
+{% extends "base-acceso.html" %}
+
+{% comment %} `HU-62`. Elegir la contraseña nueva con el enlace del correo. Es el mismo
+   formulario que el de la invitación (`TT-11`); cambia lo que se dice alrededor,
+   y adónde se manda a quien llega con un enlace que ya no vale. {% endcomment %}
+
+{% block titulo %}Elige tu contraseña nueva | SmartFood{% endblock %}
+
+{% block titulo_panel %}
+  Tu cuenta,<br><span class="texto-degradado">solo tuya</span>
+{% endblock %}
+
+{% block contenido %}
+  {% if validlink %}
+    <h1 class="font-display text-3xl tracking-tight text-texto">Elige tu contraseña nueva</h1>
+    <p class="mt-2 text-base text-texto-suave">
+      La anterior deja de servir en cuanto guardes esta. Nadie más la conocerá.
+    </p>
+
+    {% include "cuentas/partials/formulario-de-contrasena.html" with texto_del_boton="Guardar la contraseña nueva" %}
+  {% else %}
+    <div class="flex flex-col gap-3" data-enlace-de-recuperacion-invalido>
+      <span class="flex h-11 w-11 items-center justify-center rounded-md bg-aviso-suave text-aviso-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      </span>
+      <h1 class="font-display text-3xl tracking-tight text-texto">Este enlace ya no sirve</h1>
+      <p class="text-base text-texto-suave">
+        Los enlaces para elegir contraseña caducan y dejan de valer en cuanto se usan.
+        Pide uno nuevo.
+      </p>
+      <a href="{% url 'recuperar-contrasena' %}"
+         class="mt-3 inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md
+                bg-primario px-6 text-lg font-medium whitespace-nowrap text-sobre-primario
+                transition-colors hover:bg-primario-fuerte">
+        Pedir otro enlace
+      </a>
+    </div>
+  {% endif %}
+{% endblock %}

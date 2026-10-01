@@ -1,8 +1,8 @@
 # Entorno local reproducible (TT-02, DT-37).
 #
 # El stack entero: PostgreSQL (DT-1), SeaweedFS con su bucket (DT-18, DT-38),
-# la aplicación Django y el compilador de estilos. Desde un clon limpio, sin
-# `.env` y sin nada instalado salvo Docker:
+# Mailpit para el correo (DEC-18), la aplicación Django y el compilador de
+# estilos. Desde un clon limpio, sin `.env` y sin nada instalado salvo Docker:
 #
 #   docker compose up            # o `up -d` para dejarlo en segundo plano
 #
@@ -44,7 +44,9 @@ x-aplicacion: &aplicacion
     # morir: el healthcheck, cada 5 s, agotaba las 100 de PostgreSQL en unos
     # veinte minutos y todo lo demás recibía «too many clients already».
     DJANGO_CONN_MAX_AGE: "0"
-    EMAIL_URL: consolemail://
+    # Al Mailpit del compose (DEC-18): recibe todo el correo y no entrega nada
+    # fuera de la máquina. Para probar contra un buzón real, otro EMAIL_URL.
+    EMAIL_URL: smtp://mailpit:1025
     DJANGO_DEFAULT_FROM_EMAIL: SmartFood <onboarding@resend.dev>
     S3_ENDPOINT_URL: http://seaweedfs:8333
     # El navegador no resuelve `seaweedfs`: las URL firmadas de las fotografías se
@@ -146,6 +148,28 @@ services:
         fi
     restart: "no"
 
+  # Servidor de correo de desarrollo (DEC-18). Captura todo lo que el sistema
+  # envía —invitaciones, recuperación de contraseña— y lo enseña en
+  # http://localhost:8025. No entrega nada fuera de la máquina, así que la carga
+  # masiva puede invitar a direcciones ficticias sin rebotes (DEC-9 ya no aplica).
+  #
+  # SOLO en 127.0.0.1, los dos puertos: la interfaz lista los enlaces de
+  # invitación, que son credenciales (DEC-3), y no puede verlos otra máquina de
+  # la red. El SMTP se publica para el modo sin contenedor (`uv run`).
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    container_name: smartfood-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"        # interfaz web
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"   # SMTP
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   # Compila las dos hojas de Tailwind (DT-36) y se queda vigilando las
   # plantillas. Es el `tailwind watch` de la segunda terminal, ya abierto.
   estilos:
@@ -188,6 +212,8 @@ services:
         condition: service_healthy
       almacenamiento-inicializar:
         condition: service_completed_successfully
+      mailpit:
+        condition: service_healthy
       estilos:
         condition: service_healthy
     healthcheck:

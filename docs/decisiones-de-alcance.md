@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 17 (`DEC-1` … `DEC-17`) |
+| decisiones | 19 (`DEC-1` … `DEC-19`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.7 |
+| version | 1.8 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-17` |
+| S1 | Decisiones | `DEC-1` … `DEC-19` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-6` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -367,6 +367,44 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** Cada pantalla propia es código que hay que mantener y probar, y duplica en la interfaz lo que el admin ya sabía hacer. Se acepta para el rol que trabaja a diario en estas pantallas —secretaría—, no para todos. **Y hay una raya clara**: una pantalla propia solo sustituye a una del admin cuando alguien la usa a diario; el resto se queda envuelto.
 
+
+### `[DEC-18]` Las invitaciones de la carga se entregan, a un servidor de correo local
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-01. **Reabre `DEC-9`** y devuelve a `HU-03` el criterio que aquella recortó.*
+
+**El hecho que lo obliga.** `DEC-9` retiró la entrega de las invitaciones de la carga masiva por tres razones, y las tres dependían de mandar correo a buzones reales a través de un proveedor: las direcciones de los acudientes son ficticias y no hay a quién entregar; cada rebote degrada la reputación del remitente hasta que el proveedor suspende la cuenta; y el plan gratuito del proveedor solo entrega al titular. `DEC-15` retiró el despliegue y `DT-37` dejó el prototipo entero en un `docker compose`, y con eso cabe un **servidor de correo local que recibe todo y no entrega nada**. Ninguna de las tres razones se sostiene contra él: no hay buzón que falte, no hay rebote y no hay proveedor que limite.
+
+**Decidido:**
+
+- **El `docker compose` incluye Mailpit**, un servidor SMTP de desarrollo que captura todo el correo que el sistema envía y lo enseña en una interfaz web. **No entrega nada fuera de la máquina.**
+- **La carga masiva entrega la invitación de cada acudiente que crea**, por el mismo camino que las altas de una en una (`HU-39`, `HU-41`): se envía al confirmar la transacción y llega a Mailpit.
+- **`HU-03` recupera su segundo criterio original**: «se envía una invitación a cada acudiente cargado». Queda reescrito así en `./backlog-historias-de-usuario.md`.
+- **El envío a un buzón real sigue siendo posible y no cambia**: es apuntar `EMAIL_URL` a un proveedor. Es el camino para demostrar que una invitación llega a una bandeja de verdad, de una en una.
+- **La interfaz de Mailpit solo escucha en `127.0.0.1`.** Enseña los enlaces de invitación, que son credenciales (`DEC-3`), y no puede quedar al alcance de otra máquina de la red.
+
+**Justificación del equipo:** `DEC-9` era la única decisión de este documento que recortaba un criterio ya escrito, y su propia advertencia pedía declararlo como limitación en el informe final (`ENT-06`). Con la causa desaparecida, mantener el recorte sería conservar una limitación que ya no existe.
+
+**Lo que esta decisión NO cambia.** `DEC-10` y `DEC-11` siguen en pie: el seed asigna contraseñas para el uso diario, y por ese camino no hay invitación que enviar. Y `DEC-3` matiza aquí su «no se lista en ninguna pantalla»: **la interfaz de Mailpit es una pantalla que lista invitaciones**. Se acepta porque es una herramienta de desarrollo, sobre datos ficticios (`ALC-OUT-07`) y accesible solo desde la propia máquina; en una implementación real ese servidor no existe y el correo llega al buzón de su titular.
+
+> **«Se envía» es literal, y conviene decirlo así.** El correo sale por SMTP y lo recibe un servidor; que ese servidor sea una trampa local es lo que permite enviar a direcciones que no son de nadie. Ante quien evalúe, Mailpit se presenta como lo que es.
+
+### `[DEC-19]` Recuperación de contraseña olvidada
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-01. **Corrige a `DEC-12`** en su «Lo que NO se decide aquí», que excluía la recuperación de contraseña, y **cierra el punto abierto** que el `ANEXO B` dejaba sobre ella.*
+
+**El hecho que lo obliga.** Hasta ahora, quien olvidaba su contraseña no tenía forma de volver a entrar por su cuenta: la única salida era que la institución le reenviara una invitación (`TT-17`), **y la invitación no sirve a quien ya definió su contraseña**, porque `generar_invitacion` se niega con razón. Y el admin tampoco la restablece: `UsuarioAdmin` excluye el campo de contraseña, a propósito, para que nadie conozca la clave de otro (`DEC-3`). **Quien olvidaba su contraseña no tenía ningún camino dentro del sistema para volver a entrar**; solo una consola de Django en la máquina. Y con un servidor de correo local (`DEC-18`) el flujo completo se puede demostrar sin buzones reales.
+
+**Decidido:**
+
+- **Desde la pantalla de acceso, cualquier titular puede pedir un enlace para elegir una contraseña nueva**, con su correo. Los cuatro roles, por la misma puerta (`DEC-12`).
+- **El enlace usa el mismo mecanismo que la invitación**: el generador de tokens de Django, de un solo uso —se invalida al cambiar la contraseña— y con la misma caducidad (`TT-18`). No se escribe autenticación propia (`[S4]` de `./decisiones-tecnicas.md`).
+- **La respuesta es la misma exista o no la cuenta.** La pantalla no revela qué correos tienen cuenta en el sistema: decirlo convertiría el formulario en un listado de quién es acudiente de la institución, que es un dato de menores por asociación (`ALC-OUT-08`).
+- **Solo se envía a cuentas activas que ya definieron su contraseña.** Una cuenta desactivada (`HU-42`) no recupera nada, y una que todavía no usó su invitación sigue entrando por ella: la recuperación no es una segunda vía de activación.
+
+**Lo que NO se decide aquí.** No hay límite de solicitudes ni captcha: el prototipo no se expone (`DEC-15`) y Mailpit no entrega a nadie. En una implementación real haría falta limitar las solicitudes por dirección y por origen. Tampoco cambia la matriz `[S11]`: recuperar la propia contraseña no concede nada que el titular no tuviera.
+
+**Consecuencia asumida.** Es funcionalidad nueva en el último sprint, con el backlog cerrado. Se registra como `HU-62` antes de construirla.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -408,6 +446,8 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-15` | **No añade alcance: lo recorta.** Retira de `ENT-01` la condición de estar desplegado; el prototipo se demuestra en local |
 | `DEC-16` | **No añade alcance.** Reordena la navegación: portada pública única, aterrizaje por rol y un solo dashboard por rol. No toca `[S11]` |
 | `DEC-17` | **No añade alcance.** Sustituye pantallas del admin por pantallas propias para el rol institución, con lo mismo que `[S11]` ya concedía |
+| `DEC-18` | **No añade alcance: devuelve el que `DEC-9` recortó.** La carga masiva vuelve a entregar las invitaciones, a un servidor de correo local |
+| `DEC-19` | Recuperación de la contraseña olvidada, por enlace de un solo uso enviado al correo del titular |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -432,6 +472,8 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (decisión posterior) Contraseñas asignadas en el prototipo | **Decidido** | `DEC-11` | `HU-03`, `HU-41` (sin cambios en el texto) |
 | — (hueco detectado) Inicio de sesión del acudiente | **Decidido** | `DEC-12` | `HU-04` y todo `USR-2` (sin cambios en el texto) |
 | — (condición de caducidad de `DoD-4`) Si la asignatura exige entorno desplegado | **Resuelto** | `DEC-15` | ninguna — recorta `ENT-01` |
+| — (decisión posterior) Entrega de las invitaciones de la carga, reabierta | **Decidido** | `DEC-18` | `HU-03` (criterio original restituido) |
+| — (punto abierto del `ANEXO B`) Recuperación de contraseña olvidada | **Resuelto** | `DEC-19` | `HU-62` |
 
 ---
 
@@ -444,7 +486,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Respaldo bibliográfico de la justificación de `DEC-1`.** Ver la advertencia en esa decisión.
 - **Pedidos anticipados de un estudiante desactivado.** `INVD-2` impide retirarlos, y desde `HU-25` el sistema lo aplica: la entrega los rechaza. **Sigue sin decidirse qué ocurre con ese pedido ya pagado**: si se devuelve el saldo, si queda pendiente indefinidamente o si se anula. Mientras tanto se queda en la cola de `HU-24`, **marcado «No puede retirar»** para que nadie lo prepare en balde — esconderlo lo volvería invisible, y hay dinero de por medio. Es lo que se puede hacer sin decidir; decidirlo es una historia.
 - **Retención y borrado de fotografías.** `DEC-8` no decide cuánto tiempo se conserva la fotografía de un estudiante dado de baja (`DEC-7`), ni si el acudiente puede exigir su eliminación. En una implementación real la Ley 1581 de 2012 lo exigiría.
-- **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido.
+- **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido. **Resuelto el 2026-10-01 por `DEC-19`**, que lo registra como `HU-62`.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.
 - **El libro de inventario no registra quién.** `MovimientoInventario` guarda qué se movió, cuánto y cuándo, y su servicio **recibe el actor, lo comprueba y lo descarta**: no hay columna para él. Se destapó construyendo el reporte de auditoría (`HU-37`, `TT-177`), cuyo «para» es rastrear quién hizo qué: el cobro, la reserva, la entrega y el cuadre sí dicen quién, y el **ingreso de mercancía y la merma no pueden**. No se resuelve por inferencia —añadir la columna es una historia, y dejaría sin actor todo lo ya registrado—, así que **el reporte lo declara en pantalla** en vez de dejar el hueco en blanco, que se leería como un fallo de la consulta. Conviene recogerlo en `ENT-06` como limitación identificada.
 
