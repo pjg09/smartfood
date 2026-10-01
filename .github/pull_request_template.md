@@ -19,7 +19,7 @@ Ver docs/convenciones-de-git.md
 
 | Campo | Valor |
 |---|---|
-| PR del plan | `PR-nn` de `docs/plan-de-pull-requests-sprint-4.md` |
+| PR del plan | `PR-nn` de `docs/plan-de-pull-requests-sprint-N.md`, o «fuera del backlog» con el `DEC-n` o `DT-n` que lo registra |
 | Tareas | `TT-nn`, `TT-nn` |
 | Historias | `HU-nn` |
 | Invariantes que sostiene | `INV-n` / `INVD-n` — o «ninguna» |

@@ -13,7 +13,7 @@
 | criterios | 6 (`DoD-1` … `DoD-6`), los seis vigentes |
 | aplica a | Los cinco sprints. No se relaja durante el semestre. **Una excepción, ya cerrada**: ver `[S5]` |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.1] Por qué es un documento aparte
 
@@ -69,6 +69,11 @@ El código está en `main`, integrado por **Pull Request** con revisión (`[S1]`
 Aplica **siempre**. Es el único criterio sin condición: mientras el trabajo viva en una
 rama, no está terminado por definición.
 
+**«No rompe nada» lo comprueba la CI**, no la buena voluntad: el trabajo `pruebas` de
+`.github/workflows/integracion-continua.yml` levanta el stack desde cero y corre la suite
+entera en cada PR y en cada push a `main` (`DT-37`). Un PR con ese trabajo en rojo no cumple
+`DoD-2`, y en `main` la versión no se publica (`[S3.0]` de `./convenciones-de-git.md`).
+
 ### `[DoD-3]` Las migraciones están escritas y aplicadas
 
 **Si el PR cambia el esquema de la base de datos:** sus migraciones están escritas,
@@ -79,7 +84,8 @@ Lo segundo no estaba en la redacción original y se añade por lo que enseña la
 un modelo editado sin generar su migración no da error hasta que otra persona levanta el
 proyecto, y para entonces el commit lleva días integrado.
 
-**Si el PR no toca modelos**, no aplica. Decláralo.
+**Si el PR no toca modelos**, no aplica. Decláralo. La comprobación de cambios sin migrar la
+repite la CI en cada PR, toque o no modelos.
 
 ### `[DoD-4]` Se demuestra ejecutándolo, con la salida real
 
@@ -106,7 +112,7 @@ Pegar la salida real es lo que distingue haberlo comprobado de haberlo dado por 
 
 ### `[DoD-5]` Cada invariante que sostiene tiene su prueba
 
-**Si el PR sostiene una invariante** (`INV-1` … `INV-9`, `INVD-1` … `INVD-6`): existe al
+**Si el PR sostiene una invariante** (`INV-1` … `INV-9`, `INVD-1` … `INVD-7`): existe al
 menos un caso de prueba que la ejercita, y que **falla si la invariante se rompe**. Una
 prueba que pasaría igual con la invariante rota no prueba nada.
 

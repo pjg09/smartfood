@@ -312,9 +312,9 @@ conviene no perder:
 ### Institución educativa (`USR-5`)
 
 **`/padron/` es su pantalla de todos los días** (`DT-27`). Dice quién está matriculado y, al
-lado de cada estudiante, **si su acudiente ya activó la cuenta**: la carga masiva genera la
-invitación pero no la entrega (`DEC-9`), así que sin esa columna nadie sabe quién sigue sin
-poder entrar hasta que un niño se queda sin saldo. Se busca por nombre, documento, tarjeta y
+lado de cada estudiante, **si su acudiente ya activó la cuenta**: la carga masiva envía la
+invitación (`DEC-18`), pero enviarla no es que se use, así que sin esa columna nadie sabe
+quién sigue sin poder entrar hasta que un niño se queda sin saldo. Se busca por nombre, documento, tarjeta y
 acudiente —las cinco formas en que alguien pregunta en secretaría—, y los retirados no salen
 salvo que se pidan: dar de baja es un estado (`HU-51`), pero el padrón responde «quién está
 matriculado **hoy**».
@@ -626,10 +626,14 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 1. **`/login/` como institución** → `/carga/`, subir un CSV con dos filas del mismo
    acudiente. `HU-01`, `HU-02`.
-2. **`manage.py invitacion <correo del acudiente>`** → abrir el enlace, definir la
-   contraseña. `HU-03`. **Tiene que ser un acudiente cargado por la pantalla**: a los que
-   siembra `--estudiantes` se les asigna contraseña y el comando los rechaza (`DEC-11`).
+2. **Mailpit, en http://localhost:8025** → la invitación del acudiente recién cargado,
+   «Definir mi contraseña», definirla. `HU-03`, `DEC-18`. **Tiene que ser un acudiente
+   cargado por la pantalla**: a los que siembra `--estudiantes` se les asigna contraseña y
+   no reciben invitación (`DEC-11`).
 3. **`/login/` con ese acudiente** → `/mis-estudiantes/`, con su selector. `HU-04`.
+   Desde la misma puerta, **«¿Olvidaste tu contraseña?»** con su correo: el enlace llega a
+   Mailpit, se elige otra y se entra con ella. Con un correo que no tiene cuenta, la
+   pantalla responde exactamente lo mismo. `HU-62`, `DEC-19`.
 4. **Recargar la billetera** de uno de sus estudiantes. El saldo aparece en su ficha con el
    movimiento debajo: es la suma del historial, no una cifra guardada. `HU-06`, `HU-07`,
    `HU-08`, `INV-2`.
@@ -657,7 +661,7 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
    saldo de sobra y sin forma de forzarla. `HU-60`, `INV-4`.
 9. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
-   marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-9`.
+   marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-18`.
 10. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
 11. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
    nadie en el mismo momento. `HU-46`, `INVD-4`.
