@@ -23,8 +23,8 @@ LONGITUD_NOMBRE = (1, 200)
 
 # Deliberadamente laxo: comprueba la forma, no la existencia del buzón. Una
 # expresión estricta rechaza direcciones válidas y raras, y el coste de aceptar
-# una dirección con forma correcta que no existe es cero — no se le envía nada
-# (`DEC-9`).
+# una dirección con forma correcta que no existe es cero en el prototipo — la
+# invitación va a un servidor de correo local que no entrega nada (`DEC-18`).
 FORMA_DE_CORREO = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 

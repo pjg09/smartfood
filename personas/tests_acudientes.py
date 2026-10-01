@@ -5,10 +5,10 @@ uno por uno:
 
 `HU-03` — Invitación por correo y definición de contraseña
   1. El sistema genera la invitación **automáticamente** tras la carga.
-  2. Se **genera** una invitación por cada acudiente cargado; su entrega por
-     correo queda fuera del prototipo (`DEC-9`).
-  3. El acudiente define su propia contraseña con esa invitación, y la que
-     genera la carga **es utilizable**: se demuestra de extremo a extremo.
+  2. Se **envía** una invitación a cada acudiente cargado (`DEC-18`, que
+     devuelve el criterio que `DEC-9` había recortado).
+  3. El acudiente define su propia contraseña con esa invitación: se demuestra
+     de extremo a extremo con el enlace **del correo que llegó**.
 
 `HU-04` — Acudiente con varios estudiantes a cargo
   1. Una cuenta de acudiente puede tener varios estudiantes vinculados.
@@ -17,6 +17,8 @@ uno por uno:
 """
 
 import re
+
+from unittest import mock
 
 from django.core import mail
 from django.core.exceptions import PermissionDenied
@@ -75,34 +77,46 @@ class BaseDeCarga(TestCase):
 # --- `HU-03` ---------------------------------------------------------------
 
 
-class LaCargaGeneraUnaInvitacionPorAcudienteTest(BaseDeCarga):
-    """`TT-28`. Primer y segundo criterio de `HU-03`, con `DEC-9`."""
+class LaCargaEnviaUnaInvitacionPorAcudienteTest(BaseDeCarga):
+    """`TT-28`. Primer y segundo criterio de `HU-03`, con `DEC-18`."""
 
-    def test_se_genera_una_invitacion_por_cada_acudiente_cargado(self):
-        """Dos acudientes en tres filas: dos invitaciones, no tres."""
+    def test_se_envia_una_invitacion_a_cada_acudiente_cargado(self):
+        """Dos acudientes en tres filas: dos correos, no tres."""
+        mail.outbox.clear()
         resultado = self.cargar()
 
         self.assertEqual(resultado.acudientes_creados, 2)
-        self.assertEqual(resultado.invitaciones_generadas, 2)
+        self.assertEqual(resultado.invitaciones_enviadas, 2)
+        self.assertEqual(
+            sorted(destinatario for correo in mail.outbox for destinatario in correo.to),
+            ["andres.ospina@example.com", "marta.ruiz@example.com"],
+        )
+        for correo in mail.outbox:
+            with self.subTest(destinatario=correo.to):
+                self.assertIn("/invitacion/", correo.body)
 
-    def test_la_generacion_es_automatica_al_completarse_la_carga(self):
+    def test_el_envio_es_automatico_al_completarse_la_carga(self):
         """Primer criterio: nadie tiene que pedirlas después, una a una."""
+        mail.outbox.clear()
         resultado = self.cargar()
 
-        self.assertEqual(
-            resultado.invitaciones_generadas,
-            Acudiente.objects.count(),
-            "toda cuenta de acudiente creada por la carga sale de ella invitable",
-        )
+        self.assertEqual(resultado.invitaciones_enviadas, Acudiente.objects.count())
+        self.assertEqual(len(mail.outbox), Acudiente.objects.count())
 
-    def test_no_se_entrega_ningun_correo(self):
-        """`DEC-9`: se genera, no se entrega.
+    def test_una_carga_que_se_revierte_no_invita_a_nadie(self):
+        """El correo sale al confirmar la transacción (`config/correo.py`).
 
-        Las direcciones cargadas son ficticias (`ALC-OUT-07`) y cada rebote
-        degrada la reputación del remitente hasta perder la cuenta de correo.
+        Si la carga falla después de crear las cuentas, las cuentas no existen:
+        mandar la invitación sería dar un enlace a una cuenta que nunca existió.
         """
         mail.outbox.clear()
-        self.cargar()
+        with mock.patch(
+            "personas.services.crear_estudiante", side_effect=RuntimeError("fallo a mitad")
+        ):
+            with self.assertRaises(RuntimeError):
+                self.cargar()
+
+        self.assertEqual(Usuario.objects.filter(rol=Rol.ACUDIENTE).count(), 0)
         self.assertEqual(mail.outbox, [])
 
     def test_un_acudiente_reutilizado_no_recibe_otra_invitacion(self):
@@ -120,14 +134,16 @@ class LaCargaGeneraUnaInvitacionPorAcudienteTest(BaseDeCarga):
 
         self.assertEqual(resultado.acudientes_reutilizados, 1)
         self.assertEqual(resultado.acudientes_creados, 0)
-        self.assertEqual(resultado.invitaciones_generadas, 0)
+        self.assertEqual(resultado.invitaciones_enviadas, 0)
 
     def test_con_contrasena_asignada_no_hay_invitacion_que_generar(self):
         """`DEC-11`: por ese camino la cuenta nace ya activada."""
+        mail.outbox.clear()
         resultado = self.cargar(contrasena_de_desarrollo="clave-de-carga-2026")
 
         self.assertEqual(resultado.acudientes_creados, 2)
-        self.assertEqual(resultado.invitaciones_generadas, 0)
+        self.assertEqual(resultado.invitaciones_enviadas, 0)
+        self.assertEqual(mail.outbox, [])
 
     def test_una_cuenta_que_ya_definio_su_contrasena_no_admite_invitacion(self):
         usuario = Usuario.objects.crear_usuario(
@@ -143,20 +159,26 @@ class LaCargaGeneraUnaInvitacionPorAcudienteTest(BaseDeCarga):
 class LaInvitacionDeLaCargaEsUtilizableTest(BaseDeCarga):
     """`TT-28`. Tercer criterio de `HU-03`, de extremo a extremo.
 
-    Es la demostración que pide `DEC-9`: tomar el enlace de un acudiente
-    cargado, definir la contraseña con él y entrar. Sin este recorrido, «se
-    genera la invitación» sería un contador sin respaldo.
+    El enlace se toma **del correo que la carga envió** (`DEC-18`), no de
+    `generar_invitacion`: así se comprueba lo que de verdad le llega al
+    acudiente. Sin este recorrido, «se envía la invitación» sería un correo sin
+    respaldo.
     """
 
     def setUp(self):
         super().setUp()
+        mail.outbox.clear()
         self.cargar()
         self.acudiente = Usuario.objects.get(email="marta.ruiz@example.com")
+
+    def _enlace_del_correo(self):
+        (correo,) = [c for c in mail.outbox if self.acudiente.email in c.to]
+        return re.search(r"https?://\S+/invitacion/\S+", correo.body).group(0)
 
     def test_el_acudiente_define_su_contrasena_y_entra(self):
         self.assertFalse(self.acudiente.tiene_contrasena_definida)
 
-        enlace = generar_invitacion(self.acudiente)
+        enlace = self._enlace_del_correo()
         ruta = re.sub(r"^https?://[^/]+", "", enlace)
 
         # `PasswordResetConfirmView` cambia el token de la URL por uno interno y
@@ -241,7 +263,7 @@ class ElEnlaceSeObtieneDeUnoEnUnoTest(BaseDeCarga):
         self.assertNotIn("http", volcado, "el resultado no lleva ningún enlace")
         self.assertNotIn("/invitacion/", volcado)
         # Lo que sí lleva es el recuento, que no es una credencial.
-        self.assertIn("invitaciones_generadas=1", volcado)
+        self.assertIn("invitaciones_enviadas=1", volcado)
 
 
 # --- `HU-04` ---------------------------------------------------------------

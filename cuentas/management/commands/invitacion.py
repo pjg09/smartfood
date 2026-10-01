@@ -1,8 +1,9 @@
 """`manage.py invitacion <correo>` — imprime el enlace de invitación de una cuenta.
 
-`DEC-9` dice que la carga masiva **genera** las invitaciones pero no las
-entrega, y que `HU-03` se demuestra «tomando el enlace de un acudiente cargado y
-definiendo la contraseña con él». Este comando es ese «tomar».
+Desde `DEC-18` la carga masiva **entrega** las invitaciones, al Mailpit del
+`docker compose`, y ahí es donde se toman. Este comando queda para cuando no
+hay servidor de correo a mano —la aplicación en el host sin el compose, o un
+correo que se perdió—: saca el enlace de una cuenta sin pasar por la bandeja.
 
 **Por qué un comando y no una pantalla.** El enlace es una credencial: quien lo
 tiene puede fijar la contraseña de esa cuenta. Listarlos en el resultado de la
@@ -22,7 +23,7 @@ from cuentas.services import generar_invitacion
 class Command(BaseCommand):
     help = (
         "Imprime el enlace de invitación de una cuenta que todavía no definió su "
-        "contraseña (DEC-9, HU-03)."
+        "contraseña (HU-03)."
     )
 
     def add_arguments(self, parser):

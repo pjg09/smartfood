@@ -47,20 +47,16 @@ def construir_enlace_de_invitacion(usuario):
 
 
 def generar_invitacion(usuario):
-    """Genera la invitación de un usuario **sin entregarla** (`TT-28`, `DEC-9`).
+    """Genera la invitación de un usuario **sin entregarla** (`TT-28`).
 
-    `DEC-9` separa dos cosas que antes iban juntas: **generar** la invitación y
-    **entregarla**. La carga masiva hace la primera y no la segunda, porque las
-    direcciones de los acudientes son ficticias (`ALC-OUT-07`) y cada rebote
-    degrada la reputación del remitente.
+    Es la mitad de `invitar` sin el correo: construir el enlace. La usa
+    `manage.py invitacion`, para sacar el enlace de una cuenta cuando no hay
+    servidor de correo a mano. El token no se almacena, se deriva del usuario.
 
-    Generar es construir el enlace: el token no se almacena, se deriva del
-    usuario. Que se pueda construir no es trivial —una cuenta con contraseña ya
-    definida no admite invitación, y el `password=""` que cierra `TT-13` haría
-    creer que la tiene—, así que esta función **falla** en vez de devolver un
-    enlace inservible. Llamada dentro de la transacción de la carga, esa falla
-    revierte el archivo entero en lugar de dejar acudientes que nadie puede
-    activar.
+    Que se pueda construir no es trivial —una cuenta con contraseña ya definida
+    no admite invitación, y el `password=""` que cierra `TT-13` haría creer que
+    la tiene—, así que esta función **falla** en vez de devolver un enlace
+    inservible.
 
     Devuelve la URL absoluta. **Es una credencial**: quien la tiene puede fijar
     la contraseña de esa cuenta. No se muestra en ninguna pantalla ni se guarda
@@ -131,10 +127,10 @@ def crear_cuenta(*, email, rol, nombre="", accede_a_administracion=False,
         usuario.save(update_fields=["password"])
         return usuario
 
-    # `DEC-9`: la carga masiva **genera** la invitación pero no la entrega. El
-    # token no se almacena, se deriva del usuario, así que «generarla» es que el
-    # enlace se pueda construir cuando haga falta —y se puede—. Lo que no se
-    # hace es enviar correo a direcciones que no son de nadie.
+    # `enviar_invitacion=False` crea la cuenta invitable sin mandar el correo:
+    # el token no se almacena, se deriva del usuario, así que el enlace se puede
+    # construir después con `generar_invitacion`. Lo usan las pruebas, que no
+    # necesitan un correo por cada cuenta que preparan.
     if enviar_invitacion:
         invitar(usuario)
 
@@ -201,8 +197,8 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre="", contrasena_de_desa
 
     `contrasena_de_desarrollo` es la excepción que `DEC-11` declara para todas
     las altas del prototipo: asigna una clave conocida y **no envía invitación**.
-    Existe para el seed (`TT-08`), cuyas direcciones son ficticias y no
-    corresponden a ningún buzón (`ALC-OUT-07`, `DEC-9`). Por el camino normal
+    Existe para el seed (`TT-08`), que prepara cuentas para entrar a diario sin
+    pasar por la bandeja de correo (`ALC-OUT-07`). Por el camino normal
     —sin este argumento— `HU-41` se cumple entera.
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
