@@ -1,0 +1,122 @@
+name: Integración continua
+
+# Dos trabajos, y el segundo depende del primero:
+#
+#   pruebas  → levanta el stack con `docker compose` desde cero y corre, dentro de
+#              él, los tres controles de antes de cada PR: `check`,
+#              `makemigrations --check` y la suite COMPLETA (DT-37).
+#   release  → publica la versión con semantic-release (TT-01). Solo en `main`,
+#              y solo si `pruebas` salió en verde: sin pruebas en verde no hay
+#              versión.
+#
+# La suite no se enumera en ninguna parte: `manage.py test` sin argumentos
+# descubre todo `test*.py` de cada app, así que una prueba nueva entra sola.
+# Lo único que la dejaría fuera sin avisar —un fichero con otro nombre o una
+# carpeta sin `__init__.py`— lo vigila `config/tests_descubrimiento.py`.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# En un PR, un push nuevo deja obsoleto el anterior. En `main` no se cancela
+# nada: cada integración tiene que llegar a su release.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    name: Pruebas en el stack de docker compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin `.env`, sin imágenes y sin volúmenes: si no levanta aquí, no
+      # levanta en la máquina del siguiente.
+      - name: docker compose up
+        run: |
+          set -euo pipefail
+          # El contenedor escribe en el repositorio como el usuario del host.
+          GID="$(id -g)"
+          export UID GID
+          docker compose up --detach --wait --wait-timeout 420
+
+      - name: Comprobar que sirve
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error http://localhost:8000/salud/
+          echo
+          curl --fail --silent --show-error --output /dev/null http://localhost:8000/login/
+          # Las dos hojas compiladas: sin ellas la aplicación responde 200 y
+          # sale sin estilos, que es el fallo que no se ve en un código de estado.
+          curl --fail --silent --show-error --output /dev/null http://localhost:8000/static/css/tailwind.css
+          curl --fail --silent --show-error --output /dev/null http://localhost:8000/static/css/admin.css
+
+      - name: Comprobar que sembró y que las fotografías se abren desde fuera
+        run: |
+          set -euo pipefail
+          URL="$(docker compose exec -T app python manage.py shell -c \
+            'from personas.models import Estudiante; print(Estudiante.objects.exclude(foto_clave="").first().url_de_la_foto)' \
+            | tail -n 1)"
+          echo "${URL%%\?*}"
+          curl --fail --silent --show-error --output /dev/null "$URL"
+
+      - name: manage.py check
+        run: docker compose exec -T app python manage.py check
+
+      - name: Sin cambios de modelo sin migrar (DoD-3)
+        run: docker compose exec -T app python manage.py makemigrations --check --dry-run
+
+      # Sin etiquetas: la suite entera, descubierta en el momento.
+      # `--noinput` porque sin él una base de pruebas huérfana lo cuelga.
+      - name: Suite completa
+        run: docker compose exec -T app python manage.py test --noinput
+
+      - name: Registros
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Apagar
+        if: always()
+        run: docker compose down --volumes
+
+  release:
+    name: semantic-release
+    needs: pruebas
+    # Solo al integrar en `main`. En un PR este trabajo sale como omitido.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Evita dos releases simultáneos si entran dos PR seguidos.
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+    permissions:
+      contents: write        # crear la etiqueta y la Release
+      issues: write          # etiquetar issues cerrados por la Release
+      pull-requests: write   # etiquetar los PR incluidos
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # semantic-release necesita el historial completo
+          persist-credentials: false
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Node solo existe aquí: nadie del equipo lo necesita en local.
+      # No genera CHANGELOG.md: las notas viven en la Release de GitHub.
+      - name: Publicar versión
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          npx --yes
+          -p semantic-release@24
+          -p conventional-changelog-conventionalcommits@8
+          semantic-release
