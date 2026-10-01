@@ -35,6 +35,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # El runner trae un Compose reciente, y un compañero puede tener uno
+      # viejo. Una clave que solo conoce una versión nueva hace que las viejas
+      # rechacen el fichero ENTERO al validarlo —pasó con `build.provenance`—,
+      # así que se valida también con la mínima declarada en docs/desarrollo.md.
+      - name: Validar compose.yaml con el Compose mínimo (v2.20.3)
+        run: |
+          set -euo pipefail
+          docker compose version
+          curl --fail --silent --show-error --location --output /tmp/compose-minimo \
+            https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64
+          chmod +x /tmp/compose-minimo
+          /tmp/compose-minimo config --quiet
+
       # Sin `.env`, sin imágenes y sin volúmenes: si no levanta aquí, no
       # levanta en la máquina del siguiente.
       - name: docker compose up

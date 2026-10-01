@@ -158,15 +158,13 @@ services:
     <<: *aplicacion
     container_name: smartfood-app
     command: ["sh", "docker/arrancar-aplicacion.sh"]
-    build:
-      context: .
-      # Sin atestación de procedencia: lleva la hora de construcción, así que la
-      # imagen saldría distinta en cada `up` aunque ninguna capa cambiara.
-      # `false` no sirve: Compose lo trata como «sin valor» y buildx pone la suya.
-      provenance: "disabled=true"
+    build: .
     # Reconstruye en cada `up`. Con la caché de capas tarda un par de segundos
     # si nada cambió, y es lo que impide levantar una imagen vieja después de
     # un `git pull` que añadió una dependencia a `uv.lock`.
+    #
+    # Nada de `build.provenance` ni de otra clave reciente: los Compose 2 no
+    # la conocen y rechazan el fichero ENTERO. La CI lo valida con v2.20.3.
     pull_policy: build
     ports:
       - "${APP_PORT:-8000}:8000"
