@@ -292,7 +292,10 @@ TAILWIND_CLI_VERSION = "4.3.3"
 # `@import "tailwindcss"`. El paquete lo avisa con su check W001.
 TAILWIND_CLI_SRC_CSS = BASE_DIR / "estilos" / "fuente.css"
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"
-TAILWIND_CLI_PATH = BASE_DIR / ".tailwind"
+# Configurable porque en el contenedor el repositorio está montado encima de
+# /app: el binario del host —de otro sistema u otra arquitectura— no le sirve,
+# y el suyo vive fuera del montaje, en la imagen (DT-37).
+TAILWIND_CLI_PATH = Path(env("TAILWIND_CLI_PATH", default=str(BASE_DIR / ".tailwind")))
 
 # --- Almacenamiento de objetos (TT-50, DT-18, DT-21) ----------------------
 

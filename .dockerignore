@@ -1,0 +1,25 @@
+# Lo que no entra en la imagen (DT-37).
+#
+# `.env` NUNCA: la imagen no lleva credenciales. En `compose.yaml` las variables
+# vienen de `environment:`; `config/tests_contenedor.py` vigila esta línea.
+.env
+.env.*
+!.env.example
+
+# Específico de cada máquina: se reconstruye dentro de la imagen.
+.venv/
+.tailwind/
+
+# Artefactos de build. Las hojas compiladas las genera el servicio `estilos`.
+staticfiles/
+assets/css/tailwind.css
+assets/css/admin.css
+**/__pycache__/
+*.py[cod]
+
+# Nada de esto hace falta para ejecutar la aplicación.
+.git/
+.github/
+.claude/
+CLAUDE.local.md
+*.log
