@@ -15,7 +15,7 @@ python manage.py sincronizar_permisos --verbosity 0
 
 # `sembrar` es idempotente (TT-08): la primera vez crea la institución, el
 # personal, las familias y el catálogo; las siguientes no duplican nada y solo
-# restablecen las contraseñas del seed. Sin contraseña, no siembra.
+# restablecen la contraseña de la institución. Sin contraseña, no siembra.
 if [ -n "${SEMBRAR_CONTRASENA:-}" ]; then
     python manage.py sembrar \
         --contrasena-de-desarrollo "$SEMBRAR_CONTRASENA" \

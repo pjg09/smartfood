@@ -81,11 +81,28 @@ class ComposeAlDiaTest(SimpleTestCase):
     def test_los_servicios_se_alcanzan_por_la_red_de_compose(self):
         """Dentro del contenedor, `localhost` es el propio contenedor."""
         entorno = _entorno_de_la_aplicacion()
-        for variable in ("DATABASE_URL", "S3_ENDPOINT_URL"):
+        for variable in ("DATABASE_URL", "S3_ENDPOINT_URL", "EMAIL_URL"):
             with self.subTest(variable=variable):
                 self.assertNotRegex(entorno[variable], r"localhost|127\.0\.0\.1")
         # La única que va a localhost es la que usa el navegador.
         self.assertIn("localhost", entorno["S3_ENDPOINT_URL_PUBLICO"])
+
+    def test_el_correo_va_al_mailpit_del_compose(self):
+        """`DEC-18`. Con `consolemail://` la carga «enviaría» a la terminal y
+        nadie vería la invitación; con un proveedor real, a buzones ficticios."""
+        self.assertEqual(_entorno_de_la_aplicacion()["EMAIL_URL"], "smtp://mailpit:1025")
+
+    def test_mailpit_solo_escucha_en_esta_maquina(self):
+        """Su interfaz lista los enlaces de invitación, que son credenciales
+        (`DEC-3`): publicada en todas las interfaces, la abre cualquiera de la red."""
+        bloque = re.search(r"^  mailpit:\n(.*?)(?=^  \S)", _texto("compose.yaml"), re.S | re.M)
+        self.assertIsNotNone(bloque, "compose.yaml ya no tiene el servicio mailpit")
+        puertos = re.findall(r'^      - "([^"]+)"', bloque.group(1), re.M)
+
+        self.assertEqual(len(puertos), 2)  # contraprueba: la expresión los encuentra
+        for puerto in puertos:
+            with self.subTest(puerto=puerto):
+                self.assertTrue(puerto.startswith("127.0.0.1:"))
 
     def test_sin_conexiones_persistentes_bajo_runserver(self):
         """`runserver` abre un hilo por petición y cada uno dejaría su conexión
