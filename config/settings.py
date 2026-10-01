@@ -315,6 +315,11 @@ S3_BUCKET = env("S3_BUCKET", default="smartfood")
 _s3_comun = {
     "bucket_name": S3_BUCKET,
     "endpoint_url": S3_ENDPOINT_URL,
+    # La dirección con la que el NAVEGADOR alcanza el almacenamiento, para
+    # firmar las URL que se le entregan. Vacía, es la misma que la de arriba.
+    # Solo difieren con la aplicación en un contenedor: `minio:9000` para
+    # Django, `localhost:9000` para el navegador (DT-37).
+    "endpoint_url_publico": env("S3_ENDPOINT_URL_PUBLICO", default=""),
     "access_key": env("S3_ACCESS_KEY_ID", default=""),
     "secret_key": env("S3_SECRET_ACCESS_KEY", default=""),
     "region_name": env("S3_REGION", default="auto"),
@@ -336,7 +341,7 @@ STORAGES = {
     # fotografía de un menor no puede quedar en una URL adivinable ni en una que
     # siga sirviendo meses después (DEC-8, ALC-OUT-08).
     "privado": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "config.almacenamiento.AlmacenamientoS3",
         "OPTIONS": {
             **_s3_comun,
             "location": "privado",
@@ -346,7 +351,7 @@ STORAGES = {
     # Imágenes de producto (HU-59). No son sensibles, pero el bucket sigue
     # siendo privado: las sirve la aplicación (DT-21).
     "publico": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "config.almacenamiento.AlmacenamientoS3",
         "OPTIONS": {
             **_s3_comun,
             "location": "publico",
