@@ -13,11 +13,15 @@ una regla de negocio sino **qué entra y con qué fecha**:
    venta deje el saldo en negativo.
 
 Las fechas se fijan a mano sobre la jornada de `tests_frecuencia`, y el selector
-recibe `hoy=`: una prueba de ventanas que mire el reloj falla sola.
+recibe `hoy=`: una prueba de ventanas que mire el reloj falla sola. **También la
+que pasa por la pantalla**, que llama al selector sin fecha: ahí se le inyecta
+en el sitio donde la vista lo llama (`LaPantallaResumeElGastoTest.pantalla`).
 """
 
 from datetime import datetime, time, timedelta
 from decimal import Decimal
+from functools import partial
+from unittest import mock
 
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
@@ -230,10 +234,24 @@ class LaPantallaResumeElGastoTest(BaseDeGasto):
     """`TT-166`, contra `data-*` propios y nunca contra la redacción."""
 
     def pantalla(self):
+        """La pantalla, vista el día `HOY` y no el día en que corre la prueba.
+
+        La vista llama a `resumen_de_gasto` sin `hoy`, así que el selector toma
+        la fecha del reloj, y los movimientos están fechados sobre `HOY`. Sin
+        esto, la ventana de catorce días se iba alejando de ellos y la prueba
+        empezó a fallar sola el 2026-10-02, trece días después de `HOY`, sin
+        que nada hubiera cambiado (`[S3.4]` de `docs/escribir-pruebas.md`).
+
+        Se sustituye el nombre **en `reportes.views`**, que es donde la vista
+        lo busca: si un día deja de llamarlo, el parche falla en vez de dejar
+        pasar la prueba sin probar nada.
+        """
         self.client.force_login(self.acudiente)
-        return self.client.get(
-            reverse("historial-de-consumo", args=[self.estudiante.id])
-        )
+        con_fecha = partial(resumen_de_gasto, hoy=HOY)
+        with mock.patch("reportes.views.resumen_de_gasto", con_fecha):
+            return self.client.get(
+                reverse("historial-de-consumo", args=[self.estudiante.id])
+            )
 
     def test_con_movimientos_la_pantalla_enseña_el_resumen(self):
         self.recargar_el_dia("20000", 2)
