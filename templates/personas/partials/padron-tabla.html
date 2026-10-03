@@ -24,8 +24,8 @@
       <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-escudo"></use></svg>
       <span>
         <strong class="font-semibold">{{ desactivado.nombre }}</strong> queda desactivado:
-        su tarjeta no compra desde ahora. Reactivarlo es de la institución y llega
-        con <span class="font-mono">HU-49</span>.
+        su tarjeta no compra desde ahora. Solo la institución lo reactiva, desde
+        su fila.
       </span>
     </p>
   {% endif %}
@@ -185,15 +185,6 @@
                 <td class="px-4 py-3">{% include "personas/partials/padron-estado.html" %}</td>
                 <td class="px-4 py-3 text-right whitespace-nowrap">
                   <div class="flex items-center justify-end gap-4">
-                    {% comment %} **Editar sigue enlazando al admin** (`DT-2`): duplicar ese
-                       formulario sería duplicar las reglas que lo validan. Lo que
-                       sí vive aquí es desactivar (`DT-29`). {% endcomment %}
-                    <a href="{% url 'admin:personas_estudiante_change' estudiante.id %}"
-                       class="inline-flex items-center gap-1.5 text-base font-semibold
-                              text-acento-fuerte hover:underline">
-                      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
-                      Editar
-                    </a>
                     {% include "personas/partials/padron-acciones.html" %}
                   </div>
                 </td>

@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta |
 | decidido_por | Equipo SmartFood |
-| decisiones | 39 (`DT-1` … `DT-39`) |
+| decisiones | 40 (`DT-1` … `DT-40`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-39`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-40`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -885,3 +885,24 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 **Consecuencia asumida.** **Que una versión se publique ya no dice que la suite pase**: lo dice quien la corrió antes de integrar. Y nada externo detecta que el stack deja de levantar en una máquina limpia: lo vigilan `config/tests_contenedor.py`, en la suite, y el script, si alguien lo corre. Es la condición de que el prototipo se pueda demostrar (`DEC-15`), así que conviene correr el script antes de cada entrega aunque no se haya tocado la infraestructura.
 
 **Lo que no lo obligaba.** Las reglas de GitHub sobre `main` —`main` y `main-protected`— están desactivadas a fecha de esta decisión, así que el trabajo `pruebas` nunca bloqueó una integración: la espera la imponía el propio equipo. Retirarlo no cambia qué se puede integrar, sino qué se comprueba antes.
+
+#### `[DT-40]` La ficha del estudiante se edita en una modal del padrón
+
+**Corrige:** `DT-27`, `DT-29` y `DT-30` en lo que dejaban en el admin —«la edición, la baja y la reasignación siguen en el admin»—. **Aplica** `DEC-16`, que decidió que editar abre una modal sobre la pantalla en la que se está, y `DEC-17`, que puso la ficha del estudiante entre las pantallas de la institución que se construyen.
+
+**Razón:** decisión del equipo, tomada el 2026-10-01. El admin de estudiantes (`/admin/personas/estudiante/`) se retiró, y lo que hacía vuelve donde secretaría lo busca: en la fila del padrón.
+
+**Decidido:**
+
+- **«Editar», en cada fila, abre la ficha en un `<dialog>`**: fotografía, nombre, documento, código vigente, matrícula y la cuenta del acudiente. `GET /padron/<id>/ficha/` la devuelve y `POST` a la misma ruta guarda. Las dos responden **el fragmento de la ficha y nada más** (`DT-16`), con los errores o con el resultado dentro.
+- **Un solo «Guardar» es una sola transacción** (`personas.services.guardar_ficha`). Si el documento ya es de otro o la fotografía no se puede procesar, no se guarda nada y la ficha vuelve con lo escrito y el motivo. El admin hacía lo contrario —un fallo de la fotografía no deshacía la edición—, y con varios cambios en un solo envío eso dejaría la mitad aplicada sin que quien guardó supiera cuál.
+- **La tabla se entera por un evento, no por la respuesta.** Cuando algo cambió, la respuesta lleva `HX-Trigger: padron-cambiado`, y el formulario del buscador vuelve a pedir `/padron/tabla/` **con los filtros que tenía**. Así la ficha no devuelve dos cosas a la vez.
+- **El código de tarjeta no es un campo**: se enseña y se reasigna con su propia acción, `POST /padron/<id>/reasignar/`, con confirmación del navegador (`HU-46`, `INVD-4`, `INV-7`). Al lado va el enlace a la tarjeta imprimible (`HU-45`), que con el admin se había quedado sin ningún enlace.
+- **La matrícula es un interruptor que solo se apaga.** Apagarlo es la baja (`HU-51`), que no tiene vuelta (`DEC-7`), y por eso pide confirmación al guardar. A un retirado no se le dibuja el interruptor sino desde cuándo lo está: un control que la base va a rechazar no se pinta (`[S4]` de `./sistema-visual.md`).
+- **Desactivar y reactivar siguen en la fila**, fuera de la modal (`DT-29`, `DT-30`): su razón de ser es que estén a un clic.
+- **Del acudiente solo es editable el acceso** (`DEC-20`, `HU-63`). Nombre y correo se enseñan; editarlos sigue fuera de `[S11]`.
+- **`POST /padron/` sigue respondiendo `405`**: lo que escribe son rutas propias de la pantalla, no la pantalla.
+- **El alta individual va en la misma modal** (primer criterio de `HU-44`): «Cargar un solo estudiante», arriba del padrón, abre la ficha **vacía** (`GET`/`POST /padron/matricular/`). Pide fotografía —opcional—, nombre, documento y acudiente; el código lo genera el sistema al guardar (`HU-43`, `INV-7`) y se nace matriculado. Es una sola transacción (`personas.services.matricular_estudiante`): si la imagen no vale, no queda nadie matriculado a medias. Al matricular, la ficha vuelve vacía con el código generado y el enlace para imprimirlo, y la tabla se entera por el mismo `HX-Trigger`.
+- **El acudiente se elige, no se crea.** Se busca por nombre, documento o correo (`/padron/matricular/acudientes/`, que sin búsqueda no devuelve a nadie y con ella, ocho como mucho). Crear uno sería dar de alta una cuenta, y eso solo lo hace la carga masiva (`HU-01`): la institución, sobre el acudiente, solo consulta (`[S11]`). **Una familia nueva entra por la carga.**
+- **Las dos fichas avisan antes de enviar.** Mientras un campo obligatorio esté vacío o no cumpla su longitud, dice en rojo qué le falta y el botón de guardar está deshabilitado; el de matricular **nace** deshabilitado. Es una comodidad, no la regla (`DT-15`): las longitudes llegan al navegador desde el propio campo del formulario, y este las toma de `personas.validacion` —las mismas de la carga masiva—, así que el aviso y el rechazo del servidor no pueden pedir cosas distintas. La ficha de edición pasa con ello a exigir lo mismo que la carga: un documento de entre 5 y 20 caracteres.
+- **La carga masiva no desaparece**: su botón deja el padrón, pero sigue en la barra lateral.

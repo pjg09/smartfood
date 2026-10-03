@@ -338,6 +338,63 @@ def reactivar_cuenta(*, actor, usuario):
     return usuario
 
 
+def _comprobar_acceso_del_acudiente(actor, usuario, verbo):
+    """La institución, activa, y sobre la cuenta de un acudiente (`DEC-20`).
+
+    Es una puerta aparte de la de `HU-42` a propósito: `_comprobar_es_personal`
+    sigue rechazando al acudiente, y ensancharla dejaría que las acciones del
+    admin de usuarios cortaran cuentas que `HU-42` nunca cubrió.
+    """
+    if actor is None or not actor.is_authenticated or actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            f"Solo la institución educativa puede {verbo} la cuenta de un acudiente "
+            "(HU-63, DEC-20)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+    if usuario.rol != Rol.ACUDIENTE:
+        raise ValueError(
+            f"«{usuario.rol}» no es un acudiente. El personal se desactiva por "
+            "HU-42 (desactivar_cuenta)."
+        )
+
+
+@transaction.atomic
+def desactivar_acudiente(*, actor, usuario):
+    """Le corta el acceso a un acudiente sin borrar nada (`HU-63`, `DEC-20`).
+
+    **Se corta la cuenta, no a sus estudiantes.** Siguen comprando con su saldo
+    y sus restricciones; lo que pierden es quien les recargue. Por eso no se toca
+    ningún `Estudiante` aquí: su estado es otra máquina (`HU-47`, `HU-51`).
+
+    El mecanismo es el de `HU-42`: Django rechaza a los usuarios inactivos al
+    resolver la sesión, así que la que estuviera abierta deja de identificar a
+    nadie en la siguiente petición, y `PasswordResetForm` no los encuentra
+    (`DEC-19`).
+    """
+    _comprobar_acceso_del_acudiente(actor, usuario, "desactivar")
+
+    if not usuario.is_active:
+        return usuario
+
+    usuario.is_active = False
+    usuario.save(update_fields=["is_active"])
+    return usuario
+
+
+@transaction.atomic
+def reactivar_acudiente(*, actor, usuario):
+    """Le devuelve el acceso. Segundo criterio de `HU-63`."""
+    _comprobar_acceso_del_acudiente(actor, usuario, "reactivar")
+
+    if usuario.is_active:
+        return usuario
+
+    usuario.is_active = True
+    usuario.save(update_fields=["is_active"])
+    return usuario
+
+
 @transaction.atomic
 def reenviar_invitacion(usuario):
     """Vuelve a mandar la invitación a quien todavía no definió su contraseña."""
@@ -353,10 +410,12 @@ __all__ = [
     "construir_enlace_de_recuperacion",
     "crear_cuenta",
     "crear_cuenta_de_personal",
+    "desactivar_acudiente",
     "desactivar_cuenta",
     "enviar_recuperacion",
     "generar_invitacion",
     "invitar",
+    "reactivar_acudiente",
     "reactivar_cuenta",
     "reenviar_invitacion",
     "sincronizar_grupos_y_permisos",

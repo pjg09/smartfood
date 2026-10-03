@@ -1,0 +1,233 @@
+{% comment %} `DT-40`. La ficha del estudiante, dentro de la modal del padrón.
+
+   **Fragmento, no página** (`DT-16`): lo devuelven `GET` y `POST` de
+   `/padron/<id>/ficha/` y la reasignación, y siempre es esto entero. Por eso el
+   resultado —guardado, código reasignado, errores— va **dentro**, como en la
+   tabla del padrón: lo que quedara fuera no se intercambiaría.
+
+   Lo que **no** es un campo, y no por olvido:
+   - **el código de tarjeta**, que se reasigna con su propia acción y nunca se
+     escribe (`HU-46`, `INVD-4`, `INV-7`);
+   - **el nombre y el correo del acudiente**, que la institución solo consulta
+     (`DEC-20`, `[S11]`). Su acceso sí: es `HU-63`.
+{% endcomment %}
+
+<div id="ficha-del-estudiante" data-ficha-del-estudiante
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Editar a {{ estudiante.nombre }}</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  {% comment %} `multipart` por la fotografía. El `hx-confirm` de la baja **no está aquí**:
+     solo se pide cuando el interruptor de la matrícula se apagó, y eso lo decide
+     `assets/js/interfaz.js` con el texto de `data-confirmar-baja`. {% endcomment %}
+  <form hx-post="{% url 'ficha-del-estudiante' estudiante.id %}"
+        hx-target="#ficha-del-estudiante"
+        hx-swap="outerHTML"
+        hx-encoding="multipart/form-data"
+        hx-indicator="#guardando-la-ficha"
+        data-formulario-de-la-ficha
+        data-formulario-validado
+        data-confirmar-baja="{{ estudiante.nombre }} pasa a retirados: deja de comprar y de recibir recargas. La baja no tiene vuelta. ¿Continuar?"
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+      {% if guardada %}
+        <p role="status" data-ficha-guardada
+           class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave
+                  px-3 py-2 text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <span>Cambios guardados.</span>
+        </p>
+      {% endif %}
+
+      {% if codigo_retirado %}
+        <p role="status" data-codigo-reasignado
+           class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+                  px-3 py-2 text-base text-texto">
+          <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+          <span>
+            Código reasignado. La tarjeta con
+            <span class="font-mono tracking-wider break-all">{{ codigo_retirado }}</span>
+            ya no compra: imprime la nueva.
+          </span>
+        </p>
+      {% endif %}
+
+      {% if formulario.non_field_errors %}
+        <div role="alert" data-error-de-la-ficha
+             class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+                    px-3 py-2 text-base text-error-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div>{% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      {% include "personas/partials/ficha-campos.html" %}
+
+      {% comment %} `HU-45`, `HU-46`. **No es un `<input>`**, ni siquiera de solo lectura: un
+         campo con borde se lee como editable. El código lo genera el sistema
+         (`INV-7`) y lo único que se puede hacer con él es reasignarlo.
+
+         El botón va dentro del formulario pero no lo envía: `hx-params="none"`
+         deja fuera lo que se esté editando, que no se guarda por reasignar. Lo
+         escrito y no guardado se pierde, y por eso la confirmación lo dice. {% endcomment %}
+      <div class="flex flex-col gap-1">
+        <span class="text-base font-medium text-texto">Código de la tarjeta</span>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span data-codigo-vigente
+                class="rounded bg-superficie-hover px-3 py-2 font-mono text-base tracking-wider
+                       break-all text-texto">{{ estudiante.codigo_tarjeta }}</span>
+          <button type="button" data-reasignar-codigo
+                  hx-post="{% url 'reasignacion-desde-el-padron' estudiante.id %}"
+                  hx-target="#ficha-del-estudiante"
+                  hx-swap="outerHTML"
+                  hx-params="none"
+                  hx-confirm="Reasignar el código de {{ estudiante.nombre }}. La tarjeta actual deja de comprar en el acto y lo que no hayas guardado en esta ficha se descarta. ¿Continuar?"
+                  class="inline-flex items-center gap-1.5 text-base font-semibold
+                         text-acento-fuerte hover:underline">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-tarjeta"></use></svg>
+            Reasignar código
+          </button>
+          <a href="{% url 'tarjeta-del-estudiante' estudiante.id %}" target="_blank" rel="noopener"
+             data-imprimir-tarjeta
+             class="inline-flex items-center gap-1.5 text-base font-semibold
+                    text-acento-fuerte hover:underline">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-recibo"></use></svg>
+            Imprimir tarjeta
+          </a>
+        </div>
+        <p class="text-sm text-texto-suave">
+          Lo genera el sistema y es lo que lee el lector en la caja. Se reasigna si la
+          tarjeta se pierde o se copia; nunca se escribe a mano.
+        </p>
+      </div>
+
+      {% comment %} `HU-51`. **Un interruptor que solo se apaga.** La baja no tiene vuelta
+         (`DEC-7`), así que a un retirado no se le dibuja: una opción que la base
+         va a rechazar no se pinta (`[S4]` del sistema visual), y lo que se dice en
+         su lugar es desde cuándo. {% endcomment %}
+      {% if estudiante.esta_de_baja %}
+        <div data-ficha-retirado
+             class="flex items-start gap-2 rounded-md border border-borde bg-aviso-suave p-4">
+          <svg class="mt-0.5 h-4 w-4 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <p class="text-sm text-texto">
+            <strong class="font-semibold">Retirado desde el {{ estudiante.dado_de_baja_en|date:"j \d\e F \d\e Y" }}.</strong>
+            Ya no compra ni recibe recargas; su historial y su saldo se conservan. La baja no tiene vuelta.
+          </p>
+        </div>
+      {% else %}
+        <label class="flex cursor-pointer items-start justify-between gap-4 rounded-md border
+                      border-borde p-4">
+          <span class="flex flex-col gap-0.5">
+            <span class="text-base font-semibold text-texto">Matriculado</span>
+            <span class="text-sm text-texto-suave">
+              Al apagarlo y guardar pasa a retirados y deja de comprar y de recibir recargas.
+              Su historial y su saldo se conservan. <strong class="font-semibold text-texto">No tiene vuelta.</strong>
+            </span>
+          </span>
+          <input type="checkbox" name="{{ formulario.matriculado.html_name }}" value="on"
+                 data-matriculado
+                 {% if formulario.matriculado.value %}checked{% endif %}
+                 class="peer sr-only">
+          <span aria-hidden="true"
+                class="relative mt-1 h-6 w-11 shrink-0 rounded-full border border-borde
+                       bg-superficie-hover transition-colors
+                       peer-checked:border-primario peer-checked:bg-primario
+                       peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                       after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                       after:rounded-full after:bg-texto-suave after:transition-transform
+                       peer-checked:after:translate-x-5
+                       peer-checked:after:bg-sobre-primario"></span>
+        </label>
+        {% if not estudiante.puede_operar %}
+          <p data-ficha-desactivado class="-mt-3 text-sm text-error-fuerte">
+            Desactivado: su tarjeta no compra. Se reactiva desde su fila en el padrón.
+          </p>
+        {% endif %}
+      {% endif %}
+
+      {% with acudiente=estudiante.acudiente %}
+        <section class="flex flex-col gap-3 rounded-md bg-superficie-hover p-4">
+          <h3 class="text-base font-semibold text-texto">Acudiente</h3>
+
+          <dl class="flex flex-col gap-3">
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-sm font-medium text-texto-suave">Nombre</dt>
+              <dd class="text-base text-texto">{{ acudiente.nombre }}</dd>
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <dt class="text-sm font-medium text-texto-suave">Correo</dt>
+              <dd class="text-base break-all text-texto">{{ acudiente.usuario.email }}</dd>
+              <dd class="text-sm text-texto-suave">
+                No se cambia desde aquí: identifica su cuenta, y es adonde le llegan la
+                invitación y la recuperación de la contraseña.
+              </dd>
+            </div>
+          </dl>
+
+          {% if not acudiente.usuario.tiene_contrasena_definida %}
+            <p class="flex items-start gap-1.5 text-sm text-aviso-fuerte">
+              <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+              Todavía no ha definido su contraseña: la invitación sigue pendiente.
+            </p>
+          {% endif %}
+
+          {% comment %} `HU-63`, `DEC-20`. **Corta la cuenta, no a los estudiantes**, y
+             alcanza a todos los suyos a la vez: la frase los nombra antes de que
+             se apague. Sin confirmación: se deshace con el mismo interruptor
+             (`DT-30`). {% endcomment %}
+          <label class="flex cursor-pointer items-start justify-between gap-4 border-t border-borde pt-3">
+            <span class="flex flex-col gap-0.5">
+              <span class="text-base font-semibold text-texto">Acceso a la aplicación</span>
+              <span class="text-sm text-texto-suave" data-alcance-del-acceso>
+                Al apagarlo y guardar, deja de poder entrar.
+                {% if estudiantes_del_acudiente|length > 1 %}
+                  Alcanza a sus {{ estudiantes_del_acudiente|length }} estudiantes:
+                  {{ estudiantes_del_acudiente|join:", " }}.
+                {% endif %}
+                Siguen comprando con su saldo, pero nadie podrá recargarles.
+              </span>
+            </span>
+            <input type="checkbox" name="{{ formulario.acceso_del_acudiente.html_name }}" value="on"
+                   data-acceso-del-acudiente
+                   {% if formulario.acceso_del_acudiente.value %}checked{% endif %}
+                   class="peer sr-only">
+            <span aria-hidden="true"
+                  class="relative mt-1 h-6 w-11 shrink-0 rounded-full border border-borde
+                         bg-superficie transition-colors
+                         peer-checked:border-primario peer-checked:bg-primario
+                         peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                         after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                         after:rounded-full after:bg-texto-suave after:transition-transform
+                         peer-checked:after:translate-x-5
+                         peer-checked:after:bg-sobre-primario"></span>
+          </label>
+        </section>
+      {% endwith %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="guardando-la-ficha" class="htmx-indicator mr-auto text-sm text-texto-suave">Guardando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if guardada or codigo_retirado %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>

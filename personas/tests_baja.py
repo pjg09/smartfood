@@ -109,14 +109,6 @@ class LaBajaNoBorraNadaTest(BaseDeBaja):
         self.estudiante.refresh_from_db()
         self.assertEqual(self.estudiante.codigo_tarjeta, codigo)
 
-    def test_el_admin_sigue_sin_ofrecer_borrado(self):
-        """`PR-16` ya lo fijaba; aquí se comprueba que la baja no lo reintrodujo."""
-        self.client.force_login(self.actor)
-        respuesta = self.client.get(
-            reverse("admin:personas_estudiante_delete", args=[self.estudiante.pk])
-        )
-        self.assertEqual(respuesta.status_code, 403)
-
 
 # --- Segundo criterio: es un estado distinto de la desactivación ------------
 
@@ -257,68 +249,6 @@ class SoloLaInstitucionDaDeBajaTest(BaseDeBaja):
 
         with self.assertRaises(PermissionDenied):
             dar_de_baja(actor=self.actor, estudiante=self.estudiante)
-
-
-# --- `TT-42`. La acción de la ficha ----------------------------------------
-
-
-class LaAccionDeBajaTest(BaseDeBaja):
-    def setUp(self):
-        super().setUp()
-        self.client.force_login(self.actor)
-        self.url = reverse("admin:personas_estudiante_changelist")
-
-    def _lanzar(self, confirmado=False):
-        datos = {
-            "action": "accion_dar_de_baja",
-            "_selected_action": [str(self.estudiante.pk)],
-        }
-        if confirmado:
-            datos["confirmado"] = "si"
-        return self.client.post(self.url, datos)
-
-    def test_el_primer_intento_solo_pregunta(self):
-        respuesta = self._lanzar()
-
-        self.assertTemplateUsed(
-            respuesta, "admin/personas/estudiante/confirmar-baja.html"
-        )
-        self.estudiante.refresh_from_db()
-        self.assertEqual(self.estudiante.estado, EstadoDelEstudiante.ACTIVO)
-
-    def test_la_confirmacion_avisa_de_lo_que_conserva_y_de_lo_que_no(self):
-        respuesta = self._lanzar()
-
-        self.assertContains(respuesta, "no se deshace")
-        self.assertContains(respuesta, "se conservan íntegros")
-        # Y recuerda cuál es la acción que sí tiene vuelta.
-        self.assertContains(respuesta, "Reasigna el código")
-
-    def test_al_confirmar_da_de_baja(self):
-        respuesta = self._lanzar(confirmado=True)
-        self.assertEqual(respuesta.status_code, 302)
-
-        self.estudiante.refresh_from_db()
-        self.assertEqual(self.estudiante.estado, EstadoDelEstudiante.BAJA)
-
-    def test_el_listado_muestra_el_estado_y_deja_filtrar(self):
-        dar_de_baja(actor=self.actor, estudiante=self.estudiante)
-        respuesta = self.client.get(self.url)
-
-        self.assertContains(respuesta, "De baja")
-        self.assertContains(respuesta, "estado")
-
-        solo_activos = self.client.get(self.url, {"estado": "activo"})
-        self.assertNotContains(solo_activos, "Ana Sofía Restrepo Ruiz")
-
-    def test_el_estado_no_se_edita_a_mano_desde_la_ficha(self):
-        """Se transita con la acción, que pasa por el servicio (`DT-15`)."""
-        cuerpo = self.client.get(
-            reverse("admin:personas_estudiante_change", args=[self.estudiante.pk])
-        ).content.decode()
-
-        self.assertNotIn('name="estado"', cuerpo)
-        self.assertNotIn('name="dado_de_baja_en"', cuerpo)
 
 
 # --- Lo que el acudiente ve -------------------------------------------------

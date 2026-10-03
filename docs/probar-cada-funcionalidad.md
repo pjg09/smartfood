@@ -10,7 +10,7 @@
 | documentos_fuente | `./desarrollo.md` (de donde sale); `./mapa-de-la-aplicacion.md`; `./decisiones-de-alcance.md` |
 | actualizado | 2026-10-01 |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.2 |
 
 **Qué hacer para ver funcionando cada cosa**, una por sección: qué cuenta usar, qué pantalla
 abrir, qué tiene que pasar y qué hay que preparar antes. Es lo que se repasa para preparar
@@ -95,8 +95,9 @@ necesitas otra vez, recupérala de nuevo o vuelve a empezar con `docker compose 
 
 ## [S3] Imprimir la tarjeta de un estudiante
 
-Desde el admin, en el listado de estudiantes o en su ficha: **Imprimir tarjeta**. Abre
-`/estudiantes/<id>/tarjeta/`, que es la vista imprimible (`TT-37`).
+En `/padron/`, **Editar** en la fila del estudiante, y en la ficha que se abre, **Imprimir
+tarjeta** (`DT-40`). Abre `/estudiantes/<id>/tarjeta/` en otra pestaña, que es la vista
+imprimible (`TT-37`).
 
 Es de la institución, no del acudiente: quien produce la tarjeta es el colegio (`HU-45`).
 
@@ -107,16 +108,18 @@ por ahí lo inutiliza. El detalle está en `DT-22`.
 
 ## [S4] Reponer una tarjeta perdida
 
-En el listado de estudiantes del admin, se selecciona al estudiante y se elige
-**Reasignar el código de tarjeta**. Hay una pantalla de confirmación que enseña el código
-que se va a invalidar, porque **esto no se deshace**: el código actual deja de identificar
-a nadie en ese mismo momento (`INVD-4`), y la tarjeta que el estudiante lleva encima queda
-inservible. Después hay que imprimir la nueva; el mensaje trae el enlace.
+En `/padron/`, **Editar** en la fila del estudiante y, en la ficha, **Reasignar código**.
+El navegador pide confirmación, porque **esto no se deshace**: el código actual deja de
+identificar a nadie en ese mismo momento (`INVD-4`), y la tarjeta que el estudiante lleva
+encima queda inservible. La ficha vuelve con el código nuevo y dice cuál murió; **lo que
+estuvieras editando en ella sin guardar se descarta**. Después hay que imprimir la nueva,
+con el enlace de al lado.
 
 ## [S5] Dar de baja a un estudiante que se retiró
 
-En el listado del admin, **Dar de baja (se retiró del colegio)**, con confirmación. La
-baja es **lógica**: no borra nada, el historial y el saldo se conservan y siguen siendo
+En `/padron/`, **Editar** en su fila, apagar **Matriculado** y **Guardar**: el navegador pide
+confirmación, y solo en ese caso. A un retirado la ficha ya no le enseña el interruptor sino
+desde cuándo lo está (`DT-40`). La baja es **lógica**: no borra nada, el historial y el saldo se conservan y siguen siendo
 consultables (`HU-51`, `HU-52`). Desde ese momento el estudiante no puede comprar ni
 recargar (`INVD-2`).
 
@@ -129,8 +132,11 @@ recibe recargas (`INVD-7`), pero su saldo le espera; el del retirado queda conge
 
 ## [S6] Cargar la fotografía de un estudiante
 
-En la ficha del estudiante, campo **Fotografía**. Es opcional: sin ella todo funciona
-igual (`HU-57`). Para quitarla, la casilla **Quitar la fotografía actual**.
+En `/padron/`, **Editar** en su fila y, en la ficha, **Subir foto** (o **Cambiar foto**):
+la vista previa es local hasta que se guarda. Es opcional: sin ella todo funciona igual
+(`HU-57`). Para quitarla, la casilla **Quitar la foto actual**. **Si la imagen no vale, no
+se guarda nada de la ficha**, tampoco lo demás que se hubiera cambiado: un «Guardar» es una
+sola transacción (`DT-40`).
 
 Lo que se guarda no es el fichero que subiste: la canalización lo decodifica y lo vuelve a
 codificar a WEBP, lo reduce al lado máximo y **le retira el EXIF**, la ubicación GPS
@@ -299,3 +305,41 @@ siempre**, haya recomendaciones o no.
 información nutricional: el seed crea el catálogo con ficha completa, así que hay que crear
 uno a propósito. Un producto sin declarar no suma cero — se excluye y la pantalla dice
 cuántos renglones dejó fuera (`[S4.3]` de `./valores-de-referencia-nutricional.md`).
+
+## [S14] Cortar el acceso de un acudiente
+
+Como institución, en `/padron/`, **Editar** en la fila de cualquiera de sus estudiantes y, en
+el recuadro del acudiente, apagar **Acceso a la aplicación** y **Guardar** (`HU-63`,
+`DEC-20`). Sin confirmación: se deshace con el mismo interruptor. La frase de al lado dice a
+cuántos estudiantes alcanza, porque la cuenta es una para todos ellos (`HU-04`).
+
+Lo que tiene que pasar: el acudiente **no entra** en `/login/`, la sesión que tuviera abierta
+deja de servir en la siguiente petición, y **no recibe** el correo de recuperación aunque lo
+pida (`DEC-19`; se comprueba en Mailpit, `[S2]`). Sus estudiantes **siguen comprando** con el
+saldo que tengan y con sus restricciones; lo que pierden es quien les recargue.
+
+**No es la desactivación del estudiante** (`HU-47`), que bloquea la tarjeta y se hace desde
+la fila. Esto corta la cuenta del adulto. Y **no es para el personal**: un cajero o la
+administración se desactivan desde *Usuarios* (`HU-42`).
+
+## [S15] Matricular a un solo estudiante
+
+Como institución, en `/padron/`, **Cargar un solo estudiante** (`HU-44`, `DT-40`). Se abre la
+ficha vacía, con los tres campos obligatorios en rojo y **Matricular** deshabilitado. Cada
+aviso desaparece cuando su campo cumple: el nombre, escrito; el documento, **entre 5 y 20
+caracteres**, las mismas longitudes que la carga masiva; el acudiente, **elegido** de la
+lista que sale al buscarlo por nombre, documento o correo —escribirlo no es elegirlo—.
+
+Al matricular, la ficha vuelve vacía para el siguiente y dice el **código generado**, con
+**Imprimir tarjeta** y **Abrir su ficha** al lado; la tabla de detrás ya lo trae.
+
+Lo que tiene que rechazar, y con su motivo junto al campo: un documento que ya es de otro
+estudiante, y una fotografía que no se puede procesar —en ese caso **no queda nadie
+matriculado**, tampoco sin foto—.
+
+**El acudiente tiene que existir.** Si la familia es nueva, entra con la carga masiva
+(`[S1]`, `HU-01`), que es lo único que crea cuentas de acudiente.
+
+**El estudiante de prueba no se puede borrar desde la aplicación**: ninguna pantalla lo hace,
+a propósito (`DT-12`). En la base de trabajo, uno recién creado y sin movimientos se borra
+desde la consola de Django; con historia, no hay forma, y lo que procede es la baja.

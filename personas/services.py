@@ -17,8 +17,8 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from cuentas.models import Rol
-from cuentas.services import crear_cuenta
-from config.imagenes import procesar_imagen
+from cuentas.services import crear_cuenta, desactivar_acudiente, reactivar_acudiente
+from config.imagenes import ImagenInvalida, procesar_imagen
 from personas.carga import leer
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import (
@@ -539,6 +539,100 @@ def editar_estudiante(*, actor, estudiante, **campos):
 
     if cambiados:
         estudiante.save(update_fields=cambiados)
+
+    return estudiante
+
+
+
+@transaction.atomic
+def guardar_ficha(
+    *,
+    actor,
+    estudiante,
+    nombre,
+    documento,
+    fotografia=None,
+    quitar_foto=False,
+    retirar=False,
+    acceso_del_acudiente=None,
+):
+    """Todo lo que la ficha del padrón cambia, en una sola transacción (`DT-40`).
+
+    No añade ninguna regla: **cada cambio lo hace el servicio que ya lo hacía**
+    —`editar_estudiante`, `guardar_fotografia`, `dar_de_baja`, y el acceso del
+    acudiente de `DEC-20`—, cada uno con su comprobación de rol. Lo que pone
+    esta función es el **todo o nada**: si el documento choca con el de otro
+    estudiante o la fotografía no se puede procesar, se deshace lo demás.
+    Quien pulsó «Guardar» una vez no puede quedarse con la mitad aplicada sin
+    saber cuál.
+
+    `retirar` es la baja (`HU-51`), que no tiene vuelta: aquí solo se puede
+    pedir, nunca deshacer, porque no existe un servicio que lo haga.
+
+    `acceso_del_acudiente` es `None` cuando la ficha no lo toca, y `True` o
+    `False` cuando sí.
+
+    Los fallos de datos salen como `ValidationError` con el campo al que
+    pertenecen, para que la ficha los pinte donde se cometieron.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Editar estudiantes")
+
+    try:
+        with transaction.atomic():
+            editar_estudiante(
+                actor=actor, estudiante=estudiante, nombre=nombre, documento=documento
+            )
+    except IntegrityError:
+        raise ValidationError(
+            {"documento": "Ya hay otro estudiante con ese documento."}
+        ) from None
+
+    if fotografia:
+        try:
+            guardar_fotografia(actor=actor, estudiante=estudiante, archivo=fotografia)
+        except ImagenInvalida as error:
+            raise ValidationError({"fotografia": error.messages}) from None
+    elif quitar_foto:
+        quitar_fotografia(actor=actor, estudiante=estudiante)
+
+    if retirar:
+        dar_de_baja(actor=actor, estudiante=estudiante)
+
+    if acceso_del_acudiente is not None:
+        cambiar = reactivar_acudiente if acceso_del_acudiente else desactivar_acudiente
+        cambiar(actor=actor, usuario=estudiante.acudiente.usuario)
+
+    return estudiante
+
+
+@transaction.atomic
+def matricular_estudiante(*, actor, nombre, documento, acudiente, fotografia=None):
+    """Matricula a un estudiante desde el padrón (`HU-44`, primer criterio; `DT-40`).
+
+    No añade ninguna regla: el alta es `crear_estudiante`, que asigna el código
+    (`HU-43`), y la fotografía es `guardar_fotografia` (`DT-20`). Lo que pone es
+    el **todo o nada**: si la imagen no vale, el estudiante no queda matriculado
+    a medias, sin la foto que se le quiso poner.
+
+    Los fallos de datos salen como `ValidationError` con su campo, como en
+    `guardar_ficha`.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Matricular estudiantes")
+
+    try:
+        estudiante = crear_estudiante(
+            actor=actor, nombre=nombre, documento=documento, acudiente=acudiente
+        )
+    except IntegrityError:
+        raise ValidationError(
+            {"documento": "Ya hay un estudiante con ese documento."}
+        ) from None
+
+    if fotografia:
+        try:
+            guardar_fotografia(actor=actor, estudiante=estudiante, archivo=fotografia)
+        except ImagenInvalida as error:
+            raise ValidationError({"fotografia": error.messages}) from None
 
     return estudiante
 

@@ -88,7 +88,7 @@ class NadieEditaLaMatrizDesdeLaPantallaTest(BaseInstitucional):
         cuerpo = self.client.get(reverse("admin:index")).content.decode()
 
         self.assertNotIn("/admin/auth/group/", cuerpo)
-        self.assertIn("/admin/personas/estudiante/", cuerpo)
+        self.assertIn("/admin/cuentas/usuario/", cuerpo)
 
     def test_no_alcanza_el_admin_de_permisos_sueltos(self):
         respuesta = self.client.get("/admin/auth/permission/")
@@ -226,15 +226,6 @@ class LaInstitucionSigueHaciendoSuTrabajoTest(BaseInstitucional):
             )
         self.assertEqual(respuesta.status_code, 302)
         self.assertTrue(Usuario.objects.filter(email="cajera@example.com").exists())
-
-    def test_administra_estudiantes(self):
-        self.assertEqual(
-            self.client.get(reverse("admin:personas_estudiante_changelist")).status_code,
-            200,
-        )
-        self.assertEqual(
-            self.client.get(reverse("admin:personas_estudiante_add")).status_code, 200
-        )
 
     def test_consulta_acudientes(self):
         self.assertEqual(
