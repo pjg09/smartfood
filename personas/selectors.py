@@ -164,10 +164,9 @@ def padron(*, actor, busqueda="", incluir_retirados=False):
     """El padrón de la institución: quién está matriculado (`HU-44`, `DT-27`).
 
     **Esta función es una lectura y solo una lectura**, aunque la pantalla ya no
-    lo sea del todo: `DT-29` le dio al padrón una única acción que escribe
-    —desactivar (`HU-47`)—, y esa pasa por `personas.services.desactivar`, no por
-    aquí. El alta, la edición, la baja y la reasignación siguen en el admin
-    (`DT-2`): esta pantalla enseña y enlaza.
+    lo sea del todo: desactivar, reactivar y la ficha escriben desde el padrón
+    (`DT-29`, `DT-30`, `DT-40`), y todo eso pasa por `personas.services`, no por
+    aquí.
 
     **Exclusivo de la institución** (`HU-44`, tercer criterio, y `[S11]`). La
     comprobación va aquí y no en la vista porque `DT-11` lo exige: el control de
@@ -247,8 +246,8 @@ def acudientes_de_la_institucion(*, actor, busqueda=""):
 
     **Es una lectura y nada más.** La matriz solo concede `view` sobre
     `personas.acudiente`: la cuenta se da de alta con la carga (`HU-01`), se
-    activa por invitación (`HU-03`) y se desactiva desde `cuentas.usuario`
-    (`HU-42`). Esta pantalla responde «¿de quién es hijo este estudiante?» y
+    activa por invitación (`HU-03`) y se desactiva desde la ficha del
+    estudiante en el padrón (`HU-63`). Esta pantalla responde «¿de quién es hijo este estudiante?» y
     «¿este acudiente ya puede entrar?», que son las dos que secretaría hace.
 
     **Exclusivo de la institución**, y la comprobación va aquí y no en la vista

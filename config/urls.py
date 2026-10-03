@@ -17,13 +17,17 @@ from config.salud import salud
 from cuentas.views import RecuperacionDeContrasenaForm, inicio, panel
 from personas.views import (
     acudientes_de_la_carga,
+    acudientes_para_matricular,
+    alta_de_estudiante,
     desactivacion_de_estudiante,
     desactivacion_por_el_acudiente,
     reactivacion_de_estudiante,
     carga_de_estudiantes,
     padron_de_estudiantes,
     estudiante_seleccionado,
+    ficha_del_estudiante,
     panel_del_acudiente,
+    reasignacion_desde_el_padron,
     tarjeta_del_estudiante,
 )
 from reportes.views import (
@@ -193,10 +197,10 @@ urlpatterns = [
         restricciones_de_los_estudiantes,
         name="restricciones-tabla",
     ),
-    # `TT-120`, `HU-47`, `DT-29`. **La única escritura del padrón**, y por eso
-    # tiene ruta propia: `DT-27` dejó la pantalla en solo lectura y `DT-29`
-    # corrige esa parte para la desactivación inmediata. Devuelve el fragmento
-    # de la tabla, como `/padron/tabla/`.
+    # `TT-120`, `HU-47`, `DT-29`. **Cada escritura del padrón tiene ruta propia**
+    # y `POST /padron/` sigue siendo `405`: escribe la acción, no la pantalla.
+    # Esta y la de reactivar devuelven el fragmento de la tabla, como
+    # `/padron/tabla/`.
     path(
         "padron/<uuid:estudiante_id>/desactivar/",
         desactivacion_de_estudiante,
@@ -209,6 +213,30 @@ urlpatterns = [
         "padron/<uuid:estudiante_id>/reactivar/",
         reactivacion_de_estudiante,
         name="reactivacion-de-estudiante",
+    ),
+    # `DT-40`, `HU-44` primer criterio. Matricular a uno solo, en la misma modal:
+    # `GET` la ficha vacía, `POST` matricula. La segunda ruta es el buscador del
+    # acudiente, que se elige entre los que ya existen.
+    path("padron/matricular/", alta_de_estudiante, name="alta-de-estudiante"),
+    path(
+        "padron/matricular/acudientes/",
+        acudientes_para_matricular,
+        name="acudientes-para-matricular",
+    ),
+    # `DT-40`, `HU-44`, `HU-57`, `HU-51`, `HU-63`. La ficha del estudiante, en la
+    # modal del padrón: `GET` la pinta y `POST` la guarda. Las dos devuelven el
+    # fragmento de la ficha, y avisan a la tabla con `HX-Trigger`.
+    path(
+        "padron/<uuid:estudiante_id>/ficha/",
+        ficha_del_estudiante,
+        name="ficha-del-estudiante",
+    ),
+    # `HU-46`, `INVD-4`. El código no es un campo de la ficha: se reasigna con
+    # su propia acción, y el anterior deja de existir en el acto.
+    path(
+        "padron/<uuid:estudiante_id>/reasignar/",
+        reasignacion_desde_el_padron,
+        name="reasignacion-desde-el-padron",
     ),
     # Interfaz del acudiente (`TT-29`, `HU-04`, `INT-1`). La primera devuelve la
     # página; la segunda, el fragmento HTMX del estudiante elegido. Son dos

@@ -546,12 +546,13 @@ no venga de una historia.
 | `#362` | `feat/DEC-17-pantallas-propias-de-la-institucion` | Acudientes y restricciones dejan el admin y toman el sistema visual | `DEC-17` |
 | `#364` | `build/entorno-en-contenedores` | El stack entero con `docker compose up`, la suite completa en la CI antes de publicar versión, y SeaweedFS en lugar de MinIO | `DT-37`, `DT-38` |
 | — | `feat/correo-local-y-recuperacion` | Mailpit en el compose; la carga masiva vuelve a entregar las invitaciones; recuperación de la contraseña olvidada | `DEC-18`, `DEC-19`, **`HU-62`** |
+| — | `refactor/quitar-admin-de-estudiantes` | El admin de estudiantes se retira y su trabajo pasa a la ficha del estudiante, en una modal del padrón —alta de uno solo incluida—; la institución corta y devuelve el acceso de un acudiente | `DT-40`, `DEC-20`, **`HU-63`** |
 
-**El último sí trae una historia, `HU-62`**, y es el único de la tabla que añade una capacidad:
-recuperar la contraseña olvidada. Se registró con `DEC-19` antes de construirla y se marca `☑`
+**Los dos últimos traen historia, `HU-62` y `HU-63`**, y son los únicos de la tabla que añaden
+una capacidad: recuperar la contraseña olvidada, y cortar el acceso de un acudiente. Se registró con `DEC-19` antes de construirla y se marca `☑`
 en `[S4]` del backlog de historias, **pero no tiene tareas `TT-nn`**: entró con el sprint cerrado
 de trabajo y no se repartió. Ese mismo PR devuelve a `HU-03` el criterio que `DEC-9` recortó
-(`DEC-18`).
+(`DEC-18`). `HU-63` entró igual, con `DEC-20`, y tampoco tiene tareas.
 
 **Los cuatro del rediseño no amplían `[S11]`.** Entregan lo que la matriz ya concedía; lo que cambia
 es por dónde se llega y cómo se ve. `DEC-17` **corrige a `DEC-16`** en un punto —allí se

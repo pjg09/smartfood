@@ -213,7 +213,7 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.client.force_login(cuenta(Rol.INSTITUCION))
 
     def _pantalla_del_admin(self):
-        return self.client.get("/admin/personas/estudiante/").content.decode()
+        return self.client.get("/admin/cuentas/usuario/").content.decode()
 
     def test_una_pantalla_del_admin_trae_barra_cabecera_y_tema(self):
         cuerpo = self._pantalla_del_admin()

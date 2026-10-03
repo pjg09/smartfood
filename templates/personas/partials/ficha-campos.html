@@ -1,0 +1,108 @@
+{% comment %} `DT-40`. Lo que comparten la ficha de edición y la de alta: fotografía,
+   nombre y documento. Escrito una vez para que las dos pidan lo mismo.
+
+   **La validación en el navegador es una comodidad, no la regla** (`DT-15`). Las
+   longitudes salen del propio campo del formulario —y este de
+   `personas.validacion`, las mismas de la carga masiva—, así que el aviso rojo y
+   el rechazo del servidor no pueden pedir cosas distintas. El script
+   (`assets/js/interfaz.js`) lee `data-validar` y sus avisos; si no corre, el
+   servidor rechaza igual y la ficha vuelve con su error.
+
+   `estudiante` puede no existir todavía: en el alta no hay foto ni inicial.
+{% endcomment %}
+
+{% comment %} `HU-57`. **Cuadrada y no en redondo**: aquí la cara es el dato que
+   secretaría comprueba, como en el punto de venta (`[S4]` del sistema visual).
+   Sin fotografía no hay `<img>` con `src` vacío: la inicial ocupa el sitio, y la
+   vista previa la pone el script al elegir un fichero. {% endcomment %}
+<section class="flex flex-col gap-3 rounded-md border border-borde p-4">
+  <h3 class="text-base font-semibold text-texto">Foto del estudiante <span class="font-normal text-texto-suave">(opcional)</span></h3>
+  <div class="flex items-start gap-4">
+    <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-superficie-hover">
+      <img data-foto-vista alt=""
+           {% if estudiante.tiene_foto %}src="{{ estudiante.url_de_la_foto }}"{% else %}hidden{% endif %}
+           class="h-full w-full object-cover">
+      <span data-foto-inicial aria-hidden="true"
+            {% if estudiante.tiene_foto %}hidden{% endif %}
+            class="flex h-full w-full items-center justify-center font-display text-2xl
+                   text-texto-suave">{% if estudiante %}{{ estudiante.nombre|first|upper }}{% else %}<svg class="h-8 w-8"><use href="#i-personas"></use></svg>{% endif %}</span>
+    </div>
+    <div class="flex min-w-0 flex-col gap-2">
+      <label class="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border
+                    border-borde bg-superficie px-3 py-1.5 text-base font-medium text-texto
+                    transition-colors hover:border-primario hover:bg-superficie-hover
+                    has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-acento">
+        <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-cargar"></use></svg>
+        <span data-foto-nombre>{% if estudiante.tiene_foto %}Cambiar foto{% else %}Subir foto{% endif %}</span>
+        <input type="file" name="{{ formulario.fotografia.html_name }}" data-foto-entrada
+               accept="image/jpeg,image/png,image/webp,image/gif,image/bmp"
+               class="sr-only">
+      </label>
+      <p class="text-sm text-texto-suave">
+        JPEG, PNG, WebP, GIF o BMP, hasta {{ tamano_maximo_mb }} MB. Se reduce a
+        {{ lado_maximo }} px de lado y se le quitan los datos de la cámara, ubicación incluida.
+      </p>
+      {% if formulario.fotografia.errors %}
+        <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ formulario.fotografia.errors|join:" " }}</p>
+      {% endif %}
+      {% if estudiante.tiene_foto %}
+        <label class="inline-flex w-fit items-center gap-2 text-sm text-texto">
+          <input type="checkbox" name="{{ formulario.quitar_foto.html_name }}" data-quitar-foto
+                 {% if formulario.quitar_foto.value %}checked{% endif %}
+                 class="h-4 w-4 accent-primario">
+          Quitar la foto actual
+        </label>
+      {% endif %}
+      <p class="text-xs text-texto-suave">
+        En el prototipo son avatares generados, nunca fotografías de personas reales.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% with campo=formulario.nombre %}
+  <div class="flex flex-col gap-1" data-campo>
+    <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">
+      Nombre completo
+    </label>
+    <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+           value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+           data-validar
+           data-minimo="{{ campo.field.min_length }}" data-maximo="{{ campo.field.max_length }}"
+           data-aviso-vacio="Escribe el nombre completo del estudiante."
+           data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+           class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto
+                  transition-colors hover:border-acento focus:border-acento focus:outline-none
+                  {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+    <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+    {% if campo.errors %}
+      <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+    {% endif %}
+  </div>
+{% endwith %}
+
+{% with campo=formulario.documento %}
+  <div class="flex flex-col gap-1" data-campo>
+    <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">
+      Documento
+    </label>
+    <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+           value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+           data-validar
+           data-minimo="{{ campo.field.min_length }}" data-maximo="{{ campo.field.max_length }}"
+           data-aviso-vacio="Escribe el documento del estudiante."
+           data-aviso-corto="El documento tiene entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres."
+           data-aviso-largo="El documento tiene entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres."
+           class="h-12 w-full rounded-md border bg-superficie px-3 font-mono text-base
+                  tabular-nums text-texto transition-colors
+                  hover:border-acento focus:border-acento focus:outline-none
+                  {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+    <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+    {% if campo.errors %}
+      <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+    {% endif %}
+    <p class="text-sm text-texto-suave">
+      Entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres. Único dentro del colegio.
+    </p>
+  </div>
+{% endwith %}

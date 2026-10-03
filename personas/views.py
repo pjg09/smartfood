@@ -7,6 +7,7 @@ Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
 """
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
@@ -16,7 +17,7 @@ from django.views.decorators.http import require_http_methods
 from billetera.selectors import historial_de, saldo_de
 from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
-from personas.models import Estudiante, Institucion
+from personas.models import Acudiente, Estudiante, Institucion
 from personas.selectors import (
     acudientes_de_la_institucion,
     acudientes_sin_activar,
@@ -29,10 +30,13 @@ from personas.selectors import (
 from personas.services import (
     cargar_estudiantes_y_acudientes,
     desactivar,
+    guardar_ficha,
+    matricular_estudiante,
     reactivar,
+    reasignar_codigo_de_tarjeta,
 )
 from personas.tarjeta import ancho_mm, svg_del_codigo
-from personas.validacion import ArchivoInvalido
+from personas.validacion import LONGITUD_DOCUMENTO, LONGITUD_NOMBRE, ArchivoInvalido
 from reportes.selectors import historial_de_consumo
 from restricciones.selectors import (
     alergenos_bloqueados_de,
@@ -40,6 +44,70 @@ from restricciones.selectors import (
     productos_bloqueados_de,
 )
 from ventas.selectors import pedidos_pendientes_de
+
+
+class FichaDelEstudianteForm(forms.Form):
+    """Lo que la ficha del padrón deja cambiar (`DT-40`).
+
+    **El código de tarjeta no está**, y no se ha olvidado: se reasigna con su
+    propia acción (`HU-46`, `INVD-4`), nunca se escribe (`INV-7`). Tampoco el
+    nombre ni el correo del acudiente, que siguen siendo de consulta (`DEC-20`).
+
+    Las dos casillas son interruptores, y una casilla desmarcada **no viaja**:
+    su ausencia es «apagado». Por eso `matriculado` solo se dibuja a quien sigue
+    matriculado — a un retirado le faltaría siempre y se leería como «retirar».
+    """
+
+    nombre = forms.CharField(
+        label="Nombre completo",
+        min_length=LONGITUD_NOMBRE[0],
+        max_length=LONGITUD_NOMBRE[1],
+    )
+    # Las mismas longitudes que la carga masiva (`personas.validacion`): un
+    # documento que la carga rechaza no puede entrar editando la ficha.
+    documento = forms.CharField(
+        label="Documento",
+        min_length=LONGITUD_DOCUMENTO[0],
+        max_length=LONGITUD_DOCUMENTO[1],
+    )
+    fotografia = forms.ImageField(label="Fotografía", required=False)
+    quitar_foto = forms.BooleanField(label="Quitar la fotografía", required=False)
+    matriculado = forms.BooleanField(label="Matriculado", required=False)
+    acceso_del_acudiente = forms.BooleanField(
+        label="Acceso a la aplicación", required=False
+    )
+
+
+class AltaDeEstudianteForm(forms.Form):
+    """Matricular a un estudiante desde el padrón (`HU-44`, primer criterio).
+
+    **El acudiente se elige, no se crea.** Crear uno es dar de alta una cuenta,
+    y eso solo lo hace la carga masiva (`HU-01`); la institución, sobre el
+    acudiente, solo consulta (`[S11]`). Una familia nueva entra por la carga.
+
+    El código de tarjeta tampoco está: lo asigna `crear_estudiante` al guardar
+    (`HU-43`, `INV-7`).
+    """
+
+    nombre = forms.CharField(
+        label="Nombre completo",
+        min_length=LONGITUD_NOMBRE[0],
+        max_length=LONGITUD_NOMBRE[1],
+    )
+    documento = forms.CharField(
+        label="Documento",
+        min_length=LONGITUD_DOCUMENTO[0],
+        max_length=LONGITUD_DOCUMENTO[1],
+    )
+    fotografia = forms.ImageField(label="Fotografía", required=False)
+    acudiente = forms.ModelChoiceField(
+        label="Acudiente",
+        queryset=Acudiente.objects.select_related("usuario"),
+        error_messages={
+            "required": "Elige el acudiente de la lista.",
+            "invalid_choice": "Ese acudiente no existe: búscalo y elígelo de la lista.",
+        },
+    )
 
 
 class ArchivoDeCargaForm(forms.Form):
@@ -352,9 +420,9 @@ def desactivacion_de_estudiante(request, estudiante_id):
     pantallas justo en el escenario que motiva la historia.
 
     Lo que **no** cambia es dónde vive la regla: esta vista no escribe, llama a
-    `personas.services.desactivar`, que comprueba el rol (`DT-15`, `DT-11`). El
-    resto del padrón sigue leyendo, y el alta, la edición, la baja y la
-    reasignación siguen en el admin.
+    `personas.services.desactivar`, que comprueba el rol (`DT-15`, `DT-11`). La
+    edición, la baja y la reasignación van en la ficha (`DT-40`), cada una
+    también por su servicio.
     ─────────────────────────────────────────────────────────────────────────
 
     **Devuelve el fragmento de la tabla, no una página** (`DT-16`), y con los
@@ -528,3 +596,205 @@ def acudientes_de_la_carga(request):
         return render(request, "personas/partials/acudientes-tabla.html", contexto)
 
     return render(request, "personas/acudientes.html", contexto)
+
+
+def _estudiante_de_la_institucion(actor, estudiante_id):
+    """El selector decide quién pasa (`DT-15`): `403` a otro rol, `404` si no existe."""
+    try:
+        return estudiante_para_la_institucion(actor=actor, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("No hay ningún estudiante con ese identificador.") from None
+
+
+def _ficha(request, estudiante, formulario=None, **resultado):
+    """La ficha del estudiante, con lo escrito o con lo que hay en la base.
+
+    Sin formulario, se arma desde la base: es lo que se pinta al abrir y después
+    de guardar, para que lo que se ve sea lo que quedó y no lo que se tecleó.
+    """
+    usuario_del_acudiente = estudiante.acudiente.usuario
+    if formulario is None:
+        formulario = FichaDelEstudianteForm(initial={
+            "nombre": estudiante.nombre,
+            "documento": estudiante.documento,
+            "matriculado": not estudiante.esta_de_baja,
+            "acceso_del_acudiente": usuario_del_acudiente.is_active,
+        })
+
+    return render(request, "personas/partials/ficha-del-estudiante.html", {
+        "estudiante": estudiante,
+        "formulario": formulario,
+        # `DEC-20`: cortar el acceso del acudiente alcanza a todos los suyos, y
+        # la ficha lo dice antes de que se apague el interruptor.
+        "estudiantes_del_acudiente": list(
+            estudiante.acudiente.estudiantes.order_by("nombre")
+            .values_list("nombre", flat=True)
+        ),
+        # Los límites que la canalización de `DT-20` aplica, leídos de donde
+        # viven: escritos en la plantilla, el día que cambien mentiría.
+        "tamano_maximo_mb": settings.IMAGEN_TAMANO_MAXIMO_BYTES // (1024 * 1024),
+        "lado_maximo": settings.IMAGEN_LADO_MAXIMO,
+        **resultado,
+    })
+
+
+def _avisar_a_la_tabla(respuesta):
+    """La tabla del padrón vuelve a pedirse con los filtros que tenía (`DT-40`).
+
+    Es un evento y no la tabla en la respuesta: la ficha devuelve **un** fragmento
+    (`DT-16`), y quien sabe qué filtros hay puestos es el buscador, no la ficha.
+    """
+    respuesta["HX-Trigger"] = "padron-cambiado"
+    return respuesta
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def ficha_del_estudiante(request, estudiante_id):
+    """La ficha del estudiante, en la modal del padrón (`DT-40`).
+
+    `GET` la pinta y `POST` la guarda; **las dos devuelven la ficha**. Quién
+    puede lo decide el selector antes de nada: la escritura viene después de la
+    lectura, por lo mismo que en `_transicion_desde_el_padron`.
+
+    **Un error de datos vuelve en `200`**, con lo escrito y el motivo junto al
+    campo: htmx no intercambia lo que llega en `4xx`, y un `400` dejaría la
+    modal igual y a secretaría sin saber qué falló.
+    """
+    estudiante = _estudiante_de_la_institucion(request.user, estudiante_id)
+
+    if request.method == "GET":
+        return _ficha(request, estudiante)
+
+    formulario = FichaDelEstudianteForm(request.POST, request.FILES)
+    if not formulario.is_valid():
+        return _ficha(request, estudiante, formulario)
+
+    datos = formulario.cleaned_data
+    try:
+        guardar_ficha(
+            actor=request.user,
+            estudiante=estudiante,
+            nombre=datos["nombre"],
+            documento=datos["documento"],
+            fotografia=datos["fotografia"],
+            quitar_foto=datos["quitar_foto"],
+            # Solo quien sigue matriculado tiene el interruptor: a un retirado no
+            # le llega, y su ausencia no puede leerse como «retirar».
+            retirar=not estudiante.esta_de_baja and not datos["matriculado"],
+            acceso_del_acudiente=datos["acceso_del_acudiente"],
+        )
+    except ValidationError as error:
+        formulario.add_error(None, error)
+        # El servicio pudo dejar valores a medias en la instancia antes de que
+        # la transacción se deshiciera; la ficha enseña lo que hay en la base.
+        estudiante.refresh_from_db()
+        return _ficha(request, estudiante, formulario)
+
+    estudiante.refresh_from_db()
+    estudiante.acudiente.usuario.refresh_from_db()
+    return _avisar_a_la_tabla(_ficha(request, estudiante, guardada=True))
+
+
+@login_required
+@require_http_methods(["POST"])
+def reasignacion_desde_el_padron(request, estudiante_id):
+    """Reasigna el código desde la ficha (`HU-46`, `INVD-4`, `DT-40`).
+
+    Devuelve la ficha con el código nuevo y **el que acaba de morir**, que es lo
+    que secretaría necesita para saber qué tarjeta tirar.
+    """
+    estudiante = _estudiante_de_la_institucion(request.user, estudiante_id)
+    anterior, _nuevo = reasignar_codigo_de_tarjeta(
+        actor=request.user, estudiante=estudiante
+    )
+    return _avisar_a_la_tabla(_ficha(request, estudiante, codigo_retirado=anterior))
+
+
+# Cuántos acudientes enseña el buscador del alta. Es para elegir uno, no para
+# recorrer la lista: quien no lo encuentra entre los primeros afina la búsqueda.
+ACUDIENTES_EN_EL_BUSCADOR = 8
+
+
+def _alta(request, formulario=None, **resultado):
+    """La ficha de alta, vacía o con lo escrito (`HU-44`, `DT-40`).
+
+    El acudiente elegido viaja como un identificador oculto; para enseñarlo de
+    vuelta con su nombre cuando algo falló, se busca aquí. Si el identificador no
+    vale, no se enseña ninguno y el campo vuelve a pedirse.
+    """
+    formulario = formulario or AltaDeEstudianteForm()
+    elegido = None
+    if formulario.is_bound:
+        identificador = formulario.data.get("acudiente", "")
+        try:
+            elegido = (
+                Acudiente.objects.select_related("usuario").filter(pk=identificador).first()
+                if identificador else None
+            )
+        except ValidationError:
+            elegido = None
+
+    return render(request, "personas/partials/ficha-de-alta.html", {
+        "formulario": formulario,
+        "acudiente_elegido": elegido,
+        "tamano_maximo_mb": settings.IMAGEN_TAMANO_MAXIMO_BYTES // (1024 * 1024),
+        "lado_maximo": settings.IMAGEN_LADO_MAXIMO,
+        **resultado,
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def alta_de_estudiante(request):
+    """Matricula a un estudiante desde el padrón (`HU-44`, primer criterio; `DT-40`).
+
+    `GET` pinta la ficha vacía y `POST` matricula; **las dos devuelven la ficha
+    de alta** (`DT-16`). Al matricular vuelve vacía, con el resultado arriba
+    —el código que se generó y el enlace para imprimirlo—, lista para el
+    siguiente, y la tabla se entera por `HX-Trigger`.
+
+    Quién puede lo decide el servicio, pero **se pregunta antes de pintar
+    nada**: una ficha de alta que se abre para quien no puede matricular es un
+    formulario que siempre falla. El selector del padrón ya exige el rol.
+    """
+    padron(actor=request.user)
+
+    if request.method == "GET":
+        return _alta(request)
+
+    formulario = AltaDeEstudianteForm(request.POST, request.FILES)
+    if not formulario.is_valid():
+        return _alta(request, formulario)
+
+    datos = formulario.cleaned_data
+    try:
+        estudiante = matricular_estudiante(
+            actor=request.user,
+            nombre=datos["nombre"],
+            documento=datos["documento"],
+            acudiente=datos["acudiente"],
+            fotografia=datos["fotografia"],
+        )
+    except ValidationError as error:
+        formulario.add_error(None, error)
+        return _alta(request, formulario)
+
+    return _avisar_a_la_tabla(_alta(request, matriculado=estudiante))
+
+
+@login_required
+@require_http_methods(["GET"])
+def acudientes_para_matricular(request):
+    """Los acudientes que coinciden con lo que se escribe en el alta (`DT-40`).
+
+    Fragmento (`DT-16`). **Sin búsqueda no devuelve a nadie**: la lista entera
+    de un colegio son cientos de adultos, y elegir de ella a ojo es lo que el
+    recorrido de `TT-35` descartó.
+    """
+    busqueda = request.GET.get("buscar_acudiente", "").strip()
+    acudientes = acudientes_de_la_institucion(actor=request.user, busqueda=busqueda)
+    return render(request, "personas/partials/acudientes-para-matricular.html", {
+        "busqueda": busqueda,
+        "acudientes": list(acudientes[:ACUDIENTES_EN_EL_BUSCADOR]) if busqueda else [],
+    })

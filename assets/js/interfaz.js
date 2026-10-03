@@ -665,6 +665,171 @@
     if (cerrarlo) cerrarlo.addEventListener("click", cerrar);
   }
 
+  // ── La ficha del estudiante, en la modal del padrón (`DT-40`) ──────────────
+  //
+  // **Aquí no se pide nada al servidor**: lo hace htmx. Esto solo abre y cierra
+  // el `<dialog>`, enseña la fotografía elegida antes de subirla y pide la
+  // confirmación de la baja. La ficha llega por `hx-get` al cuerpo de la modal,
+  // y se abre al recibirla; los intercambios siguientes —guardar, reasignar—
+  // ocurren dentro de una modal que ya está abierta.
+  //
+  // **La confirmación de la baja es condicional**, y por eso no es un
+  // `hx-confirm`: solo se pide si el interruptor de la matrícula se apagó. La
+  // baja no tiene vuelta (`DEC-7`); guardar un nombre corregido no necesita
+  // ninguna pregunta, y preguntar siempre enseña a confirmar sin leer.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  function montarFichaDelEstudiante() {
+    var modal = document.querySelector("[data-modal-ficha]");
+    if (!modal) return;
+    var cuerpo = modal.querySelector("#cuerpo-de-la-ficha");
+
+    function cerrar() {
+      modal.close();
+      cuerpo.innerHTML = "";
+    }
+
+    document.body.addEventListener("htmx:afterSwap", function (evento) {
+      if (evento.detail.target === cuerpo && !modal.open) modal.showModal();
+    });
+
+    modal.addEventListener("click", function (evento) {
+      // Pulsar fuera del panel cierra, que es lo que un `<dialog>` no hace solo.
+      if (evento.target === modal || evento.target.closest("[data-cerrar-ficha]")) {
+        cerrar();
+      }
+    });
+    // Escape cierra el `<dialog>` por su cuenta; se vacía igual para que la
+    // siguiente ficha no enseñe un instante la anterior.
+    modal.addEventListener("close", function () { cuerpo.innerHTML = ""; });
+
+    modal.addEventListener("change", function (evento) {
+      var entrada = evento.target.closest("[data-foto-entrada]");
+      if (!entrada || !entrada.files || !entrada.files[0]) return;
+      var ficha = entrada.closest("[data-ficha-del-estudiante]");
+      var vista = ficha.querySelector("[data-foto-vista]");
+      var inicial = ficha.querySelector("[data-foto-inicial]");
+      var nombre = ficha.querySelector("[data-foto-nombre]");
+      // Vista previa local: el fichero no ha salido del navegador. Lo que se
+      // guarde será la versión re-codificada del servidor (`DT-20`), no esta.
+      vista.src = URL.createObjectURL(entrada.files[0]);
+      vista.hidden = false;
+      if (inicial) inicial.hidden = true;
+      if (nombre) nombre.textContent = entrada.files[0].name;
+    });
+
+    // ── Validación en vivo (`DT-40`) ─────────────────────────────────────────
+    // **Una comodidad, no la regla** (`DT-15`): las longitudes llegan en
+    // `data-minimo` y `data-maximo` desde el propio campo del formulario de
+    // Django, y el servidor rechaza igual lo que esto deje pasar. Aquí solo se
+    // dice antes lo que el servidor diría después, y se apaga «Guardar» mientras
+    // haya algo que decir.
+    function avisoDe(campo) {
+      var valor = campo.value.trim();
+      var minimo = parseInt(campo.getAttribute("data-minimo") || "0", 10);
+      var maximo = parseInt(campo.getAttribute("data-maximo") || "0", 10);
+      if (!valor) return campo.getAttribute("data-aviso-vacio");
+      if (minimo && valor.length < minimo) return campo.getAttribute("data-aviso-corto");
+      if (maximo && valor.length > maximo) return campo.getAttribute("data-aviso-largo");
+      return "";
+    }
+
+    function validar(formulario) {
+      var hayFallos = false;
+      formulario.querySelectorAll("[data-validar]").forEach(function (campo) {
+        var aviso = avisoDe(campo);
+        var contenedor = campo.closest("[data-campo]");
+        var hueco = contenedor && contenedor.querySelector("[data-aviso]");
+        if (hueco) {
+          hueco.textContent = aviso;
+          hueco.hidden = !aviso;
+        }
+        if (campo.type !== "hidden") {
+          campo.classList.toggle("border-error", !!aviso);
+          campo.classList.toggle("border-borde", !aviso);
+          campo.setAttribute("aria-invalid", aviso ? "true" : "false");
+        }
+        if (aviso) hayFallos = true;
+      });
+      var guardar = formulario.querySelector("[data-guardar-ficha]");
+      if (guardar) guardar.disabled = hayFallos;
+    }
+
+    function validarLoQueLlego(raiz) {
+      (raiz || modal).querySelectorAll("[data-formulario-validado]").forEach(validar);
+    }
+
+    modal.addEventListener("input", function (evento) {
+      var formulario = evento.target.closest("[data-formulario-validado]");
+      if (!formulario) return;
+      // El error que trajo el servidor se refería a lo que había antes de tocar
+      // el campo: en cuanto cambia, deja de ser verdad.
+      var contenedor = evento.target.closest("[data-campo]");
+      var viejo = contenedor && contenedor.querySelector("[data-error-del-servidor]");
+      if (viejo) viejo.remove();
+      validar(formulario);
+    });
+
+    // ── El acudiente del alta: se busca y se elige (`DT-40`) ─────────────────
+    modal.addEventListener("click", function (evento) {
+      var elegir = evento.target.closest("[data-elegir-acudiente]");
+      var cambiar = evento.target.closest("[data-cambiar-acudiente]");
+      if (!elegir && !cambiar) return;
+      var selector = evento.target.closest("[data-selector-de-acudiente]");
+      var oculto = selector.querySelector("[data-acudiente-elegido]");
+      var ficha = selector.querySelector("[data-acudiente-ficha]");
+      var buscador = selector.querySelector("[data-acudiente-buscador]");
+
+      if (elegir) {
+        oculto.value = elegir.getAttribute("data-elegir-acudiente");
+        ficha.querySelector("[data-acudiente-nombre]").textContent = elegir.getAttribute("data-nombre");
+        ficha.querySelector("[data-acudiente-correo]").textContent = elegir.getAttribute("data-correo");
+        ficha.hidden = false;
+        buscador.hidden = true;
+      } else {
+        oculto.value = "";
+        ficha.hidden = true;
+        buscador.hidden = false;
+        buscador.querySelector("[data-buscar-acudiente]").focus();
+      }
+      var viejo = selector.querySelector("[data-error-del-servidor]");
+      if (viejo) viejo.remove();
+      validar(selector.closest("[data-formulario-validado]"));
+    });
+
+    // Enter en el buscador del acudiente buscaría… enviando la ficha entera.
+    modal.addEventListener("keydown", function (evento) {
+      if (evento.key === "Enter" && evento.target.matches("[data-buscar-acudiente]")) {
+        evento.preventDefault();
+      }
+    });
+
+    // Tras cualquier intercambio se vuelve a validar lo que haya en la modal. No
+    // se filtra por el elemento: con `outerHTML`, el que se intercambió ya no
+    // está en el documento, y preguntarle si vive dentro de la modal dice que no.
+    document.body.addEventListener("htmx:afterSettle", function (evento) {
+      validarLoQueLlego();
+      // Los acudientes encontrados caen por debajo del borde de la modal en
+      // cuanto la ficha tiene foto, nombre y documento encima: sin esto, quien
+      // escribe no ve que llegaron.
+      if (evento.detail.target && evento.detail.target.id === "acudientes-encontrados") {
+        evento.detail.target.scrollIntoView({ block: "nearest" });
+      }
+    });
+
+    document.body.addEventListener("htmx:confirm", function (evento) {
+      var formulario = evento.target;
+      if (!formulario.matches || !formulario.matches("[data-formulario-de-la-ficha]")) return;
+      var matricula = formulario.querySelector("[data-matriculado]");
+      if (!matricula || matricula.checked) return;
+
+      evento.preventDefault();
+      if (window.confirm(formulario.getAttribute("data-confirmar-baja"))) {
+        evento.detail.issueRequest(true);
+      }
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
@@ -677,5 +842,6 @@
     montarModosDeBusqueda();
     montarMediosDePago();
     montarModalDelAdmin();
+    montarFichaDelEstudiante();
   });
 })();

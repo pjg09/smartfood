@@ -8,9 +8,9 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-01; la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-02; el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
-| version | 1.9 |
+| version | 1.10 |
 
 ### [S0.1] Qué responde este documento
 
@@ -64,6 +64,10 @@ los mismos colores desde `DT-23`.
 | `/padron/tabla/` | Fragmento HTMX de la tabla del padrón, filtrada | Institución | `DT-27` |
 | `/padron/<id>/desactivar/` | `POST`. Desactiva a un estudiante: su tarjeta deja de comprar | Institución | `TT-120`, `DT-29` |
 | `/padron/<id>/reactivar/` | `POST`. Lo devuelve a activo. **Solo la institución**, venga la desactivación de donde venga (`INVD-3`) | Institución | `TT-123`, `DT-30` |
+| `/padron/matricular/` | Matricular a un solo estudiante, en la misma modal: `GET` la ficha vacía, `POST` matricula. El código lo genera el sistema | Institución | `HU-44`, `DT-40` |
+| `/padron/matricular/acudientes/` | Fragmento: los acudientes que coinciden con lo escrito en el alta. Sin búsqueda, ninguno; con ella, ocho como mucho | Institución | `DT-40` |
+| `/padron/<id>/ficha/` | La ficha del estudiante, en la modal del padrón. `GET` la pinta; `POST` guarda nombre, documento, fotografía, baja y acceso del acudiente **en una sola transacción** | Institución | `DT-40`, `HU-63` |
+| `/padron/<id>/reasignar/` | `POST`. Reasigna el código de tarjeta desde la ficha: el anterior deja de comprar en el acto (`INVD-4`) | Institución | `HU-46`, `DT-40` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
 | `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`) | Institución | `DEC-17` |
 | `/acudientes/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DEC-17` |
@@ -118,6 +122,12 @@ los mismos colores desde `DT-23`.
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/matricular/` | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/matricular/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/matricular/acudientes/` | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/<id>/ficha/` | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/<id>/ficha/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/padron/<id>/reasignar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/<id>/desactivar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |
@@ -203,7 +213,6 @@ coincidir porque dejaría media pantalla en cada tema.
 
 | Modelo | Institución | Administración | Cajero | Acudiente |
 |---|---|---|---|---|
-| `personas.estudiante` | **200** | 403 | 302 | 302 |
 | `personas.acudiente` | **200** (solo consulta) | 403 | 302 | 302 |
 | `personas.institucion` | **200** | 403 | 302 | 302 |
 | `cuentas.usuario` | **200** | 403 | 302 | 302 |
@@ -229,8 +238,8 @@ conviene no perder:
 - **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
   `/admin/catalogo/producto/<id>/historial/`, que enseña la cifra y debajo los movimientos
   que la suman, con una columna de existencias tras cada uno. Es una vista propia del admin
-  registrada en `get_urls()`, como la baja y la reasignación de `personas`: **no es una
-  segunda excepción a `DT-27`**, que sigue siendo solo el padrón.
+  registrada en `get_urls()`: **no es una segunda excepción a `DT-27`**, que sigue siendo
+  solo el padrón.
 - **El reporte de ventas es el libro, con su consolidado encima** (`HU-35`, `TT-168`). El
   admin pone el listado, los filtros, la búsqueda y la navegación por fechas; lo que se añade
   es cuánto suma **lo que se está mirando**, porque se calcula sobre el mismo `QuerySet` que
@@ -319,23 +328,31 @@ acudiente —las cinco formas en que alguien pregunta en secretaría—, y los r
 salvo que se pidan: dar de baja es un estado (`HU-51`), pero el padrón responde «quién está
 matriculado **hoy**».
 
-**El padrón lee, y desactiva.** Cada fila enlaza al admin para editar, y ahí sigue
-estando el alta, la edición, la baja y la reasignación. La desactivación es la única
-escritura de la pantalla y está declarada en `DT-29`, que corrige esa parte de `DT-27`:
-`HU-47` existe por la inmediatez —una tarjeta perdida en mitad de la jornada— y llegar al
-admin desde aquí son tres pantallas. Un clic desactiva y la fila queda marcada en rojo;
-otro la reactiva (`HU-49`, `DT-30`), y esa es la segunda escritura de la pantalla: el
-desbloqueo pasa por una verificación presencial (`INVD-3`), así que ocurre con la familia
+**El padrón lee, desactiva y abre la ficha.** Desactivar y reactivar van en la fila, a un
+clic (`DT-29`, `DT-30`): `HU-47` existe por la inmediatez —una tarjeta perdida en mitad de
+la jornada— y el desbloqueo pasa por una verificación presencial (`INVD-3`), con la familia
 en el mostrador y el padrón delante. **Desactivar pide confirmación y reactivar no**: lo
 primero deja al estudiante sin comprar hasta que alguien vaya al colegio, lo segundo se
-deshace con el botón de al lado. `POST /padron/` sigue respondiendo `405`: lo que escribe
-son dos rutas propias, no la pantalla.
+deshace con el botón de al lado.
 
-Carga masiva en `/carga/`. En el admin: *Estudiantes* —listado con estado, código de tarjeta
-y si tiene fotografía; búsqueda por nombre, documento, código o acudiente; alta individual
-con autocompletado; acciones de **reasignar el código** y **dar de baja**, las dos con
-confirmación—, *Acudientes* de solo consulta, y *Usuarios* para dar de alta al personal,
-desactivarlo, reactivarlo y reenviarle la invitación.
+**«Editar» abre la ficha en una modal** (`DT-40`), sobre el propio padrón: fotografía,
+nombre, documento, el código vigente con **Reasignar código** e **Imprimir tarjeta**, el
+interruptor de **Matriculado** —apagarlo es la baja, que no tiene vuelta y pide
+confirmación; a un retirado ya no se le dibuja— y, del acudiente, nombre y correo de solo
+consulta más el interruptor de **Acceso a la aplicación** (`HU-63`, `DEC-20`), que dice a
+cuántos estudiantes alcanza antes de apagarse. **Un «Guardar» es una sola transacción**: si
+el documento ya es de otro o la fotografía no vale, no se guarda nada. Al guardar, la tabla
+se vuelve a pedir con los filtros que tenía. `POST /padron/` sigue respondiendo `405`: lo
+que escribe son rutas propias, no la pantalla.
+
+**«Cargar un solo estudiante», arriba del padrón, abre la misma modal vacía** (`HU-44`,
+`DT-40`): fotografía opcional, nombre, documento y un acudiente **que ya exista**, buscado
+por nombre, documento o correo. Mientras falte algo obligatorio, cada campo lo dice en rojo
+y «Matricular» está deshabilitado. El código se genera al guardar, y la ficha vuelve vacía
+con él y el enlace para imprimir la tarjeta. **Una familia nueva entra con la carga
+masiva**, en `/carga/`, que sigue en la barra lateral. En el admin quedan *Acudientes* de solo consulta y
+*Usuarios* para dar de alta al personal, desactivarlo, reactivarlo y reenviarle la
+invitación.
 
 Y *Restricciones por estudiante*, **solo consulta** (`HU-38`): la misma pantalla que ve la
 administración de la cafetería. Las restricciones son del acudiente, también para el
@@ -662,11 +679,13 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 9. **Como institución, `/padron/`**: quién está matriculado y **qué acudientes no han
    activado su cuenta todavía**. Se busca por nombre, documento, tarjeta o acudiente, y se
    marca «Ver retirados» para ver a los dados de baja. `DT-27`, `HU-44`, `DEC-18`.
-10. **Como institución**, *Estudiantes* → **Imprimir tarjeta**, al 100 %. `HU-43`, `HU-45`.
-11. **Reasignar el código** y volver a imprimir: la tarjeta anterior deja de identificar a
-   nadie en el mismo momento. `HU-46`, `INVD-4`.
-12. **Dar de baja**: no borra nada, el acudiente lo ve en su panel, y en `/padron/` deja de
-   salir salvo que se marque «Ver retirados». `HU-51`, `HU-52`.
+10. **Como institución**, **Editar** en una fila del padrón → **Imprimir tarjeta**, al 100 %.
+   `HU-43`, `HU-45`, `DT-40`.
+11. **Reasignar código** desde la misma ficha y volver a imprimir: la tarjeta anterior deja
+   de identificar a nadie en el mismo momento. `HU-46`, `INVD-4`.
+12. **Dar de baja**, apagando «Matriculado» en la ficha: no borra nada, el acudiente lo ve en
+   su panel, y en `/padron/` deja de salir salvo que se marque «Ver retirados». `HU-51`,
+   `HU-52`.
 13. **`/login/` como administración** → el catálogo. `HU-26`, `HU-57`, `HU-59`.
 14. **Ingresar mercancía** desde la administración: las existencias salen de la suma del
    historial, no de un contador. `HU-27`, `INV-3`.

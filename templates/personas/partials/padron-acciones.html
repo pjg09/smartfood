@@ -28,6 +28,18 @@
    Pedir confirmación donde no hace falta enseña a confirmarlo todo sin leer.
 {% endcomment %}
 
+
+{% comment %} `DT-40`. Abre la ficha en la modal del padrón. Es un `GET` y no escribe:
+   lo que se guarda, se guarda desde la ficha. {% endcomment %}
+<button type="button" data-editar-estudiante
+        hx-get="{% url 'ficha-del-estudiante' estudiante.id %}"
+        hx-target="#cuerpo-de-la-ficha"
+        hx-swap="innerHTML"
+        class="mt-1 inline-flex items-center gap-1.5 text-base font-semibold
+               text-acento-fuerte hover:underline tablet:mt-0">
+  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+  Editar
+</button>
 {% if estudiante.puede_operar %}
   <form hx-post="{% url 'desactivacion-de-estudiante' estudiante.id %}"
         hx-target="#padron-tabla"

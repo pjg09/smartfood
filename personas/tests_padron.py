@@ -8,9 +8,9 @@ eso es lo que estas pruebas vigilan, además de la pantalla:
 1. **Solo la institución.** El padrón lleva nombre, documento y correo de los
    acudientes de menores matriculados. No es una lista que pueda ver la
    cafetería, y la regla vive en el selector, no en la vista (`DT-11`, `[S11]`).
-2. **Solo lee.** No hay formulario, no hay servicio detrás y cada fila enlaza al
-   admin. Si algún día aparece una escritura aquí, `INV-4` obliga a volver a
-   mirar quién puede.
+2. **La pantalla no escribe.** `POST /padron/` es `405`: lo que escribe son
+   rutas propias —desactivar, reactivar, la ficha (`DT-29`, `DT-30`, `DT-40`)—,
+   cada una con su servicio y su prueba.
 3. **Los retirados no salen por defecto**, y desactivado no es retirado.
 """
 
@@ -162,16 +162,6 @@ class LaPantallaDelPadronTest(TestCase):
         self.assertIn("data-cuenta-activa", cuerpo)
         self.assertIn("data-cuenta-sin-activar", cuerpo)
         self.assertIn("1 sin activar", cuerpo)
-
-    def test_cada_fila_enlaza_al_admin_para_editar(self):
-        """**El padrón no edita.** Escribir sobre un estudiante sigue siendo de
-        `INT-3` (`DT-2`); duplicar el formulario duplicaría sus reglas."""
-        cuerpo = self.client.get(self.url).content.decode()
-
-        self.assertIn(
-            reverse("admin:personas_estudiante_change", args=[self.estudiante.id]),
-            cuerpo,
-        )
 
     def test_la_pantalla_no_escribe(self):
         """No hay `POST`, y no es un descuido: es lo que mantiene la excepción a

@@ -1,0 +1,30 @@
+{% comment %} `DT-40`. Los acudientes que coinciden con lo escrito en el alta.
+
+   Fragmento (`DT-16`). Cada uno es un **botón**, no un enlace ni una casilla: no
+   navega ni se envía, lo elige. El script copia su identificador al campo oculto
+   de la ficha y enseña a quién se eligió. {% endcomment %}
+
+{% if acudientes %}
+  <ul class="flex flex-col gap-1" data-acudientes-encontrados>
+    {% for acudiente in acudientes %}
+      <li>
+        <button type="button" data-elegir-acudiente="{{ acudiente.pk }}"
+                data-nombre="{{ acudiente.nombre }}" data-correo="{{ acudiente.usuario.email }}"
+                class="flex w-full flex-col items-start rounded-md border border-borde bg-superficie
+                       px-3 py-2 text-left transition-colors hover:border-primario
+                       hover:bg-primario-suave">
+          <span class="font-medium text-texto">{{ acudiente.nombre }}</span>
+          <span class="text-sm break-all text-texto-suave">{{ acudiente.usuario.email }}</span>
+          <span class="text-sm text-texto-suave">
+            {{ acudiente.cuantos }} {% if acudiente.cuantos == 1 %}estudiante{% else %}estudiantes{% endif %} a su cargo
+          </span>
+        </button>
+      </li>
+    {% endfor %}
+  </ul>
+{% elif busqueda %}
+  <p class="text-sm text-texto-suave" data-sin-acudientes>
+    Ningún acudiente coincide con <span class="break-all font-mono">{{ busqueda }}</span>.
+    Si la familia es nueva, entra con «Cargar estudiantes».
+  </p>
+{% endif %}

@@ -39,8 +39,6 @@ from django.utils.translation import gettext
 
 from cuentas.models import Rol, Usuario
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
-from personas.codigo import generar_codigo_de_tarjeta
-from personas.models import Acudiente, Estudiante
 from personas.services import dar_de_alta_la_institucion
 from ventas.models import CierreDeCaja
 
@@ -169,26 +167,17 @@ class ElAdminSeVeEnteroEnEspanolTest(TestCase):
             )
         self.client.force_login(institucion.usuario)
 
-        # **Hace falta al menos un estudiante.** El admin solo dibuja la barra de
+        # **Hace falta al menos una fila.** El admin solo dibuja la barra de
         # acciones —el desplegable y su botón— cuando el listado tiene filas, así
-        # que sobre un padrón vacío no habría nada que traducir y la prueba
+        # que sobre un listado vacío no habría nada que traducir y la prueba
         # pasaría sin comprobar nada.
-        acudiente = Usuario.objects.crear_usuario(
+        Usuario.objects.crear_usuario(
             email="acudiente@example.com", rol=Rol.ACUDIENTE, nombre="Marta"
-        )
-        ficha = Acudiente.objects.create(
-            usuario=acudiente, nombre="Marta Ruiz Ochoa", documento="4310012345"
-        )
-        Estudiante.objects.create(
-            nombre="Ana Sofía Restrepo Ruiz",
-            documento="1001234501",
-            acudiente=ficha,
-            codigo_tarjeta=generar_codigo_de_tarjeta(),
         )
 
     def test_el_listado_no_tiene_ninguna_de_las_cuatro_en_ingles(self):
         cuerpo = self.client.get(
-            reverse("admin:personas_estudiante_changelist")
+            reverse("admin:cuentas_usuario_changelist")
         ).content.decode()
 
         for ingles in ["Select an option", ">Run<", 'value="Search"', 'alt="Search"']:
@@ -197,7 +186,7 @@ class ElAdminSeVeEnteroEnEspanolTest(TestCase):
 
     def test_y_sí_tiene_las_traducidas(self):
         cuerpo = self.client.get(
-            reverse("admin:personas_estudiante_changelist")
+            reverse("admin:cuentas_usuario_changelist")
         ).content.decode()
 
         for espanol in ["Seleccione una opción", ">Ejecutar<", 'value="Buscar"']:

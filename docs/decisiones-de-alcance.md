@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 19 (`DEC-1` … `DEC-19`) |
+| decisiones | 20 (`DEC-1` … `DEC-20`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.8 |
+| version | 1.9 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-19` |
+| S1 | Decisiones | `DEC-1` … `DEC-20` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -405,6 +405,25 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** Es funcionalidad nueva en el último sprint, con el backlog cerrado. Se registra como `HU-62` antes de construirla.
 
+### `[DEC-20]` La institución corta y devuelve el acceso de un acudiente
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-01. **Amplía `[S11]`**: sobre el acudiente, la institución solo tenía `view`, y pasa a poder desactivar y reactivar su cuenta. **No toca sus datos**: el nombre y el correo siguen siendo de solo consulta.*
+
+**El hecho que lo obliga.** `HU-42` da a la institución el corte de acceso **del personal de la cafetería y de nadie más**, y el servicio lo hace cumplir: `desactivar_cuenta` rechaza cualquier otro rol. Una cuenta de acudiente que hubiera que cortar no tenía ningún camino dentro del sistema; solo una consola de Django en la máquina. Se destapó al diseñar la ficha del estudiante en el padrón (`DT-40`), cuya maqueta trae el interruptor «Acceso a la aplicación».
+
+**Decidido:**
+
+- **La institución desactiva y reactiva la cuenta de un acudiente**, desde la ficha de cualquiera de sus estudiantes. Es el mismo mecanismo de `HU-42` —la cuenta deja de estar activa, y no se borra nada—, con su propio servicio para que la puerta del personal no se ensanche sin querer.
+- **Una cuenta desactivada no inicia sesión ni opera**, y tampoco recupera la contraseña: `DEC-19` ya excluye a las cuentas inactivas.
+- **Se corta la cuenta, no a los estudiantes.** Siguen comprando con el saldo que tengan y con sus restricciones vigentes. Lo que se quedan sin es quien les recargue —recargar es del acudiente (`HU-06`)— y quien cambie esas restricciones, que la cafetería tampoco puede (`INV-4`).
+- **Afecta a todos los estudiantes del acudiente a la vez** (`HU-04`), y la ficha lo dice antes de apagar el interruptor.
+- **Solo la institución**, en las dos direcciones. Ningún otro rol lo hace, y el acudiente no tiene cómo reactivarse.
+- **Sin confirmación**: se deshace con el mismo interruptor, por la misma razón que la reactivación del estudiante no la lleva (`DT-30`).
+
+**Lo que NO se decide aquí.** No se edita el nombre ni el correo del acudiente: siguen siendo `view` (`DEC-17`). No se avisa al acudiente, que es el mismo punto abierto que la desactivación del estudiante (`ANEXO B`). Y **no se invalida una invitación pendiente**: quien todavía no definió su contraseña puede definirla con ella, pero no entra mientras la cuenta siga desactivada.
+
+**Consecuencia asumida.** Es funcionalidad nueva en el último sprint, con el backlog cerrado. Se registra como `HU-63` antes de construirla.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -448,6 +467,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-17` | **No añade alcance.** Sustituye pantallas del admin por pantallas propias para el rol institución, con lo mismo que `[S11]` ya concedía |
 | `DEC-18` | **No añade alcance: devuelve el que `DEC-9` recortó.** La carga masiva vuelve a entregar las invitaciones, a un servidor de correo local |
 | `DEC-19` | Recuperación de la contraseña olvidada, por enlace de un solo uso enviado al correo del titular |
+| `DEC-20` | Desactivación y reactivación de la cuenta de un acudiente por la institución. Amplía la fila del acudiente en `[S11]`, que solo concedía consulta |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -474,6 +494,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (condición de caducidad de `DoD-4`) Si la asignatura exige entorno desplegado | **Resuelto** | `DEC-15` | ninguna — recorta `ENT-01` |
 | — (decisión posterior) Entrega de las invitaciones de la carga, reabierta | **Decidido** | `DEC-18` | `HU-03` (criterio original restituido) |
 | — (punto abierto del `ANEXO B`) Recuperación de contraseña olvidada | **Resuelto** | `DEC-19` | `HU-62` |
+| — (hueco detectado) Corte de acceso de un acudiente | **Decidido** | `DEC-20` | `HU-63` |
 
 ---
 

@@ -308,14 +308,16 @@ alteran el recuento de este sprint**: las tareas siguen siendo 33 y su avance, e
 sus marcas. El detalle de qué entregó cada PR está en `[S7]` de
 `./plan-de-pull-requests-sprint-5.md`.
 
-**Lo que dejan abierto**: tres secciones del rol institución —usuarios, institución y el alta
-y edición de estudiantes— siguen en el admin porque escriben y necesitan formulario propio.
-No hay tarea que las cubra; construirlas exigiría decidir antes si entran en este sprint o
-en la entrega.
+**Lo que dejan abierto**: usuarios e institución siguen en el admin porque escriben y
+necesitan formulario propio. **La edición de estudiantes ya no**: está en la ficha del padrón
+(`DT-40`), y el alta de uno solo, tampoco: va en la misma modal. No hay tarea que cubra las
+dos que quedan; construirlas exigiría decidir antes si entran en este sprint o en la entrega.
 
 **Después entraron dos más.** `#364` dejó el stack entero en un `docker compose` y la suite
 en la CI (`DT-37`, `DT-38`), sin tocar el producto. Y el 2026-10-01, **uno con historia
 propia**: el correo local y la recuperación de contraseña (`DEC-18`, `DEC-19`). Trae `HU-62`
 —registrada con su decisión antes de construirla— y devuelve a `HU-03` el criterio que `DEC-9`
 recortó. **Tampoco altera el recuento**: `HU-62` no
-tiene tareas `TT-nn` en este backlog, igual que el rediseño. El detalle, en el mismo `[S7]`.
+tiene tareas `TT-nn` en este backlog, igual que el rediseño. Ni el último: la ficha del
+estudiante en el padrón, que sustituye al admin de estudiantes (`DT-40`) y trae `HU-63` con
+`DEC-20`. El detalle, en el mismo `[S7]`.

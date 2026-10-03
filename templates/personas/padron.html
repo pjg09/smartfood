@@ -8,13 +8,11 @@
    aunque se le envió la invitación (`DEC-18`)—. El admin contesta la primera en tres clics y la segunda no la
    contesta.
 
-   **Lee, y desactiva** (`DT-29`, `HU-47`). Dar de alta, editar, dar de baja o
-   reasignar la tarjeta siguen siendo del admin: cada fila enlaza allí, y
-   duplicar ese formulario sería duplicar las reglas que lo validan. La
-   desactivación es la excepción declarada: existe por la inmediatez —una
-   tarjeta perdida en mitad de la jornada— y mandarla al admin añadiría tres
-   pantallas justo en el escenario que la motiva. La regla sigue en el servicio,
-   no aquí.
+   **Lee, desactiva y abre la ficha.** Desactivar y reactivar van en la fila, a
+   un clic, porque su razón de ser es la inmediatez (`DT-29`, `DT-30`). Editar,
+   la fotografía, la baja, la reasignación del código y el acceso del acudiente
+   van en la ficha, que se abre en una modal sobre esta misma pantalla
+   (`DT-40`, `DEC-16`). Las reglas siguen en los servicios, no aquí.
 
    Composición de la referencia (`DT-23`, `DT-25`): encabezado de pantalla,
    buscador de ancho completo con su icono, el interruptor de retirados y la
@@ -44,7 +42,7 @@
        acelera lo que ya funcionaba; no lo sustituye. {% endcomment %}
     <form method="get" action="{% url 'padron' %}"
           hx-get="{% url 'padron-tabla' %}"
-          hx-trigger="input changed delay:400ms from:#busqueda, change from:#retirados"
+          hx-trigger="input changed delay:400ms from:#busqueda, change from:#retirados, padron-cambiado from:body"
           hx-target="#padron-tabla"
           hx-swap="outerHTML"
           hx-indicator="#buscando-en-el-padron"
@@ -97,21 +95,28 @@
 
         <p id="buscando-en-el-padron" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
 
-        {% comment %} `HU-01`. La acción de esta pantalla es matricular, y va aquí arriba
-           como en la referencia: es lo único que se hace **desde** el padrón, y
-           cuando falta alguien es justo lo que se busca.
+        {% comment %} `HU-44`, primer criterio (`DT-40`). La acción de esta pantalla es
+           matricular, y va aquí arriba como en la referencia: cuando falta alguien
+           es justo lo que se busca. Abre la ficha de alta en la misma modal que
+           «Editar». **La carga masiva no desaparece**: sigue en la barra lateral, y
+           es el camino de una familia nueva. Vive dentro del formulario del
+           buscador, y `hx-indicator="this"` evita que herede su «Buscando…».
 
-           Enlace de acento y no botón sólido (`[S2.1]`): en una pantalla cuya
-           pieza principal es la tabla, un botón relleno arriba se lleva la mirada
-           por delante de los datos. {% endcomment %}
-        <a href="{% url 'carga-de-estudiantes' %}"
-           class="ml-auto inline-flex items-center gap-2 rounded-md border border-borde
-                  tablet:ml-0
-                  bg-superficie px-4 py-2 text-base font-semibold text-texto
-                  transition-colors hover:border-primario hover:bg-superficie-hover">
-          <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-cargar"></use></svg>
-          Cargar estudiantes
-        </a>
+           Contorno y no botón sólido (`[S2.1]`): en una pantalla cuya pieza
+           principal es la tabla, un botón relleno arriba se lleva la mirada por
+           delante de los datos. {% endcomment %}
+        <button type="button" data-matricular-estudiante
+                hx-get="{% url 'alta-de-estudiante' %}"
+                hx-target="#cuerpo-de-la-ficha"
+                hx-swap="innerHTML"
+                hx-indicator="this"
+                class="ml-auto inline-flex items-center gap-2 rounded-md border border-borde
+                       tablet:ml-0
+                       bg-superficie px-4 py-2 text-base font-semibold text-texto
+                       transition-colors hover:border-primario hover:bg-superficie-hover">
+          <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+          Cargar un solo estudiante
+        </button>
       </div>
 
       {% comment %} Sin JavaScript, este botón es lo que hace funcionar el formulario. Con
@@ -124,4 +129,17 @@
 
     {% include "personas/partials/padron-tabla.html" %}
   </div>
+
+  {% comment %} `DT-40`. La modal de la ficha. Nace vacía: «Editar» pide el fragmento y
+     `assets/js/interfaz.js` la abre al recibirlo.
+
+     Es un `<dialog>`, como la del admin: el navegador lleva el foco, la tecla de
+     escape y el velo. **La tabla no se refresca desde aquí**: la ficha responde
+     con `HX-Trigger: padron-cambiado` y el buscador de arriba vuelve a pedirla
+     con los filtros que tenía. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Ficha del estudiante"
+          class="m-auto w-[min(36rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
 {% endblock %}

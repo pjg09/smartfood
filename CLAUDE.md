@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado.** Con `PR-09` quedaron cerradas **las 61 historias** del backlog —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362) **y el correo local con la recuperación de contraseña** (`DEC-18`, `DEC-19`): la segunda trajo **`HU-62`, la historia 62**, y devolvió a `HU-03` el criterio que `DEC-9` recortó. Las dos se registraron como alcance **antes** de construirlas. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
+**El producto está terminado.** Con `PR-09` quedaron cerradas **las 61 historias** del backlog —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362), **el correo local con la recuperación de contraseña** (`DEC-18`, `DEC-19`), que trajo **`HU-62`, la historia 62**, y devolvió a `HU-03` el criterio que `DEC-9` recortó, **y la ficha del estudiante en una modal del padrón** (`DT-40`), que sustituyó al admin de estudiantes y trajo **`HU-63`** con `DEC-20`: la institución corta el acceso de un acudiente. Las tres se registraron **antes** de construirlas. El alta de un solo estudiante va en la misma modal, vacía, y elige un acudiente que ya existe: **una familia nueva sigue entrando por la carga masiva**. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
 
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
@@ -51,7 +51,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-**Diez** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13` y `DEC-19`) y **dos lo
+**Once** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19` y `DEC-20`) y **dos lo
 recortan** (`DEC-14`, `DEC-15`); `DEC-18` devuelve lo que `DEC-9` recortó. Ninguna está
 incorporada a él. Para responder qué hace o no hace el sistema
 hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
@@ -296,10 +296,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.572 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.612 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.572, no corrió entera.
+menos de esas 1.612, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
