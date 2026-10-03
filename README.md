@@ -150,7 +150,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`probar-cada-funcionalidad.md`](./docs/probar-cada-funcionalidad.md) | Cómo ver funcionando cada cosa en local: acudientes, recuperación de contraseña, reservas, mermas, alertas… |
 | [`escribir-pruebas.md`](./docs/escribir-pruebas.md) | Dónde va una prueba, cómo se ejecuta y los siete patrones que ya costaron una ronda |
 | [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Todas las rutas, quién alcanza cada una y el recorrido de demostración |
-| [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Ramas, commits y publicación de versiones |
+| [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Cómo se integra en `main`, commits y publicación de versiones |
 | [`despliegue.md`](./docs/despliegue.md) | Por qué no hay entorno desplegado, y qué costó el que hubo |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
@@ -189,12 +189,12 @@ la tarea está mal entendida o de que falta una decisión.
 
 ## Cómo entra el código
 
-**Todo entra por Pull Request**, con revisión y squash merge. Es una convención del equipo:
-`main` no tiene protección activa en GitHub, así que nada rechaza un `push` directo. Ramas
-cortas, commits en Conventional Commits —son los que disparan el versionado—. El detalle
-está en [`convenciones-de-git.md`](./docs/convenciones-de-git.md).
+**Se empuja directo a `main`** (`DT-41`), sin ramas ni Pull Requests: `git pull --rebase` y
+`git push`, nunca `--force`. Cada commit en Conventional Commits —son los que disparan el
+versionado, y nadie los valida antes de llegar—. El detalle está en
+[`convenciones-de-git.md`](./docs/convenciones-de-git.md).
 
-Antes de abrir un PR, los tres tienen que pasar:
+Antes de empujar, los tres tienen que pasar:
 
 ```bash
 docker compose exec -T app python manage.py check

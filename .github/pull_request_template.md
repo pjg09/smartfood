@@ -34,7 +34,7 @@ Detalle en docs/definicion-de-terminado.md
 
 - [ ] **`DoD-1`** Cierra `HU-nn`: sus criterios de aceptación se cumplen, verificados uno a uno.
       <!-- Si no cierra historias: qué habilita, y cómo se comprueba que lo habilita. -->
-- [ ] **`DoD-2`** Integrado por PR y no rompe nada de lo ya construido. *(Siempre aplica.)*
+- [ ] **`DoD-2`** Integrado en `main` y no rompe nada de lo ya construido. *(Siempre aplica.)*
 - [ ] **`DoD-3`** Migraciones escritas, aplicadas, y `makemigrations --check` sin pendientes.
       <!-- No aplica si el PR no toca modelos. Dilo. -->
 - [ ] **`DoD-4`** Se demuestra **ejecutándolo**: pega el comando y su salida real.

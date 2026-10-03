@@ -48,7 +48,7 @@ docker compose exec -T app python manage.py test cuentas.tests_acceso --noinput
   fuerza `DEBUG=False` y sin manifiesto salen 285 errores. El arranque del contenedor ya lo
   hace (`[S4]` de `./trampas-del-stack.md`).
 
-**La CI no corre la suite** (`DT-39`): se corre aquí, antes de cada PR, y nadie la repite
+**La CI no corre la suite** (`DT-39`): se corre aquí, antes de cada `push` a `main`, y nadie la repite
 después. La versión se publica igual, pase o no (`[S3.0]` de `./convenciones-de-git.md`).
 
 ---

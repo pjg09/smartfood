@@ -392,11 +392,11 @@ degrada la reputación del remitente (`DEC-9`).
 
 ---
 
-## [S5] Antes de abrir un Pull Request
+## [S5] Antes de empujar a `main`
 
-Todo entra por PR (`./convenciones-de-git.md`). Es una convención: `main` no tiene protección
-activa en GitHub, así que nada rechaza un `push` directo, y desde `DT-39` tampoco hay CI que
-corra estos tres comandos por ti.
+Se empuja directo a `main` (`DT-41`, `[S1]` de `./convenciones-de-git.md`): no hay revisión del
+otro desarrollador, ni protección en GitHub, ni CI que corra estos tres comandos por ti
+(`DT-39`). Lo que no compruebes aquí no lo comprueba nadie.
 
 ```bash
 docker compose exec app python manage.py check
@@ -407,8 +407,11 @@ docker compose exec app python manage.py test --noinput
 Los tres tienen que pasar —con `uv run python manage.py …` en el host, lo mismo—. **Nadie
 los repite después**: la CI ya no corre pruebas y la versión se publica igual (`DT-39`,
 `[S3.0]` de `./convenciones-de-git.md`), así que lo que no pasó aquí llega a `main` roto. **Y si el
-PR toca la infraestructura, un cuarto**: que el stack levante desde cero (`[S5.3]`). El segundo es `DoD-3` y es el que más se olvida: un modelo
+cambio toca la infraestructura, un cuarto**: que el stack levante desde cero (`[S5.3]`). El segundo es `DoD-3` y es el que más se olvida: un modelo
 editado sin su migración no da error hasta que otra persona levanta el proyecto.
+
+**Si el `git pull --rebase` de antes de empujar trae commits del otro, vuelve a correrlos**: lo
+que probaste ya no es lo que vas a integrar.
 
 `--noinput` en el tercero: si una ejecución anterior se interrumpió a media prueba, la base
 de datos de prueba se queda creada y el comando siguiente **se queda esperando** una
@@ -454,7 +457,7 @@ parche temporal.
 
 ### [S5.2] Mirar una pantalla sin abrir el navegador
 
-Para revisar cómo queda algo **y para adjuntar la evidencia a un PR** —`DoD-4` está vigente y
+Para revisar cómo queda algo **y para adjuntar la evidencia al commit** —`DoD-4` está vigente y
 pide demostrarlo ejecutándolo— no hace falta abrir el navegador a mano: se renderiza la
 pantalla con el cliente de pruebas y se fotografía con Chrome sin interfaz.
 
@@ -556,7 +559,7 @@ docker compose up -d                                  # vuelve a lo tuyo
 Termina con `RESULTADO: VERDE` o `FALLO`; si falla, vuelca los registros de todos los
 servicios. **Es la única comprobación que queda de que el stack levanta en otra máquina**, y
 esa es la condición de que el prototipo se pueda demostrar (`DEC-15`): córrelo siempre que el
-PR toque la infraestructura, y antes de cada entrega aunque no la haya tocado.
+cambio toque la infraestructura, y antes de cada entrega aunque no la haya tocado.
 
 ---
 

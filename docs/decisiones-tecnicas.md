@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` el 2026-10-03 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 40 (`DT-1` … `DT-40`) |
+| decisiones | 41 (`DT-1` … `DT-41`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-40`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-41`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -906,3 +906,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El acudiente se elige, no se crea.** Se busca por nombre, documento o correo (`/padron/matricular/acudientes/`, que sin búsqueda no devuelve a nadie y con ella, ocho como mucho). Crear uno sería dar de alta una cuenta, y eso solo lo hace la carga masiva (`HU-01`): la institución, sobre el acudiente, solo consulta (`[S11]`). **Una familia nueva entra por la carga.**
 - **Las dos fichas avisan antes de enviar.** Mientras un campo obligatorio esté vacío o no cumpla su longitud, dice en rojo qué le falta y el botón de guardar está deshabilitado; el de matricular **nace** deshabilitado. Es una comodidad, no la regla (`DT-15`): las longitudes llegan al navegador desde el propio campo del formulario, y este las toma de `personas.validacion` —las mismas de la carga masiva—, así que el aviso y el rechazo del servidor no pueden pedir cosas distintas. La ficha de edición pasa con ello a exigir lo mismo que la carga: un documento de entre 5 y 20 caracteres.
 - **La carga masiva no desaparece**: su botón deja el padrón, pero sigue en la barra lateral.
+
+#### `[DT-41]` Se integra empujando directo a `main`, sin ramas ni Pull Requests
+
+**Corrige:** `[S1]` de `./convenciones-de-git.md` (`TT-01`), que pedía ramas cortas, Pull Request con revisión del otro desarrollador y squash merge para todo lo que entrara en `main`; y `DT-39` en que la validación del título del PR siga cubriendo el mensaje que decide la versión.
+
+**Razón:** decisión del equipo, tomada el 2026-10-03, por tiempo. Abrir rama, abrir PR, esperar y integrar cada cambio se volvió inmanejable para dos personas desarrollando en el último sprint. **El equipo la toma sabiendo lo que pierde y asume las consecuencias.**
+
+**Decidido:**
+
+- **Se commitea y se empuja directo a `main`**: `git pull --rebase` antes de cada `push`, y **nunca `push --force`** sobre `main`, que borraría lo que el otro ya empujó.
+- **Antes de empujar, los tres comandos en verde** (`[S5]` de `./desarrollo.md`), y el script de `[S5.3]` si el cambio toca la infraestructura. Si el `pull --rebase` trae commits del otro, se vuelven a correr.
+- **Cada commit cumple la convención** (`[S2]` de `./convenciones-de-git.md`): sin squash, `semantic-release` analiza cada uno tal cual.
+- **La Definición de Terminado sigue entera**, aplicada a lo que se empuja junto en lugar de a un PR (`[S5]` de `./definicion-de-terminado.md`).
+- **Los `PR-nn` de los planes de sprint siguen siendo la unidad de entrega**, ahora como un conjunto de commits.
+- **Abrir un Pull Request sigue siendo posible** cuando convenga, con el flujo de siempre: squash, título validado y plantilla.
+
+**Consecuencia asumida.** **Nadie revisa un cambio antes de que llegue a `main`**: ni el otro desarrollador, ni la CI (`DT-39`), ni GitHub, porque `main` no tiene protección activa. **El mensaje de cada commit tampoco se valida**: `convencion-de-commits.yml` solo corre en Pull Requests, y un tipo mal escrito no da error, simplemente no cuenta para la versión o cuenta como otra cosa. **Y una nota `BREAKING CHANGE:`, `BREAKING-CHANGE:` o `CAMBIO INCOMPATIBLE:` en el cuerpo de un commit ahora sí publica una versión mayor**, porque el cuerpo llega a `main` (`noteKeywords` de `.releaserc.json`). A cambio, el cuerpo de cada commit —con sus `Refs:` y la evidencia de `DoD-4`— queda en el historial, cosa que el squash descartaba.

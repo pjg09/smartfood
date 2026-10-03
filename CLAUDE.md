@@ -48,7 +48,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
 | `docs/trampas-del-stack.md` | **Las sesenta trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
-| `docs/convenciones-de-git.md` | Ramas, convención de commits y publicación de versiones (`TT-01`) |
+| `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
 **Once** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19` y `DEC-20`) y **dos lo
@@ -234,7 +234,7 @@ alguna billetera (`billetera.services.recargar`). El atajo está en `docs/desarr
 Se entra por `/login/`, que es la puerta de los cuatro roles. Las credenciales locales y el
 recorrido de cada rol están en `docs/desarrollo.md`.
 
-Al sacar una rama ajena, **`migrate` antes de nada**: una migración sin aplicar no falla al
+Al traer commits del otro con `git pull --rebase`, **`migrate` antes de nada**: una migración sin aplicar no falla al
 arrancar, falla al abrir la pantalla que la usa. Con el compose basta `docker compose up -d`
 —o `restart app`—, que migra al arrancar.
 
@@ -244,7 +244,7 @@ arrancar, falla al abrir la pantalla que la usa. Con el compose basta `docker co
 condición de que el prototipo se pueda demostrar (`DEC-15`), y se rompe sin tocar
 `compose.yaml`: basta cambiar otra cosa y no acordarse de él.
 
-**Un PR que cambie la infraestructura actualiza en el mismo PR** `compose.yaml`, el
+**Un cambio de infraestructura actualiza en el mismo commit** `compose.yaml`, el
 `Dockerfile` o los scripts de `docker/`. Cuenta como infraestructura —la tabla completa está
 en `[S5.3]` de `docs/desarrollo.md`—:
 
@@ -261,10 +261,10 @@ volúmenes, tu imagen y tu `.env`. El script trabaja sobre una copia del árbol 
 has commiteado— y con otro nombre de proyecto, así que tu base no se toca, y **se niega a
 correr con el de tu stack**, porque al terminar borra los volúmenes.
 
-**La CI ya no lo hace por ti** (`DT-39`): solo publica la versión. Lo que antes comprobaba en
-cada PR lo comprueba ahora quien integra, y **nada avisa si no lo hace**. Dos cosas lo
+**La CI ya no lo hace por ti** (`DT-39`): solo publica la versión. Lo que antes comprobaba lo
+comprueba ahora quien empuja, y **nada avisa si no lo hace**. Dos cosas lo
 sostienen: **`config/tests_contenedor.py`**, que va en la suite y vigila sin Docker lo que se
-puede vigilar, y el script, que solo cuenta si se corre. Córrelo siempre que el PR toque la
+puede vigilar, y el script, que solo cuenta si se corre. Córrelo siempre que el cambio toque la
 infraestructura, y antes de cada entrega aunque no la haya tocado.
 
 Dos cosas que tu máquina no detecta y el script sí: **una imagen que ya no existe en el
@@ -275,7 +275,7 @@ Para mirar el esquema: `docker compose exec postgres psql -U smartfood -d smartf
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
 Postgres, que es donde viven las invariantes—.
 
-Antes de cada PR, los tres tienen que pasar:
+Antes de cada `push` a `main`, los tres tienen que pasar:
 
 ```bash
 uv run python manage.py check
@@ -290,8 +290,9 @@ arranque del contenedor ya lo hace.
 
 **Nadie los repite después de ti.** La CI ya no corre pruebas (`DT-39`): el único workflow que
 queda, `publicar-version.yml`, publica la versión en cada push a `main` **pase o no la
-suite**, y lo único que se comprueba en GitHub es el título del PR (`[S3.0]` de
-`docs/convenciones-de-git.md`). Lo que no pasó aquí llega a `main` roto. La suite no se
+suite**, y GitHub no comprueba nada antes: ni la suite ni el mensaje del commit (`[S3.0]` de
+`docs/convenciones-de-git.md`). Lo que no pasó aquí llega a `main` roto. **Si el `git pull
+--rebase` trae commits del otro, vuelve a correrlos**: lo que probaste ya no es lo que integras. La suite no se
 enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fichero se llame
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
@@ -329,14 +330,15 @@ una prueba**.
 
 ## Definición de Terminado
 
-En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican al
-**Pull Request** y no a la historia, porque hay tareas que no cuelgan de ninguna.
+En `docs/definicion-de-terminado.md`: seis criterios citables, `DoD-1` … `DoD-6`. Se aplican a
+**lo que se empuja junto a `main`** —o al Pull Request, si se abre uno— y no a la historia,
+porque hay tareas que no cuelgan de ninguna.
 
 Cada criterio declara cuándo aplica. `DoD-2` (integrado en `main`) y `DoD-6` (datos ficticios)
 aplican **siempre**; los demás son condicionales — y un criterio que no aplica **se declara, no se
 salta**.
 
-**`DoD-4` está vigente** y pide demostrar lo que el PR entrega **ejecutándolo, con la salida real
+**`DoD-4` está vigente** y pide demostrar lo que se entrega **ejecutándolo, con la salida real
 del comando**. No basta «funciona en mi máquina»: hay que pegar el comando y su resultado. Estuvo
 suspendido entre el 2026-08-30 y el 2026-09-17; el rastro está en `[S5]` de
 `docs/definicion-de-terminado.md`.
@@ -353,11 +355,16 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - **Kebab-case ASCII** en nombres de fichero: minúsculas, guiones, sin acentos ni guiones bajos.
 - Los identificadores entre corchetes (`HU-17`, `TT-23`, `DT-6`, `DEC-5`) son **estables y
   citables**. Cítalos en los commits: `HU-17` dice qué se construyó y por qué.
-- **Trunk based development**: ramas cortas y todo entra por PR con squash merge. **`main` no tiene
-  protección activa en GitHub**: las reglas existen pero están desactivadas, así que un `push`
-  directo no se rechaza. Que nada entre sin PR es una convención del equipo, no un bloqueo.
-  Commits en Conventional Commits —`tipo(ámbito): resumen` en español, cuerpo con `Refs:`—, porque
-  son los que disparan el versionado. El detalle está en `docs/convenciones-de-git.md`.
+- **Se empuja directo a `main`, sin ramas ni Pull Requests** (`DT-41`). Es una decisión del
+  equipo, tomada sabiendo lo que pierde: **no hagas una rama ni abras un PR salvo que te lo
+  pidan**. Antes de cada `push`: los tres comandos en verde y `git pull --rebase`. **Nunca
+  `push --force` sobre `main`**: borraría lo que el otro ya empujó. `main` no tiene protección
+  activa en GitHub, así que nada de esto lo impide una máquina.
+- **Cada commit llega a `main` tal cual y decide la versión**: Conventional Commits
+  —`tipo(ámbito): resumen` en español, cuerpo con `Refs:`—, y **nadie lo valida antes**. Un tipo
+  mal escrito no da error: no cuenta para la versión. Y **una línea del cuerpo que empiece por
+  `BREAKING CHANGE:`, `BREAKING-CHANGE:` o `CAMBIO INCOMPATIBLE:` publica una versión mayor**.
+  El detalle está en `[S2]` de `docs/convenciones-de-git.md`.
 - **`assets/js/interfaz.js` y `cuentas/templatetags/interfaz.py` son compartidos**: acumulan una
   pieza por pantalla. Al commitear por temáticas, `git add -A` los mete enteros y mezcla dos
   temas en un commit. Ahí se pone el fichero a mano.
@@ -366,16 +373,13 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
   mira `git status` antes de cada uno.
 - **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
   instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
-- **No encadenes un PR sobre otro sin integrar.** Con squash merge, `main` recibe un commit
-  nuevo y la rama apilada conflictúa aunque el contenido sea idéntico. Si no queda otra:
-  `git rebase --onto main <punta-vieja-del-PR-anterior>` y `push --force-with-lease`.
-- **Varias ramas que insertan en el MISMO punto de una lista de este fichero conflictúan en
-  el segundo merge**, aunque el contenido sea compatible: git no puede decidir el orden. La
-  lista de trampas no lo tiene, así que basta con que cada rama ancle tras una entrada
-  distinta. Se comprueba antes de subir, mergeando las ramas en una temporal.
-- **El conteo de pruebas se actualiza en el ÚLTIMO PR de la tanda.** Puesto en cada uno es la
-  misma línea cambiada en todos: conflicto seguro.
-- Al repartir por temáticas, los ficheros que **toca casi cualquier PR** y hay que despiezar a
+- **Dos personas que insertan en el MISMO punto de una lista de este fichero conflictúan al
+  hacer `git pull --rebase`**, aunque el contenido sea compatible: git no puede decidir el
+  orden. La lista de trampas no lo tiene, así que basta con que cada uno ancle tras una
+  entrada distinta.
+- **El conteo de pruebas lo actualiza el commit que cambia el número de pruebas.** Si el
+  `pull --rebase` trae pruebas del otro, se recuenta con la suite entera antes de empujar.
+- Al repartir por temáticas, los ficheros que **toca casi cualquier commit** y hay que despiezar a
   mano son `config/urls.py`, `cuentas/templatetags/interfaz.py`, `assets/js/interfaz.js`,
   `docs/decisiones-de-alcance.md` y este.
 - Cuando los bloques de dos temas se entrelazan en un fichero, **no partas el parche**: escribe
@@ -393,16 +397,16 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 3. Mira su campo **Origen**: dice de qué elemento del alcance sale. Si vas a construir algo que no
    está ahí, para — y **regístralo antes de construirlo**: historia nueva (`HU-nn`) si el backlog
    no la tiene, y además `DEC-n` en `decisiones-de-alcance.md` si amplía `[S11]` o el
-   anteproyecto. Un PR no crea alcance; lo aplica. Pasó con `HU-60` y `HU-61`.
+   anteproyecto. Un commit no crea alcance; lo aplica. Pasó con `HU-60` y `HU-61`.
    **Escribir un `.md` que registra cómo funciona algo no es alcance nuevo**: es parte de
    construirlo, y varias tareas del proyecto son exactamente eso (`TT-44`, `TT-158`, `TT-162`).
 4. Comprueba si sostiene alguna invariante. Si sí, hace falta un caso de prueba que la ejercite.
 5. Al terminar, marca la tarea `☑` **en los dos documentos** —el plan de PR y el sprint backlog—
-   dentro del propio PR, y actualiza los contadores. Deben coincidir. **Comprueba la redacción de
+   en lo mismo que empujas, y actualiza los contadores. Deben coincidir. **Comprueba la redacción de
    las dos filas**: no siempre es idéntica, y un reemplazo que sirve en un documento puede no
    alcanzar la fila del otro. Pasó con `TT-87`.
-6. Si el PR cierra una historia, márcala también en la tabla `[S4]` de
-   `backlog-historias-de-usuario.md`. **Un PR puede cerrar más de una, y una puede venir de
+6. Si el trabajo cierra una historia, márcala también en la tabla `[S4]` de
+   `backlog-historias-de-usuario.md`. **Una entrega puede cerrar más de una, y una puede venir de
    un sprint anterior**: `PR-06` saldó `HU-13` y `HU-17`, esta última abierta desde el
    Sprint 2, y `PR-09` vuelve a hacerlo con `HU-20` y `HU-09`. Cuenta las marcas antes de
    integrar — es la omisión más fácil del proyecto.
@@ -430,7 +434,7 @@ Resolución 810 de 2021—, **lo que no se pudo confirmar se declara** en vez de
 los valores viven en un solo sitio del código para que actualizarlos sea una tabla y una
 prueba. No se cita una norma que no se ha leído.
 
-**Antes de cerrar un PR, cuadra las marcas por script**: que cada `TT-nn` coincida en el
+**Antes de empujar, cuadra las marcas por script**: que cada `TT-nn` coincida en el
 sprint backlog y en el plan de PR, que el contador diga lo que dicen las marcas, y que las
 historias `☑` cuadren con `[S4]` y con los metadatos. **Un reemplazo de texto que no encuentra
 su ancla no avisa**: en el Sprint 4, la línea que decía qué cerró `HU-23` no llegó a
@@ -452,7 +456,7 @@ Dos excepciones, porque ahí la historia **es** el contenido:
 - **Los registros de decisiones** —`DEC-n`, `DT-n`, `INVD-n`— no se reescriben: una decisión
   posterior que corrige a otra se añade con su propio identificador y dice a cuál corrige, como
   `DT-21` hace con `DT-18`. Borrar la anterior dejaría sin explicación por qué el código es así.
-  **Mientras la decisión no está integrada en `main`, se corrige en su propio PR**: todavía no
-  la ha leído nadie.
+  **Mientras la decisión no se ha empujado a `main`, se corrige sin más**: todavía no la ha
+  leído nadie.
 - **Las listas de puntos abiertos y de hallazgos** —`ANEXO B`, los `UX-n` del recorrido— marcan el
   punto como resuelto y dicen dónde. Que el punto llegó a estar abierto es información.

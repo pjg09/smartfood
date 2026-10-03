@@ -17,10 +17,11 @@
 
 ### [S0.1] Qué es este documento y qué no es
 
-Nada entra en `main` por `push` directo (`[S1]` de `./convenciones-de-git.md`). Es una convención
-del equipo: GitHub no lo impide, porque `main` no tiene protección activa.
+Desde `DT-41` se empuja directo a `main`, sin Pull Requests (`[S1]` de
+`./convenciones-de-git.md`). **Los `PR-nn` de este plan siguen siendo la unidad de entrega**:
+cada uno es ahora un conjunto de commits que se empujan juntos, no un Pull Request.
 Este documento responde a una sola pregunta operativa: **¿hasta dónde desarrollo antes de
-parar, abrir un PR y seguir?**
+parar, integrar y seguir?**
 
 **No reordena ni modifica ninguna tarea.** El orden de `./sprint-5-backlog.md` es el orden
 de construcción verificado en su `ANEXO C`. Lo único que este documento añade son **cortes**.

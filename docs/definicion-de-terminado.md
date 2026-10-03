@@ -13,7 +13,7 @@
 | criterios | 6 (`DoD-1` … `DoD-6`), los seis vigentes |
 | aplica a | Los cinco sprints. No se relaja durante el semestre. **Una excepción, ya cerrada**: ver `[S5]` |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 ### [S0.1] Por qué es un documento aparte
 
@@ -36,9 +36,11 @@ Sprint Backlog. Vive donde le corresponde.
 > 2026-09-17, mientras no existió la condición previa que exigía. `DEC-15` la retiró y el
 > criterio volvió con otra forma; el rastro está en `[S5]`.
 
-Se aplica a la **unidad de trabajo**, que en este proyecto es **un Pull Request**
-(`[S1]` de `./convenciones-de-git.md`). Un PR es lo que se integra, lo que se despliega
-y lo que se revisa: es la unidad natural sobre la que preguntar «¿está terminado?».
+Se aplica a la **unidad de trabajo**, que en este proyecto es **lo que se empuja junto a
+`main`**: el commit, o el grupo de commits de una misma tarea, que entra en un `push`
+(`[S1]` de `./convenciones-de-git.md`, `DT-41`). Es lo que se integra de una vez, y es la
+unidad natural sobre la que preguntar «¿está terminado?». Si se abre un Pull Request, la
+unidad es el PR.
 
 Cada criterio dice **cuándo aplica**. Un criterio que no aplica no se salta en silencio:
 se declara por qué no aplica. Es la diferencia entre «no había migraciones» y «no me
@@ -50,11 +52,11 @@ acordé de mirar si había migraciones».
 
 ### `[DoD-1]` Los criterios de aceptación se cumplen
 
-**Si el PR cierra una o más historias:** todos los criterios de aceptación de cada una
+**Si la integración cierra una o más historias:** todos los criterios de aceptación de cada una
 se cumplen y se han verificado **uno a uno**, no de vista. Los criterios son el
 contrato: ni menos, ni más.
 
-**Si el PR no cierra ninguna historia** —habilitación (`[S3]` del sprint backlog) o
+**Si no cierra ninguna historia** —habilitación (`[S3]` del sprint backlog) o
 gestión (`[S5]`)— declara **qué habilita** y **cómo se comprueba que lo habilita**. Una
 tarea de habilitación sin comprobación es una promesa.
 
@@ -63,21 +65,22 @@ tarea de habilitación sin comprobación es una promesa.
 
 ### `[DoD-2]` Está integrado en la rama principal
 
-El código está en `main`, integrado por **Pull Request** con revisión (`[S1]` de
-`./convenciones-de-git.md`), y **no rompe nada de lo ya construido**.
+El código está en `main` —empujado directo, o por Pull Request si se abrió uno (`[S1]` de
+`./convenciones-de-git.md`)— y **no rompe nada de lo ya construido**.
 
-Aplica **siempre**. Es el único criterio sin condición: mientras el trabajo viva en una
-rama, no está terminado por definición.
+Aplica **siempre**. Es el único criterio sin condición: mientras el trabajo viva solo en tu
+máquina, no está terminado por definición. **Sin revisión del otro desarrollador** (`DT-41`),
+lo único que separa un cambio roto de `main` es lo que quien empuja comprobó antes.
 
 **«No rompe nada» se comprueba ejecutando, antes de integrar, y lo hace quien integra**: la
 CI ya no corre pruebas (`DT-39`). Los tres comandos de `[S5]` de `./desarrollo.md` —`check`,
-`makemigrations --check` y la suite entera— en verde, y si el PR toca la infraestructura,
-`docker/comprobar-desde-cero.sh` también (`[S5.3]`). Un PR integrado sin ellos no cumple
-`DoD-2`, aunque GitHub lo haya dejado pasar y la versión se haya publicado.
+`makemigrations --check` y la suite entera— en verde, y si el cambio toca la infraestructura,
+`docker/comprobar-desde-cero.sh` también (`[S5.3]`). Lo que se empuja sin ellos no cumple
+`DoD-2`, aunque GitHub lo haya aceptado y la versión se haya publicado.
 
 ### `[DoD-3]` Las migraciones están escritas y aplicadas
 
-**Si el PR cambia el esquema de la base de datos:** sus migraciones están escritas,
+**Si el cambio toca el esquema de la base de datos:** sus migraciones están escritas,
 aplicadas en el entorno de pruebas, y **no quedan cambios de modelo sin migrar**
 —`manage.py makemigrations --check` no encuentra nada pendiente—.
 
@@ -85,15 +88,15 @@ Lo segundo no estaba en la redacción original y se añade por lo que enseña la
 un modelo editado sin generar su migración no da error hasta que otra persona levanta el
 proyecto, y para entonces el commit lleva días integrado.
 
-**Si el PR no toca modelos**, no aplica. Decláralo. La comprobación de cambios sin migrar se
-corre igual antes de cada PR, toque o no modelos: es uno de los tres comandos de `DoD-2`.
+**Si no toca modelos**, no aplica. Decláralo. La comprobación de cambios sin migrar se
+corre igual antes de cada push, toque o no modelos: es uno de los tres comandos de `DoD-2`.
 
 ### `[DoD-4]` Se demuestra ejecutándolo, con la salida real
 
-Lo que el PR entrega **se enseña funcionando**, no se deduce del diff. Aplica
+Lo que se entrega **se enseña funcionando**, no se deduce del diff. Aplica
 **siempre**, y la forma depende de lo que se entrega:
 
-| Lo que entrega el PR | Cómo se demuestra |
+| Lo que se entrega | Cómo se demuestra |
 |---|---|
 | Funcionalidad para un usuario | Se usa: se recorre la pantalla o el flujo, y se dice con qué cuenta y con qué datos |
 | Configuración o infraestructura | Por su **efecto observable**: el comando que lo ejerce y su salida |
@@ -113,11 +116,11 @@ Pegar la salida real es lo que distingue haberlo comprobado de haberlo dado por 
 
 ### `[DoD-5]` Cada invariante que sostiene tiene su prueba
 
-**Si el PR sostiene una invariante** (`INV-1` … `INV-9`, `INVD-1` … `INVD-7`): existe al
+**Si el cambio sostiene una invariante** (`INV-1` … `INV-9`, `INVD-1` … `INVD-7`): existe al
 menos un caso de prueba que la ejercita, y que **falla si la invariante se rompe**. Una
 prueba que pasaría igual con la invariante rota no prueba nada.
 
-**Si el PR no sostiene ninguna**, no aplica. Decláralo — y comprueba de verdad que no
+**Si no sostiene ninguna**, no aplica. Decláralo — y comprueba de verdad que no
 sostiene ninguna antes de declararlo.
 
 > **Punto abierto, y no lo cierra este documento.** `[ANEXO B]` de
@@ -140,13 +143,17 @@ Aplica **siempre**. No es una preferencia de calidad: es la Ley 1581 de 2012 sob
 tratamiento de datos de menores (`ALC-OUT-08`), y es la razón por la que el prototipo no
 se despliega en una institución real (`ALC-OUT-06`).
 
-Un PR que incumpla `DoD-6` no se corrige: se revierte.
+Un commit que incumpla `DoD-6` no se corrige: se revierte con `git revert`.
 
 ---
 
 ## [S3] Cómo se usa
 
-La plantilla de Pull Request (`.github/pull_request_template.md`) lleva los seis
+**Con push directo no hay plantilla que rellenar**, así que los seis criterios se repasan de
+memoria antes de empujar, y la evidencia de `DoD-4` —el comando y su salida— se pega en el
+cuerpo del commit, que ahora sí llega a `main` (`[S2.5]` de `./convenciones-de-git.md`).
+
+Si se abre un Pull Request, la plantilla (`.github/pull_request_template.md`) lleva los seis
 criterios como lista de verificación, citando su identificador. Marcar una casilla es
 afirmar que se comprobó; dejarla sin marcar y sin explicación es dejar el PR incompleto.
 
@@ -183,6 +190,7 @@ fecha y su motivo.
 |---|---|---|---|
 | 2026-08-30 | **`DoD-4` suspendido** | El entorno desplegado se congeló: el plan gratuito del proveedor no lo sostiene y el fallo no es del código | **Cerrado el 2026-09-17** |
 | 2026-09-17 | **`DoD-4` restablecido, con otra redacción** | La consulta con la docente se resolvió: la asignatura no exige despliegue. `DEC-15` retira de `ENT-01` la condición de estar desplegado, así que el criterio ya no espera una condición previa que no va a existir | Vigente |
+| 2026-10-03 | **La unidad de trabajo deja de ser el Pull Request**, y `DoD-2` deja de exigir uno con revisión | Por tiempo, el equipo empuja directo a `main` (`DT-41`). Los seis criterios siguen enteros; lo que cambia es sobre qué se aplican —lo que se empuja junto— y que ya no hay revisión del otro desarrollador ni CI (`DT-39`) que los compruebe después | Vigente |
 
 **La suspensión duró dieciocho días y se cerró como debía: con una decisión, no por
 olvido.** Su propia caja declaraba que caducaba sola mientras no tuviera fecha de

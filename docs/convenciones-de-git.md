@@ -5,70 +5,59 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-GIT |
-| titulo | Estrategia de ramas, convención de commits y publicación de versiones |
+| titulo | Integración en `main`, convención de commits y publicación de versiones |
 | documentos_fuente | `./sprint-1-backlog.md` (`TT-01`, `[S2]`); `./decisiones-tecnicas.md` (`DT-13`) |
 | tipo_documento | Convención de trabajo. No es un artefacto de Scrum |
 | cubre | `TT-01` — Repositorio, estrategia de ramas y convención de commits |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
-Este documento es el contrato de cómo entra código a `main`. Lo que aquí se decide lo
-hace cumplir la automatización de `.github/workflows/`, no la buena voluntad.
+Este documento es el contrato de cómo entra código a `main`. **Casi nada de lo que aquí se
+decide lo hace cumplir una máquina**: `main` no tiene protección activa, la CI no corre
+pruebas (`DT-39`) y se empuja directo (`DT-41`). Lo que se sostiene, se sostiene porque cada
+uno lo cumple antes de empujar.
 
 ---
 
-## [S1] Estrategia de ramas: trunk based development
+## [S1] Se integra empujando directo a `main`
 
-**Una sola rama de larga vida: `main`.** Siempre desplegable.
+**Una sola rama: `main`.** Desde `DT-41` el trabajo se commitea y se empuja directo a `main`,
+sin ramas de trabajo ni Pull Requests. Es una decisión del equipo por tiempo, tomada sabiendo
+lo que se pierde: la revisión del otro desarrollador antes de integrar y la validación
+automática del mensaje (`[S2.5]`).
 
-**`main` no tiene protección activa en GitHub.** Las reglas `main` y `main-protected` existen pero
-están desactivadas, y no hay *branch protection*: un `push` directo no se rechaza. Las reglas de
-esta tabla son **convenciones del equipo**, no bloqueos, y se sostienen porque cada uno las cumple.
+**Nada lo hace cumplir.** `main` no tiene protección activa en GitHub —las reglas `main` y
+`main-protected` existen pero están desactivadas— y la CI ya no corre pruebas (`DT-39`). Lo
+que se sostiene, se sostiene porque cada uno lo cumple antes de empujar:
 
-| Regla | Consecuencia |
+| Regla | Por qué |
 |---|---|
-| Nada entra en `main` por `push` directo —por convención: GitHub no lo impide— | Todo entra por Pull Request, sin excepciones |
-| Las ramas de trabajo son **cortas**: horas o un par de días | Si una rama vive más de dos días, el PR es demasiado grande: pártelo |
-| Se ramifica **desde `main`**, nunca desde otra rama de trabajo | Sin ramas apiladas; sin `develop`, sin `release/*`, sin `hotfix/*` |
-| Se integra con **squash merge** | Un PR = un commit en `main` = una entrada en el historial |
-| La rama se borra al integrar | El repositorio no acumula ramas muertas |
+| **Antes de empujar, los tres comandos en verde** (`[S5]` de `./desarrollo.md`) | Nadie los repite después: lo que no pasó en tu máquina llega a `main` roto |
+| **Cada commit cumple `[S2]`** | `semantic-release` lee cada commit tal cual, y nadie revisa el mensaje antes (`[S2.5]`) |
+| **`git pull --rebase` antes de empujar** | Con dos personas empujando, el historial se mantiene lineal y los conflictos se resuelven en tu máquina, no en `main` |
+| **Nunca `push --force` sobre `main`** | Borraría los commits que el otro ya empujó |
+| **Commits pequeños y con un solo tema** | Sin squash, cada commit es una entrada del historial y del cálculo de la versión |
 
-**No hay GitFlow.** Con dos desarrolladores, cinco sprints y despliegue continuo a un
-único entorno de pruebas (`DT-13`), una rama de integración intermedia solo añade
-conflictos y ceremonia.
+**Las ramas no están prohibidas**: para algo grande o para pedir revisión se puede abrir un
+Pull Request, y el flujo de antes sigue funcionando —squash, título validado—. Pero no es
+el camino por defecto.
 
-### [S1.1] Nombre de la rama
-
-```
-tipo/TT-nn-resumen-corto
-```
-
-Kebab-case ASCII, igual que los nombres de fichero. El identificador de la tarea va en
-el nombre porque es lo que permite rastrear la rama hasta el backlog.
-
-```
-feat/TT-30-generador-codigo-tarjeta
-feat/TT-21-modelos-estudiante-acudiente
-fix/TT-25-validacion-todo-o-nada
-docs/TT-07-definicion-de-terminado
-```
-
-Si el PR cubre varias tareas, se usa la **primera** del rango: `feat/TT-15-cuentas-de-personal`.
-
-### [S1.2] Ciclo de trabajo
+### [S1.1] Ciclo de trabajo
 
 ```bash
-git switch main && git pull --ff-only          # 1. partir de main al día
-git switch -c feat/TT-30-generador-codigo      # 2. rama corta
-# ... commits siguiendo [S2] ...
-git push -u origin feat/TT-30-generador-codigo # 3. subir
-gh pr create --fill                            # 4. abrir PR (título = [S2])
-# ... revisión del otro desarrollador + los tres comandos en verde en local ...
-gh pr merge --squash --delete-branch           # 5. squash e integrar
+git switch main && git pull --rebase           # 1. partir de main al día
+# ... commits siguiendo [S2], uno por tema ...
+# ... los tres comandos en verde (y el script de [S5.3] si tocas infraestructura) ...
+git pull --rebase                              # 2. traer lo que empujó el otro
+git push                                       # 3. integrar
 ```
 
-**Rebase sobre `main`, no merge de `main` a la rama.** Mantiene el historial lineal y el
-diff del PR limpio: `git pull --rebase origin main`.
+**Si el `pull --rebase` trae cambios del otro, vuelve a correr la suite antes de empujar**:
+lo que probaste ya no es lo que vas a integrar.
+
+**Las tareas siguen siendo la unidad de trazabilidad.** El `TT-nn` y el `HU-nn` van en el
+`Refs:` de cada commit (`[S2]`), y los `PR-nn` de los planes de sprint siguen siendo la forma
+de agrupar el trabajo: ahora son un conjunto de commits empujados, no un Pull Request.
 
 ---
 
@@ -139,37 +128,18 @@ El ámbito es **opcional** cuando el cambio es transversal: `feat: ...`.
 
 ### [S2.3] Cambios incompatibles
 
-**Un `!` antes de los dos puntos, en el título del Pull Request. Y solo eso.**
-
-Conventional Commits admite además declararlo con una nota `BREAKING CHANGE:` al final
-del cuerpo. **Aquí esa vía no sirve**, y conviene entender por qué antes de usarla por
-costumbre: el repositorio integra con squash y el mensaje que queda en `main` es
-únicamente el título del PR (`[S2.5]`). Un `BREAKING CHANGE:` escrito en el cuerpo de un
-commit de la rama **nunca llega a `main`**, así que `semantic-release` no lo ve y publica
-una `minor` donde tocaba una `major`. El fallo es silencioso: no hay error, solo un
-número de versión que miente.
+**Un `!` antes de los dos puntos, en el resumen del commit.**
 
 ```
 feat(billetera)!: reconstruir el saldo desde el historial
 ```
 
-En el cuerpo del commit de tu rama puedes explicarlo como quieras —y debes—, pero **lo
-que decide la versión es el `!` del título**:
-
-```
-feat(billetera)!: reconstruir el saldo desde el historial
-
-Se elimina la columna `saldo` de la tabla. El saldo pasa a ser la suma de
-los movimientos, según INV-2 y DT-4. Toda lectura del saldo debe pasar por
-el selector correspondiente.
-
-BREAKING CHANGE: `Billetera.saldo` deja de existir.
-Refs: TT-23, INV-2, DT-4
-```
-
-El `BREAKING CHANGE:` de ese cuerpo es documentación para quien revise la rama, no el
-disparador de la versión. `.releaserc.json` conserva los `noteKeywords` por si algún día
-se integra de otra forma, pero **no te apoyes en ellos**.
+**Ojo con tres notas en el cuerpo: ahora también cuentan.** Con push directo cada commit
+llega a `main` entero, y `semantic-release` lee como cambio incompatible una línea que empiece
+por `BREAKING CHANGE:`, `BREAKING-CHANGE:` o **`CAMBIO INCOMPATIBLE:`** (`noteKeywords` de
+`.releaserc.json`). La última es la que se escribe sin querer en español, y cualquiera de las
+tres, puesta para explicar algo, **publica una versión mayor**. Si el cambio es incompatible, usa el `!` y explícalo en el cuerpo con otras
+palabras; si no lo es, no escribas esa nota.
 
 ### [S2.4] Ejemplos completos
 
@@ -205,45 +175,40 @@ Refs: TT-46, HU-26, INV-5
 
 ### [S2.5] Lo que importa al integrar
 
-> Con **squash merge**, lo que queda en `main` —y lo que analiza `semantic-release`— es
-> el **título del Pull Request**, no tus commits locales.
+> Con push directo, **cada commit que empujas llega a `main` tal cual**, con su cuerpo, y
+> `semantic-release` analiza todos los que entraron desde la última versión.
 
-El título del PR debe cumplir `[S2]`. `.github/workflows/convencion-de-commits.yml` lo
-verifica en cada apertura y edición del PR y falla si no cumple. Los commits dentro de
-la rama son tuyos: escríbelos bien igualmente, pero el que cuenta es el título.
+**Nadie valida el mensaje antes de que llegue.** `.github/workflows/convencion-de-commits.yml`
+solo comprueba el título de un Pull Request, y en el flujo habitual no hay ninguno. Un
+`tipo` mal escrito —`feature:` en vez de `feat:`, un ámbito con mayúsculas— no da error: ese
+commit simplemente no cuenta para la versión, o cuenta como otra cosa. Revisa el mensaje
+antes de empujar: `git log origin/main..HEAD --format='%s'`.
 
-La configuración del repositorio lo sostiene: en *Settings → General → Pull Requests*
-solo está activo **Allow squash merging**, con *Default commit message* fijado en
-**Pull request title**. Merge commits y rebase están desactivados, de modo que no existe
-la vía por la que los commits de una rama llegarían sueltos a `main`.
+**El cuerpo del commit sí se conserva**, y con él los `Refs: TT-nn`: la trazabilidad queda
+en el historial de `main`, sin depender de un Pull Request.
 
-**Dos consecuencias que hay que tener presentes:**
-
-1. El cuerpo del commit que queda en `main` está **vacío**. Los `Refs: TT-nn` de tus
-   commits no viajan al historial: viven en el Pull Request, al que el commit de squash
-   enlaza con el `(#N)` que GitHub le añade al título. Por eso la plantilla de PR incluye
-   una tabla de trazabilidad —es el sitio donde esa información queda para siempre—.
-2. Un cambio incompatible **solo cuenta si lleva `!` en el título** (`[S2.3]`).
+**Si se abre un Pull Request**, rige lo de siempre: el repositorio solo permite squash, con el
+título del PR como mensaje y el cuerpo vacío, así que lo que cuenta es el título, y la
+validación sí corre.
 
 ---
 
 ## [S3] Publicación de versiones
 
-`semantic-release` corre en **cada `push` a `main`**, es decir, cada vez que se integra
-un PR. Configuración en `.releaserc.json`, workflow en `.github/workflows/publicar-version.yml`.
+`semantic-release` corre en **cada `push` a `main`**. Configuración en `.releaserc.json`, workflow en `.github/workflows/publicar-version.yml`.
 
 ### [S3.0] La versión no espera a las pruebas: las pruebas van antes, en local
 
-**La CI no corre pruebas** (`DT-39`). El workflow tiene un solo trabajo, `release`, y lo
-único que se comprueba en GitHub es el título del PR (`convencion-de-commits.yml`), porque
-es lo que decide la versión (`[S2.5]`).
+**La CI no corre pruebas** (`DT-39`). El workflow tiene un solo trabajo, `release`, y
+publica con lo que haya en `main`. Con push directo (`DT-41`) GitHub no comprueba nada antes:
+ni la suite ni el mensaje del commit (`[S2.5]`).
 
 **Que se publique una versión no dice que la suite pase: lo dice quien la corrió.** Antes de
 integrar, en local, los tres comandos de `[S5]` de `./desarrollo.md` —`check`,
-`makemigrations --check` y la suite entera—, y **si el PR toca la infraestructura**,
+`makemigrations --check` y la suite entera—, y **si el cambio toca la infraestructura**,
 `docker/comprobar-desde-cero.sh`, que levanta el stack desde cero como lo haría otra máquina
-(`[S5.3]` del mismo documento). Lo que antes hacía la CI en cada PR lo hace ahora quien
-integra, y solo cuando hace falta.
+(`[S5.3]` del mismo documento). Lo que antes hacía la CI lo hace ahora quien empuja, y solo
+cuando hace falta.
 
 **La suite no se enumera en ninguna parte.** `manage.py test` sin argumentos descubre todo
 `test*.py` en cada app, así que una prueba nueva entra sola. Las dos formas de que una prueba
@@ -270,10 +235,10 @@ Se leen los commits desde la última etiqueta y gana el de mayor impacto:
 
 | Hay al menos un… | Versión |
 |---|---|
-| Cambio incompatible: `!` en el título (`[S2.3]`) | `major` — `1.4.2` → `2.0.0` |
+| Cambio incompatible: `!` en el resumen, o una nota `BREAKING CHANGE:` en el cuerpo (`[S2.3]`) | `major` — `1.4.2` → `2.0.0` |
 | `feat` | `minor` — `1.4.2` → `1.5.0` |
 | `fix`, `perf`, `refactor`, `revert` | `patch` — `1.4.2` → `1.4.3` |
 | Solo `docs`, `test`, `build`, `ci`, `style`, `chore` | **No se publica nada** |
 
-Que un PR de solo documentación no publique versión es intencional: el número de versión
+Que un commit de solo documentación no publique versión es intencional: el número de versión
 mide el sistema, no la actividad.
