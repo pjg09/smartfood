@@ -59,7 +59,7 @@ git switch -c feat/TT-30-generador-codigo      # 2. rama corta
 # ... commits siguiendo [S2] ...
 git push -u origin feat/TT-30-generador-codigo # 3. subir
 gh pr create --fill                            # 4. abrir PR (título = [S2])
-# ... revisión del otro desarrollador + CI en verde ...
+# ... revisión del otro desarrollador + los tres comandos en verde en local ...
 gh pr merge --squash --delete-branch           # 5. squash e integrar
 ```
 
@@ -226,32 +226,25 @@ la vía por la que los commits de una rama llegarían sueltos a `main`.
 ## [S3] Publicación de versiones
 
 `semantic-release` corre en **cada `push` a `main`**, es decir, cada vez que se integra
-un PR, **y solo si la suite completa pasó antes en ese mismo commit**. Configuración en
-`.releaserc.json`, workflow en `.github/workflows/integracion-continua.yml`.
+un PR. Configuración en `.releaserc.json`, workflow en `.github/workflows/publicar-version.yml`.
 
-### [S3.0] Sin pruebas en verde no hay versión
+### [S3.0] La versión no espera a las pruebas: las pruebas van antes, en local
 
-El workflow tiene dos trabajos, y el segundo declara `needs:` sobre el primero:
+**La CI no corre pruebas** (`DT-39`). El workflow tiene un solo trabajo, `release`, y lo
+único que se comprueba en GitHub es el título del PR (`convencion-de-commits.yml`), porque
+es lo que decide la versión (`[S2.5]`).
 
-| Trabajo | Cuándo | Qué hace |
-|---|---|---|
-| `pruebas` | En **cada PR** —y en cada push a su rama— y en **cada push a `main`** | Levanta el stack con `docker compose` desde cero (`DT-37`), comprueba que sirve, y dentro de él corre `check`, `makemigrations --check` y **la suite entera** |
-| `release` | Solo en push a `main`, **solo si `pruebas` salió en verde** | `semantic-release` |
-
-**Si una prueba falla en `main`, el trabajo `release` sale como omitido y no se publica
-nada.** No hay que hacer nada para recuperarlo: el siguiente PR que integre con la suite
-en verde publica la versión con todos los commits pendientes, porque `semantic-release`
-lee desde la última etiqueta.
+**Que se publique una versión no dice que la suite pase: lo dice quien la corrió.** Antes de
+integrar, en local, los tres comandos de `[S5]` de `./desarrollo.md` —`check`,
+`makemigrations --check` y la suite entera—, y **si el PR toca la infraestructura**,
+`docker/comprobar-desde-cero.sh`, que levanta el stack desde cero como lo haría otra máquina
+(`[S5.3]` del mismo documento). Lo que antes hacía la CI en cada PR lo hace ahora quien
+integra, y solo cuando hace falta.
 
 **La suite no se enumera en ninguna parte.** `manage.py test` sin argumentos descubre todo
-`test*.py` en cada app, así que una prueba nueva entra en la CI sin tocar el workflow. Las
-dos formas de que una prueba se quede fuera sin avisar —un fichero que no casa con el patrón
-y una carpeta sin `__init__.py`— las vigila `config/tests_descubrimiento.py`.
-
-**Que la suite bloquee el merge del PR, no solo la versión, es un ajuste de GitHub**: en
-*Settings → Branches → main*, *Require status checks to pass* con el trabajo
-**«Pruebas en el stack de docker compose»**. Sin él, el PR se puede integrar en rojo y lo
-único que se para es la versión.
+`test*.py` en cada app, así que una prueba nueva entra sola. Las dos formas de que una prueba
+se quede fuera sin avisar —un fichero que no casa con el patrón y una carpeta sin
+`__init__.py`— las vigila `config/tests_descubrimiento.py`.
 
 | Aspecto | Decisión |
 |---|---|

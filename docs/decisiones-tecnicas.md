@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 38 (`DT-1` … `DT-38`) |
+| decisiones | 39 (`DT-1` … `DT-39`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-38`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-39`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -869,3 +869,19 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El código no cambia.** `django-storages` habla S3 y no sabe con qué servidor; los ajustes `STORAGES`, los prefijos `privado/` y `publico/` de `DT-21` y la firma de `DT-37` son los mismos.
 
 **Consecuencia asumida.** Una base que ya tenía fotografías en el volumen de MinIO queda con claves que apuntan a objetos que SeaweedFS no tiene: hay que empezar de cero (`docker compose down -v`) para que `sembrar` vuelva a generarlas. Los datos son ficticios (`ALC-OUT-07`) y se resiembran solos al levantar.
+
+#### `[DT-39]` La CI ya no corre pruebas: solo publica la versión
+
+**Corrige:** `DT-37` en «el flujo `integracion-continua` de la CI levanta el stack desde cero en cada PR y comprueba que sirve», y la regla de `[S3.0]` de `./convenciones-de-git.md`, «sin pruebas en verde no hay versión».
+
+**Razón:** decisión del equipo, tomada el 2026-10-02. El trabajo `pruebas` tardaba unos veinte minutos por integración —levantar el stack desde cero y pasar la suite completa—, y con dos personas desarrollando en el último sprint esa espera se volvió el cuello de botella. El equipo prefiere ese tiempo a la red de seguridad.
+
+**Decidido:**
+
+- **Se retira el trabajo `pruebas`.** El workflow pasa a llamarse `publicar-version.yml` y solo tiene el trabajo `release`: `semantic-release` en cada push a `main`, sin depender de nada.
+- **Se conserva `convencion-de-commits.yml`**, que valida el título del PR en unos segundos: el release calcula la versión a partir de ese título (`[S2.5]` de `./convenciones-de-git.md`), y un título mal escrito no publica la versión que toca.
+- **Las comprobaciones pasan a local, y no desaparecen.** Los tres comandos de antes de cada PR —`check`, `makemigrations --check` y la suite— siguen siendo obligatorios. **Y cuando el cambio toca la infraestructura**, `docker/comprobar-desde-cero.sh` hace lo que hacía el trabajo retirado, con los mismos pasos: validar el compose con el mínimo, levantar desde cero, comprobar páginas, hojas, fotografías firmadas y correo, y correr los tres comandos dentro (`[S5.3]` de `./desarrollo.md`). Además pregunta al registro por cada imagen, que es lo que el runner de GitHub hacía sin querer al empezar sin caché.
+
+**Consecuencia asumida.** **Que una versión se publique ya no dice que la suite pase**: lo dice quien la corrió antes de integrar. Y nada externo detecta que el stack deja de levantar en una máquina limpia: lo vigilan `config/tests_contenedor.py`, en la suite, y el script, si alguien lo corre. Es la condición de que el prototipo se pueda demostrar (`DEC-15`), así que conviene correr el script antes de cada entrega aunque no se haya tocado la infraestructura.
+
+**Lo que no lo obligaba.** Las reglas de GitHub sobre `main` —`main` y `main-protected`— están desactivadas a fecha de esta decisión, así que el trabajo `pruebas` nunca bloqueó una integración: la espera la imponía el propio equipo. Retirarlo no cambia qué se puede integrar, sino qué se comprueba antes.

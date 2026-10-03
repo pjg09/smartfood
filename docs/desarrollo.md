@@ -5,12 +5,12 @@
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-DESARROLLO |
-| titulo | Reconstrucción del entorno local, credenciales, comandos del día a día y la CI en local |
+| titulo | Reconstrucción del entorno local, credenciales, comandos del día a día y la comprobación desde cero |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`); `./decisiones-tecnicas.md` (`DT-37`, `DT-38`) |
-| actualizado | 2026-10-01 |
+| actualizado | 2026-10-02 |
 | idioma | es-CO |
-| version | 1.4 |
+| version | 1.5 |
 
 Es la libreta del desarrollo: **cómo levantar el entorno desde cero, con qué se entra y
 qué comandos hacen falta a diario.** Es el único entorno que hay: `DEC-15` retiró el
@@ -402,9 +402,9 @@ docker compose exec app python manage.py makemigrations --check --dry-run   # si
 docker compose exec app python manage.py test --noinput
 ```
 
-Los tres tienen que pasar —con `uv run python manage.py …` en el host, lo mismo—. La CI
-los repite en cada PR, y sin ellos en verde no se publica versión (`[S3.0]` de
-`./convenciones-de-git.md`). **Y si el
+Los tres tienen que pasar —con `uv run python manage.py …` en el host, lo mismo—. **Nadie
+los repite después**: la CI ya no corre pruebas y la versión se publica igual (`DT-39`,
+`[S3.0]` de `./convenciones-de-git.md`), así que lo que no pasó aquí llega a `main` roto. **Y si el
 PR toca la infraestructura, un cuarto**: que el stack levante desde cero (`[S5.3]`). El segundo es `DoD-3` y es el que más se olvida: un modelo
 editado sin su migración no da error hasta que otra persona levanta el proyecto.
 
@@ -515,14 +515,15 @@ y no acordarse de ellos. Cuenta como infraestructura:
 | Un servicio nuevo —una cola, una caché— | `compose.yaml`, con su `healthcheck` y su `depends_on` |
 | Una hoja de estilos nueva | `docker/vigilar-estilos.sh` |
 
-**Dos cosas lo vigilan**, y ninguna depende de acordarse:
+**Dos cosas lo vigilan**, y la segunda depende de acordarse de correrla (`DT-39`):
 
 - **`config/tests_contenedor.py`**, dentro de la suite: una variable obligatoria que el compose
   no da, `localhost` donde tiene que ir un nombre de servicio, la versión de Python, el `.env`
   dentro de la imagen, un comando del arranque que ya no existe.
-- **El flujo `integracion-continua` de la CI**, en cada PR: levanta el stack desde cero
-  —sin `.env`, sin imágenes, sin volúmenes—, comprueba que sirve páginas y hojas, que sembró y
-  que una fotografía firmada se abre desde fuera.
+- **`docker/comprobar-desde-cero.sh`**, a mano y antes de subir: levanta el stack desde cero
+  —sin `.env` y sin volúmenes—, comprueba que sirve páginas y hojas, que sembró, que una
+  fotografía firmada se abre desde fuera y que cada imagen sigue en su registro. La receta,
+  abajo.
 
 Para comprobarlo en local antes de subir, **sin tocar tu base**: un nombre de proyecto
 distinto da volúmenes nuevos.
@@ -535,37 +536,25 @@ docker compose -p smartfood-limpio down -v             # borra SOLO los volúmen
 docker compose up -d                                   # vuelve a lo tuyo
 ```
 
-**Y el trabajo `pruebas` de la CI entero, antes de subir**: valida el compose con el mínimo,
-levanta desde cero, comprueba páginas, fotografías y correo, y corre `check`, migraciones y la
-suite. Ejecuta los pasos `run:` **leídos del propio YAML**, así que lo que se prueba es el
-workflow de verdad y no una copia. Trabaja sobre una copia del árbol —con lo que no has
-commiteado— y con otro nombre de proyecto, así que tu base no se toca. Tarda unos seis minutos.
+**Y la comprobación entera, antes de subir: `docker/comprobar-desde-cero.sh`.** Es lo que
+hacía el trabajo `pruebas` de la CI hasta que `DT-39` lo retiró, con los mismos pasos:
+pregunta al registro por cada imagen —lo que un `up` en tu máquina no ve, porque las tienes en
+caché—, valida el compose con el mínimo, levanta desde cero, comprueba páginas, hojas,
+fotografías firmadas y correo, y corre `check`, migraciones y la suite. Trabaja sobre una
+copia del árbol —con lo que no has commiteado— y con otro nombre de proyecto, así que tu base
+no se toca; **se niega a correr** con el nombre de tu stack, que al terminar borraría tus
+volúmenes. Tarda unos seis minutos.
 
 ```bash
 docker compose down                                   # libera los puertos; conserva tus datos
-D="$(mktemp -d)"
-git ls-files -co --exclude-standard -z | rsync -a --from0 --files-from=- ./ "$D/"
-( cd "$D" && COMPOSE_PROJECT_NAME=smartfood-limpio uv run --no-project --with pyyaml python - <<'PY'
-import subprocess, yaml
-pasos = yaml.safe_load(open(".github/workflows/integracion-continua.yml"))["jobs"]["pruebas"]["steps"]
-fallo = False
-for paso in pasos:
-    si = paso.get("if", "")
-    if "run" not in paso or (si == "failure()" and not fallo) or (fallo and not si):
-        continue
-    print(f"\n==== {paso['name']}", flush=True)
-    codigo = subprocess.run(["bash", "-e", "-c", paso["run"]]).returncode
-    fallo = fallo or (codigo != 0 and not si)
-print("\nRESULTADO:", "FALLO" if fallo else "VERDE")
-PY
-)
-rm -rf "$D"
+docker/comprobar-desde-cero.sh
 docker compose up -d                                  # vuelve a lo tuyo
 ```
 
-Termina con `RESULTADO: VERDE` o `FALLO`; si falla, el paso `Registros` vuelca los de todos los
-servicios. No sustituye a la CI —el runner tiene otro Compose y ninguna caché—, pero caza en
-seis minutos lo que allí cuesta un push y siete minutos y medio.
+Termina con `RESULTADO: VERDE` o `FALLO`; si falla, vuelca los registros de todos los
+servicios. **Es la única comprobación que queda de que el stack levanta en otra máquina**, y
+esa es la condición de que el prototipo se pueda demostrar (`DEC-15`): córrelo siempre que el
+PR toque la infraestructura, y antes de cada entrega aunque no la haya tocado.
 
 ---
 
