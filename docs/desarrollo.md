@@ -394,7 +394,9 @@ degrada la reputación del remitente (`DEC-9`).
 
 ## [S5] Antes de abrir un Pull Request
 
-`main` está protegida: todo entra por PR (`./convenciones-de-git.md`).
+Todo entra por PR (`./convenciones-de-git.md`). Es una convención: `main` no tiene protección
+activa en GitHub, así que nada rechaza un `push` directo, y desde `DT-39` tampoco hay CI que
+corra estos tres comandos por ti.
 
 ```bash
 docker compose exec app python manage.py check

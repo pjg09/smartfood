@@ -19,11 +19,15 @@ hace cumplir la automatización de `.github/workflows/`, no la buena voluntad.
 
 ## [S1] Estrategia de ramas: trunk based development
 
-**Una sola rama de larga vida: `main`.** Siempre desplegable, siempre protegida.
+**Una sola rama de larga vida: `main`.** Siempre desplegable.
+
+**`main` no tiene protección activa en GitHub.** Las reglas `main` y `main-protected` existen pero
+están desactivadas, y no hay *branch protection*: un `push` directo no se rechaza. Las reglas de
+esta tabla son **convenciones del equipo**, no bloqueos, y se sostienen porque cada uno las cumple.
 
 | Regla | Consecuencia |
 |---|---|
-| `main` está protegida contra `push` directo | Todo entra por Pull Request, sin excepciones |
+| Nada entra en `main` por `push` directo —por convención: GitHub no lo impide— | Todo entra por Pull Request, sin excepciones |
 | Las ramas de trabajo son **cortas**: horas o un par de días | Si una rama vive más de dos días, el PR es demasiado grande: pártelo |
 | Se ramifica **desde `main`**, nunca desde otra rama de trabajo | Sin ramas apiladas; sin `develop`, sin `release/*`, sin `hotfix/*` |
 | Se integra con **squash merge** | Un PR = un commit en `main` = una entrada en el historial |
@@ -256,8 +260,9 @@ se quede fuera sin avisar —un fichero que no casa con el patrón y una carpeta
 | Node en local | **No hace falta.** Solo existe dentro del runner de GitHub Actions |
 
 Sin `@semantic-release/changelog` ni `@semantic-release/git`, el proceso **no escribe de
-vuelta en el repositorio**: solo crea la etiqueta y la Release. Es lo que permite que
-`main` siga protegida sin excepciones para el bot.
+vuelta en el repositorio**: solo crea la etiqueta y la Release. Por eso no necesita permiso
+para empujar a `main`: si algún día se reactiva su protección, no hará falta ninguna excepción
+para el bot.
 
 ### [S3.1] Cómo se calcula la versión
 
