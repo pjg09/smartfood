@@ -5,7 +5,8 @@ que lo rompe casi nunca es tocar esos dos ficheros: es tocar **otro** —una
 variable obligatoria nueva en los ajustes, un comando renombrado, la versión de
 Python— y no acordarse de ellos. Estas pruebas vigilan esa deriva sin Docker,
 con la suite de siempre. Lo que solo se ve levantando el stack de verdad lo
-vigila el flujo `integracion-continua` de la CI.
+vigila la comprobación desde cero de `[S5.3]` de docs/desarrollo.md, que se
+corre a mano: la CI ya no corre pruebas (DT-39).
 """
 
 import ast

@@ -1,7 +1,7 @@
 """Toda prueba escrita es una prueba que se ejecuta.
 
-La CI corre `manage.py test` sin argumentos (`integracion-continua.yml`): la
-suite no se enumera en ninguna parte, y una prueba nueva entra sola **si el
+`manage.py test` se corre sin argumentos, en local y en el script de
+comprobación desde cero (`[S5.3]` de docs/desarrollo.md): la suite no se enumera en ninguna parte, y una prueba nueva entra sola **si el
 descubridor la encuentra**. Hay dos formas de que no la encuentre, y ninguna
 avisa —la suite sale en verde con una prueba menos—:
 

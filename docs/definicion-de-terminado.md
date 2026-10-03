@@ -69,10 +69,11 @@ El código está en `main`, integrado por **Pull Request** con revisión (`[S1]`
 Aplica **siempre**. Es el único criterio sin condición: mientras el trabajo viva en una
 rama, no está terminado por definición.
 
-**«No rompe nada» lo comprueba la CI**, no la buena voluntad: el trabajo `pruebas` de
-`.github/workflows/integracion-continua.yml` levanta el stack desde cero y corre la suite
-entera en cada PR y en cada push a `main` (`DT-37`). Un PR con ese trabajo en rojo no cumple
-`DoD-2`, y en `main` la versión no se publica (`[S3.0]` de `./convenciones-de-git.md`).
+**«No rompe nada» se comprueba ejecutando, antes de integrar, y lo hace quien integra**: la
+CI ya no corre pruebas (`DT-39`). Los tres comandos de `[S5]` de `./desarrollo.md` —`check`,
+`makemigrations --check` y la suite entera— en verde, y si el PR toca la infraestructura,
+`docker/comprobar-desde-cero.sh` también (`[S5.3]`). Un PR integrado sin ellos no cumple
+`DoD-2`, aunque GitHub lo haya dejado pasar y la versión se haya publicado.
 
 ### `[DoD-3]` Las migraciones están escritas y aplicadas
 
@@ -84,8 +85,8 @@ Lo segundo no estaba en la redacción original y se añade por lo que enseña la
 un modelo editado sin generar su migración no da error hasta que otra persona levanta el
 proyecto, y para entonces el commit lleva días integrado.
 
-**Si el PR no toca modelos**, no aplica. Decláralo. La comprobación de cambios sin migrar la
-repite la CI en cada PR, toque o no modelos.
+**Si el PR no toca modelos**, no aplica. Decláralo. La comprobación de cambios sin migrar se
+corre igual antes de cada PR, toque o no modelos: es uno de los tres comandos de `DoD-2`.
 
 ### `[DoD-4]` Se demuestra ejecutándolo, con la salida real
 

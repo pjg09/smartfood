@@ -255,21 +255,21 @@ en `[S5.3]` de `docs/desarrollo.md`—:
   nombre u opciones;
 - un servicio nuevo, o una hoja de estilos nueva.
 
-**Y lo comprueba levantando desde cero**, con otro nombre de proyecto para no tocar la base
-de trabajo: la receta está en `[S5.3]` de `docs/desarrollo.md`. «Me levanta a mí» no vale: a
-ti te levanta con tus volúmenes, tu imagen y tu `.env`.
+**Y lo comprueba levantando desde cero, con `docker/comprobar-desde-cero.sh`**, antes de
+subir (`[S5.3]` de `docs/desarrollo.md`). «Me levanta a mí» no vale: a ti te levanta con tus
+volúmenes, tu imagen y tu `.env`. El script trabaja sobre una copia del árbol —con lo que no
+has commiteado— y con otro nombre de proyecto, así que tu base no se toca, y **se niega a
+correr con el de tu stack**, porque al terminar borra los volúmenes.
 
-Dos cosas que tu máquina no detecta: **una imagen que ya no existe en el registro**, porque la
-tienes en caché —mira `docker manifest inspect <imagen>` antes de añadirla; así cayó MinIO—, y
-**una clave que solo conoce tu Compose** —valida con el v2.20.3, como la CI—. Para probar
-cambios sin commitear, copia el árbol con `git ls-files -co --exclude-standard -z | rsync -a
---from0 --files-from=- ./ <dir>` y levanta allí con `COMPOSE_PROJECT_NAME=smartfood-limpio`.
+**La CI ya no lo hace por ti** (`DT-39`): solo publica la versión. Lo que antes comprobaba en
+cada PR lo comprueba ahora quien integra, y **nada avisa si no lo hace**. Dos cosas lo
+sostienen: **`config/tests_contenedor.py`**, que va en la suite y vigila sin Docker lo que se
+puede vigilar, y el script, que solo cuenta si se corre. Córrelo siempre que el PR toque la
+infraestructura, y antes de cada entrega aunque no la haya tocado.
 
-Dos comprobaciones lo sostienen, y son lo que de verdad cuenta —una regla se olvida en el
-siguiente PR—: **`config/tests_contenedor.py`** en la suite, y **el flujo
-`integracion-continua`** de la CI, que levanta el stack desde cero en cada PR. **Un PR con
-ese flujo en rojo no se integra**, aunque el cambio «no tenga nada que ver»: si no levanta en
-la CI, no levanta en la máquina del siguiente.
+Dos cosas que tu máquina no detecta y el script sí: **una imagen que ya no existe en el
+registro**, porque la tienes en caché —pregunta al registro por cada una; así cayó MinIO—, y
+**una clave que solo conoce tu Compose** —valida con el v2.20.3—.
 
 Para mirar el esquema: `docker compose exec postgres psql -U smartfood -d smartfood`, y dentro `\dt` o
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
@@ -288,10 +288,10 @@ recién hecho, en el host, la suite necesita antes un `collectstatic`**: el ejec
 `DEBUG=False` y sin manifiesto salen 285 errores (`[S4]` de `docs/trampas-del-stack.md`). El
 arranque del contenedor ya lo hace.
 
-**La CI corre los tres en cada PR y en cada push a `main`**, dentro del stack de
-`docker compose` levantado desde cero (`integracion-continua.yml`), y **la versión solo se
-publica si pasan** (`[S3.0]` de `docs/convenciones-de-git.md`). Córrelos igual antes de
-subir: la CI tarda unos siete minutos y medio en decirte lo que aquí sabes en cinco. La suite no se
+**Nadie los repite después de ti.** La CI ya no corre pruebas (`DT-39`): el único workflow que
+queda, `publicar-version.yml`, publica la versión en cada push a `main` **pase o no la
+suite**, y lo único que se comprueba en GitHub es el título del PR (`[S3.0]` de
+`docs/convenciones-de-git.md`). Lo que no pasó aquí llega a `main` roto. La suite no se
 enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fichero se llame
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.

@@ -1,0 +1,52 @@
+name: Publicar versión
+
+# Publica la versión con semantic-release (TT-01) en cada integración en `main`.
+#
+# **No corre pruebas** (DT-39). Hasta el 2026-10-02 este workflow levantaba el
+# stack desde cero y pasaba la suite completa antes de publicar, y eso costaba
+# unos veinte minutos por integración. Las comprobaciones siguen existiendo, en
+# local y bajo demanda: los tres comandos de antes de cada PR, y
+# `docker/comprobar-desde-cero.sh` cuando el cambio toca la infraestructura
+# (`[S5.3]` de docs/desarrollo.md). **Que la versión se publique no dice que la
+# suite pase**: eso lo dice quien la corrió antes de integrar.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: semantic-release
+    runs-on: ubuntu-latest
+    # Evita dos releases simultáneos si entran dos PR seguidos.
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+    permissions:
+      contents: write        # crear la etiqueta y la Release
+      issues: write          # etiquetar issues cerrados por la Release
+      pull-requests: write   # etiquetar los PR incluidos
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # semantic-release necesita el historial completo
+          persist-credentials: false
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Node solo existe aquí: nadie del equipo lo necesita en local.
+      # No genera CHANGELOG.md: las notas viven en la Release de GitHub.
+      - name: Publicar versión
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          npx --yes
+          -p semantic-release@24
+          -p conventional-changelog-conventionalcommits@8
+          semantic-release

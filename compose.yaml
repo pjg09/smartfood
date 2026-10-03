@@ -15,8 +15,9 @@
 # ESTE FICHERO TIENE QUE LEVANTAR SIEMPRE, EN CUALQUIER MÁQUINA. Si un cambio
 # añade una variable de entorno obligatoria, un servicio, un paso de arranque o
 # una dependencia del sistema, se refleja aquí —o en el `Dockerfile`— en el
-# mismo PR. Lo vigilan `config/tests_contenedor.py` y el flujo
-# `integracion-continua` de la CI, que levanta esto mismo desde cero.
+# mismo PR. Lo vigilan `config/tests_contenedor.py` y la comprobación desde
+# cero de `[S5.3]` de docs/desarrollo.md, que levanta esto mismo como lo haría
+# otra máquina. La CI ya no (DT-39): hay que correrla a mano.
 
 name: smartfood
 

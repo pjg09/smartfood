@@ -329,8 +329,9 @@ veinte minutos después. Las que sí dan error lo dan en la máquina de otro, no
   a los nueve segundos. Y la clave ni siquiera hacía falta: se puso contra una recreación de
   contenedores que achacamos a la atestación de buildx, y la causa era la de la entrada
   siguiente. **La atestación cambia el ID del índice de la imagen en cada construcción, pero
-  Compose no recrea por eso**: compara la imagen, no el índice que la envuelve. La CI valida
-  ahora `compose.yaml` con el Compose mínimo declarado, v2.20.3.
+  Compose no recrea por eso**: compara la imagen, no el índice que la envuelve.
+  `docker/comprobar-desde-cero.sh` valida `compose.yaml` con el Compose mínimo declarado,
+  v2.20.3.
 - **Dos servicios con `build:` y la misma `image:` se pisan.** Cada uno etiqueta la imagen con
   su `com.docker.compose.service`, así que son dos imágenes distintas con el mismo nombre y
   gana la que termina última: el ID cambia de un `up` a otro y vuelve la recreación de arriba.
@@ -349,7 +350,8 @@ veinte minutos después. Las que sí dan error lo dan en la máquina de otro, no
   todo seguía levantando, porque estaban en caché. Ningún clon nuevo podía levantar ni la
   infraestructura. Lo vio el primer runner sin caché (`DT-38`). Probar «desde cero» en tu
   máquina no lo detecta: `docker compose down -v` borra volúmenes, **no imágenes**. Para eso
-  está la CI, o `docker manifest inspect <imagen>`, que pregunta al registro.
+  está `docker manifest inspect <imagen>`, que pregunta al registro: lo hace
+  `docker/comprobar-desde-cero.sh` con cada imagen que no se construye en local.
 - **Dentro de un contenedor, `localhost` es `::1` antes que `127.0.0.1`.** El `wget` de
   Alpine prueba IPv6 primero y no reintenta por IPv4; SeaweedFS solo escucha en IPv4, así que
   el healthcheck daba el servicio por caído con el API respondiendo desde fuera, y el compose

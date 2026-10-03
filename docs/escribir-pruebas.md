@@ -28,7 +28,7 @@ siempre —`[S2]`— y un puntero hasta aquí.
 ## [S1] Dónde va y cómo se ejecuta
 
 **Una prueba va en `<app>/tests_<tema>.py`**, en una carpeta con `__init__.py`. Es lo único
-que la hace entrar en la suite: la CI corre `manage.py test` sin argumentos y el
+que la hace entrar en la suite: `manage.py test` va sin argumentos y el
 descubridor solo encuentra ficheros `test*.py` dentro de paquetes. **Una prueba con otro
 nombre, o en una carpeta sin `__init__.py`, no se ejecuta nunca y nada avisa**: la suite
 sale en verde con una prueba menos. Lo vigila `config/tests_descubrimiento.py`.
@@ -48,8 +48,8 @@ docker compose exec -T app python manage.py test cuentas.tests_acceso --noinput
   fuerza `DEBUG=False` y sin manifiesto salen 285 errores. El arranque del contenedor ya lo
   hace (`[S4]` de `./trampas-del-stack.md`).
 
-La CI corre la suite en cada PR y en cada push a `main`, y sin ella en verde no se publica
-versión (`[S3.0]` de `./convenciones-de-git.md`).
+**La CI no corre la suite** (`DT-39`): se corre aquí, antes de cada PR, y nadie la repite
+después. La versión se publica igual, pase o no (`[S3.0]` de `./convenciones-de-git.md`).
 
 ---
 
@@ -164,5 +164,5 @@ comprobarse:
 | Qué | Por qué la suite no lo ve | Cómo se comprueba |
 |---|---|---|
 | **Cómo se ve una pantalla** | Una cifra cruda o una copia en masculino no rompen nada | Mirarla: Playwright contra el stack (`[S3.1]` de `./desarrollo.md`). En los Sprints 4 y 5 encontró quince defectos que ninguna prueba vio |
-| **Que un correo salga de verdad** | La suite usa el buzón en memoria de Django, no SMTP | El API de Mailpit: `curl 'localhost:8025/api/v1/search?query=to:<correo>'`. La CI lo hace en cada PR |
-| **Que el stack levante en otra máquina** | La suite corre dentro de un stack que ya levantó | El trabajo `pruebas` de la CI, o su receta en local (`[S5.3]` de `./desarrollo.md`) |
+| **Que un correo salga de verdad** | La suite usa el buzón en memoria de Django, no SMTP | El API de Mailpit: `curl 'localhost:8025/api/v1/search?query=to:<correo>'`. `docker/comprobar-desde-cero.sh` lo hace con la recuperación y la carga |
+| **Que el stack levante en otra máquina** | La suite corre dentro de un stack que ya levantó | `docker/comprobar-desde-cero.sh`, que además pregunta al registro por cada imagen (`[S5.3]` de `./desarrollo.md`) |

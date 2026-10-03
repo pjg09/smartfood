@@ -10,8 +10,8 @@
 #
 # Si cambias la versión de Python (`.python-version`), la de uv o la forma de
 # instalar algo, cambia esto en el mismo PR. `config/tests_contenedor.py`
-# vigila lo que se puede vigilar sin Docker; el flujo `integracion-continua`
-# de la CI levanta el stack entero.
+# vigila lo que se puede vigilar sin Docker; la comprobación desde cero de
+# `[S5.3]` de docs/desarrollo.md levanta el stack entero. La CI ya no (DT-39).
 
 # La versión menor tiene que ser la de `.python-version`.
 FROM python:3.14.4-slim-trixie
