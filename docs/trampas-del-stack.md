@@ -10,7 +10,7 @@
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -117,6 +117,16 @@ y un puntero a este fichero. El resto está aquí, agrupado por dónde muerde.
   exactamente igual y a quien pulsó sin saber por qué no pasó nada. El precedente del
   repositorio es devolver `200` **con el motivo dentro del fragmento** —lo hacen el cobro y
   el padrón—: el estado de la petición y lo que hay que enseñar son dos preguntas distintas.
+- **Tras un intercambio `outerHTML`, el elemento que lo pidió ya no está en el documento.** Un
+  manejador de `htmx:afterSwap` o `htmx:afterSettle` que pregunte `modal.contains(elemento)`
+  para saber si el intercambio fue dentro de la modal recibe `false` —el nodo viejo está
+  desenganchado— y no hace nada, sin error. En la ficha del padrón se revalida tras **cualquier**
+  intercambio, sin filtrar por el elemento (`assets/js/interfaz.js`).
+- **Un botón con `hx-get` dentro de un `<form>` hereda su `hx-indicator`.** El botón «Cargar un
+  solo estudiante» vive dentro del formulario del buscador del padrón, y al pulsarlo salía
+  «Buscando…» mientras se abría la modal. `hx-indicator="this"` en el botón lo corta. Lo mismo
+  vale para `hx-target`, `hx-swap` y `hx-encoding`: se heredan de los antepasados, así que un
+  botón dentro de un formulario los declara él mismo.
 - **Los acentos graves de Markdown no son nada en una plantilla.** `` `HU-25` `` se sirve con
   las comillas puestas. Dentro de `{% comment %}` da igual; en el texto visible, no.
 

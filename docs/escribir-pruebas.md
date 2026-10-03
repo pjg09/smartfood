@@ -108,6 +108,36 @@ Se parchea el reloj del generador —`mock.patch.object(PasswordResetTokenGenera
 …)`— más allá de la caducidad, y con contraprueba antes de ella
 (`cuentas/tests_recuperacion.py`).
 
+**Una prueba de pantalla también recibe la fecha, aunque la vista no se la pase.** Si la vista
+llama al selector sin `hoy=`, el selector toma el reloj, y unos datos fechados sobre un `HOY`
+fijo se quedan fuera de la ventana en cuanto pasan los días. Así se rompió `main` el
+2026-10-02, trece días después del `HOY` de `reportes/tests_frecuencia.py`. La fecha se inyecta
+en el sitio donde la vista llama al selector, no moviendo el reloj de todo el proceso:
+
+```python
+con_fecha = partial(resumen_de_gasto, hoy=HOY)
+with mock.patch("reportes.views.resumen_de_gasto", con_fecha):
+    respuesta = self.client.get(reverse("historial-de-consumo", args=[...]))
+```
+
+Se parchea el nombre **en el módulo de la vista**, que es donde se busca: si un día la vista
+deja de usarlo, `mock.patch` falla en vez de dejar pasar una prueba que ya no prueba nada
+(`reportes/tests_gasto.py`).
+
+**Para encontrar las que quedan, se adelanta el reloj y se corre la suite.** Una prueba que
+depende de la fecha real pasa hoy y falla dentro de unas semanas. Con el reloj de Django
+adelantado un mes —y un año— salen ahora:
+
+```python
+real = timezone.now
+delta = timedelta(days=30)
+with mock.patch("django.utils.timezone.now", lambda: real() + delta):
+    get_runner(settings)(interactive=False).run_tests(["reportes"])
+```
+
+Se ejecuta con `manage.py shell` o con un script que haga `django.setup()`. `timezone.localdate()`
+lee de `now()`, así que el parche alcanza también a los selectores que piden la fecha.
+
 ### [S3.5] «No hay forma de pintar A sin B» se fija sobre el fragmento
 
 `render_to_string` sobre el `partial`, con y sin datos. Si alguien separa los dos bloques en

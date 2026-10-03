@@ -8,11 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| actualizado | 2026-09-19; el Sprint 5 estrenó otras dos —`[S2.8]` y `[S2.9]`— en los reportes: el medidor del acudiente y el consolidado del admin |
+| actualizado | 2026-10-03; la ficha del padrón estrenó tres —`[S2.10]` a `[S2.12]`—: la modal, la validación en vivo y el buscador para elegir. Antes, el Sprint 5 trajo `[S2.8]` y `[S2.9]` |
 | cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental y los reportes añadieron |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 ### [S0.1] Qué responde este documento
 
@@ -62,7 +62,7 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Doce, y diez tienen sección propia porque llevan una decisión o una trampa que hay que
+Quince, y trece tienen sección propia porque llevan una decisión o una trampa que hay que
 conocer antes de copiarlas.
 
 **Tres las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
@@ -88,6 +88,9 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 | Medidor de proporción | `templates/reportes/partials/recomendaciones.html` | Barra fina bajo la cifra; **se recorta la barra a 100, nunca el número**, y el color no significa nada |
 | Consolidado de reporte | `templates/admin/ventas/venta/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
+| Modal de ficha | `templates/personas/partials/ficha-del-estudiante.html` | Un `<dialog>` que recibe el fragmento; la respuesta es siempre la ficha y la tabla de detrás se entera por `HX-Trigger` |
+| Validación en vivo | `templates/personas/partials/ficha-campos.html` | Aviso rojo por campo y guardar deshabilitado mientras falte algo; **las longitudes vienen del formulario**, no de la plantilla |
+| Buscador para elegir | `templates/personas/partials/acudientes-para-matricular.html` | Busca a cada tecla, pocos resultados como botones, y lo elegido pasa a un campo oculto con «Cambiar» |
 
 ### [S2.1] Tarjeta de resumen
 
@@ -166,7 +169,9 @@ primer escaneo.
 ### [S2.4] Bloque punteado
 
 Es el hueco y el estado vacío. **Un hueco nunca es un botón deshabilitado**: una acción
-apagada promete que un día hará algo y no dice cuándo ni de qué depende. El bloque dice qué
+apagada promete que un día hará algo y no dice cuándo ni de qué depende. (El guardar de una
+ficha incompleta sí va deshabilitado: no es una función que falte, y cada campo dice qué le
+falta —`[S2.11]`—.) El bloque dice qué
 falta y qué historia lo trae —`HU-17`, `HU-21`—, que son las dos cosas.
 `ventas/tests_acceso.py` lo vigila.
 
@@ -310,6 +315,66 @@ Tres decisiones que se copian con ella:
   se cambia es ese `title` desde `changelist_view`, porque el de fábrica —«Seleccione venta
   para ver»— describe lo que se hace con una tabla, no lo que es la pantalla.
 
+
+### [S2.10] Modal de ficha
+
+Crear y editar abren una modal sobre la pantalla en la que se está (`DEC-16`), y esta es la
+que se copia: **la ficha del estudiante del padrón** (`DT-40`). La página lleva un `<dialog>`
+vacío (`templates/personas/padron.html`); el botón pide el fragmento con `hx-get` al cuerpo
+de la modal, y `assets/js/interfaz.js` la abre al recibirlo. El fragmento
+(`templates/personas/partials/ficha-del-estudiante.html`) trae su cabecera con el título y
+la equis, el cuerpo con desplazamiento propio y el pie con las dos acciones.
+
+Cuatro decisiones que se copian con ella:
+
+- **Es un `<dialog>`, no un `<div>` con `z-index`**: el navegador lleva el foco, la tecla de
+  escape y el velo, que es justo lo que se hace mal a mano.
+- **`GET` y `POST` devuelven la misma ficha** (`DT-16`), con los errores o el resultado
+  **dentro**. Lo que quedara fuera del fragmento no se intercambiaría.
+- **La tabla de detrás no viene en la respuesta: se entera por un evento.** Cuando algo
+  cambió, la respuesta lleva `HX-Trigger: padron-cambiado` y el buscador de la página lo
+  escucha con `padron-cambiado from:body`, así que la tabla se vuelve a pedir **con los
+  filtros que tenía**. La ficha no sabe qué filtros hay puestos, y no tiene por qué saberlo.
+- **Lo que no tiene vuelta pide confirmación, y solo eso.** La baja la pide al guardar, y
+  solo si se apagó su interruptor; corregir un apellido no pregunta nada. Como `hx-confirm`
+  es fijo, la condicional va en el evento `htmx:confirm`, con
+  `evento.detail.issueRequest(true)`. Preguntar siempre enseña a confirmar sin leer.
+
+### [S2.11] Validación en vivo
+
+Los campos obligatorios de una ficha **dicen en rojo, debajo, qué les falta** mientras estén
+vacíos o no cumplan, y el botón de guardar está deshabilitado hasta que cumplen todos. Se
+copia de `templates/personas/partials/ficha-campos.html`, y lo mueve `assets/js/interfaz.js`.
+
+- **Es una comodidad, no la regla** (`DT-15`). El servidor rechaza igual lo que esto deje
+  pasar, y vuelve la ficha con su error junto al campo.
+- **Las longitudes no se escriben en la plantilla**: llegan en `data-minimo` y `data-maximo`
+  desde el propio campo del formulario de Django, que las toma de donde viven
+  (`personas/validacion.py`, las mismas de la carga masiva). Así el aviso rojo y el rechazo
+  del servidor no pueden pedir cosas distintas.
+- **El error del servidor se borra en cuanto se toca el campo**: se refería a lo que había
+  antes, y deja de ser verdad.
+- **Un formulario incompleto no es un hueco.** El botón deshabilitado de `[S2.4]` y `[S4]` está
+  prohibido porque promete una función que no existe; este dice que a **esa ficha** le falta
+  algo, y cada campo dice qué. Por eso es un botón deshabilitado y no un bloque punteado.
+
+### [S2.12] Buscador para elegir
+
+Para elegir **uno** de una lista que puede tener cientos —el acudiente al matricular—:
+un buscador que pide coincidencias a cada tecla, una lista corta de botones, y lo elegido
+pasa a una ficha con «Cambiar». Se copia del bloque del acudiente de
+`templates/personas/partials/ficha-de-alta.html` y de
+`templates/personas/partials/acudientes-para-matricular.html`.
+
+- **Sin búsqueda no devuelve a nadie, y con ella pocos** (ocho). La lista entera de un
+  colegio, recorrida a ojo, es lo que el recorrido de `TT-35` descartó.
+- **Cada resultado es un botón**, no un enlace ni una casilla: no navega ni se envía, elige.
+- **Lo que se valida es el campo oculto con lo elegido**, no el texto del buscador: escribir
+  un nombre no es elegirlo.
+- **Enter en el buscador no envía la ficha**: buscaría enviando el formulario entero.
+- **Los resultados se llevan a la vista** (`scrollIntoView`) al llegar: en una modal con
+  campos encima, caen por debajo del borde y quien escribe no ve que llegaron.
+
 ---
 
 ## [S3] Los cuatro armazones
@@ -330,7 +395,8 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 
 ## [S4] Lo que no se dibuja
 
-- **Un botón deshabilitado en lugar de un hueco.** Ver `[S2.4]`.
+- **Un botón deshabilitado en lugar de un hueco.** Ver `[S2.4]`. No confundir con el guardar
+  de una ficha incompleta, que sí va deshabilitado (`[S2.11]`).
 - **Un diálogo de confirmación en el punto de venta.** `INT-2` los descarta: cada uno cuesta
   un clic y un segundo por venta, y roba el foco —que es del lector—. El botón de cobrar
   cobra (`TT-81`). Lo que protege de un cobro accidental no es un modal: es que el ticket

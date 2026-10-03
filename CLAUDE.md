@@ -13,7 +13,14 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado.** Con `PR-09` quedaron cerradas **las 61 historias** del backlog —24 de las 33 tareas, 9 de los 13 PR—, y lo que falta (`PR-10` … `PR-13`) **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre del sprint. **Lo que sí lo tocó, después y fuera del backlog, fue el rediseño de la navegación** (`DEC-16`, `DT-36`, `DEC-17`; PR #359 a #362), **el correo local con la recuperación de contraseña** (`DEC-18`, `DEC-19`), que trajo **`HU-62`, la historia 62**, y devolvió a `HU-03` el criterio que `DEC-9` recortó, **y la ficha del estudiante en una modal del padrón** (`DT-40`), que sustituyó al admin de estudiantes y trajo **`HU-63`** con `DEC-20`: la institución corta el acceso de un acudiente. Las tres se registraron **antes** de construirlas. El alta de un solo estudiante va en la misma modal, vacía, y elige un acudiente que ya existe: **una familia nueva sigue entrando por la carga masiva**. Si una tarea propone tocar el producto sin un `DEC-n` detrás, sigue siendo señal de que está mal entendida.
+**El producto está terminado: las 63 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
+**no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
+Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
+(`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
+`DEC-19`, `HU-62`) y la ficha del estudiante en una modal del padrón, que sustituyó al admin de
+estudiantes (`DT-40`, con `DEC-20` y `HU-63`: la institución corta el acceso de un acudiente).
+Una familia nueva sigue entrando por la carga masiva. **Si una tarea propone tocar el producto
+sin un `DEC-n` detrás, es señal de que está mal entendida.**
 
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
 
@@ -30,7 +37,6 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/sprint-5-backlog.md` | **Las 33 tareas del sprint en curso** (`TT-155` … `TT-187`), con responsable. Incluye `[S5]`, el cierre del proyecto |
 | `docs/plan-de-pull-requests-sprint-5.md` | Esas 33 tareas en 13 PR y el estado de cada una —**el estado manda aquí** |
 | `docs/sprint-4-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
-| `docs/sprint-1-backlog.md` y `docs/sprint-2-backlog.md`, con sus planes de PR | Los sprints 1 y 2, cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
 | `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
@@ -47,7 +53,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las sesenta trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las sesenta y dos trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -124,6 +130,12 @@ que no comparten interfaz (`DT-34`), y —desde `DEC-17`— los acudientes y las
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
 solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`).
 
+**Si tras escribir hay que refrescar otra zona**, la respuesta lleva `HX-Trigger: <evento>` y esa
+zona escucha `<evento> from:body`: el endpoint sigue devolviendo un solo fragmento (`DT-40`, la
+ficha y la tabla del padrón). **Una confirmación que depende del formulario** —preguntar solo si
+se apagó un interruptor— no cabe en `hx-confirm`, que es fijo: va en el evento `htmx:confirm`
+con `evento.detail.issueRequest(true)`.
+
 **Los reportes de la cafetería no son una tercera excepción**: los cuatro viven dentro del
 admin, por el camino que `TT-141` abrió para el historial de existencias y repiten `TT-168`
 (ventas), `TT-170` (inventario) y `TT-176` (cierres de caja) — el admin pone listado, filtros
@@ -146,8 +158,8 @@ que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las p
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **doce**
-composiciones existen —diez con sección propia— y de qué plantilla se copia cada una. Tres que
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **quince**
+composiciones existen —trece con sección propia— y de qué plantilla se copia cada una. Tres que
 se olvidan: la acción de una tarjeta de resumen es un **enlace** de acento abajo, no un botón
 sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y qué historia lo trae—;
 y un medidor **recorta la barra a 100, nunca el número**.
@@ -158,7 +170,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las sesenta están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las sesenta y dos están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -271,6 +283,10 @@ Dos cosas que tu máquina no detecta y el script sí: **una imagen que ya no exi
 registro**, porque la tienes en caché —pregunta al registro por cada una; así cayó MinIO—, y
 **una clave que solo conoce tu Compose** —valida con el v2.20.3—.
 
+**`compose.yaml` y el `Dockerfile` solo pueden citar los dos scripts de arranque** de `docker/`:
+`config/tests_contenedor.py` falla si nombran otro. `docker/comprobar-desde-cero.sh` corre en el
+host, así que se cita desde `desarrollo.md`.
+
 Para mirar el esquema: `docker compose exec postgres psql -U smartfood -d smartfood`, y dentro `\dt` o
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
 Postgres, que es donde viven las invariantes—.
@@ -305,6 +321,22 @@ menos de esas 1.612, no corrió entera.
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
 servicio»— pasa sola el día que deja de proteger.
+
+**Una vista que llama a un selector sin `hoy=` es una bomba de tiempo para sus pruebas de pantalla**:
+sus datos van fechados sobre un `HOY` fijo y la ventana se calcula con el reloj. Se inyecta en la
+prueba con `mock.patch("<app>.views.<selector>", partial(<selector>, hoy=HOY))`. Para encontrar
+las que quedan, corre la suite con `mock.patch("django.utils.timezone.now", …)` adelantado un mes.
+
+**Para probar rutas que escriben, sin tocar la base de trabajo**: `django.test.Client` dentro de
+`with transaction.atomic():` en `manage.py shell`, y `transaction.set_rollback(True)` al final.
+Nunca ejecutes en la base de trabajo lo que no tiene vuelta —una baja, una reasignación—.
+
+**La suite en un `git worktree`, en el host**, necesita tres cosas que git no copia: el `.env`,
+las hojas compiladas (`assets/css/*.css`, ignoradas) y un `collectstatic`. Sin las hojas salen
+unos 300 errores que no son de las pruebas.
+
+**El directorio temporal de una sesión de Claude se borra al cerrarla**, con lo que haya dentro:
+un *worktree* allí con cambios sin commitear se pierde. Commitea antes de dejarlo.
 
 **La salida de la suite son nueve líneas.** Una ejecución interrumpida **sigue viva** y
 retiene `test_smartfood`: la siguiente falla con «is being accessed by other users», que no
@@ -439,6 +471,10 @@ sprint backlog y en el plan de PR, que el contador diga lo que dicen las marcas,
 historias `☑` cuadren con `[S4]` y con los metadatos. **Un reemplazo de texto que no encuentra
 su ancla no avisa**: en el Sprint 4, la línea que decía qué cerró `HU-23` no llegó a
 escribirse y se descubrió dos PR después. Cuenta, no confíes.
+
+**Las ediciones de documentación van por script, con `assert texto.count(ancla) == 1`** antes de
+cada reemplazo: si el ancla no está, o está dos veces, el script se para en vez de dejar el
+cambio a medias.
 
 **Al insertar una fila en una tabla numerada, renumera emparejando por el identificador
 (`HU-nn`), nunca por el número.** Un reemplazo del número encuentra primero tu propia fila

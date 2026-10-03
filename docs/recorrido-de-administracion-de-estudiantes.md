@@ -12,9 +12,23 @@
 | responsable | Alejandro (análisis y UX) |
 | recorrido_el | 2026-08-31, sobre el entorno local |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Qué es este documento
+
+> **La vista que se recorrió ya no existe.** El 2026-10-03 se retiró el admin de estudiantes
+> (`/admin/personas/estudiante/`) y su trabajo pasó a la ficha del estudiante, en una modal del
+> padrón (`DT-40`). Este documento se conserva como lo que es —el registro de `TT-35`—, y los
+> hallazgos no se reescriben. Dónde vive hoy cada uno:
+>
+> | Hallazgo | Hoy |
+> |---|---|
+> | `[UX-1]` Campos que no se pueden llenar en el alta | La ficha de alta no los pide: ni identificador, ni fecha de creación, ni código, ni «quitar foto» (`templates/personas/partials/ficha-de-alta.html`) |
+> | `[UX-2]` El acudiente, en una lista de cientos | El buscador para elegir de `[S2.12]` de `./sistema-visual.md`: sin búsqueda no devuelve a nadie, y con ella ocho como mucho |
+> | `[UX-3]` Buscar por el acudiente | El buscador del padrón busca por nombre, documento, tarjeta y acudiente |
+> | `[UX-4]` El código de tarjeta | La ficha lo enseña, sin campo para escribirlo, con «Reasignar código» e «Imprimir tarjeta» al lado |
+> | `[UX-5]` No hay forma de borrar a un estudiante | Sigue sin haberla. La baja es el interruptor «Matriculado», que solo se apaga |
+> | `[UX-6]` La institución editaba los grupos de permisos | No era de esta vista y no cambia |
 
 **Lo que se recorrió es la vista construida, no un boceto.** Cada observación de `[S2]`
 sale de abrir la pantalla y hacer la tarea; ninguna es una previsión. Las que se

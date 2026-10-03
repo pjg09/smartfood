@@ -531,9 +531,11 @@ Es el sprint con **más frentes independientes** de los cinco.
 
 **Pull Requests que no salen de ninguna tarea de este sprint**, y por eso van aparte:
 sumarlos a las 33 falsearía el avance, y no contarlos escondería que `main` tiene código que
-el plan no previó. Son tres bloques: **el rediseño de la navegación** (`#359` … `#362`, el
-2026-09-30), **el entorno en contenedores** (`#364`) y **el correo local con la recuperación
-de contraseña**.
+el plan no previó. Son cinco bloques: **el rediseño de la navegación** (`#359` … `#362`, el
+2026-09-30), **el entorno en contenedores** (`#364`), **el correo local con la recuperación
+de contraseña** (`#365`), **la ficha del estudiante en el padrón** (`#369`) y **el cambio de
+cómo se integra**: la CI deja de correr pruebas (`#368`) y, desde `DT-41`, se empuja directo
+a `main` sin Pull Requests. Lo que entra después ya no tiene número de PR.
 
 Los del rediseño los pidió el dueño del producto al ver la aplicación de un tirón. Todos se
 registraron **antes** de construirlos —como alcance (`DEC-n`) o como decisión técnica
@@ -547,14 +549,21 @@ no venga de una historia.
 | `#361` | `feat/DEC-16-un-dashboard-por-rol` | Portada única y pública, aterrizaje por rol, el admin envuelto en el armazón de la aplicación y el panel de la cafetería | `DEC-16`, `DT-36` |
 | `#362` | `feat/DEC-17-pantallas-propias-de-la-institucion` | Acudientes y restricciones dejan el admin y toman el sistema visual | `DEC-17` |
 | `#364` | `build/entorno-en-contenedores` | El stack entero con `docker compose up`, la suite completa en la CI antes de publicar versión, y SeaweedFS en lugar de MinIO | `DT-37`, `DT-38` |
-| — | `feat/correo-local-y-recuperacion` | Mailpit en el compose; la carga masiva vuelve a entregar las invitaciones; recuperación de la contraseña olvidada | `DEC-18`, `DEC-19`, **`HU-62`** |
-| — | `refactor/quitar-admin-de-estudiantes` | El admin de estudiantes se retira y su trabajo pasa a la ficha del estudiante, en una modal del padrón —alta de uno solo incluida—; la institución corta y devuelve el acceso de un acudiente | `DT-40`, `DEC-20`, **`HU-63`** |
+| `#363` | `docs/DEC-16-consolidar-la-documentacion` | Registra el rediseño de la navegación y parte las trampas del stack en su propio documento | `DEC-16`, `DEC-17` |
+| `#365` | `feat/correo-local-y-recuperacion` | Mailpit en el compose; la carga masiva vuelve a entregar las invitaciones; recuperación de la contraseña olvidada | `DEC-18`, `DEC-19`, **`HU-62`** |
+| `#366` | `docs/aprendizajes-de-contenedores-y-correo` | Pone al día la documentación tras los contenedores y el correo local | — |
+| `#367` | `test/TT-166-fecha-inyectada-en-el-gasto` | Dos pruebas de pantalla de `TT-166` dejan de depender del día en que corren: fallaban solas desde el 2026-10-02 | `TT-166` |
+| `#368` | `ci/dejar-solo-el-release` | La CI deja de correr pruebas y solo publica la versión; `docker/comprobar-desde-cero.sh` hace en local lo que hacía el trabajo retirado | `DT-39` |
+| `#369` | `refactor/quitar-admin-de-estudiantes` | El admin de estudiantes se retira y su trabajo pasa a la ficha del estudiante, en una modal del padrón —alta de uno solo incluida—; la institución corta y devuelve el acceso de un acudiente | `DT-40`, `DEC-20`, **`HU-63`** |
+| `#370` | `docs/main-sin-proteccion` | La documentación deja de afirmar que `main` está protegida: las reglas de GitHub están desactivadas | — |
+| — | `main` (`4e333da`) | Se empuja directo a `main`, sin ramas ni Pull Requests; se reescribe todo lo que exigía el flujo anterior. El primer commit integrado así | `DT-41` |
 
-**Los dos últimos traen historia, `HU-62` y `HU-63`**, y son los únicos de la tabla que añaden
-una capacidad: recuperar la contraseña olvidada, y cortar el acceso de un acudiente. Se registró con `DEC-19` antes de construirla y se marca `☑`
-en `[S4]` del backlog de historias, **pero no tiene tareas `TT-nn`**: entró con el sprint cerrado
-de trabajo y no se repartió. Ese mismo PR devuelve a `HU-03` el criterio que `DEC-9` recortó
-(`DEC-18`). `HU-63` entró igual, con `DEC-20`, y tampoco tiene tareas.
+**Dos traen historia, `#365` con `HU-62` y `#369` con `HU-63`**, y son los únicos de la tabla
+que añaden una capacidad: recuperar la contraseña olvidada, y cortar el acceso de un acudiente.
+Cada una se registró con su decisión (`DEC-19`, `DEC-20`) antes de construirla y está `☑` en
+`[S4]` del backlog de historias, **pero ninguna tiene tareas `TT-nn`**: entraron con el sprint
+cerrado de trabajo y no se repartieron. `#365` devuelve además a `HU-03` el criterio que
+`DEC-9` recortó (`DEC-18`).
 
 **Los cuatro del rediseño no amplían `[S11]`.** Entregan lo que la matriz ya concedía; lo que cambia
 es por dónde se llega y cómo se ve. `DEC-17` **corrige a `DEC-16`** en un punto —allí se
@@ -562,10 +571,11 @@ decidió envolver el admin sin reescribirlo, y aquello reescribe las pantallas d
 deja escrita la raya: una pantalla propia sustituye a una del admin **solo cuando alguien la
 usa a diario**.
 
-**Qué queda abierto.** El rol institución tiene tres secciones que siguen en el admin y que
-`DEC-17` deja para después, porque escriben y necesitan formulario propio: **usuarios**,
-**institución** y el alta y edición de **estudiantes**. No hay tarea que las cubra: si se
-construyen, hace falta decidir antes si entran en este sprint o en la entrega.
+**Qué queda abierto.** El rol institución tiene dos secciones que siguen en el admin y que
+`DEC-17` deja para después, porque escriben y necesitan formulario propio: **usuarios** e
+**institución**. Los **estudiantes** ya no: su alta y su edición viven en la ficha del padrón
+desde `#369` (`DT-40`). No hay tarea que cubra las dos que quedan: si se construyen, hace falta
+decidir antes si entran en este sprint o en la entrega.
 
 > **Esto no cambia el avance de `[S3]`.** Las 33 tareas del sprint siguen siendo 33, y las
 > finalizadas, las que digan sus marcas. Este anexo cuenta trabajo, no tareas.

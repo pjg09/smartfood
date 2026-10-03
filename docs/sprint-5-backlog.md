@@ -299,8 +299,8 @@ Es el sprint con más frentes independientes de los cinco: los reportes de la ca
 
 ## [S8] Trabajo fuera de este backlog
 
-El 2026-09-30 se integraron **cuatro Pull Requests que no salen de ninguna de estas 33
-tareas**, los primeros de seis: el rediseño de la navegación que pidió el dueño del
+Desde el 2026-09-30 entró en `main` trabajo que **no sale de ninguna de estas 33 tareas**. Lo
+primero fueron cuatro Pull Requests: el rediseño de la navegación que pidió el dueño del
 producto —portada única, aterrizaje por rol, el admin envuelto y dos pantallas propias para la institución—.
 
 Se registraron como alcance antes de construirlos (`DEC-16`, `DEC-17`, `DT-36`) y **no
@@ -313,11 +313,16 @@ necesitan formulario propio. **La edición de estudiantes ya no**: está en la f
 (`DT-40`), y el alta de uno solo, tampoco: va en la misma modal. No hay tarea que cubra las
 dos que quedan; construirlas exigiría decidir antes si entran en este sprint o en la entrega.
 
-**Después entraron dos más.** `#364` dejó el stack entero en un `docker compose` y la suite
-en la CI (`DT-37`, `DT-38`), sin tocar el producto. Y el 2026-10-01, **uno con historia
-propia**: el correo local y la recuperación de contraseña (`DEC-18`, `DEC-19`). Trae `HU-62`
-—registrada con su decisión antes de construirla— y devuelve a `HU-03` el criterio que `DEC-9`
-recortó. **Tampoco altera el recuento**: `HU-62` no
-tiene tareas `TT-nn` en este backlog, igual que el rediseño. Ni el último: la ficha del
-estudiante en el padrón, que sustituye al admin de estudiantes (`DT-40`) y trae `HU-63` con
-`DEC-20`. El detalle, en el mismo `[S7]`.
+**Después entró el resto**, con la misma regla: registrado antes de construirse.
+- **El entorno en contenedores** (`#364`, `DT-37`, `DT-38`), sin tocar el producto.
+- **El correo local y la recuperación de contraseña** (`#365`, `DEC-18`, `DEC-19`), que trae
+  `HU-62` y devuelve a `HU-03` el criterio que `DEC-9` recortó.
+- **La ficha del estudiante en el padrón** (`#369`, `DT-40`), que sustituye al admin de
+  estudiantes y trae `HU-63` con `DEC-20`.
+- **El cambio de cómo se integra**: la CI deja de correr pruebas (`#368`, `DT-39`) y, desde
+  `DT-41`, se empuja directo a `main` sin Pull Requests.
+- **Una prueba que dependía del reloj**, corregida (`#367`, `TT-166`), y documentación (`#363`,
+  `#366`, `#370`).
+
+**Nada de eso altera el recuento**: `HU-62` y `HU-63` no tienen tareas `TT-nn` en este backlog,
+igual que el rediseño. El detalle de cada uno, en `[S7]` del plan de PR.
