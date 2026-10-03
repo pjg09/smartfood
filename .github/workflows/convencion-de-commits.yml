@@ -1,6 +1,6 @@
 name: Convención de commits
 
-# Con main protegido y squash merge, el mensaje que analiza semantic-release es
+# Con squash merge como única vía de integrar, el mensaje que analiza semantic-release es
 # el TÍTULO DEL PR, no los commits de la rama. Si el título no cumple la
 # convención, el versionado no se dispara. Esto lo impide (TT-01).
 on:

@@ -17,7 +17,8 @@
 
 ### [S0.1] Qué es este documento y qué no es
 
-`main` está protegida: nada entra por `push` directo (`[S1]` de `./convenciones-de-git.md`).
+Nada entra en `main` por `push` directo (`[S1]` de `./convenciones-de-git.md`). Es una convención
+del equipo: GitHub no lo impide, porque `main` no tiene protección activa.
 Este documento responde a una sola pregunta operativa: **¿hasta dónde desarrollo antes de
 parar, abrir un PR y seguir?**
 

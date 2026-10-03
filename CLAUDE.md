@@ -353,7 +353,9 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - **Kebab-case ASCII** en nombres de fichero: minúsculas, guiones, sin acentos ni guiones bajos.
 - Los identificadores entre corchetes (`HU-17`, `TT-23`, `DT-6`, `DEC-5`) son **estables y
   citables**. Cítalos en los commits: `HU-17` dice qué se construyó y por qué.
-- **Trunk based development**: `main` protegida, ramas cortas, todo entra por PR con squash merge.
+- **Trunk based development**: ramas cortas y todo entra por PR con squash merge. **`main` no tiene
+  protección activa en GitHub**: las reglas existen pero están desactivadas, así que un `push`
+  directo no se rechaza. Que nada entre sin PR es una convención del equipo, no un bloqueo.
   Commits en Conventional Commits —`tipo(ámbito): resumen` en español, cuerpo con `Refs:`—, porque
   son los que disparan el versionado. El detalle está en `docs/convenciones-de-git.md`.
 - **`assets/js/interfaz.js` y `cuentas/templatetags/interfaz.py` son compartidos**: acumulan una

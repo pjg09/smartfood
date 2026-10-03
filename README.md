@@ -189,7 +189,8 @@ la tarea está mal entendida o de que falta una decisión.
 
 ## Cómo entra el código
 
-`main` está protegida: **todo entra por Pull Request**, con revisión y squash merge. Ramas
+**Todo entra por Pull Request**, con revisión y squash merge. Es una convención del equipo:
+`main` no tiene protección activa en GitHub, así que nada rechaza un `push` directo. Ramas
 cortas, commits en Conventional Commits —son los que disparan el versionado—. El detalle
 está en [`convenciones-de-git.md`](./docs/convenciones-de-git.md).
 
