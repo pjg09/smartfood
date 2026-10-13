@@ -13,7 +13,7 @@
    - **la matrícula**: se nace matriculado, y un interruptor que solo sirviera
      para nacer retirado no tiene sentido;
    - **un acudiente nuevo**: se elige uno que existe. Crearlo es dar de alta una
-     cuenta, y eso es de la carga masiva (`HU-01`, `[S11]`).
+     cuenta, y tiene su sitio: «Acudientes» (`HU-64`) o la carga masiva (`HU-01`).
 
    **«Matricular» empieza deshabilitado** y se habilita cuando los tres campos
    obligatorios cumplen; mientras no, cada uno dice en rojo qué le falta. Lo
@@ -138,7 +138,9 @@
             <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
           {% endif %}
           <p class="text-sm text-texto-suave">
-            Solo acudientes que ya existen. Una familia nueva entra con «Cargar estudiantes».
+            Solo acudientes que ya existen. Una familia nueva se da de alta antes en
+            <a href="{% url 'acudientes' %}" class="font-semibold underline">Acudientes</a>,
+            con «Cargar un solo acudiente», o con «Cargar estudiantes».
           </p>
         </section>
       {% endwith %}

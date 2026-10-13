@@ -30,6 +30,7 @@ from personas.selectors import (
 )
 from personas.services import (
     cargar_estudiantes_y_acudientes,
+    crear_acudiente,
     desactivar,
     guardar_ficha,
     matricular_estudiante,
@@ -83,9 +84,10 @@ class FichaDelEstudianteForm(forms.Form):
 class AltaDeEstudianteForm(forms.Form):
     """Matricular a un estudiante desde el padrón (`HU-44`, primer criterio).
 
-    **El acudiente se elige, no se crea.** Crear uno es dar de alta una cuenta,
-    y eso solo lo hace la carga masiva (`HU-01`); la institución, sobre el
-    acudiente, solo consulta (`[S11]`). Una familia nueva entra por la carga.
+    **El acudiente se elige, no se crea aquí.** Crearlo es dar de alta una
+    cuenta, con su invitación, y eso tiene su sitio: la pantalla de acudientes
+    (`HU-64`, `DEC-23`) o la carga masiva (`HU-01`). Una familia nueva se da de
+    alta allí primero.
 
     El código de tarjeta tampoco está: lo asigna `crear_estudiante` al guardar
     (`HU-43`, `INV-7`).
@@ -593,10 +595,11 @@ def acudientes_de_la_carga(request):
     dice `resolver_match.url_name` y no una cabecera que el cliente pueda
     falsear (`DT-16`).
 
-    **Solo lee.** La tabla no escribe nada: la cuenta se crea con la carga
-    (`HU-01`), se activa por invitación (`HU-03`) y su acceso se corta desde la
-    ficha del estudiante, en el padrón (`DEC-20`). Las familias que se fueron
-    solo salen con «Ver retirados» (`DT-44`).
+    **Solo lee.** La tabla no escribe nada: el alta de un acudiente es su propia
+    ruta (`alta_de_acudiente`, `HU-64`), la cuenta se activa por invitación
+    (`HU-03`) y su acceso se corta desde la ficha del estudiante, en el padrón
+    (`DEC-20`). Las familias que se fueron solo salen con «Ver retirados»
+    (`DT-44`).
     """
     contexto = _contexto_de_los_acudientes(
         request.user,
@@ -609,6 +612,69 @@ def acudientes_de_la_carga(request):
         return render(request, "personas/partials/acudientes-tabla.html", contexto)
 
     return render(request, "personas/acudientes.html", contexto)
+
+
+class AltaDeAcudienteForm(forms.Form):
+    """Dar de alta a un acudiente sin la carga masiva (`HU-64`, `DEC-23`).
+
+    Las tres columnas del acudiente en el archivo de carga, con sus mismas
+    longitudes (`personas.validacion`). La contraseña no está: la define el
+    titular con su invitación (`HU-03`).
+    """
+
+    nombre = forms.CharField(
+        label="Nombre completo", min_length=LONGITUD_NOMBRE[0], max_length=LONGITUD_NOMBRE[1]
+    )
+    documento = forms.CharField(
+        label="Documento", min_length=LONGITUD_DOCUMENTO[0], max_length=LONGITUD_DOCUMENTO[1]
+    )
+    email = forms.EmailField(label="Correo", max_length=254)
+
+
+def _alta_de_acudiente(request, formulario=None, **resultado):
+    return render(request, "personas/partials/alta-de-acudiente.html", {
+        "formulario": formulario or AltaDeAcudienteForm(),
+        **resultado,
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def alta_de_acudiente(request):
+    """Da de alta a un acudiente desde su pantalla (`HU-64`, `DEC-23`).
+
+    `GET` pinta la modal vacía y `POST` crea; **las dos devuelven la modal**
+    (`DT-16`). Al crear vuelve vacía con el resultado, y la tabla se entera por
+    `HX-Trigger: acudientes-cambiado`, como el alta del padrón (`DT-40`).
+
+    Quién puede se pregunta antes de pintar nada: el selector de la lista exige
+    la institución. Las reglas —longitudes, correo y documento únicos— son del
+    servicio, y el formulario solo adelanta las que puede.
+    """
+    acudientes_de_la_institucion(actor=request.user)
+
+    if request.method == "GET":
+        return _alta_de_acudiente(request)
+
+    formulario = AltaDeAcudienteForm(request.POST)
+    if not formulario.is_valid():
+        return _alta_de_acudiente(request, formulario)
+
+    datos = formulario.cleaned_data
+    try:
+        acudiente = crear_acudiente(
+            actor=request.user,
+            nombre=datos["nombre"],
+            documento=datos["documento"],
+            email=datos["email"],
+        )
+    except ValidationError as error:
+        formulario.add_error(None, error)
+        return _alta_de_acudiente(request, formulario)
+
+    respuesta = _alta_de_acudiente(request, creado=acudiente)
+    respuesta["HX-Trigger"] = "acudientes-cambiado"
+    return respuesta
 
 
 @login_required

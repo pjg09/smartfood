@@ -45,8 +45,10 @@ PERMISOS_POR_ROL = {
         # `HU-51`). Borrar la fila destruiría la trazabilidad que `OBJ-E2` pide,
         # y las claves ajenas van con `PROTECT` justamente por eso.
         "personas.estudiante": ["add", "view", "change"],
-        # Ver al acudiente de un estudiante es parte de administrarlo. Escribirlo
-        # no: la cuenta del acudiente se gestiona desde `cuentas.usuario`.
+        # Ver al acudiente de un estudiante es parte de administrarlo. **Solo
+        # `view` en el admin**: el alta —por la carga (`HU-01`) o de una en una
+        # (`HU-64`)— y el acceso (`HU-63`) son servicios con su propia puerta, y
+        # el admin no edita acudientes.
         "personas.acudiente": ["view"],
         # **Sin `restricciones.restriccionesdelestudiante`** (`DEC-21`). «Consultar
         # restricciones de un estudiante: Sí» se sigue cumpliendo (`HU-38`), pero

@@ -1,0 +1,145 @@
+{% comment %} `HU-64`, `DEC-23`. Dar de alta a un solo acudiente, sin la carga masiva.
+
+   **Fragmento, no página** (`DT-16`): lo devuelven `GET` y `POST` de
+   `/acudientes/nuevo/`, en la misma modal que la ficha del acudiente. Al crear
+   vuelve **vacío**, con el resultado arriba; la tabla se entera por
+   `HX-Trigger: acudientes-cambiado`.
+
+   **Las tres columnas del acudiente en el archivo de carga**, con sus mismas
+   longitudes, y ninguna contraseña: la define el titular con la invitación
+   (`HU-03`). **Nace sin estudiantes**, y el resultado dice dónde se le matricula
+   uno: en el padrón, que ya sabe elegirlo (`DT-40`).
+
+   «Crear acudiente» nace deshabilitado; lo habilita `assets/js/interfaz.js`
+   cuando los tres campos cumplen. La regla está en el servicio.
+{% endcomment %}
+
+<div id="alta-de-acudiente" data-alta-de-acudiente class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Cargar un solo acudiente</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% url 'alta-de-acudiente' %}"
+        hx-target="#alta-de-acudiente"
+        hx-swap="outerHTML"
+        hx-indicator="#creando-acudiente"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+      {% if creado %}
+        <div role="status" data-acudiente-creado
+             class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave
+                    px-3 py-2 text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <div class="flex flex-col gap-1">
+            <p>
+              {% comment %} Sin género: el nombre no lo dice, y «quedó dado de alta»
+                 sobre «Lucía» se lee mal. {% endcomment %}
+              Se dio de alta a <strong class="font-semibold">{{ creado.nombre }}</strong>. La
+              invitación salió a <span class="font-semibold break-all">{{ creado.usuario.email }}</span>.
+            </p>
+            <p>
+              Todavía no tiene estudiantes: se le matricula uno en el padrón, con
+              <a href="{% url 'padron' %}" data-ir-al-padron class="font-semibold underline">«Cargar un solo estudiante»</a>.
+            </p>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if formulario.non_field_errors %}
+        <div role="alert" data-error-del-alta
+             class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+                    px-3 py-2 text-base text-error-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div>{% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      {% with campo=formulario.nombre %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Nombre completo</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                 data-validar data-minimo="{{ campo.field.min_length }}" data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el nombre completo del acudiente."
+                 data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto
+                        transition-colors hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}
+            <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+          {% endif %}
+        </div>
+      {% endwith %}
+
+      {% with campo=formulario.documento %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Documento</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                 data-validar data-minimo="{{ campo.field.min_length }}" data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el documento del acudiente."
+                 data-aviso-corto="El documento tiene entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres."
+                 data-aviso-largo="El documento tiene entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 font-mono text-base
+                        tabular-nums text-texto transition-colors
+                        hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}
+            <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+          {% endif %}
+          <p class="text-sm text-texto-suave">
+            Entre {{ campo.field.min_length }} y {{ campo.field.max_length }} caracteres, como en el archivo de carga.
+          </p>
+        </div>
+      {% endwith %}
+
+      {% with campo=formulario.email %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Correo</label>
+          <input type="email" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el correo: es su cuenta y adonde llega la invitación."
+                 data-aviso-largo="El correo no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto
+                        transition-colors hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}
+            <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+          {% endif %}
+          <p class="text-sm text-texto-suave">
+            Es con lo que entrará. Le llega la invitación para definir su contraseña; en local la atrapa Mailpit.
+          </p>
+        </div>
+      {% endwith %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="creando-acudiente" class="htmx-indicator mr-auto text-sm text-texto-suave">Creando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if creado %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha disabled
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Crear acudiente
+      </button>
+    </div>
+  </form>
+</div>

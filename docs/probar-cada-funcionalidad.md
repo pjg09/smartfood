@@ -337,8 +337,8 @@ Lo que tiene que rechazar, y con su motivo junto al campo: un documento que ya e
 estudiante, y una fotografía que no se puede procesar —en ese caso **no queda nadie
 matriculado**, tampoco sin foto—.
 
-**El acudiente tiene que existir.** Si la familia es nueva, entra con la carga masiva
-(`[S1]`, `HU-01`), que es lo único que crea cuentas de acudiente.
+**El acudiente tiene que existir.** Si la familia es nueva, dalo de alta antes con
+«Cargar un solo acudiente» (`[S19]`, `HU-64`) o con la carga masiva (`[S1]`, `HU-01`).
 
 **El estudiante de prueba no se puede borrar desde la aplicación**: ninguna pantalla lo hace,
 a propósito (`DT-12`). En la base de trabajo, uno recién creado y sin movimientos se borra
@@ -390,3 +390,18 @@ invitación nueva a la dirección nueva —se ve en Mailpit— y la anterior ya 
 **Desactivar** pide confirmación y deja la cuenta sin entrar ni operar; **Reactivar** la
 devuelve (`HU-42`). **Reenviar invitación** solo aparece a quien todavía no definió su
 contraseña.
+
+## [S19] Dar de alta a un solo acudiente
+
+Como institución, en `/acudientes/`, **Cargar un solo acudiente** (`HU-64`, `DEC-23`). Pide
+nombre, documento y correo, con las reglas del archivo de carga: el documento, entre 5 y 20
+caracteres. **Crear acudiente** está deshabilitado mientras falte algo.
+
+Al crear, la modal vuelve vacía y dice a qué correo salió la invitación —se lee en Mailpit,
+<http://localhost:8025>—; la tabla de detrás ya lo trae, con **0 estudiantes** y sin marca de
+retirado. Para matricularle un hijo: en el padrón, **Cargar un solo estudiante** (`[S15]`), que
+ya lo encuentra al buscarlo.
+
+Lo que tiene que rechazar, junto al campo: un correo que ya es de otra cuenta —también con
+otras mayúsculas— y un documento que ya es de otro acudiente. **El acudiente creado no se
+borra desde la aplicación**: en la base de trabajo, crea solo los que quieras conservar.

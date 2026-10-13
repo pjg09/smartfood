@@ -13,13 +13,17 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado: las 63 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
+**El producto está terminado: las 64 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
 **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
 Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
 (`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
 `DEC-19`, `HU-62`) y la ficha del estudiante en una modal del padrón, que sustituyó al admin de
 estudiantes (`DT-40`, con `DEC-20` y `HU-63`: la institución corta el acceso de un acudiente).
-Una familia nueva sigue entrando por la carga masiva. **Si una tarea propone tocar el producto
+El 2026-10-12 entraron las pantallas de la institución: fichas de solo lectura, `/usuarios/`
+en lugar del admin, fuera restricciones e institución, y el alta de un acudiente
+(`DT-42` … `DT-46`, `DEC-21` … `DEC-23`, `HU-64`).
+Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
+la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
 
 Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia: `ENT-05`, `ENT-06` y `ENT-07` son entregables declarados en `[S9.3]` del anteproyecto que ningún sprint había planificado. Ver `[S5]` de `./docs/sprint-5-backlog.md`.
@@ -57,7 +61,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-**Once** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19` y `DEC-20`) y **dos lo
+**Doce** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20` y `DEC-23`) y **dos lo
 recortan** (`DEC-14`, `DEC-15`); `DEC-18` devuelve lo que `DEC-9` recortó. Ninguna está
 incorporada a él. Para responder qué hace o no hace el sistema
 hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
@@ -316,10 +320,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.700 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.712 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.700, no corrió entera.
+menos de esas 1.712, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-12; el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,10 +43,10 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las sesenta y dos rutas
+## [S2] Las sesenta y tres rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **56 rutas propias** que resuelve Django fuera del
+los mismos colores desde `DT-23`. Son las **57 rutas propias** que resuelve Django fuera del
 admin, todas, y **6 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna.
 
@@ -74,6 +74,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
 | `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`). Las familias que ya se fueron solo salen con **Ver retirados** (`DT-44`) | Institución | `DEC-17`, `DT-44` |
 | `/acudientes/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DEC-17` |
+| `/acudientes/nuevo/` | La modal de alta de un solo acudiente: nombre, documento y correo, con las reglas del archivo de carga. **Sin contraseña**: le llega la invitación | Institución | `HU-64`, `DEC-23` |
 | `/acudientes/<id>/` | La ficha del acudiente **en solo lectura**, al pulsar su fila: sus datos, el estado de su cuenta y sus estudiantes, retirados incluidos. Solo `GET`; **sin saldo ni consumos** | Institución | `DT-44` |
 | `/usuarios/` | El personal de la cafetería —cajeros y administración—, **sin acudientes ni la institución**: rol, último acceso y estado de la cuenta | Institución | `DT-45` |
 | `/usuarios/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DT-45` |
@@ -140,6 +141,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/padron/<id>/ficha/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/ficha/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reasignar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/acudientes/nuevo/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/acudientes/<id>/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/usuarios/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/usuarios/nuevo/` | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -376,8 +378,9 @@ que escribe son rutas propias, no la pantalla.
 `DT-40`): fotografía opcional, nombre, documento y un acudiente **que ya exista**, buscado
 por nombre, documento o correo. Mientras falte algo obligatorio, cada campo lo dice en rojo
 y «Matricular» está deshabilitado. El código se genera al guardar, y la ficha vuelve vacía
-con él y el enlace para imprimir la tarjeta. **Una familia nueva entra con la carga
-masiva**, en `/carga/`, que sigue en la barra lateral.
+con él y el enlace para imprimir la tarjeta. **Una familia nueva se da de alta antes**:
+de una en una en `/acudientes/`, con «Cargar un solo acudiente» (`HU-64`, `DEC-23`), o con la
+carga masiva en `/carga/`, que sigue en la barra lateral.
 
 **`/usuarios/` es el personal de la cafetería** (`DT-45`), y solo él: ni acudientes —tienen
 su pantalla— ni la propia institución. Cada fila dice el rol, el último acceso y el estado
@@ -788,8 +791,9 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
 
 ## [S6] Qué está construido, y qué no lo estará
 
-**Nada del producto.** Las **63 historias** están terminadas: las 61 del backlog, que cerró
-`HU-37`, más `HU-62` y `HU-63`, que entraron después con su decisión (`DEC-19`, `DEC-20`). Lo
+**Nada del producto.** Las **64 historias** están terminadas: las 61 del backlog, que cerró
+`HU-37`, más `HU-62`, `HU-63` y `HU-64`, que entraron después con su decisión (`DEC-19`,
+`DEC-20`, `DEC-23`). Lo
 que queda del Sprint 5 es entrega, no desarrollo.
 
 **El reporte de auditoría ya está** (`HU-37`, `TT-177`, `TT-178`): una línea de tiempo con

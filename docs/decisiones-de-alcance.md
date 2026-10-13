@@ -12,9 +12,9 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 22 (`DEC-1` … `DEC-22`) |
+| decisiones | 23 (`DEC-1` … `DEC-23`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
 | version | 1.9 |
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-22` |
+| S1 | Decisiones | `DEC-1` … `DEC-23` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -458,6 +458,24 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** **Cambiar el nombre del colegio solo se puede hacer desde la consola de Django**, o volviendo a sembrar sobre una base vacía. En el prototipo no hace falta; en una implementación real habría que devolverlo como pantalla propia.
 
+### `[DEC-23]` La institución da de alta a un acudiente sin la carga masiva
+
+*No cierra ningún `VAC`: **resuelve un punto del `ANEXO B`**, «Matricular a una familia nueva de una en una». Decisión posterior, tomada el 2026-10-12. **Amplía el anteproyecto** en el mecanismo, no en el permiso: la fila de `[S11]` «Cargar estudiantes y crear cuentas de acudientes» ya era de la institución, pero el único camino para crearlas era el archivo de `HU-01`. **Corrige el segundo criterio de `HU-05`**, que decía que toda cuenta de acudiente nace de la carga, y a `DT-40` en que «una familia nueva entra por la carga».*
+
+**El hecho que lo obliga.** Un estudiante cuya familia no estaba en el sistema solo entraba subiendo un archivo, aunque fuera de una fila: el alta individual del padrón (`DT-40`) elige un acudiente que ya existe, y nada creaba uno. El `ANEXO B` lo dejó abierto diciendo que resolverlo era ampliar `[S11]`. **Esa lectura era demasiado estricta**: lo que `[S11]` concede a la institución sobre el acudiente en el admin es `view`, pero crear su cuenta está en su propia fila. Lo que faltaba era el camino, y eso es una historia.
+
+**Decidido:**
+
+- **«Cargar un solo acudiente», en `/acudientes/`, abre una modal** con las tres columnas del acudiente en el archivo de carga —nombre, documento y correo—, con sus mismas longitudes (`personas.validacion`). Se registra como `HU-64`.
+- **La cuenta nace igual que en la carga**: sin contraseña utilizable, con su invitación al confirmar la transacción (`INV-6`, `INVD-1`, `HU-03`), y el correo en minúsculas. **Sigue sin haber autorregistro** (`HU-05`): la cuenta la crea la institución.
+- **Ni el correo ni el documento pueden repetirse**, y un fallo no deja nada a medias ni envía ninguna invitación.
+- **Nace sin estudiantes.** Se le matricula después desde el padrón, con «Cargar un solo estudiante», que ya elige entre los acudientes existentes. La lista de acudientes lo enseña desde ese momento, y no como retirado (`DT-44`).
+- **Solo la institución**, por el servicio (`crear_acudiente`, `DT-15`).
+
+**Lo que NO se decide aquí.** No se editan los datos de un acudiente ya creado: su nombre, documento y correo siguen siendo de consulta (`DEC-20`). Y no se crea acudiente y estudiante en un solo paso: son dos altas, cada una en su pantalla.
+
+**Consecuencia asumida.** **Un acudiente recién creado recibe la invitación antes de tener ningún estudiante**: si entra en ese intervalo, ve su panel vacío. Matricular al estudiante justo después lo evita, y la modal dice dónde hacerlo. Es funcionalidad nueva con el backlog cerrado, y se registra como `HU-64` antes de construirla.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -504,6 +522,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-20` | Desactivación y reactivación de la cuenta de un acudiente por la institución. Amplía la fila del acudiente en `[S11]`, que solo concedía consulta |
 | `DEC-21` | **No añade alcance ni recorta `[S11]`.** Quita a la institución la pantalla y el proxy de restricciones de todos; las consulta en la ficha del padrón (`DT-43`) |
 | `DEC-22` | **No añade alcance ni recorta `[S11]`.** Retira la edición de los datos de la institución en el admin, que nadie usaba; su nombre lo pone el seed (`HU-39`) |
+| `DEC-23` | Alta de un solo acudiente por la institución, sin la carga masiva. Amplía el mecanismo de `HU-01`; la fila de `[S11]` ya era suya |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -531,6 +550,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (decisión posterior) Entrega de las invitaciones de la carga, reabierta | **Decidido** | `DEC-18` | `HU-03` (criterio original restituido) |
 | — (punto abierto del `ANEXO B`) Recuperación de contraseña olvidada | **Resuelto** | `DEC-19` | `HU-62` |
 | — (hueco detectado) Corte de acceso de un acudiente | **Decidido** | `DEC-20` | `HU-63` |
+| — (`ANEXO B`) Matricular a una familia nueva de una en una | **Decidido** | `DEC-23` | `HU-64` |
 
 ---
 
@@ -546,7 +566,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido. **Resuelto el 2026-10-01 por `DEC-19`**, que lo registra como `HU-62`.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.
 - **El libro de inventario no registra quién.** `MovimientoInventario` guarda qué se movió, cuánto y cuándo, y su servicio **recibe el actor, lo comprueba y lo descarta**: no hay columna para él. Se destapó construyendo el reporte de auditoría (`HU-37`, `TT-177`), cuyo «para» es rastrear quién hizo qué: el cobro, la reserva, la entrega y el cuadre sí dicen quién, y el **ingreso de mercancía y la merma no pueden**. No se resuelve por inferencia —añadir la columna es una historia, y dejaría sin actor todo lo ya registrado—, así que **el reporte lo declara en pantalla** en vez de dejar el hueco en blanco, que se leería como un fallo de la consulta. Conviene recogerlo en `ENT-06` como limitación identificada.
-- **Matricular a una familia nueva de una en una.** El alta individual del padrón (`HU-44`, `DT-40`) solo elige un acudiente **que ya existe**: crear uno es dar de alta una cuenta, y sobre el acudiente la institución solo consulta (`[S11]`, `DEC-17`); la única vía que crea cuentas de acudiente es la carga masiva (`HU-01`). Así que un estudiante cuya familia no está en el sistema solo entra subiendo un archivo, aunque sea de una fila. No se resuelve por inferencia —sería ampliar `[S11]`, con su `DEC`—, y conviene recogerlo en `ENT-06` como limitación identificada.
+- **Matricular a una familia nueva de una en una.** El alta individual del padrón (`HU-44`, `DT-40`) solo elige un acudiente **que ya existe**: crear uno es dar de alta una cuenta, y sobre el acudiente la institución solo consulta (`[S11]`, `DEC-17`); la única vía que crea cuentas de acudiente es la carga masiva (`HU-01`). Así que un estudiante cuya familia no está en el sistema solo entra subiendo un archivo, aunque sea de una fila. No se resuelve por inferencia —sería ampliar `[S11]`, con su `DEC`—, y conviene recogerlo en `ENT-06` como limitación identificada. **Resuelto el 2026-10-12 por `DEC-23`**, que lo registra como `HU-64`; esa decisión corrige también la lectura de `[S11]` de este punto.
 
 ---
 

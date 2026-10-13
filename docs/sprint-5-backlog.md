@@ -323,6 +323,11 @@ y la pantalla de la institución se retiró en vez de construirse, porque nadie 
   `DT-41`, se empuja directo a `main` sin Pull Requests.
 - **Una prueba que dependía del reloj**, corregida (`#367`, `TT-166`), y documentación (`#363`,
   `#366`, `#370`).
+- **El 2026-10-12, las pantallas de la institución**, empujadas directo a `main`: fichas de
+  solo lectura en el padrón y en acudientes (`DT-43`, `DT-44`), `/usuarios/` en lugar del
+  admin (`DT-45`, `DT-46`), la retirada de las pantallas de restricciones y de institución
+  (`DEC-21`, `DEC-22`) y el alta de un solo acudiente, que trae `HU-64` con `DEC-23`. Con
+  ellas, el buscador de los listados del admin filtra mientras se escribe (`DT-42`).
 
-**Nada de eso altera el recuento**: `HU-62` y `HU-63` no tienen tareas `TT-nn` en este backlog,
+**Nada de eso altera el recuento**: `HU-62`, `HU-63` y `HU-64` no tienen tareas `TT-nn` en este backlog,
 igual que el rediseño. El detalle de cada uno, en `[S7]` del plan de PR.

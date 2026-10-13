@@ -244,10 +244,9 @@ def cuentas_sin_activar(estudiantes):
 def acudientes_de_la_institucion(*, actor, busqueda="", incluir_retirados=False):
     """Los acudientes con menores matriculados (`HU-44`, `[S11]`, `DEC-17`).
 
-    **Es una lectura y nada más.** La matriz solo concede `view` sobre
-    `personas.acudiente`: la cuenta se da de alta con la carga (`HU-01`), se
-    activa por invitación (`HU-03`) y se desactiva desde la ficha del
-    estudiante en el padrón (`HU-63`). Esta pantalla responde «¿de quién es hijo este estudiante?» y
+    **Es una lectura y nada más.** La cuenta se da de alta con la carga (`HU-01`)
+    o de una en una (`HU-64`), se activa por invitación (`HU-03`) y se desactiva
+    desde la ficha del estudiante en el padrón (`HU-63`); todo eso son servicios. Esta pantalla responde «¿de quién es hijo este estudiante?» y
     «¿este acudiente ya puede entrar?», que son las dos que secretaría hace.
 
     **Exclusivo de la institución**, y la comprobación va aquí y no en la vista

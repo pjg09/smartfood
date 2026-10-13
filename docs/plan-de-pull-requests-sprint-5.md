@@ -557,11 +557,13 @@ no venga de una historia.
 | `#369` | `refactor/quitar-admin-de-estudiantes` | El admin de estudiantes se retira y su trabajo pasa a la ficha del estudiante, en una modal del padrón —alta de uno solo incluida—; la institución corta y devuelve el acceso de un acudiente | `DT-40`, `DEC-20`, **`HU-63`** |
 | `#370` | `docs/main-sin-proteccion` | La documentación deja de afirmar que `main` está protegida: las reglas de GitHub están desactivadas | — |
 | — | `main` (`4e333da`) | Se empuja directo a `main`, sin ramas ni Pull Requests; se reescribe todo lo que exigía el flujo anterior. El primer commit integrado así | `DT-41` |
+| — | `main` | Las pantallas de la institución: fichas de solo lectura en el padrón y en acudientes, `/usuarios/` en lugar del admin con alta y edición en modal, fuera las pantallas de restricciones y de institución, y el alta de un solo acudiente. El buscador del admin filtra mientras se escribe | `DT-42` … `DT-46`, `DEC-21` … `DEC-23`, **`HU-64`** |
 
-**Dos traen historia, `#365` con `HU-62` y `#369` con `HU-63`**, y son los únicos de la tabla
-que añaden una capacidad: recuperar la contraseña olvidada, y cortar el acceso de un acudiente.
-Cada una se registró con su decisión (`DEC-19`, `DEC-20`) antes de construirla y está `☑` en
-`[S4]` del backlog de historias, **pero ninguna tiene tareas `TT-nn`**: entraron con el sprint
+**Tres traen historia, `#365` con `HU-62`, `#369` con `HU-63` y el último con `HU-64`**, y son
+los únicos de la tabla que añaden una capacidad: recuperar la contraseña olvidada, cortar el
+acceso de un acudiente y darlo de alta sin archivo de carga. Cada una se registró con su
+decisión (`DEC-19`, `DEC-20`, `DEC-23`) antes de construirla y está `☑` en `[S4]` del backlog
+de historias, **pero ninguna tiene tareas `TT-nn`**: entraron con el sprint
 cerrado de trabajo y no se repartieron. `#365` devuelve además a `HU-03` el criterio que
 `DEC-9` recortó (`DEC-18`).
 

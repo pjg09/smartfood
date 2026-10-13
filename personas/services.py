@@ -16,7 +16,7 @@ from django.core.files.storage import storages
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from cuentas.models import Rol
+from cuentas.models import Rol, Usuario
 from cuentas.services import crear_cuenta, desactivar_acudiente, reactivar_acudiente
 from config.imagenes import ImagenInvalida, procesar_imagen
 from personas.carga import leer
@@ -27,7 +27,13 @@ from personas.models import (
     Estudiante,
     Institucion,
 )
-from personas.validacion import ArchivoInvalido, validar
+from personas.validacion import (
+    FORMA_DE_CORREO,
+    LONGITUD_DOCUMENTO,
+    LONGITUD_NOMBRE,
+    ArchivoInvalido,
+    validar,
+)
 
 # Cuántas veces se vuelve a intentar si el código sorteado ya existía (`DT-9`).
 #
@@ -635,6 +641,49 @@ def matricular_estudiante(*, actor, nombre, documento, acudiente, fotografia=Non
             raise ValidationError({"fotografia": error.messages}) from None
 
     return estudiante
+
+
+@transaction.atomic
+def crear_acudiente(*, actor, nombre, documento, email):
+    """Da de alta a un acudiente sin pasar por la carga masiva (`HU-64`, `DEC-23`).
+
+    Es la mitad de una fila de la carga (`HU-01`): **la misma cuenta, nacida igual**
+    —sin contraseña utilizable, con su invitación al confirmar (`INV-6`,
+    `INVD-1`, `HU-03`)— y **las mismas reglas**: las longitudes de
+    `personas.validacion` y el correo en minúsculas, que es como la carga lo
+    agrupa. Lo que se escribe a mano no puede valer menos que lo que se sube.
+
+    **Nace sin estudiantes.** Se le matricula después desde el padrón, con
+    «Cargar un solo estudiante», que ya elige entre los acudientes existentes
+    (`DT-40`). Es lo que faltaba para que una familia nueva entrara sin archivo.
+
+    Solo la institución (`[S11]`, fila «crear cuentas de acudientes»). Los fallos
+    de datos salen como `ValidationError` con su campo, como en el alta del
+    estudiante.
+    """
+    _comprobar_que_administra_estudiantes(actor, "Dar de alta un acudiente")
+
+    nombre, documento = nombre.strip(), documento.strip()
+    email = email.strip().lower()
+
+    errores = {}
+    if not LONGITUD_NOMBRE[0] <= len(nombre) <= LONGITUD_NOMBRE[1]:
+        errores["nombre"] = f"Entre {LONGITUD_NOMBRE[0]} y {LONGITUD_NOMBRE[1]} caracteres."
+    if not LONGITUD_DOCUMENTO[0] <= len(documento) <= LONGITUD_DOCUMENTO[1]:
+        errores["documento"] = (
+            f"Entre {LONGITUD_DOCUMENTO[0]} y {LONGITUD_DOCUMENTO[1]} caracteres."
+        )
+    elif Acudiente.objects.filter(documento=documento).exists():
+        errores["documento"] = "Ya hay un acudiente con ese documento."
+    if not FORMA_DE_CORREO.match(email):
+        errores["email"] = "No parece un correo."
+    elif Usuario.objects.filter(email__iexact=email).exists():
+        errores["email"] = "Ya hay una cuenta con ese correo."
+    if errores:
+        raise ValidationError(errores)
+
+    usuario = crear_cuenta(email=email, rol=Rol.ACUDIENTE, nombre=nombre)
+    return Acudiente.objects.create(usuario=usuario, nombre=nombre, documento=documento)
 
 
 @dataclass

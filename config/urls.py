@@ -27,6 +27,7 @@ from cuentas.views import (
 )
 from personas.views import (
     acudientes_de_la_carga,
+    alta_de_acudiente,
     consulta_del_acudiente,
     acudientes_para_matricular,
     alta_de_estudiante,
@@ -209,6 +210,8 @@ urlpatterns = [
          name="invitacion-de-personal"),
     path("acudientes/", acudientes_de_la_carga, name="acudientes"),
     path("acudientes/tabla/", acudientes_de_la_carga, name="acudientes-tabla"),
+    # `HU-64`, `DEC-23`. El alta de un solo acudiente, en la modal de la pantalla.
+    path("acudientes/nuevo/", alta_de_acudiente, name="alta-de-acudiente"),
     # `DT-44`. La ficha del acudiente en solo lectura, al pulsar su fila.
     path(
         "acudientes/<uuid:acudiente_id>/",
