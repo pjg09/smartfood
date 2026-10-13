@@ -1,5 +1,6 @@
 {% load dinero %}
-{% comment %} DEC-24. La ficha nutricional de un producto, en la modal de la reserva.
+{% comment %} DEC-24. La ficha nutricional de un producto, en la modal. La abren la reserva y
+   los productos bloqueados (`HU-10`): una sola ficha para las dos pantallas.
 
    Lo que el producto **declara hoy** (`TT-44`, `campos-nutricionales.md`), con lo que ese
    estudiante tiene bloqueado: es lo que el acudiente viene a mirar antes de añadirlo. Un
@@ -33,7 +34,7 @@
     {% if producto.bloqueado %}
       <p class="flex items-start gap-2 rounded-md bg-error-suave p-3 text-sm text-error-fuerte">
         <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-restriccion"></use></svg>
-        Lo bloqueaste para {{ estudiante.nombre }}: no se puede reservar.
+        Lo bloqueaste para {{ estudiante.nombre }}: no lo puede comprar ni reservar.
       </p>
     {% endif %}
 

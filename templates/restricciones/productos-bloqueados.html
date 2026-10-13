@@ -96,4 +96,12 @@
 
     {% include "restricciones/partials/lista-de-productos.html" %}
   </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`), para «Detalle». Fuera de la lista, que HTMX
+     reemplaza a cada búsqueda y a cada bloqueo: dentro se perdería con ella. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Detalle del producto"
+          class="m-auto w-[min(40rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
 {% endblock %}

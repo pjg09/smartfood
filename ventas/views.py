@@ -492,7 +492,9 @@ def detalle_del_producto(request, estudiante_id, producto_id):
     """La ficha nutricional de un producto, para la modal (`DEC-24`).
 
     Con lo que ese estudiante tiene bloqueado, porque es lo que el acudiente
-    viene a mirar: si puede llevarlo y qué declara. Fragmento (`DT-16`).
+    viene a mirar: si puede llevarlo y qué declara. La abren la reserva y los
+    productos bloqueados (`HU-10`), y es la misma en las dos. Fragmento
+    (`DT-16`).
     """
     estudiante = _estudiante_del_acudiente(request, estudiante_id)
     producto = next(

@@ -499,3 +499,58 @@ class LaListaPintaLaImagenDelProductoTest(TestCase):
 
         self.assertContains(respuesta, self.con_imagen.url_de_la_imagen)
 
+
+class CadaTarjetaAbreSuFichaTest(TestCase):
+    """`DEC-24`. «Detalle» en cada tarjeta abre la misma ficha que la reserva.
+
+    Sobre el marcado y por `data-*` (`[S3.6]` de `escribir-pruebas.md`); que la
+    ficha diga lo que debe lo prueba `ventas.tests_reserva.LaFichaDelProductoTest`.
+    """
+
+    def setUp(self):
+        self.usuario, _, (self.estudiante,) = acudiente_con_estudiantes()
+        self.empanada = producto("Empanada de carne")
+        self.client.login(email=self.usuario.email, password=CLAVE)
+        self.ficha = reverse("detalle-del-producto", args=[self.estudiante.id, self.empanada.id])
+
+    def test_la_lista_pide_la_ficha_de_cada_producto(self):
+        cuerpo = self.client.get(
+            reverse("productos-bloqueados-lista", args=[self.estudiante.id])
+        ).content.decode()
+
+        self.assertRegex(
+            cuerpo,
+            r"data-detalle-del-producto-en-la-lista\s+hx-get=\"" + re.escape(self.ficha) + '"',
+        )
+
+    def test_tambien_tras_tocar_el_interruptor(self):
+        """El `POST` devuelve la lista entera: «Detalle» no se pierde al bloquear."""
+        respuesta = self.client.post(
+            reverse("bloqueo-de-producto", args=[self.estudiante.id]),
+            {"producto": str(self.empanada.id), "accion": "bloquear"},
+        )
+
+        self.assertContains(respuesta, self.ficha)
+
+    def test_la_pagina_trae_la_modal_fuera_de_la_lista(self):
+        """Dentro de la lista se iría con cada búsqueda y cada bloqueo."""
+        cuerpo = self.client.get(
+            reverse("productos-bloqueados", args=[self.estudiante.id])
+        ).content.decode()
+
+        self.assertIn("data-modal-ficha", cuerpo)
+        self.assertNotIn(
+            "data-modal-ficha",
+            self.client.get(
+                reverse("productos-bloqueados-lista", args=[self.estudiante.id])
+            ).content.decode(),
+        )
+
+    def test_la_ficha_de_un_bloqueado_lo_dice(self):
+        bloquear_producto(actor=self.usuario, estudiante=self.estudiante, producto=self.empanada)
+
+        respuesta = self.client.get(self.ficha)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "data-detalle-del-producto")
+        self.assertTrue(respuesta.context["producto"].bloqueado)

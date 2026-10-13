@@ -344,16 +344,18 @@ urlpatterns = [
         reserva,
         name="reserva",
     ),
-    # `DEC-24`. Los fragmentos de la pantalla de reserva, que es una sola: el
-    # ticket que se recalcula a cada «+» o «−» y la ficha de un producto en la
-    # modal. Todos `GET`: no escriben, y devuelven un fragmento (`DT-16`).
+    # `DEC-24`. El ticket de la reserva, que se recalcula a cada «+» o «−».
+    # `GET`: no escribe, y devuelve un fragmento (`DT-16`).
     path(
         "mis-estudiantes/<uuid:estudiante_id>/reservar/ticket/",
         ticket_de_la_reserva,
         name="ticket-de-la-reserva",
     ),
+    # La ficha nutricional de un producto en la modal, con lo que ese estudiante
+    # tiene bloqueado. **No cuelga de `reservar/`**: la abren la reserva y los
+    # productos bloqueados, y es la misma ficha en las dos. Fragmento (`DT-16`).
     path(
-        "mis-estudiantes/<uuid:estudiante_id>/reservar/productos/<uuid:producto_id>/",
+        "mis-estudiantes/<uuid:estudiante_id>/productos/<uuid:producto_id>/",
         detalle_del_producto,
         name="detalle-del-producto",
     ),

@@ -107,7 +107,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/punto-de-venta/cierre/` | Cierre de caja: el efectivo esperado de la jornada, calculado desde las ventas registradas, contra lo que el cajero cuenta | **Solo cajero** | `TT-173` |
 | `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: filtros, tarjetas **sin existencias** —es un encargo— con su ticket al lado, y los pedidos del estudiante debajo | **Solo su acudiente** | `TT-145`, `DT-47`, `DEC-24` |
 | `/mis-estudiantes/<id>/reservar/ticket/` | Fragmento HTMX del ticket para las cantidades elegidas: total, calorías, saldo después y cupo | **Solo su acudiente** | `DEC-24` |
-| `/mis-estudiantes/<id>/reservar/productos/<producto>/` | Fragmento HTMX: la ficha nutricional del producto, para la modal | **Solo su acudiente** | `DEC-24` |
+| `/mis-estudiantes/<id>/productos/<producto>/` | Fragmento HTMX: la ficha nutricional del producto, para la modal de la reserva y de los productos bloqueados | **Solo su acudiente** | `DEC-24` |
 | `/mis-estudiantes/<id>/pedidos/` | Fragmento HTMX: la lista de pedidos de la pantalla de reserva, que se repinta al cancelar | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/` | Fragmento HTMX: el detalle de un pedido en la modal, con su cancelación si está pendiente | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Solo su acudiente** | `HU-66` |
@@ -139,7 +139,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/reservar/ticket/` | 403 | 403 | 403 | **200** | 302 → acceso |
-| `/mis-estudiantes/<id>/reservar/productos/<producto>/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/productos/<producto>/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/pedidos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |

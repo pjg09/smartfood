@@ -62,8 +62,19 @@
             <div class="flex min-w-0 flex-1 flex-col gap-1">
               <span class="text-base font-medium text-texto">{{ fila.producto.nombre }}</span>
               <span class="text-sm text-texto-suave">{{ fila.producto.categoria.nombre }}</span>
-              <span class="mt-auto pt-2 font-display text-lg tabular-nums text-texto">
-                {{ fila.producto.precio|dinero }}
+              {% comment %} «Detalle» abre la ficha nutricional en la modal de la página: la
+                 misma que la reserva (`detalle-del-producto.html`), para que las dos
+                 pantallas no puedan decir cosas distintas del mismo producto. Va arriba,
+                 junto al precio, y no en la franja de abajo: esa es la del gesto de
+                 bloquear, y un segundo botón ahí se pulsaría por error. {% endcomment %}
+              <span class="mt-auto flex items-baseline justify-between gap-3 pt-2">
+                <span class="font-display text-lg tabular-nums text-texto">{{ fila.producto.precio|dinero }}</span>
+                <button type="button" data-detalle-del-producto-en-la-lista
+                        hx-get="{% url 'detalle-del-producto' estudiante.id fila.producto.id %}"
+                        hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                        class="shrink-0 text-base font-semibold text-acento-fuerte hover:underline">
+                  Detalle
+                </button>
               </span>
             </div>
           </div>
