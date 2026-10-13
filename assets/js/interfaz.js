@@ -979,6 +979,46 @@
     });
   }
 
+  // ── La miniatura que se amplía (`[S2.13]` de `sistema-visual.md`) ─────────
+  //
+  // Un botón `data-ampliar-imagen` con un `<img>` dentro abre el `<dialog>` del
+  // armazón con esa misma imagen, grande. **Se escucha en el documento**, no en
+  // cada botón: la ficha del estudiante y la lista de productos llegan y se
+  // reemplazan por HTMX, y un oyente puesto al cargar no conocería las nuevas.
+  //
+  // Copia `currentSrc` y no vuelve a pedir nada: es la misma URL —firmada, en
+  // la foto del estudiante (`DT-18`)—, ya en la caché del navegador.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  function montarImagenAmpliable() {
+    var modal = document.querySelector("[data-modal-imagen]");
+    if (!modal) return;
+    var imagen = modal.querySelector("[data-imagen-ampliada]");
+    var titulo = modal.querySelector("[data-titulo-de-la-imagen]");
+
+    document.addEventListener("click", function (evento) {
+      var boton = evento.target.closest("[data-ampliar-imagen]");
+      if (!boton) return;
+      var miniatura = boton.querySelector("img");
+      if (!miniatura) return;
+
+      imagen.src = miniatura.currentSrc || miniatura.src;
+      titulo.textContent = boton.getAttribute("data-ampliar-imagen");
+      imagen.alt = titulo.textContent;
+      modal.showModal();
+    });
+
+    modal.addEventListener("click", function (evento) {
+      // Pulsar fuera del panel cierra, que es lo que un `<dialog>` no hace solo.
+      if (evento.target === modal || evento.target.closest("[data-cerrar-imagen]")) {
+        modal.close();
+      }
+    });
+    // Escape cierra el `<dialog>` por su cuenta. Se quita la imagen igual, para
+    // que la siguiente no enseñe un instante la anterior.
+    modal.addEventListener("close", function () { imagen.removeAttribute("src"); });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
@@ -993,5 +1033,6 @@
     montarModalDelAdmin();
     montarBuscadorDelAdmin();
     montarFichaDelEstudiante();
+    montarImagenAmpliable();
   });
 })();

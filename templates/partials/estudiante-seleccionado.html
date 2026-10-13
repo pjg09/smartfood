@@ -33,9 +33,17 @@
         {% comment %} La URL viene firmada y caduca pronto (`DEC-8`, `DT-18`): la
            fotografía de un menor no puede quedar en una dirección adivinable ni
            en una que siga sirviendo meses después. Y en este repositorio ninguna
-           es de una persona real — se generan en el seed (`INVD-6`). {% endcomment %}
-        <img src="{{ seleccionado.url_de_la_foto }}" alt=""
-             class="h-20 w-20 shrink-0 rounded-full border border-borde object-cover">
+           es de una persona real — se generan en el seed (`INVD-6`).
+
+           Pulsarla la amplía (`[S2.13]` de `sistema-visual.md`). El botón lleva
+           el nombre: es lo que dice la modal y lo que oye un lector de
+           pantalla, porque la imagen sola no tiene `alt`. {% endcomment %}
+        <button type="button" data-ampliar-imagen="{{ seleccionado.nombre }}"
+                aria-label="Ampliar la foto de {{ seleccionado.nombre }}"
+                class="shrink-0 cursor-zoom-in self-start rounded-full tablet:self-auto">
+          <img src="{{ seleccionado.url_de_la_foto }}" alt=""
+               class="h-20 w-20 rounded-full border border-borde object-cover">
+        </button>
       {% else %}
         <span aria-hidden="true"
               class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full

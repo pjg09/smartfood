@@ -8,11 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| actualizado | 2026-10-03; la ficha del padrón estrenó tres —`[S2.10]` a `[S2.12]`—: la modal, la validación en vivo y el buscador para elegir. Antes, el Sprint 5 trajo `[S2.8]` y `[S2.9]` |
+| actualizado | 2026-10-13; `[S2.13]`, la imagen ampliable, que estrenan la foto del panel del acudiente y las imágenes de productos bloqueados. Antes, la ficha del padrón trajo `[S2.10]` a `[S2.12]` y el Sprint 5, `[S2.8]` y `[S2.9]` |
 | cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental y los reportes añadieron |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 ### [S0.1] Qué responde este documento
 
@@ -62,7 +62,7 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Quince, y trece tienen sección propia porque llevan una decisión o una trampa que hay que
+Dieciséis, y catorce tienen sección propia porque llevan una decisión o una trampa que hay que
 conocer antes de copiarlas.
 
 **Tres las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
@@ -91,6 +91,7 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Modal de ficha | `templates/personas/partials/ficha-del-estudiante.html` | Un `<dialog>` que recibe el fragmento; la respuesta es siempre la ficha y la tabla de detrás se entera por `HX-Trigger` |
 | Validación en vivo | `templates/personas/partials/ficha-campos.html` | Aviso rojo por campo y guardar deshabilitado mientras falte algo; **las longitudes vienen del formulario**, no de la plantilla |
 | Buscador para elegir | `templates/personas/partials/acudientes-para-matricular.html` | Busca a cada tecla, pocos resultados como botones, y lo elegido pasa a un campo oculto con «Cambiar» |
+| Imagen ampliable | `templates/restricciones/partials/lista-de-productos.html` | La miniatura va **dentro de un botón** `data-ampliar-imagen`; la modal es **una sola, la del armazón** |
 
 ### [S2.1] Tarjeta de resumen
 
@@ -378,6 +379,33 @@ pasa a una ficha con «Cambiar». Se copia del bloque del acudiente de
 - **Enter en el buscador no envía la ficha**: buscaría enviando el formulario entero.
 - **Los resultados se llevan a la vista** (`scrollIntoView`) al llegar: en una modal con
   campos encima, caen por debajo del borde y quien escribe no ve que llegaron.
+
+### [S2.13] Imagen ampliable
+
+Una miniatura que, al pulsarla, se ve grande en una modal. Se copia de la imagen del
+producto en `templates/restricciones/partials/lista-de-productos.html`; la foto del
+estudiante de `templates/partials/estudiante-seleccionado.html` es la misma pieza en redondo.
+
+- **La miniatura va dentro de un `<button type="button" data-ampliar-imagen="<título>">`**,
+  no con un `onclick` en el `<img>`: un `<img>` no recibe el foco, y con el teclado no se
+  abriría. El valor del atributo es el título de la modal, y el botón lleva un
+  `aria-label` que dice qué amplía, porque la imagen va con `alt` vacío —el nombre está al
+  lado—.
+- **La modal es una sola y vive en el armazón** (`templates/base-aplicacion.html`), no
+  una por pantalla. Una pantalla nueva solo envuelve su miniatura; no añade ningún
+  `<dialog>` ni ninguna línea de JavaScript.
+- **`interfaz.js` escucha en el documento**, no en cada botón: las miniaturas de la ficha
+  del estudiante y de la lista de productos llegan por HTMX, y un oyente puesto al cargar no
+  las conocería.
+- **Reutiliza la URL de la miniatura** (`currentSrc`): la imagen ya está en la caché y no
+  hay segunda petición. En la foto del estudiante es la URL firmada (`DT-18`), así que la
+  modal no abre ninguna dirección nueva a la fotografía de un menor.
+- **El `<img>` de la modal nace sin `src`** y se le quita al cerrar: con el `src` vacío pide
+  la propia página (`[S4]`), y sin quitarlo la siguiente imagen enseñaría un instante la
+  anterior.
+- **El hueco sin imagen no se amplía**: no hay nada que ver, y un botón que abre una modal
+  vacía promete algo que no hay.
+- **No cubre el admin**, que tiene su armazón propio (`[S3]`).
 
 ---
 

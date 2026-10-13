@@ -14,6 +14,7 @@ caduca pronto — la fotografía de un menor no puede quedar en una URL adivinab
 ni en una que siga sirviendo meses después (`DEC-8`, `ALC-OUT-08`).
 """
 
+import re
 from io import BytesIO
 
 from django.conf import settings
@@ -278,6 +279,45 @@ class SinFotografiaTodoSigueFuncionandoTest(BaseDeFotografia):
         from personas.carga import COLUMNAS
 
         self.assertNotIn("foto", "".join(COLUMNAS))
+
+
+class LaFotoDelPanelSeAmpliaTest(BaseDeFotografia):
+    """La foto del panel del acudiente abre la modal del armazón (`[S2.13]`).
+
+    Se fija sobre el marcado y por `data-*` (`[S3.6]` de `escribir-pruebas.md`):
+    lo que abre la modal es `interfaz.js`, y lo que este lado garantiza es que
+    la miniatura vaya dentro del botón que el JavaScript busca.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.acudiente.usuario)
+
+    def _fragmento(self):
+        return self.client.get(
+            reverse("estudiante-seleccionado", args=[self.estudiante.pk])
+        ).content.decode()
+
+    def test_con_foto_la_miniatura_va_dentro_del_boton_que_amplia(self):
+        self.subir()
+        self.estudiante.refresh_from_db()
+
+        self.assertRegex(
+            self._fragmento(),
+            r'<button[^>]*data-ampliar-imagen="Ana Sofía Restrepo Ruiz"[^>]*>\s*<img src="[^"]+"',
+        )
+
+    def test_sin_foto_no_hay_nada_que_ampliar(self):
+        self.assertNotIn("data-ampliar-imagen", self._fragmento())
+
+    def test_el_armazon_trae_la_modal_sin_src(self):
+        """Un `<img>` con `src` vacío pide la propia página (`[S4]` de
+        `sistema-visual.md`): la de la modal nace sin él y lo pone el JavaScript."""
+        cuerpo = self.client.get(reverse("mis-estudiantes")).content.decode()
+
+        self.assertIn("data-modal-imagen", cuerpo)
+        ampliada = re.search(r"<img[^>]*data-imagen-ampliada[^>]*>", cuerpo).group(0)
+        self.assertNotIn("src=", ampliada)
 
 
 # --- Quién puede cargarla ---------------------------------------------------

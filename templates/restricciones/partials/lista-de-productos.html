@@ -39,12 +39,19 @@
              Sin imagen no hay `<img>` con `src` vacío, que pide la propia
              página y deja un icono roto (`[S5]` de `sistema-visual.md`): el
              hueco se marca con borde discontinuo. Un producto sin imagen se
-             bloquea igual. {% endcomment %}
+             bloquea igual.
+
+             Pulsarla la amplía (`[S2.13]` de `sistema-visual.md`); el hueco no,
+             porque no hay nada que ampliar. {% endcomment %}
           <div class="flex flex-1 gap-3 p-4">
             {% if fila.producto.tiene_imagen %}
-              <img src="{{ fila.producto.url_de_la_imagen }}" alt=""
-                   width="64" height="64" loading="lazy" data-imagen-del-producto
-                   class="h-16 w-16 shrink-0 rounded-md border border-borde object-cover">
+              <button type="button" data-ampliar-imagen="{{ fila.producto.nombre }}"
+                      aria-label="Ampliar la imagen de {{ fila.producto.nombre }}"
+                      class="shrink-0 cursor-zoom-in self-start rounded-md">
+                <img src="{{ fila.producto.url_de_la_imagen }}" alt=""
+                     width="64" height="64" loading="lazy" data-imagen-del-producto
+                     class="h-16 w-16 rounded-md border border-borde object-cover">
+              </button>
             {% else %}
               <span aria-hidden="true" data-sin-imagen-del-producto
                     class="flex h-16 w-16 shrink-0 items-center justify-center rounded-md

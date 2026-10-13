@@ -472,6 +472,17 @@ class LaListaPintaLaImagenDelProductoTest(TestCase):
 
         self.assertEqual(imagenes, [self.con_imagen.url_de_la_imagen])
 
+    def test_la_miniatura_va_dentro_del_boton_que_amplia(self):
+        """`[S2.13]` de `sistema-visual.md`: el botón es lo que busca `interfaz.js`."""
+        self.assertRegex(
+            self._lista(),
+            r'<button[^>]*data-ampliar-imagen="Empanada de carne"[^>]*>\s*'
+            r'<img src="' + re.escape(self.con_imagen.url_de_la_imagen) + '"',
+        )
+
+    def test_el_hueco_sin_imagen_no_se_amplia(self):
+        self.assertNotIn('data-ampliar-imagen="Jugo de mora"', self._lista())
+
     def test_el_producto_sin_imagen_marca_el_hueco_sin_img_vacio(self):
         """Un `src` vacío pide la propia página y deja un icono roto."""
         cuerpo = self._lista()

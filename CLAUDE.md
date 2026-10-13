@@ -165,8 +165,8 @@ que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las p
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **quince**
-composiciones existen —trece con sección propia— y de qué plantilla se copia cada una. Tres que
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **dieciséis**
+composiciones existen —catorce con sección propia— y de qué plantilla se copia cada una. Tres que
 se olvidan: la acción de una tarjeta de resumen es un **enlace** de acento abajo, no un botón
 sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y qué historia lo trae—;
 y un medidor **recorta la barra a 100, nunca el número**.
@@ -320,10 +320,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.722 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.727 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.722, no corrió entera.
+menos de esas 1.727, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

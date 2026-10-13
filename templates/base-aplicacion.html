@@ -108,6 +108,32 @@
     {% block contenido %}{% endblock %}
   </main>
 
+  {% comment %} La imagen ampliada (`[S2.13]` de `sistema-visual.md`). **Una sola, en el
+     armazón**, y no una por pantalla: cualquier miniatura envuelta en un botón
+     `data-ampliar-imagen` la abre, también las que llegan después por HTMX
+     (`assets/js/interfaz.js`).
+
+     Nace sin `src`: un `<img>` con el `src` vacío pide la propia página. Lo pone
+     el JavaScript al abrir, copiándolo de la miniatura — la misma URL, así que
+     la imagen ya está en la caché y no hay una segunda petición. {% endcomment %}
+  <dialog data-modal-imagen aria-labelledby="titulo-de-la-imagen"
+          class="no-imprimir m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde
+                 bg-superficie p-0 text-texto backdrop:bg-velo">
+    <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+      <h2 id="titulo-de-la-imagen" data-titulo-de-la-imagen
+          class="min-w-0 truncate font-display text-lg text-texto"></h2>
+      <button type="button" data-cerrar-imagen aria-label="Cerrar"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                     text-texto-suave transition-colors hover:bg-superficie-hover">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+      </button>
+    </div>
+    <div class="p-4">
+      <img data-imagen-ampliada alt=""
+           class="mx-auto aspect-square max-h-[75vh] w-full rounded-md object-contain">
+    </div>
+  </dialog>
+
   {% comment %} Cajón de móvil. Nace oculto con `hidden` (el atributo, no la clase): así
      no depende de que el JavaScript llegue para no taparlo todo. {% endcomment %}
   <div data-cajon hidden class="no-imprimir fixed inset-0 z-40 tablet:hidden">
