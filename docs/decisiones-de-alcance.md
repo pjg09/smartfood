@@ -12,9 +12,9 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 21 (`DEC-1` … `DEC-21`) |
+| decisiones | 22 (`DEC-1` … `DEC-22`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
 | version | 1.9 |
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-21` |
+| S1 | Decisiones | `DEC-1` … `DEC-22` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -441,6 +441,23 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** Para saber qué estudiantes tienen alguna restricción, la institución tiene que abrirlos de uno en uno: ya no hay una vista que los reúna. **Y su consulta depende ahora de `DT-43`**: sin la ficha de solo lectura, `HU-38` se quedaría sin camino para este rol.
 
+### `[DEC-22]` La institución deja de editar sus datos en el admin
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-12. **No recorta `[S11]`**, que no tiene una fila para los datos de la institución, ni ninguna historia: `HU-39` pide que la cuenta se cree en el seed, no que se edite. **Corrige a `DEC-17`** en un punto: «institución» estaba entre las pantallas propias de este rol, y lo que se decide es no tener ninguna.*
+
+**El hecho que lo obliga.** La entrada «Institución» del menú abría el admin de `personas.institucion`, donde se podía cambiar el nombre del colegio. Nadie lo hacía: el prototipo opera sobre **una** institución de referencia (`ALC-OUT-10`), y su nombre lo pone el seed. Era una entrada más en el menú que no servía.
+
+**Decidido:**
+
+- **Sale del menú de la institución**, y con ella **la última entrada suya que vivía en el admin**: su menú son cuatro pantallas propias —padrón, carga, acudientes y usuarios—.
+- **Se retira el permiso** `personas.institucion` (`view`, `change`) de su matriz, y **el registro en el admin**: ningún rol la alcanzaba ya, y `/admin/personas/institucion/` responde `404`.
+- **Su nombre se sigue enseñando** en la cabecera. Lo que se retira es editarlo.
+- **Que haya una sola institución lo sigue imponiendo la base** (`unica`), no el admin.
+
+**Lo que NO se decide aquí.** La cuenta de la institución sigue entrando al admin (`is_staff`): consulta *Acudientes* por su URL y conserva el permiso sobre `cuentas.usuario`, aunque ya trabaje en `/usuarios/` (`DT-45`).
+
+**Consecuencia asumida.** **Cambiar el nombre del colegio solo se puede hacer desde la consola de Django**, o volviendo a sembrar sobre una base vacía. En el prototipo no hace falta; en una implementación real habría que devolverlo como pantalla propia.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -486,6 +503,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-19` | Recuperación de la contraseña olvidada, por enlace de un solo uso enviado al correo del titular |
 | `DEC-20` | Desactivación y reactivación de la cuenta de un acudiente por la institución. Amplía la fila del acudiente en `[S11]`, que solo concedía consulta |
 | `DEC-21` | **No añade alcance ni recorta `[S11]`.** Quita a la institución la pantalla y el proxy de restricciones de todos; las consulta en la ficha del padrón (`DT-43`) |
+| `DEC-22` | **No añade alcance ni recorta `[S11]`.** Retira la edición de los datos de la institución en el admin, que nadie usaba; su nombre lo pone el seed (`HU-39`) |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

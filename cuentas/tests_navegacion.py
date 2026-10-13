@@ -213,8 +213,8 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.client.force_login(cuenta(Rol.INSTITUCION))
 
     def _pantalla_del_admin(self):
-        # La de acudientes: «Usuarios» ya no es del admin (`DT-45`), y la URL de
-        # su listado saldría en la propia página que se mira.
+        # La de acudientes: la institución ya no tiene ninguna entrada del admin
+        # en su menú (`DT-45`, `DEC-22`), pero sigue pudiendo abrir esta.
         respuesta = self.client.get("/admin/personas/acudiente/")
         self.assertEqual(respuesta.status_code, 200)
         return respuesta.content.decode()
@@ -230,8 +230,9 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         """La barra del admin es la misma del resto, no una copia.
 
         Se comprueban las dos clases de entrada que conviven desde `DEC-17`:
-        una pantalla propia —el padrón, los usuarios— y una que sigue dentro del
-        admin, la de la institución.
+        pantallas propias y entradas que siguen dentro del admin. La institución
+        ya solo tiene de las primeras (`DT-45`, `DEC-22`); las segundas se
+        comprueban con la administración de la cafetería.
         """
         from django.urls import reverse as resolver
 
@@ -241,4 +242,9 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.assertIn(resolver("acudientes"), cuerpo)
         self.assertIn(resolver("usuarios"), cuerpo)
         self.assertNotIn(resolver("admin:cuentas_usuario_changelist"), cuerpo)
-        self.assertIn(resolver("admin:personas_institucion_changelist"), cuerpo)
+        self.assertNotIn("/admin/personas/institucion/", cuerpo)
+
+        self.client.force_login(cuenta(Rol.ADMINISTRADOR))
+        cafeteria = self.client.get("/admin/ventas/venta/").content.decode()
+        self.assertIn(resolver("admin:catalogo_producto_changelist"), cafeteria)
+        self.assertIn(resolver("panel-de-la-cafeteria"), cafeteria)

@@ -32,7 +32,9 @@ PERMISOS_POR_ROL = {
     # `DEC-2`, también las cuentas del personal de la cafetería (`HU-40`).
     Rol.INSTITUCION: {
         "cuentas.usuario": ["add", "view", "change"],
-        "personas.institucion": ["view", "change"],
+        # **Sin `personas.institucion`** (`DEC-22`). Editar sus propios datos no lo
+        # usaba nadie: el nombre lo pone el seed (`HU-39`, `ALC-OUT-10`), y su
+        # entrada en el admin se retiró.
         # `HU-44`, tercer criterio: administrar estudiantes es función
         # **exclusiva** de la institución educativa. Aquí es donde se hace
         # exclusiva; ningún otro rol la tiene, y esa ausencia es la mitad que

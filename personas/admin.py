@@ -3,24 +3,17 @@
 **Los estudiantes ya no se administran aquí.** El alta individual, la edición,
 la fotografía, la baja y la reasignación del código siguen en
 `personas.services`, que es donde viven sus reglas (`DT-15`); lo que se quitó
-es la pantalla del admin que los llamaba, a la espera de la que la sustituya.
+es la pantalla del admin que los llamaba, y la sustituye la ficha del padrón
+(`DT-40`).
 """
 
 from django.contrib import admin
 
-from personas.models import Acudiente, Institucion
+from personas.models import Acudiente
 
-
-@admin.register(Institucion)
-class InstitucionAdmin(admin.ModelAdmin):
-    list_display = ["nombre", "usuario"]
-    readonly_fields = ["id", "unica"]
-
-    def has_add_permission(self, request):
-        # El prototipo opera sobre UNA institución (`ALC-OUT-10`, `HU-39`), y la
-        # crea el seed. La base lo impide igualmente; esto solo evita ofrecer un
-        # botón que siempre falla.
-        return not Institucion.objects.exists()
+# **La institución ya no se edita aquí** (`DEC-22`): no lo usaba nadie. La crea
+# el seed con su nombre (`HU-39`), y que haya una sola lo impone la base
+# (`ALC-OUT-10`), no este registro.
 
 
 @admin.register(Acudiente)

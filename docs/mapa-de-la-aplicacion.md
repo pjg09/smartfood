@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-12; `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -231,7 +231,7 @@ coincidir porque dejaría media pantalla en cada tema.
 | Modelo | Institución | Administración | Cajero | Acudiente |
 |---|---|---|---|---|
 | `personas.acudiente` | **200** (solo consulta) | 403 | 302 | 302 |
-| `personas.institucion` | **200** | 403 | 302 | 302 |
+| `personas.institucion` | 404 (`DEC-22`: sin registro en el admin) | 404 | 302 | 302 |
 | `cuentas.usuario` | **200** (fuera del menú, `DT-45`) | 403 | 302 | 302 |
 | `catalogo.producto` | 403 | **200** | 302 | 302 |
 | `catalogo.categoria` | 403 | **200** | 302 | 302 |
@@ -388,7 +388,9 @@ que la define el titular con la invitación (`HU-40`, `HU-41`). **Editar**, en c
 corrige el nombre y el correo, nunca el rol (`DT-46`): si cambia el correo de quien todavía
 no activó su cuenta, la invitación vieja caduca y sale otra a la nueva dirección.
 
-En el admin le quedan *Acudientes*, de solo consulta, e *Institución*, para sus datos.
+**Ya no edita los datos de la institución**: no lo usaba nadie, y su nombre lo pone el seed
+(`DEC-22`, `HU-39`). Su menú son cuatro pantallas propias y ninguna del admin; en él solo
+queda, por su URL, *Acudientes* de solo consulta.
 
 **Las restricciones, en la ficha de cada estudiante** (`HU-38`, `DT-43`), y en ningún listado:
 la pantalla de restricciones de todos no le servía y se le quitó (`DEC-21`); sigue siendo de

@@ -308,10 +308,10 @@ alteran el recuento de este sprint**: las tareas siguen siendo 33 y su avance, e
 sus marcas. El detalle de qué entregó cada PR está en `[S7]` de
 `./plan-de-pull-requests-sprint-5.md`.
 
-**Lo que dejan abierto**: usuarios e institución siguen en el admin porque escriben y
-necesitan formulario propio. **La edición de estudiantes ya no**: está en la ficha del padrón
-(`DT-40`), y el alta de uno solo, tampoco: va en la misma modal. No hay tarea que cubra las
-dos que quedan; construirlas exigiría decidir antes si entran en este sprint o en la entrega.
+**Lo que dejaban abierto ya está cerrado.** La edición y el alta de un estudiante están en la
+ficha del padrón (`DT-40`); el personal de la cafetería, en `/usuarios/` (`DT-45`, `DT-46`);
+y la pantalla de la institución se retiró en vez de construirse, porque nadie la usaba
+(`DEC-22`). Ninguna de las tres tiene tarea `TT-nn`.
 
 **Después entró el resto**, con la misma regla: registrado antes de construirse.
 - **El entorno en contenedores** (`#364`, `DT-37`, `DT-38`), sin tocar el producto.

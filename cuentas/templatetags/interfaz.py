@@ -114,7 +114,8 @@ MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
     Rol.ACUDIENTE: (Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes"),),
     # `USR-5`: el padrón que secretaría abre a diario (`DT-27`), la carga de
-    # principio de curso (`HU-01`) y las fichas que administra. **Sin
+    # principio de curso (`HU-01`) y las fichas que administra. Todo pantallas
+    # propias: ninguna entrada suya vive ya en el admin (`DT-45`, `DEC-22`). **Sin
     # «Restricciones»** (`DEC-21`): las consulta en la ficha de cada estudiante,
     # desde el padrón (`DT-43`).
     Rol.INSTITUCION: (
@@ -124,7 +125,8 @@ MENU_POR_ROL = {
         # `DT-45`. Pantalla propia y no el listado del admin, que mezclaba al
         # personal con los acudientes y con la propia institución.
         Entrada("usuarios", "Usuarios", "i-candado"),
-        _del_admin("personas_institucion", "Institución", "i-colegio"),
+        # **Sin «Institución»** (`DEC-22`): editar los datos de la institución
+        # no lo usaba nadie, y su nombre lo pone el seed (`HU-39`).
     ),
     # `USR-4`: la cafetería. El catálogo y el inventario son lo que administra;
     # ventas, cierres y auditoría, lo que consulta. La cola de reservas no vive
