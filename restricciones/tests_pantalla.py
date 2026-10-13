@@ -2,8 +2,10 @@
 
 Sustituye al proxy del admin de `TT-112`. Lo que se fija:
 
-1. **Quién entra**: la institución y la administración de la cafetería, que es
-   lo que `[S11]` concede. La regla vive en el selector, no en la vista.
+1. **Quién entra**: la administración de la cafetería. La institución también
+   consulta restricciones (`[S11]`, `HU-38`), pero en la ficha del padrón: esta
+   pantalla no le servía y se le quitó (`DEC-21`). La regla vive en el
+   selector, no en la vista ni en el menú.
 2. **Que no escriba nada.** `INV-4` es explícito: las restricciones son del
    acudiente y la cafetería no las desactiva. Una acción aquí sería la
    invariante rota en la interfaz.
@@ -59,12 +61,15 @@ def estudiante(nombre="Ana Ruiz", documento="1000000001"):
 
 
 class QuienConsultaLasRestriccionesTest(TestCase):
-    def test_la_institucion_y_la_cafeteria_sí(self):
-        for rol in (Rol.INSTITUCION, Rol.ADMINISTRADOR):
-            with self.subTest(rol=rol):
-                self.assertEqual(
-                    list(estudiantes_con_sus_restricciones(actor=cuenta(rol))), []
-                )
+    def test_la_cafeteria_sí(self):
+        self.assertEqual(
+            list(estudiantes_con_sus_restricciones(actor=cuenta(Rol.ADMINISTRADOR))), []
+        )
+
+    def test_la_institucion_no_entra_por_esta_puerta(self):
+        """`DEC-21`. Las consulta en la ficha de cada estudiante, desde el padrón."""
+        with self.assertRaises(PermissionDenied):
+            estudiantes_con_sus_restricciones(actor=cuenta(Rol.INSTITUCION))
 
     def test_el_acudiente_no_entra_por_esta_puerta(self):
         """Las consulta en `INT-1`, sobre los suyos, no en la lista del colegio."""
@@ -74,7 +79,7 @@ class QuienConsultaLasRestriccionesTest(TestCase):
 
 class LaPantallaDeRestriccionesTest(TestCase):
     def setUp(self):
-        self.actor = cuenta(Rol.INSTITUCION)
+        self.actor = cuenta(Rol.ADMINISTRADOR)
         self.ana = estudiante()
         self.client.force_login(self.actor)
 
@@ -113,3 +118,35 @@ class LaPantallaDeRestriccionesTest(TestCase):
 
         self.assertIn("Ana Ruiz", tabla)
         self.assertNotIn("Otro Estudiante", tabla)
+
+
+class LaInstitucionYaNoTieneEstaPantallaTest(TestCase):
+    """`DEC-21`. Ni en el menú ni por la URL, y la consulta sigue en el padrón."""
+
+    def setUp(self):
+        self.institucion = cuenta(Rol.INSTITUCION)
+        self.ana = estudiante()
+
+    def test_la_url_responde_403(self):
+        self.client.force_login(self.institucion)
+        for ruta in ["restricciones-de-estudiantes", "restricciones-tabla"]:
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.client.get(reverse(ruta)).status_code, 403)
+
+    def test_contraprueba_la_cafeteria_si_entra(self):
+        self.client.force_login(cuenta(Rol.ADMINISTRADOR))
+        self.assertEqual(self.client.get(reverse("restricciones-de-estudiantes")).status_code, 200)
+
+    def test_no_esta_en_su_menu(self):
+        self.client.force_login(self.institucion)
+        padron = self.client.get(reverse("padron")).content.decode()
+        self.assertNotIn(f'href="{reverse("restricciones-de-estudiantes")}"', padron)
+        # Contraprueba: la búsqueda encuentra una entrada del menú que sí está.
+        self.assertIn(f'href="{reverse("acudientes")}"', padron)
+
+    def test_sigue_consultandolas_en_la_ficha_del_padron(self):
+        """`HU-38` para la institución, por su otro camino (`DT-43`)."""
+        self.client.force_login(self.institucion)
+        ficha = self.client.get(reverse("consulta-del-estudiante", args=[self.ana.pk]))
+        self.assertEqual(ficha.status_code, 200)
+        self.assertIn("data-consulta-restricciones", ficha.content.decode())

@@ -393,7 +393,8 @@ def restricciones_de_los_estudiantes(request):
     **Sustituye al proxy del admin** (`TT-112`), que enseñaba lo mismo dentro de
     otra interfaz. La regla de acceso no cambia y no se repite aquí: la impone
     `estudiantes_con_sus_restricciones` (`DT-11`, `DT-15`), que la concede a la
-    institución y a la administración de la cafetería, y a nadie más.
+    administración de la cafetería y a nadie más: la institución las consulta
+    en la ficha de cada estudiante, desde el padrón (`DEC-21`, `DT-43`).
 
     **Solo lee, y no por omisión.** `INV-4` es explícito: las restricciones las
     pone y las quita el acudiente (`HU-10`, `HU-11`, `HU-61`), y ni la cafetería

@@ -3,8 +3,9 @@
 Los dos criterios de `HU-38`:
 
 1. **Los cuatro roles de `[S11]` pueden consultar restricciones.** Cada uno por su
-   interfaz: el acudiente en `INT-1`, el cajero al identificar en `INT-2` y la
-   cafetería y la institución en `INT-3`. `LosCuatroRolesConsultanTest` recorre
+   interfaz: el acudiente en `INT-1`, el cajero al identificar en `INT-2`, la
+   cafetería en `INT-3` y la institución en la ficha del padrón (`DT-43`,
+   `DEC-21`). `LosCuatroRolesConsultanTest` recorre
    los cuatro caminos reales, no una tabla.
 2. **Ninguno salvo el acudiente puede configurarlas ni retirarlas** (`HU-13`). Los
    servicios ya lo cumplen (`restricciones/tests_permisos.py`); lo que se
@@ -108,7 +109,8 @@ class BaseDeConsulta(TestCase):
         )
 
     def cuentas_de_la_administracion(self):
-        return {Rol.ADMINISTRADOR: self.administracion, Rol.INSTITUCION: self.institucion}
+        """Quien consulta la lista de todos en el admin: solo la cafetería (`DEC-21`)."""
+        return {Rol.ADMINISTRADOR: self.administracion}
 
     def fotografia_de_las_tres(self):
         """Lo configurado, contado en la base. Para afirmar que no se movió nada."""
@@ -143,7 +145,20 @@ class LosCuatroRolesConsultanTest(BaseDeConsulta):
         self.assertTrue(restricciones.hay_alguna)
         self.assertEqual([r.alergeno for r in restricciones.alergenos], [self.alergeno])
 
-    def test_la_cafeteria_y_la_institucion_en_la_administracion(self):
+    def test_la_institucion_en_la_ficha_del_padron(self):
+        """`DEC-21`: su camino ya no es el admin, sino la ficha de cada estudiante."""
+        self.client.force_login(self.institucion)
+
+        respuesta = self.client.get(
+            reverse("consulta-del-estudiante", args=[self.estudiante.pk])
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        restricciones = respuesta.context["restricciones"]
+        self.assertTrue(restricciones.hay_alguna)
+        self.assertEqual([r.alergeno for r in restricciones.alergenos], [self.alergeno])
+
+    def test_la_cafeteria_en_la_administracion(self):
         for rol, cuenta in self.cuentas_de_la_administracion().items():
             with self.subTest(rol=rol):
                 self.client.force_login(cuenta)
@@ -155,7 +170,7 @@ class LosCuatroRolesConsultanTest(BaseDeConsulta):
                 self.assertIn(self.estudiante, listado.context["cl"].result_list)
                 self.assertEqual(ficha.status_code, 200)
 
-    def test_y_la_entrada_esta_en_el_indice_de_los_dos(self):
+    def test_y_la_entrada_esta_en_su_indice(self):
         """Una consulta a la que solo se llega sabiendo la URL no está habilitada."""
         for rol, cuenta in self.cuentas_de_la_administracion().items():
             with self.subTest(rol=rol):
@@ -173,7 +188,7 @@ class LosCuatroRolesConsultanTest(BaseDeConsulta):
 class LaPuertaDeLaAdministracionTest(BaseDeConsulta):
     """`TT-111`. El selector de `INT-3` decide quién llega, no el admin."""
 
-    def test_la_cafeteria_y_la_institucion_ven_a_todos(self):
+    def test_la_cafeteria_ve_a_todos(self):
         for rol, cuenta in self.cuentas_de_la_administracion().items():
             with self.subTest(rol=rol):
                 self.assertEqual(
@@ -187,7 +202,7 @@ class LaPuertaDeLaAdministracionTest(BaseDeConsulta):
         Al acudiente le daría los estudiantes ajenos, y eso no lo concede
         `[S11]`: consulta los suyos (`estudiante_a_cargo`).
         """
-        for cuenta in [self.usuario_acudiente, self.cajero]:
+        for cuenta in [self.usuario_acudiente, self.cajero, self.institucion]:
             with self.subTest(rol=cuenta.rol):
                 with self.assertRaises(PermissionDenied):
                     estudiantes_con_sus_restricciones(actor=cuenta)
@@ -203,7 +218,7 @@ class LaPuertaDeLaAdministracionTest(BaseDeConsulta):
 
     def test_lo_precargado_dice_lo_mismo_que_el_selector_de_tt_106(self):
         """Dos lecturas de lo mismo que discreparan serían dos pantallas que se contradicen."""
-        consulta = estudiantes_con_sus_restricciones(actor=self.institucion)
+        consulta = estudiantes_con_sus_restricciones(actor=self.administracion)
 
         for estudiante in [self.estudiante, self.sin_nada]:
             with self.subTest(estudiante=estudiante.nombre):
@@ -216,7 +231,7 @@ class LaPuertaDeLaAdministracionTest(BaseDeConsulta):
                 self.assertEqual(precargadas.hay_alguna, directas.hay_alguna)
 
     def test_sin_limite_es_none_y_no_cero(self):
-        consulta = estudiantes_con_sus_restricciones(actor=self.institucion)
+        consulta = estudiantes_con_sus_restricciones(actor=self.administracion)
 
         self.assertIsNone(restricciones_precargadas(consulta.get(pk=self.sin_nada.pk)).limite)
 
@@ -227,7 +242,7 @@ class LaPuertaDeLaAdministracionTest(BaseDeConsulta):
         lectura por fila crecería con el colegio.
         """
         def leer_todo():
-            for estudiante in estudiantes_con_sus_restricciones(actor=self.institucion):
+            for estudiante in estudiantes_con_sus_restricciones(actor=self.administracion):
                 vigentes = restricciones_precargadas(estudiante)
                 _ = (vigentes.limite, [r.producto.nombre for r in vigentes.productos],
                      [r.alergeno.nombre for r in vigentes.alergenos])
@@ -302,7 +317,7 @@ class LaConsultaNoAbreEscrituraTest(BaseDeConsulta):
     def test_el_admin_niega_la_escritura_aunque_hubiera_permiso(self):
         """La segunda de las dos comprobaciones: el `ModelAdmin` no se fía de la matriz."""
         modelo_admin = RestriccionesDelEstudianteAdmin(RestriccionesDelEstudiante, None)
-        peticion = type("Peticion", (), {"user": self.institucion})()
+        peticion = type("Peticion", (), {"user": self.administracion})()
 
         self.assertFalse(modelo_admin.has_add_permission(peticion))
         self.assertFalse(modelo_admin.has_change_permission(peticion, self.estudiante))
@@ -320,6 +335,16 @@ class QuienNoConsultaEnLaAdministracionTest(BaseDeConsulta):
 
                 self.assertEqual(respuesta.status_code, 302)
                 self.assertIn(reverse("admin:login"), respuesta["Location"])
+
+    def test_la_institucion_ya_no_la_tiene_en_el_admin(self):
+        """`DEC-21`. Entra al admin, pero ni el listado ni la ficha del proxy son suyos."""
+        self.client.force_login(self.institucion)
+
+        self.assertEqual(self.client.get(reverse(LISTADO)).status_code, 403)
+        self.assertEqual(
+            self.client.get(reverse(FICHA, args=[self.estudiante.pk])).status_code, 403
+        )
+        self.assertFalse(self.institucion.has_perm("restricciones.view_restriccionesdelestudiante"))
 
     def test_un_permiso_concedido_por_error_no_basta_sin_el_rol(self):
         """Se le da al cajero `is_staff` y el permiso a mano: el rol lo sigue parando."""

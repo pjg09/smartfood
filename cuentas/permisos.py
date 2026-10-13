@@ -46,11 +46,10 @@ PERMISOS_POR_ROL = {
         # Ver al acudiente de un estudiante es parte de administrarlo. Escribirlo
         # no: la cuenta del acudiente se gestiona desde `cuentas.usuario`.
         "personas.acudiente": ["view"],
-        # «Consultar restricciones de un estudiante: Sí» (`HU-38`, `TT-111`).
-        # **Solo `view`, y no porque se haya elegido no dar más**: el proxy no
-        # tiene otro permiso que conceder (`default_permissions`). Escribirlas
-        # sigue siendo del acudiente (`INV-4`, `HU-13`).
-        "restricciones.restriccionesdelestudiante": ["view"],
+        # **Sin `restricciones.restriccionesdelestudiante`** (`DEC-21`). «Consultar
+        # restricciones de un estudiante: Sí» se sigue cumpliendo (`HU-38`), pero
+        # en la ficha del padrón (`DT-43`), que no pasa por este proxy. La lista
+        # de todos, y su entrada en el admin, son de la cafetería.
     },
     # `USR-4`. «Gestionar catálogo, precios e inventario» y «Consultar reportes
     # de ventas e inventario». El catálogo ya existe (`TT-43`); el inventario y

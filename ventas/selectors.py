@@ -132,8 +132,9 @@ def informacion_de_cobro(*, actor, estudiante):
         # `[S11]` concede **consultar** restricciones a los cuatro roles
         # (`HU-38`), así que exigir el cajero aquí no las protege — las protege
         # el saldo, que sí es «solo al cobrar». Los otros tres roles consultan
-        # por su propia puerta: el acudiente en `INT-1` y la cafetería y la
-        # institución en `INT-3` (`TT-111`, `estudiantes_con_sus_restricciones`).
+        # por su propia puerta: el acudiente en `INT-1`, la cafetería en `INT-3`
+        # (`TT-111`, `estudiantes_con_sus_restricciones`) y la institución en la
+        # ficha del padrón (`DT-43`, `DEC-21`).
         restricciones=restricciones_vigentes(estudiante),
     )
 

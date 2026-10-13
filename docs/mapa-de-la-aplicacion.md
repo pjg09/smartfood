@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-12; la institución deja de tener la pantalla de restricciones (`DEC-21`). Antes, las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -75,8 +75,8 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`). Las familias que ya se fueron solo salen con **Ver retirados** (`DT-44`) | Institución | `DEC-17`, `DT-44` |
 | `/acudientes/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DEC-17` |
 | `/acudientes/<id>/` | La ficha del acudiente **en solo lectura**, al pulsar su fila: sus datos, el estado de su cuenta y sus estudiantes, retirados incluidos. Solo `GET`; **sin saldo ni consumos** | Institución | `DT-44` |
-| `/restricciones/` | Qué tiene bloqueado cada estudiante, **en consulta** (`HU-38`, `INV-4`) | Institución, administración | `DEC-17` |
-| `/restricciones/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución, administración | `DEC-17` |
+| `/restricciones/` | Qué tiene bloqueado cada estudiante, **en consulta** (`HU-38`, `INV-4`). La institución no la tiene: consulta en la ficha del padrón (`DEC-21`) | Administración | `DEC-17`, `DEC-21` |
+| `/restricciones/tabla/` | Fragmento HTMX de esa tabla, filtrada | Administración | `DEC-17` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
@@ -227,16 +227,18 @@ coincidir porque dejaría media pantalla en cada tema.
 | `catalogo.alergeno` | 403 | **200** | 302 | 302 |
 | `inventario.movimientoinventario` | 403 | **200** | 302 | 302 |
 | `inventario.merma` | 403 | **200** | 302 | 302 |
-| `restricciones.restriccionesdelestudiante` | **200** (solo consulta) | **200** (solo consulta) | 302 | 302 |
+| `restricciones.restriccionesdelestudiante` | 403 (`DEC-21`) | **200** (solo consulta) | 302 | 302 |
 | `ventas.venta` | 403 | **200** (solo consulta) | 302 | 302 |
 | `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
 | `/admin/auditoria/` (sin modelo) | 403 | **200** (solo consulta) | 403 | 403 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
-**Dos filas de esta tabla ya no son el camino de nadie** (`DEC-17`): la institución consulta
-acudientes en `/acudientes/` y las restricciones en `/restricciones/`, que son pantallas
-propias con el sistema visual. Los permisos del admin se conservan —son los mismos y los
-impone la misma capa— pero quien trabaja ya no pasa por ahí.
+**La fila de `personas.acudiente` ya no es el camino de nadie** (`DEC-17`): la institución
+consulta a los acudientes en `/acudientes/`, una pantalla propia con el sistema visual. El
+permiso del admin se conserva —es el mismo y lo impone la misma capa—, pero quien trabaja ya
+no pasa por ahí. **Las restricciones, en cambio, la institución ya no las tiene en ningún
+listado** (`DEC-21`): ni el proxy del admin ni `/restricciones/`. Las consulta en la ficha de
+cada estudiante, desde el padrón (`DT-43`).
 
 Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Diez lecturas que
 conviene no perder:
@@ -305,8 +307,9 @@ conviene no perder:
 - **Las restricciones se consultan en el admin y no se escriben en él** (`HU-38`, `INV-4`).
   La única entrada es *Restricciones por estudiante*, un proxy del estudiante **sin más
   permiso que `view`**: Django no crea los de escritura, así que no hay ninguno que
-  conceder por error. Alta, edición y borrado responden `403` a los dos roles. Las tres
-  tablas de restricciones siguen sin registrarse.
+  conceder por error. Alta, edición y borrado responden `403`. **Es solo de la
+  administración**: la institución no tiene ni el permiso (`DEC-21`). Las tres tablas de
+  restricciones siguen sin registrarse.
 
 - **El catálogo es de quien lo vende.** La institución recibe `403`: `[S11]` no le da el
   catálogo, y desde `UX-6` ya no es superusuario, así que la matriz la vincula de verdad.
@@ -367,9 +370,10 @@ masiva**, en `/carga/`, que sigue en la barra lateral. En el admin quedan *Acudi
 *Usuarios* para dar de alta al personal, desactivarlo, reactivarlo y reenviarle la
 invitación.
 
-Y *Restricciones por estudiante*, **solo consulta** (`HU-38`): la misma pantalla que ve la
-administración de la cafetería. Las restricciones son del acudiente, también para el
-colegio (`INV-4`, `HU-13`).
+**Las restricciones, en la ficha de cada estudiante** (`HU-38`, `DT-43`), y en ningún listado:
+la pantalla de restricciones de todos no le servía y se le quitó (`DEC-21`); sigue siendo de
+la administración de la cafetería. Son del acudiente, también para el colegio (`INV-4`,
+`HU-13`).
 
 ### Administración de la cafetería (`USR-4`)
 

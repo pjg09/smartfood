@@ -330,27 +330,33 @@ def restricciones_vigentes(estudiante):
 # | Acudiente     | `INT-1` | los suyos: `estudiante_a_cargo`                    |
 # | Cajero        | `INT-2` | al que identifica: `informacion_de_cobro` (TT-109) |
 # | Administrador | `INT-3` | todos: `estudiantes_con_sus_restricciones`         |
-# | Institución   | `INT-3` | todos: `estudiantes_con_sus_restricciones`         |
+# | Institución   | `INT-3` | uno a uno, en la ficha del padrón (`DT-43`)        |
+#
+# La institución tenía también la lista de todos (`DEC-17`) y dejó de tenerla
+# con `DEC-21`: no la usaba. Sigue consultando —`HU-38` no cambia—, pero
+# estudiante a estudiante: `estudiante_para_la_institucion` decide a quién llega
+# y `restricciones_vigentes` trae las tres.
 
-#: Los dos roles que consultan desde el admin. **No son «los que pueden
-#: consultar»** —esos son los cuatro—, sino los que lo hacen por `INT-3`: el
-#: acudiente no entra al admin (`DT-2`) y el cajero tampoco (`cuentas.0004`).
-CONSULTAN_EN_LA_ADMINISTRACION = (Rol.ADMINISTRADOR, Rol.INSTITUCION)
+#: Quien consulta la lista de todos desde la administración. **No es «quien
+#: puede consultar»** —esos son los cuatro—: el acudiente no entra al admin
+#: (`DT-2`), el cajero tampoco (`cuentas.0004`) y la institución consulta en la
+#: ficha del padrón (`DEC-21`).
+CONSULTAN_EN_LA_ADMINISTRACION = (Rol.ADMINISTRADOR,)
 
 
 def estudiantes_con_sus_restricciones(*, actor):
     """Todos los estudiantes, cada uno con sus restricciones ya traídas (`TT-111`, `HU-38`).
 
-    La consulta de la administración de la cafetería y de la institución, que
-    trabajan en `INT-3` (`DT-2`). **Solo lee**: no hay servicio detrás, y lo que
-    devuelve es el proxy de `RestriccionesDelEstudiante`, cuyo único permiso es
-    `view`.
+    La consulta de la administración de la cafetería, que trabaja en `INT-3`
+    (`DT-2`). **Solo lee**: no hay servicio detrás, y lo que devuelve es el
+    proxy de `RestriccionesDelEstudiante`, cuyo único permiso es `view`.
 
-    ── POR QUÉ LOS DOS VEN A TODOS ─────────────────────────────────────────
+    ── POR QUÉ VE A TODOS ──────────────────────────────────────────────────
     La cafetería atiende a cualquier estudiante del colegio, así que necesita
     saber quién es alérgico al maní antes de que llegue a la caja — no solo el
-    cajero en el momento de cobrar. La institución administra a todos (`HU-44`).
-    Ninguno de los dos tiene un subconjunto natural que filtrar.
+    cajero en el momento de cobrar. No tiene un subconjunto natural que filtrar.
+    La institución también podría verlos a todos, y no pasa por aquí porque no
+    le sirve (`DEC-21`): los consulta uno a uno, en la ficha del padrón.
     ─────────────────────────────────────────────────────────────────────────
 
     **Lo que no autoriza es a más que eso.** Devuelve estudiantes para colgarles
@@ -368,9 +374,9 @@ def estudiantes_con_sus_restricciones(*, actor):
         raise PermissionDenied("Consultar restricciones exige identificarse.")
     if actor.rol not in CONSULTAN_EN_LA_ADMINISTRACION:
         raise PermissionDenied(
-            "Desde la administración consultan las restricciones la cafetería y "
-            "la institución. El acudiente las ve en su panel y el cajero al "
-            "identificar al estudiante (HU-38, [S11])."
+            "La lista de restricciones de todos es de la cafetería. La "
+            "institución las ve en la ficha de cada estudiante, el acudiente en "
+            "su panel y el cajero al identificar al estudiante (HU-38, DEC-21)."
         )
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")

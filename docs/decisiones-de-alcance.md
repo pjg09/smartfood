@@ -12,9 +12,9 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 20 (`DEC-1` … `DEC-20`) |
+| decisiones | 21 (`DEC-1` … `DEC-21`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
 | version | 1.9 |
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-20` |
+| S1 | Decisiones | `DEC-1` … `DEC-21` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -424,6 +424,23 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** Es funcionalidad nueva en el último sprint, con el backlog cerrado. Se registra como `HU-63` antes de construirla.
 
+### `[DEC-21]` La institución deja de tener la lista de restricciones de todos
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-12. **No recorta `[S11]`**: la institución sigue consultando las restricciones de un estudiante (`HU-38`), en la ficha del padrón (`DT-43`). **Corrige a `DEC-17`** en un punto: allí se construyó, para este rol, la pantalla de restricciones.*
+
+**El hecho que lo obliga.** Secretaría no usaba la lista de restricciones de todos los estudiantes: la pregunta que se hace es por **uno**, y desde `DT-43` la ficha de solo lectura del padrón la contesta con las tres restricciones juntas. La entrada del menú era una pantalla más que no servía. La raya de `DEC-17` —una pantalla propia se justifica porque alguien la usa a diario— la deja fuera.
+
+**Decidido:**
+
+- **La institución pierde la pantalla `/restricciones/` y la entrada «Restricciones» de su menú.** Por la URL responde `403`: lo impone `estudiantes_con_sus_restricciones` (`DT-11`), no la ausencia del enlace.
+- **Y el proxy del admin**, *Restricciones por estudiante*, que `DEC-17` había dejado como camino de nadie: se retira de su matriz `restricciones.restriccionesdelestudiante` (`view`).
+- **La consulta sigue**, estudiante a estudiante, en la ficha del padrón. Es la fila de `[S11]` «Consultar restricciones de un estudiante», que nunca pidió una lista.
+- **La pantalla no se borra**: es también la de la administración de la cafetería, que sí ve a todos, porque atiende a cualquier estudiante antes de que llegue a la caja.
+
+**Lo que NO se decide aquí.** No cambia nada de la cafetería, ni del acudiente, ni del cajero. `INV-4` sigue igual: nadie salvo el acudiente escribe una restricción.
+
+**Consecuencia asumida.** Para saber qué estudiantes tienen alguna restricción, la institución tiene que abrirlos de uno en uno: ya no hay una vista que los reúna. **Y su consulta depende ahora de `DT-43`**: sin la ficha de solo lectura, `HU-38` se quedaría sin camino para este rol.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -468,6 +485,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-18` | **No añade alcance: devuelve el que `DEC-9` recortó.** La carga masiva vuelve a entregar las invitaciones, a un servidor de correo local |
 | `DEC-19` | Recuperación de la contraseña olvidada, por enlace de un solo uso enviado al correo del titular |
 | `DEC-20` | Desactivación y reactivación de la cuenta de un acudiente por la institución. Amplía la fila del acudiente en `[S11]`, que solo concedía consulta |
+| `DEC-21` | **No añade alcance ni recorta `[S11]`.** Quita a la institución la pantalla y el proxy de restricciones de todos; las consulta en la ficha del padrón (`DT-43`) |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

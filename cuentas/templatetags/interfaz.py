@@ -114,12 +114,13 @@ MENU_POR_ROL = {
     # `USR-2` entra desde el teléfono (`INT-1`) y a lo suyo: sus estudiantes.
     Rol.ACUDIENTE: (Entrada("mis-estudiantes", "Mis estudiantes", "i-estudiantes"),),
     # `USR-5`: el padrón que secretaría abre a diario (`DT-27`), la carga de
-    # principio de curso (`HU-01`) y las fichas que administra.
+    # principio de curso (`HU-01`) y las fichas que administra. **Sin
+    # «Restricciones»** (`DEC-21`): las consulta en la ficha de cada estudiante,
+    # desde el padrón (`DT-43`).
     Rol.INSTITUCION: (
         Entrada("padron", "Padrón", "i-estudiantes"),
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
         Entrada("acudientes", "Acudientes", "i-personas"),
-        Entrada("restricciones-de-estudiantes", "Restricciones", "i-restriccion"),
         _del_admin("cuentas_usuario", "Usuarios", "i-candado"),
         _del_admin("personas_institucion", "Institución", "i-colegio"),
     ),
