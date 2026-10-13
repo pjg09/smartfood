@@ -1,0 +1,178 @@
+{% comment %} `DT-45`. La tabla del personal y su línea de recuento.
+
+   Fragmento, no página (`DT-16`): lo devuelven `/usuarios/tabla/` a cada tecla
+   del buscador y las tres acciones de cada fila. **El resultado de una acción va
+   dentro**, como en el padrón: lo que quedara fuera no se intercambiaría.
+
+   **Tabla de datos** (`[S2.2]`), con fichas por debajo de `tablet`.
+{% endcomment %}
+
+<div id="usuarios-tabla" class="flex flex-col gap-3">
+
+  {% if desactivada %}
+    <p role="status" data-usuario-desactivado-aviso
+       class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+              px-3 py-2 text-base text-texto">
+      <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-candado"></use></svg>
+      <span>
+        La cuenta de <strong class="font-semibold">{{ desactivada.nombre|default:desactivada.email }}</strong>
+        queda desactivada: ya no entra ni opera. Su historial se conserva.
+      </span>
+    </p>
+  {% endif %}
+
+  {% if reactivada %}
+    <p role="status" data-usuario-reactivado-aviso
+       class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+              px-3 py-2 text-base text-texto">
+      <svg class="mt-0.5 h-4 w-4 shrink-0 text-exito-fuerte" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      <span>
+        La cuenta de <strong class="font-semibold">{{ reactivada.nombre|default:reactivada.email }}</strong>
+        vuelve a estar activa.
+      </span>
+    </p>
+  {% endif %}
+
+  {% if invitada %}
+    <p role="status" data-invitacion-reenviada
+       class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover
+              px-3 py-2 text-base text-texto">
+      <svg class="mt-0.5 h-4 w-4 shrink-0 text-acento-fuerte" aria-hidden="true"><use href="#i-correo"></use></svg>
+      <span>
+        Invitación reenviada a <strong class="font-semibold break-all">{{ invitada.email }}</strong>.
+      </span>
+    </p>
+  {% endif %}
+
+  {% if error %}
+    <p role="alert" data-error-de-usuarios
+       class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+              px-3 py-2 text-base text-error-fuerte">
+      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <span>{{ error }}</span>
+    </p>
+  {% endif %}
+
+  {% comment %} «2 de 5», y las cuentas sin activar en la misma línea: la invitación se
+     envía al crear, pero enviarla no es que se use (`HU-41`). {% endcomment %}
+  <p class="text-base text-texto-suave" data-recuento-de-usuarios>
+    <strong class="font-semibold text-texto">{{ personal|length }}</strong>
+    de {{ total }}
+    {% if total == 1 %}usuario{% else %}usuarios{% endif %}
+    <span id="guardando-en-usuarios" class="htmx-indicator text-sm text-texto-suave">· Guardando…</span>
+    {% if sin_activar %}
+      <span aria-hidden="true" class="px-1 text-borde">·</span>
+      <span class="inline-flex items-center gap-1.5 font-medium text-aviso-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        {{ sin_activar }} sin activar
+      </span>
+    {% endif %}
+  </p>
+
+  {% if not personal %}
+    <div class="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md
+                border border-dashed border-borde p-8 text-center" role="status">
+      <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave
+                   text-acento-fuerte">
+        <svg class="h-6 w-6" aria-hidden="true"><use href="#i-buscar"></use></svg>
+      </span>
+      {% if busqueda %}
+        <p class="text-base font-medium text-texto">Ningún usuario coincide</p>
+        <p class="max-w-md text-sm text-texto-suave">
+          Se buscó <span class="font-mono break-all">{{ busqueda }}</span> en nombre y correo.
+        </p>
+      {% else %}
+        <p class="text-base font-medium text-texto">Todavía no hay personal</p>
+        <p class="max-w-md text-sm text-texto-suave">
+          Las cuentas de cajero y de administración se crean con «Crear usuario».
+        </p>
+      {% endif %}
+    </div>
+  {% else %}
+
+    <ul class="flex flex-col gap-3 tablet:hidden">
+      {% for usuario in personal %}
+        <li data-fila-de-usuario
+            class="overflow-hidden rounded-md border border-borde bg-superficie">
+          <div class="flex items-start justify-between gap-3 px-4 py-3">
+            <div class="flex min-w-0 flex-col">
+              <span class="font-semibold text-texto">{{ usuario.nombre|default:"Sin nombre" }}</span>
+              <span class="text-sm text-texto-suave">{{ usuario.get_rol_display }}</span>
+            </div>
+            {% include "cuentas/partials/usuario-estado.html" %}
+          </div>
+          <div class="flex flex-col gap-2 border-t border-borde bg-superficie-hover px-4 py-3">
+            <span class="text-sm break-all text-texto">{{ usuario.email }}</span>
+            <span class="text-sm text-texto-suave">
+              Último acceso:
+              {% if usuario.last_login %}{{ usuario.last_login|date:"j \d\e F, H:i" }}{% else %}nunca{% endif %}
+            </span>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {% include "cuentas/partials/usuario-acciones.html" %}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="hidden overflow-hidden rounded-md border border-borde tablet:block">
+      <div class="overflow-x-auto">
+        <table class="tabla-datos tabla-md">
+          <thead>
+            <tr class="border-b border-borde bg-primario-suave">
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-personas"></use></svg>
+                  Usuario
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+                  Rol
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-reloj"></use></svg>
+                  Último acceso
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-escudo"></use></svg>
+                  Estado de la cuenta
+                </span>
+              </th>
+              <th scope="col" class="px-4 py-3 text-right">
+                <span class="sr-only">Acciones</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usuario in personal %}
+              <tr data-fila-de-usuario
+                  class="border-b border-borde transition-colors last:border-b-0
+                         even:bg-superficie-hover hover:bg-primario-suave">
+                <td class="px-4 py-3">
+                  <span class="block font-semibold text-texto">{{ usuario.nombre|default:"Sin nombre" }}</span>
+                  <span class="block text-sm break-all text-texto-suave">{{ usuario.email }}</span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-texto">{{ usuario.get_rol_display }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-texto-suave">
+                  {% if usuario.last_login %}{{ usuario.last_login|date:"j \d\e F, H:i" }}{% else %}Nunca{% endif %}
+                </td>
+                <td class="px-4 py-3">{% include "cuentas/partials/usuario-estado.html" %}</td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-4">
+                    {% include "cuentas/partials/usuario-acciones.html" %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</div>

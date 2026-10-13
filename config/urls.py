@@ -14,7 +14,16 @@ from django.views.generic import TemplateView
 from billetera.views import recarga
 from catalogo.views import imagen_del_producto
 from config.salud import salud
-from cuentas.views import RecuperacionDeContrasenaForm, inicio, panel
+from cuentas.views import (
+    RecuperacionDeContrasenaForm,
+    alta_de_personal,
+    desactivacion_de_personal,
+    inicio,
+    invitacion_de_personal,
+    panel,
+    reactivacion_de_personal,
+    usuarios_del_personal,
+)
 from personas.views import (
     acudientes_de_la_carga,
     consulta_del_acudiente,
@@ -184,6 +193,17 @@ urlpatterns = [
     # `DEC-17`. Los acudientes, con la misma composición que el padrón. Dos
     # rutas a la misma vista por lo mismo que allí: lo que cambia es el
     # envoltorio, no lo que se responde (`DT-16`).
+    # `DT-45`. El personal de la cafetería, con la composición del padrón.
+    # Sustituye, para la institución, al listado de usuarios del admin.
+    path("usuarios/", usuarios_del_personal, name="usuarios"),
+    path("usuarios/tabla/", usuarios_del_personal, name="usuarios-tabla"),
+    path("usuarios/nuevo/", alta_de_personal, name="alta-de-personal"),
+    path("usuarios/<uuid:usuario_id>/desactivar/", desactivacion_de_personal,
+         name="desactivacion-de-personal"),
+    path("usuarios/<uuid:usuario_id>/reactivar/", reactivacion_de_personal,
+         name="reactivacion-de-personal"),
+    path("usuarios/<uuid:usuario_id>/invitacion/", invitacion_de_personal,
+         name="invitacion-de-personal"),
     path("acudientes/", acudientes_de_la_carga, name="acudientes"),
     path("acudientes/tabla/", acudientes_de_la_carga, name="acudientes-tabla"),
     # `DT-44`. La ficha del acudiente en solo lectura, al pulsar su fila.

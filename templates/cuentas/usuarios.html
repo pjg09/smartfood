@@ -1,0 +1,88 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} `DT-45`. El personal de la cafetería: cajeros y administración (`HU-40`, `HU-42`).
+
+   **Sustituye, para la institución, al listado de usuarios del admin**, que
+   mezclaba al personal con todos los acudientes y con la propia cuenta de la
+   institución. Aquí solo está a quien se administra desde aquí: los acudientes
+   tienen su pantalla (`DEC-17`) y la institución no se gestiona.
+
+   **Misma composición que el padrón y los acudientes** (`DT-25`, `DT-27`):
+   encabezado, buscador de ancho completo, la acción arriba a la derecha y la
+   tabla debajo. «Crear usuario» abre la modal, como «Cargar un solo estudiante».
+{% endcomment %}
+
+{% block titulo %}Usuarios | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Usuarios</h1>
+      <p class="text-base font-medium text-texto-suave">
+        El personal de la cafetería: quién cobra, quién administra y quién ya activó su cuenta.
+      </p>
+    </header>
+
+    {% comment %} El buscador pide a cada tecla, con 400 ms de espera, y vuelve a pedir la
+       tabla cuando el alta avisa con `personal-cambiado`. Sin JavaScript, Enter. {% endcomment %}
+    <form method="get" action="{% url 'usuarios' %}"
+          hx-get="{% url 'usuarios-tabla' %}"
+          hx-trigger="input changed delay:400ms from:#busqueda, personal-cambiado from:body"
+          hx-target="#usuarios-tabla"
+          hx-swap="outerHTML"
+          hx-indicator="#buscando-usuarios"
+          class="flex flex-col gap-3">
+
+      <div class="flex flex-col gap-3 tablet:flex-row tablet:items-end">
+        <div class="flex grow flex-col gap-1">
+          <label for="busqueda" class="text-base font-medium text-texto">Buscar</label>
+          <div class="relative">
+            <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave"
+                 aria-hidden="true"><use href="#i-buscar"></use></svg>
+            <input type="search" id="busqueda" name="busqueda" value="{{ busqueda }}"
+                   autocomplete="off"
+                   placeholder="Nombre o correo"
+                   class="h-12 w-full rounded-md border border-borde bg-superficie pr-3 pl-10
+                          text-base text-texto transition-colors
+                          placeholder:text-texto-suave
+                          hover:border-acento focus:border-acento focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 tablet:shrink-0 tablet:pb-1">
+          <p id="buscando-usuarios" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
+
+          {% comment %} Contorno y no sólido, como en el padrón (`[S2.1]`): la pieza principal
+             de la pantalla es la tabla. `hx-indicator="this"` evita que herede el
+             «Buscando…» del formulario en el que vive. {% endcomment %}
+          <button type="button" data-crear-usuario
+                  hx-get="{% url 'alta-de-personal' %}"
+                  hx-target="#cuerpo-de-la-ficha"
+                  hx-swap="innerHTML"
+                  hx-indicator="this"
+                  class="ml-auto inline-flex items-center gap-2 rounded-md border border-borde
+                         tablet:ml-0
+                         bg-superficie px-4 py-2 text-base font-semibold text-texto
+                         transition-colors hover:border-primario hover:bg-superficie-hover">
+            <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-personas"></use></svg>
+            Crear usuario
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="sr-only">Buscar</button>
+    </form>
+
+    {% include "cuentas/partials/usuarios-tabla.html" %}
+  </div>
+
+  {% comment %} La misma modal que el padrón y los acudientes, con los mismos nombres: la
+     abre y la cierra el mismo código de `assets/js/interfaz.js`, que además
+     valida en vivo lo que lleve `data-formulario-validado`. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Cuenta del personal"
+          class="m-auto w-[min(36rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

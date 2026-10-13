@@ -121,7 +121,9 @@ MENU_POR_ROL = {
         Entrada("padron", "Padrón", "i-estudiantes"),
         Entrada("carga-de-estudiantes", "Cargar estudiantes", "i-cargar"),
         Entrada("acudientes", "Acudientes", "i-personas"),
-        _del_admin("cuentas_usuario", "Usuarios", "i-candado"),
+        # `DT-45`. Pantalla propia y no el listado del admin, que mezclaba al
+        # personal con los acudientes y con la propia institución.
+        Entrada("usuarios", "Usuarios", "i-candado"),
         _del_admin("personas_institucion", "Institución", "i-colegio"),
     ),
     # `USR-4`: la cafetería. El catálogo y el inventario son lo que administra;

@@ -371,3 +371,19 @@ de un acudiente (`[S5]`), **que no tiene vuelta**: en la base de trabajo, mejor 
 
 Lo que tiene que verse en cualquier caso: un acudiente con el **acceso cortado** sale como
 **«Acceso cortado»**, en rojo, aquí y en el padrón, y nunca como «Activa».
+
+## [S18] Dar de alta, desactivar y reactivar al personal
+
+Como institución, en `/usuarios/` (`DT-45`). La lista trae **solo** cajeros y administración:
+ni acudientes ni la cuenta de la institución.
+
+**Crear usuario** abre la modal: nombre, correo y rol, con **Crear usuario** deshabilitado
+mientras falte algo. **No pide contraseña**: al crear sale la invitación, que se lee en
+Mailpit (<http://localhost:8025>), y el titular define la suya desde el enlace (`HU-41`).
+Un correo que ya existe —también con otras mayúsculas— se rechaza junto al campo. **La
+cuenta creada no se borra desde la aplicación**: en la base de trabajo, crea solo las que
+quieras conservar.
+
+En cada fila, **Desactivar** pide confirmación y deja la cuenta sin entrar ni operar; **Reactivar** la
+devuelve (`HU-42`). **Reenviar invitación** solo aparece a quien todavía no definió su
+contraseña.

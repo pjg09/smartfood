@@ -271,7 +271,10 @@ class LaAccionDelPadronTest(BaseDeReactivacion):
         }
         de_reactivacion = {r for r in rutas if "reactiv" in r}
 
-        self.assertEqual(de_reactivacion, {REACTIVAR})
+        # La segunda es de **cuentas del personal**, no de estudiantes (`DT-45`,
+        # `HU-42`), y solo la alcanza la institución: `cuentas/tests_usuarios.py`
+        # comprueba que cualquier otro rol recibe `403`.
+        self.assertEqual(de_reactivacion, {REACTIVAR, "reactivacion-de-personal"})
         self.assertIn(DESACTIVAR_ACUDIENTE, rutas)
 
     def test_a_un_retirado_lo_rechaza_y_lo_dice_en_la_tabla(self):

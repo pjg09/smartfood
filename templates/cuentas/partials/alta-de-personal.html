@@ -1,0 +1,112 @@
+{% comment %} `DT-45`, `HU-40`, `HU-41`. Dar de alta a un cajero o a un administrador.
+
+   **Fragmento, no página** (`DT-16`): lo devuelven `GET` y `POST` de
+   `/usuarios/nuevo/`, en la misma modal que el padrón y los acudientes. Al
+   crear vuelve **vacío**, con el resultado arriba, listo para el siguiente; la
+   tabla se entera por `HX-Trigger: personal-cambiado`.
+
+   **No se pide contraseña, y es la historia entera** (`HU-41`, `DEC-3`): la
+   cuenta nace sin ella y el titular la define con la invitación que le llega.
+   Quien la crea no la conoce nunca.
+
+   **«Crear usuario» nace deshabilitado** y se habilita cuando correo y nombre
+   están escritos; mientras no, cada uno dice en rojo qué le falta. Lo decide
+   `assets/js/interfaz.js` con `data-validar`; la regla —el formato del correo,
+   que no se repita— está en el servidor.
+{% endcomment %}
+
+<div id="alta-de-personal" data-alta-de-personal class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Crear usuario</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% url 'alta-de-personal' %}"
+        hx-target="#alta-de-personal"
+        hx-swap="outerHTML"
+        hx-indicator="#creando-usuario"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+      {% if creada %}
+        <div role="status" data-usuario-creado
+             class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave
+                    px-3 py-2 text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <p>
+            Cuenta de <strong class="font-semibold">{{ creada.get_rol_display|lower }}</strong> creada
+            para {{ creada.nombre }}. La invitación salió a
+            <span class="font-semibold break-all">{{ creada.email }}</span>: define su contraseña
+            desde ahí, y nadie más la conocerá.
+          </p>
+        </div>
+      {% endif %}
+
+      {% if formulario.non_field_errors %}
+        <div role="alert" data-error-del-alta
+             class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+                    px-3 py-2 text-base text-error-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div>{% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      {% include "cuentas/partials/campos-de-personal.html" %}
+
+      {% comment %} Dos tarjetas y no un desplegable: son dos opciones y cada una necesita
+         una línea que diga qué concede. Radios de verdad, con `sr-only`: se eligen
+         con teclado y flechas sin JavaScript. Cajero viene marcado porque es el que
+         menos concede. {% endcomment %}
+      <fieldset class="flex flex-col gap-2">
+        <legend class="mb-1 text-base font-medium text-texto">Rol</legend>
+        {% for valor, etiqueta in formulario.fields.rol.choices %}
+          <label class="flex cursor-pointer items-start gap-3 rounded-md border border-borde p-4
+                        transition-colors hover:bg-superficie-hover
+                        has-[:checked]:border-primario has-[:checked]:bg-primario-suave
+                        has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-acento">
+            <input type="radio" name="{{ formulario.rol.html_name }}" value="{{ valor }}"
+                   data-rol="{{ valor }}"
+                   {% if formulario.rol.value == valor %}checked{% endif %}
+                   class="mt-1 h-4 w-4 accent-primario">
+            <span class="flex flex-col gap-0.5">
+              <span class="text-base font-semibold text-texto">{{ etiqueta }}</span>
+              <span class="text-sm text-texto-suave">
+                {% if valor == "cajero" %}
+                  Cobra en el punto de venta, entrega reservas y cuadra la caja. No entra a la administración.
+                {% else %}
+                  Administra el catálogo y el inventario y consulta ventas, cierres y auditoría.
+                {% endif %}
+              </span>
+            </span>
+          </label>
+        {% endfor %}
+        {% if formulario.rol.errors %}
+          <p class="text-sm font-medium text-error-fuerte">{{ formulario.rol.errors|join:" " }}</p>
+        {% endif %}
+      </fieldset>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="creando-usuario" class="htmx-indicator mr-auto text-sm text-texto-suave">Creando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if creada %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha disabled
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Crear usuario
+      </button>
+    </div>
+  </form>
+</div>

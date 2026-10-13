@@ -1,0 +1,27 @@
+{% comment %} `DT-45`. El estado de una cuenta del personal, en una sola pieza.
+
+   Lo pintan la tabla y la ficha de móvil: escrito dos veces, el día que cambie
+   una copia la otra se queda vieja. **Desactivada va primero** (`HU-42`):
+   desactivar no borra la contraseña, y preguntando solo por ella una cuenta
+   cortada se leería «Activa» —el defecto que tuvo el estado del acudiente—.
+   «Sin activar» es ámbar: no hay nada roto, falta que use su invitación (`HU-41`).
+{% endcomment %}
+{% if not usuario.is_active %}
+  <span data-usuario-desactivado
+        class="inline-flex items-center gap-1.5 text-base font-medium whitespace-nowrap text-error-fuerte">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+    Desactivada
+  </span>
+{% elif usuario.tiene_contrasena_definida %}
+  <span data-usuario-activo
+        class="inline-flex items-center gap-1.5 text-base font-medium whitespace-nowrap text-exito-fuerte">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+    Activa
+  </span>
+{% else %}
+  <span data-usuario-sin-activar
+        class="inline-flex items-center gap-1.5 text-base font-medium whitespace-nowrap text-aviso-fuerte">
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    Sin activar
+  </span>
+{% endif %}

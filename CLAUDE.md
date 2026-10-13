@@ -124,11 +124,14 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con cuatro pantallas propias fuera de él**: el padrón de la institución, que es la que
+**con cinco pantallas propias fuera de él**: el padrón de la institución, que es la que
 secretaría abre a diario (`DT-27`), la cola de reservas pendientes, que comparten dos roles
-que no comparten interfaz (`DT-34`), y —desde `DEC-17`— los acudientes y las restricciones.
+que no comparten interfaz (`DT-34`), —desde `DEC-17`— los acudientes y las restricciones, y
+el personal de la cafetería en `/usuarios/` (`DT-45`).
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
-solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`).
+solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). `/usuarios/` es
+la excepción declarada: no es diaria, pero la del admin mezclaba al personal con todos los
+acudientes.
 
 **Si tras escribir hay que refrescar otra zona**, la respuesta lleva `HX-Trigger: <evento>` y esa
 zona escucha `<evento> from:body`: el endpoint sigue devolviendo un solo fragmento (`DT-40`, la
@@ -313,10 +316,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.665 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.688 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.665, no corrió entera.
+menos de esas 1.688, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

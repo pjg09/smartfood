@@ -403,6 +403,19 @@ def reenviar_invitacion(usuario):
     invitar(usuario)
 
 
+def reenviar_invitacion_de_personal(*, actor, usuario):
+    """Reenvía la invitación a un cajero o administrador, desde `/usuarios/` (`DT-45`).
+
+    `reenviar_invitacion` **no recibe actor**: la protegía el permiso del admin,
+    que era su único camino. Con una pantalla propia, quién puede lo tiene que
+    decir el servicio (`DT-15`), y es lo mismo que para desactivar: la
+    institución, activa, y sobre personal de la cafetería (`HU-41`, `HU-42`).
+    """
+    _comprobar_actor_institucional(actor, "reenviar la invitación a")
+    _comprobar_es_personal(usuario)
+    reenviar_invitacion(usuario)
+
+
 __all__ = [
     "Rol",
     "asignar_grupo_del_rol",
@@ -418,5 +431,6 @@ __all__ = [
     "reactivar_acudiente",
     "reactivar_cuenta",
     "reenviar_invitacion",
+    "reenviar_invitacion_de_personal",
     "sincronizar_grupos_y_permisos",
 ]

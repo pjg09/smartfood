@@ -213,7 +213,11 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.client.force_login(cuenta(Rol.INSTITUCION))
 
     def _pantalla_del_admin(self):
-        return self.client.get("/admin/cuentas/usuario/").content.decode()
+        # La de acudientes: «Usuarios» ya no es del admin (`DT-45`), y la URL de
+        # su listado saldría en la propia página que se mira.
+        respuesta = self.client.get("/admin/personas/acudiente/")
+        self.assertEqual(respuesta.status_code, 200)
+        return respuesta.content.decode()
 
     def test_una_pantalla_del_admin_trae_barra_cabecera_y_tema(self):
         cuerpo = self._pantalla_del_admin()
@@ -226,8 +230,8 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         """La barra del admin es la misma del resto, no una copia.
 
         Se comprueban las dos clases de entrada que conviven desde `DEC-17`:
-        una pantalla propia —el padrón— y una que sigue dentro del admin. La de
-        acudientes ya no vale como ejemplo: dejó de ser del admin.
+        una pantalla propia —el padrón, los usuarios— y una que sigue dentro del
+        admin, la de la institución.
         """
         from django.urls import reverse as resolver
 
@@ -235,4 +239,6 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
 
         self.assertIn(resolver("padron"), cuerpo)
         self.assertIn(resolver("acudientes"), cuerpo)
-        self.assertIn(resolver("admin:cuentas_usuario_changelist"), cuerpo)
+        self.assertIn(resolver("usuarios"), cuerpo)
+        self.assertNotIn(resolver("admin:cuentas_usuario_changelist"), cuerpo)
+        self.assertIn(resolver("admin:personas_institucion_changelist"), cuerpo)

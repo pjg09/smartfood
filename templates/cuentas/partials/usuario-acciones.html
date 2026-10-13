@@ -1,0 +1,57 @@
+{% comment %} `DT-45`. Lo que se hace sobre una cuenta del personal, desde su fila.
+
+   Las tres acciones que el admin tenía como acciones masivas (`HU-41`, `HU-42`),
+   ahora una por fila y a un clic. Cada una devuelve la tabla entera, y por eso
+   lleva la búsqueda dentro: responder la lista completa le borraría a quien
+   actúa lo que estaba buscando.
+
+   **Desactivar pide confirmación y reactivar no**, por lo mismo que en el
+   padrón (`DT-30`): lo primero deja a alguien sin poder trabajar; lo segundo se
+   deshace con el botón de al lado. Reenviar la invitación solo se dibuja a quien
+   todavía no la usó: a los demás el servicio se la negaría.
+{% endcomment %}
+{% if usuario.is_active %}
+  {% if not usuario.tiene_contrasena_definida %}
+    <form hx-post="{% url 'invitacion-de-personal' usuario.id %}"
+          hx-target="#usuarios-tabla" hx-swap="outerHTML"
+          hx-indicator="#guardando-en-usuarios"
+          class="inline-flex">
+      {% csrf_token %}
+      <input type="hidden" name="busqueda" value="{{ busqueda }}">
+      <button type="submit" data-reenviar-invitacion
+              class="inline-flex items-center gap-1.5 text-base font-semibold
+                     text-acento-fuerte hover:underline">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correo"></use></svg>
+        Reenviar invitación
+      </button>
+    </form>
+  {% endif %}
+  <form hx-post="{% url 'desactivacion-de-personal' usuario.id %}"
+        hx-target="#usuarios-tabla" hx-swap="outerHTML"
+        hx-confirm="Desactivar la cuenta de {{ usuario.nombre|default:usuario.email }}. Deja de poder entrar y operar de inmediato; su historial se conserva. ¿Continuar?"
+        hx-indicator="#guardando-en-usuarios"
+        class="inline-flex">
+    {% csrf_token %}
+    <input type="hidden" name="busqueda" value="{{ busqueda }}">
+    <button type="submit" data-desactivar-usuario
+            class="inline-flex items-center gap-1.5 text-base font-semibold
+                   text-error-fuerte hover:underline">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+      Desactivar
+    </button>
+  </form>
+{% else %}
+  <form hx-post="{% url 'reactivacion-de-personal' usuario.id %}"
+        hx-target="#usuarios-tabla" hx-swap="outerHTML"
+        hx-indicator="#guardando-en-usuarios"
+        class="inline-flex">
+    {% csrf_token %}
+    <input type="hidden" name="busqueda" value="{{ busqueda }}">
+    <button type="submit" data-reactivar-usuario
+            class="inline-flex items-center gap-1.5 text-base font-semibold
+                   text-acento-fuerte hover:underline">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      Reactivar
+    </button>
+  </form>
+{% endif %}

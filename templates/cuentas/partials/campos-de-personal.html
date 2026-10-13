@@ -1,0 +1,44 @@
+{% comment %} `DT-45`. Nombre y correo de una cuenta del personal, en la modal del alta.
+
+   **La validación en el navegador es una comodidad, no la regla** (`DT-15`): el
+   script de la modal lee `data-validar`; el formato del correo y que no se
+   repita los decide el servidor.
+{% endcomment %}
+{% with campo=formulario.nombre %}
+  <div class="flex flex-col gap-1" data-campo>
+    <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Nombre completo</label>
+    <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+           value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+           data-validar data-maximo="{{ campo.field.max_length }}"
+           data-aviso-vacio="Escribe el nombre de quien va a usar la cuenta."
+           data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+           class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto
+                  transition-colors hover:border-acento focus:border-acento focus:outline-none
+                  {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+    <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+    {% if campo.errors %}
+      <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+    {% endif %}
+  </div>
+{% endwith %}
+
+{% with campo=formulario.email %}
+  <div class="flex flex-col gap-1" data-campo>
+    <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Correo</label>
+    <input type="email" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+           value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+           data-validar data-maximo="{{ campo.field.max_length }}"
+           data-aviso-vacio="Escribe el correo: es adonde llega la invitación."
+           data-aviso-largo="El correo no puede pasar de {{ campo.field.max_length }} caracteres."
+           class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto
+                  transition-colors hover:border-acento focus:border-acento focus:outline-none
+                  {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+    <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+    {% if campo.errors %}
+      <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+    {% endif %}
+    <p class="text-sm text-texto-suave">
+      Le llega la invitación para definir su contraseña. En local la atrapa Mailpit.
+    </p>
+  </div>
+{% endwith %}

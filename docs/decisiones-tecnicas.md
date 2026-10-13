@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` y `DT-44` el 2026-10-12 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-45` el 2026-10-12 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 44 (`DT-1` … `DT-44`) |
+| decisiones | 45 (`DT-1` … `DT-45`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-44`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-45`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -975,3 +975,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **«Acceso cortado» es un estado de la cuenta**, en rojo, en esta lista, en el padrón y en las dos fichas. Cortar el acceso no borra la contraseña, y el estado solo preguntaba por ella: desde `DEC-20`, una cuenta cortada se pintaba **«Activa»** en las dos tablas.
 
 **Consecuencia asumida.** **La marca «Retirado» no se vio sobre la base de trabajo**: haría falta una baja, que no tiene vuelta. Se miró con Playwright sirviendo al navegador los fragmentos que Django pintó dentro de una transacción deshecha; el resto, contra el stack. Las pruebas son `personas/tests_acudiente_consulta.py`.
+
+#### `[DT-45]` `/usuarios/`: el personal de la cafetería, con la composición del padrón
+
+**Aplica** `DEC-17`, que puso «usuarios» entre las pantallas propias de la institución. **Sustituye**, en su menú, al listado `cuentas.usuario` del admin. **No amplía el alcance ni toca `[S11]`**: alta (`HU-40`), invitación (`HU-41`) y acceso (`HU-42`) siguen siendo los mismos y los mismos servicios.
+
+**Razón:** decisión del equipo, tomada el 2026-10-12. El listado del admin mezclaba al personal con **todos los acudientes y con la propia cuenta de la institución**: para encontrar a los dos o tres cajeros había que filtrar entre cientos de familias, y se le ofrecían acciones sobre cuentas que no son de personal y que los servicios rechazan.
+
+**Decidido:**
+
+- **`/usuarios/` lista solo `ROLES_DE_PERSONAL`** —cajero y administración—, los mismos que aceptan los servicios de alta y acceso. Lo decide `cuentas.selectors.personal_de_la_cafeteria`, que exige la institución (`DT-11`). Las cuentas desactivadas salen siempre, con su estado.
+- **La composición es la del padrón y los acudientes** (`DT-25`, `DT-27`): buscador en vivo por nombre y correo, recuento «N de M», tabla con rol, último acceso y estado de la cuenta, y fichas por debajo de `tablet`.
+- **«Crear usuario» abre la modal de alta**, la misma `<dialog>` y el mismo código que el alta del padrón (`DT-40`): nombre, correo y rol en dos tarjetas, validados en vivo, y **ningún campo de contraseña** (`HU-41`, `DEC-3`). Un correo repetido, sin distinguir mayúsculas, se rechaza. Al crear, la modal vuelve vacía con el resultado y la tabla se entera por `HX-Trigger: personal-cambiado`.
+- **Las tres acciones del admin pasan a la fila**: desactivar —con confirmación—, reactivar y reenviar la invitación, esta solo a quien no la ha usado. Devuelven la tabla con la búsqueda que había, como el padrón (`DT-29`). Se lee la lista antes de escribir, así que una cuenta que no es de personal da `404`.
+- **`reenviar_invitacion` no recibía `actor`**: su único camino era el admin, que la protegía con su permiso. `reenviar_invitacion_de_personal` le pone la puerta —la institución, sobre personal— y es la que llama la pantalla (`DT-15`).
+- **El admin de usuarios no se retira**: sale del menú y sigue respondiendo por su URL, como el de acudientes tras `DEC-17`.
+
+**Consecuencia asumida.** **Es una excepción a la raya de `DEC-17`**, que solo sustituye una pantalla del admin cuando alguien la usa a diario, y el alta de personal no es diaria: se acepta porque la del admin no servía para lo que se usa, no por la frecuencia. Y **el alta con éxito no se probó en el navegador sobre la base de trabajo**, porque una cuenta creada no se borra desde la aplicación: se sirvió al navegador la respuesta que Django dio dentro de una transacción deshecha; el resto, contra el stack. Las pruebas son `cuentas/tests_usuarios.py`.
