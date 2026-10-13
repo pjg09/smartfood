@@ -10,7 +10,7 @@
 | documentos_fuente | `../CLAUDE.md`, de donde sale; `./definicion-de-terminado.md` (`DoD-5`); `./trampas-del-stack.md` (`[S4]`); `./decisiones-tecnicas.md` (`DT-37`) |
 | actualizado | 2026-10-01 |
 | idioma | es-CO |
-| version | 1.0 |
+| version | 1.1 |
 
 **Léelo antes de escribir o tocar una prueba.** Recoge dónde va, cómo se ejecuta y
 **siete patrones** que el proyecto aprendió a fuerza de pruebas que pasaban sin probar nada,
@@ -166,7 +166,7 @@ dirección pública se prueba sin servidor, porque prefirmar es un cálculo loca
 
 ---
 
-## [S4] Comprobar a mano, sin navegador
+## [S4] Comprobar a mano, fuera de la suite
 
 Para un flujo real —el admin, sobre todo—, `django.test.Client` por stdin dentro del
 contenedor, añadiendo el host que usa el cliente:
@@ -184,11 +184,73 @@ PY
 Sin esa llamada la respuesta llega con `200`, y leerla revienta con un
 `TypeError: 'NoneType' object is not subscriptable` que no menciona la causa.
 
+### [S4.1] Mirar una pantalla que escribe, sin escribir
+
+Cancelar un pedido, bloquear un producto o cobrar **no tienen vuelta** en la base de trabajo:
+dejan asientos que la aplicación no borra. Pulsar «Bloquear» en el navegador para mirar una
+pantalla dejó el 2026-10-13 dos asientos de auditoría que nadie había pedido. **Para ver la
+pantalla con esos datos no hace falta escribirlos**: se generan las respuestas dentro de una
+transacción que se deshace y se le sirven al navegador.
+
+Primero, las respuestas, con los datos que haga falta crear y sin que quede ninguno. El
+script va **en un fichero**, no en un heredoc: un fragmento de documentación con una línea
+`PY` cierra el heredoc antes de tiempo, y bash ejecuta el resto como órdenes.
+
+```python
+# generar.py — se ejecuta con:
+#   docker compose exec -T app python manage.py shell < generar.py
+import json
+from django.db import transaction
+from django.test import Client
+from django.urls import reverse
+
+salida = {}
+with transaction.atomic():
+    # … crear lo necesario por los servicios: recargar, reservar, cancelar …
+    cliente = Client(HTTP_HOST="localhost")
+    cliente.force_login(acudiente)
+    salida["pagina"] = cliente.get(reverse("reserva", args=[estudiante.id])).content.decode()
+    salida["fragmento"] = cliente.get(url_del_fragmento).content.decode()
+    transaction.set_rollback(True)
+open("/tmp/respuestas.json", "w").write(json.dumps(salida))
+```
+
+Y `docker compose cp app:/tmp/respuestas.json .` para traerlas al host.
+
+Después, Playwright contra el stack, con la sesión iniciada de verdad: **un `goto` al origen
+antes de `set_content`**, para que los estilos, el JavaScript y las cookies resuelvan contra
+`localhost:8000`, y **`page.route` para los fragmentos** que la página pedirá por HTMX —el
+servidor no los tiene, porque se deshicieron—:
+
+```python
+datos = json.load(open("respuestas.json"))
+
+def servir(ruta):
+    if "/fragmento/" in ruta.request.url:
+        return ruta.fulfill(
+            status=200, body=datos["fragmento"], content_type="text/html; charset=utf-8"
+        )
+    return ruta.continue_()
+
+pagina.route("**/*", servir)
+pagina.goto("http://localhost:8000/salud/")
+pagina.set_content(datos["pagina"], wait_until="load")
+```
+
+Tres cosas que costaron una ronda:
+
+- **`wait_for_load_state("load")`, no `"networkidle"`**: con HTMX y las imágenes del catálogo
+  no llega nunca, y el script se queda colgado sin decir dónde.
+- **`python -u` y sin `| tail`**: si el script se corta, `tail` no ha soltado nada y no se
+  sabe hasta dónde llegó — ni si llegó a pulsar algo que escribe.
+- **Una imagen `loading="lazy"` sale en blanco** en la captura, y más con `set_content`: no es
+  que no cargue. Se espera `naturalWidth > 0` antes de concluir nada.
+
 ---
 
 ## [S5] Lo que la suite no ve
 
-Tres cosas pasan las 1.500 pruebas y aun así pueden estar mal. Tienen su propia forma de
+Tres cosas pasan la suite entera y aun así pueden estar mal. Tienen su propia forma de
 comprobarse:
 
 | Qué | Por qué la suite no lo ve | Cómo se comprueba |

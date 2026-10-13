@@ -60,7 +60,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las sesenta y dos trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las sesenta y tres trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -180,7 +180,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las sesenta y dos están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las sesenta y tres están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -238,10 +238,15 @@ uv run python manage.py <lo que sea>       # aplicación con uv (`[S1.0.2]` de d
 
 Desde un agente, **siempre `exec -T`**: sin él, Docker pide una terminal que no hay y el comando
 falla. Un script de Django va por stdin —`docker compose exec -T app python manage.py shell <<'PY'`—
-y así las comillas dobles no rompen nada. Tras editar código, `runserver` se reinicia: un `curl`
+y así las comillas dobles no rompen nada. **Si el script lleva texto que contiene una línea `PY`**
+—un fragmento de documentación—, va en un fichero: esa línea cierra el heredoc y bash ejecuta el
+resto como órdenes. Tras editar código, `runserver` se reinicia: un `curl`
 puede dar `000` unos segundos; espera a que `/salud/` conteste antes de concluir nada. **Una
 prueba que falla con `assertContains` vuelca la página entera**: filtra la suite con
 `grep -E '^(FAIL|ERROR):|^Ran|^OK|FAILED'` y abre el detalle solo de la que falle.
+`pkill -f <patrón>` mata la propia shell del agente si el patrón aparece en el comando (sale con
+144). `response.context` solo existe en el ejecutor de pruebas: en `manage.py shell` es `None`,
+así que se lee el HTML (`[S4]` de `docs/escribir-pruebas.md`).
 
 **No arranques un `runserver` en el host con `app` levantado**: se pelean por el puerto 8000.
 **El correo no sale de la máquina**: lo atrapa Mailpit y se lee en <http://localhost:8025>
@@ -323,14 +328,16 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.790 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.790 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
 menos de esas 1.790, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
-servicio»— pasa sola el día que deja de proteger.
+servicio»— pasa sola el día que deja de proteger. La contraprueba sale barata por script: cada
+mutación, un reemplazo de ancla única; se corren las pruebas de la app, se cuenta cuántas caen y se
+restaura el fichero. Una mutación que no tumba ninguna es una regla sin guardián.
 
 **Una vista que llama a un selector sin `hoy=` es una bomba de tiempo para sus pruebas de pantalla**:
 sus datos van fechados sobre un `HOY` fijo y la ventana se calcula con el reloj. Se inyecta en la
@@ -369,6 +376,13 @@ oscuro—. La receta de `file://` (`[S5.2]`) queda para cuando no hay stack.
 **Hazlo siempre que toques una pantalla.** Mirarlas encontró quince defectos en los Sprints 4
 y 5 —dos de ellos cifras equivocadas con el total de al lado correcto— y **ninguno rompía
 una prueba**.
+**Mirar una pantalla que escribe, sin escribir**: genera las respuestas con `django.test.Client`
+en una transacción deshecha y sírvelas a Playwright —`page.set_content` tras un `goto` al origen,
+y `page.route` para los fragmentos—; la receta está en `[S4.1]` de `docs/escribir-pruebas.md`.
+Pulsar «Bloquear» en el navegador dejó dos asientos de auditoría en la base de trabajo.
+Playwright desde un agente: `wait_for_load_state("load")`, no `"networkidle"`, que se cuelga;
+`python -u` y sin `| tail`, o si se corta no queda salida; una imagen `loading="lazy"` sale en
+blanco en la captura: espera `naturalWidth > 0` antes de concluir que no carga.
 
 ## Definición de Terminado
 

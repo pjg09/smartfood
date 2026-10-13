@@ -761,14 +761,22 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     una columna de existencias tras cada movimiento, y hay que seguirla hasta el total de
     arriba. Es el escenario crítico **`TST-4`**, y con él los cuatro de `ENT-05` quedan
     demostrados. `HU-29`, `INV-3`.
-21. **Como acudiente, reservar** desde la tarjeta *Reservas* de su estudiante: se eligen
-    cantidades y se paga. **El saldo baja al reservar**, no al recoger, y queda en el
-    historial. `HU-23`.
-    Antes de eso conviene **bloquear un producto y tratar de reservarlo**: la reserva se
-    rechaza igual que la venta, porque pasa por la misma validación. Ninguno de los criterios
-    de `HU-23` lo menciona, y es el punto que más dice del diseño.
+21. **Como acudiente, reservar** desde la tarjeta *Reservas* de su estudiante. La pantalla
+    es un punto de venta: filtros arriba, tarjetas con *Agregar* que pasa a «− n +», y el
+    ticket al lado, que el servidor recalcula a cada pulsación. **No enseña existencias**:
+    la reserva es un encargo que la cafetería prepara (`DEC-24`). Se paga, y **el saldo baja
+    al reservar**, no al recoger. `HU-23`.
+    Antes de eso conviene **bloquear un producto**: su tarjeta lo dice en rojo y no deja
+    agregarlo. Y aunque se forzara, la reserva se rechazaría igual que la venta, porque pasa
+    por la misma validación. Ninguno de los criterios de `HU-23` lo menciona, y es el punto
+    que más dice del diseño.
+    Debajo están **sus pedidos**: pulsar uno abre el detalle, y si está por recoger se
+    **cancela** ahí mismo con un motivo; el importe vuelve a la billetera en el acto y el
+    ticket lo enseña. `HU-65`, `HU-66`.
 22. **Como cajero, *Reservas***: la cola de lo que hay que preparar, de lo más antiguo a lo
-    más reciente. `HU-24`.
+    más reciente. `HU-24`. Lo que no se vaya a poder preparar **se cancela desde aquí**, con
+    su motivo, y el acudiente lo verá en el detalle de su pedido (`HU-67`). Conviene dejar
+    sin cancelar el pedido que se entrega en el paso siguiente.
 23. **Escanear la tarjeta de ese estudiante** en el punto de venta: su pedido sale **antes
     del saldo**. Pulsar *Entregar* y comparar: **el saldo no se mueve** y las existencias sí.
     Intentarlo otra vez lo rechaza. `HU-25`.

@@ -10,7 +10,7 @@
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -202,6 +202,12 @@ pero solo muerden dentro del admin.
 - **Tras tocar plantillas del admin hay que `manage.py estilos_del_admin`**, no
   `tailwind build`: son dos hojas y aquel solo conoce la de `TAILWIND_CLI_SRC_CSS` (`DT-36`).
   Y después, `collectstatic`, o se sirve la anterior.
+- **Filtrar `get_queryset` de un `ModelAdmin` también esconde la ficha.** La vista de
+  edición busca el objeto con el mismo `get_queryset` que el listado, así que lo que se saca
+  del listado deja de abrirse: el admin responde que «no existe» y redirige al índice. Se
+  quitaron las reservas canceladas del reporte de ventas (`DEC-24`) y el enlace de la
+  auditoría a esa venta murió sin que nada fallara. Si el listado se filtra y la ficha no,
+  `get_object` busca en el `QuerySet` entero (`VentaAdmin`, `DT-48`).
 
 ---
 

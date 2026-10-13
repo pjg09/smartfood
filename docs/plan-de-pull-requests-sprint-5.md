@@ -11,7 +11,7 @@
 | tipo_documento | Documento derivado de planificación. **No es un artefacto de Scrum** |
 | sprint | **5 de 5 — el último** · semanas 14 – 15 · **Entrega final · semana 16** (`EVA-5`, 30 %) |
 | tareas cubiertas | 33 de 33 (`TT-155` … `TT-187`) |
-| pull requests | 13 (`PR-01` … `PR-13`), más **4 fuera del backlog** (`[S7]`) |
+| pull requests | 13 (`PR-01` … `PR-13`), más el **trabajo fuera del backlog** de `[S7]` |
 | idioma | es-CO |
 | version | 1.1 |
 
@@ -535,7 +535,8 @@ el plan no previó. Son cinco bloques: **el rediseño de la navegación** (`#359
 2026-09-30), **el entorno en contenedores** (`#364`), **el correo local con la recuperación
 de contraseña** (`#365`), **la ficha del estudiante en el padrón** (`#369`) y **el cambio de
 cómo se integra**: la CI deja de correr pruebas (`#368`) y, desde `DT-41`, se empuja directo
-a `main` sin Pull Requests. Lo que entra después ya no tiene número de PR.
+a `main` sin Pull Requests. Lo que entra después ya no tiene número de PR: las pantallas de la
+institución (2026-10-12) y la reserva como encargo con sus pedidos cancelables (2026-10-13).
 
 Los del rediseño los pidió el dueño del producto al ver la aplicación de un tirón. Todos se
 registraron **antes** de construirlos —como alcance (`DEC-n`) o como decisión técnica
@@ -558,13 +559,15 @@ no venga de una historia.
 | `#370` | `docs/main-sin-proteccion` | La documentación deja de afirmar que `main` está protegida: las reglas de GitHub están desactivadas | — |
 | — | `main` (`4e333da`) | Se empuja directo a `main`, sin ramas ni Pull Requests; se reescribe todo lo que exigía el flujo anterior. El primer commit integrado así | `DT-41` |
 | — | `main` | Las pantallas de la institución: fichas de solo lectura en el padrón y en acudientes, `/usuarios/` en lugar del admin con alta y edición en modal, fuera las pantallas de restricciones y de institución, y el alta de un solo acudiente. El buscador del admin filtra mientras se escribe | `DT-42` … `DT-46`, `DEC-21` … `DEC-23`, **`HU-64`** |
+| — | `main` | La reserva como encargo: deja de mirar existencias y se monta como un punto de venta —filtros, tarjetas con su ficha nutricional y ticket calculado por el servidor—, con los pedidos debajo. Un pedido pendiente se cancela con motivo, por el acudiente desde su modal o por la cafetería desde la cola, y el importe vuelve a la billetera. Además: el panel vuelve al estudiante con el que se trabajaba, las imágenes de producto llegan a restricciones y a la reserva, y las miniaturas se amplían en una modal | `DEC-24`, `DT-47`, `DT-48`, **`HU-65` … `HU-67`** |
 
-**Tres traen historia, `#365` con `HU-62`, `#369` con `HU-63` y el último con `HU-64`**, y son
-los únicos de la tabla que añaden una capacidad: recuperar la contraseña olvidada, cortar el
-acceso de un acudiente y darlo de alta sin archivo de carga. Cada una se registró con su
-decisión (`DEC-19`, `DEC-20`, `DEC-23`) antes de construirla y está `☑` en `[S4]` del backlog
-de historias, **pero ninguna tiene tareas `TT-nn`**: entraron con el sprint
-cerrado de trabajo y no se repartieron. `#365` devuelve además a `HU-03` el criterio que
+**Cuatro traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
+institución con `HU-64` y la reserva como encargo con `HU-65` … `HU-67`**, y son los únicos de
+la tabla que añaden una capacidad: recuperar la contraseña olvidada, cortar el acceso de un
+acudiente, darlo de alta sin archivo de carga, y ver y cancelar los pedidos anticipados con
+devolución. Cada una se registró con su decisión (`DEC-19`, `DEC-20`, `DEC-23`, `DEC-24`)
+antes de construirla y está `☑` en `[S4]` del backlog de historias, **pero ninguna tiene
+tareas `TT-nn`**: entraron con el sprint cerrado de trabajo y no se repartieron. `#365` devuelve además a `HU-03` el criterio que
 `DEC-9` recortó (`DEC-18`).
 
 **Los cuatro del rediseño no amplían `[S11]`.** Entregan lo que la matriz ya concedía; lo que cambia
@@ -573,11 +576,11 @@ decidió envolver el admin sin reescribirlo, y aquello reescribe las pantallas d
 deja escrita la raya: una pantalla propia sustituye a una del admin **solo cuando alguien la
 usa a diario**.
 
-**Qué queda abierto.** El rol institución tiene dos secciones que siguen en el admin y que
-`DEC-17` deja para después, porque escriben y necesitan formulario propio: **usuarios** e
-**institución**. Los **estudiantes** ya no: su alta y su edición viven en la ficha del padrón
-desde `#369` (`DT-40`). No hay tarea que cubra las dos que quedan: si se construyen, hace falta
-decidir antes si entran en este sprint o en la entrega.
+**Qué queda abierto.** Del rol institución, nada en el admin: **la institución ya no tiene
+ninguna entrada del admin en su menú** (`DEC-22`). Los estudiantes se dan de alta y se editan
+en la ficha del padrón (`#369`, `DT-40`), el personal en `/usuarios/` (`DT-45`, `DT-46`), y la
+pantalla de los datos de la institución se retiró porque nadie la usaba (`DEC-22`). Lo que
+sigue abierto está en el `ANEXO B` de `./decisiones-de-alcance.md`, no aquí.
 
 > **Esto no cambia el avance de `[S3]`.** Las 33 tareas del sprint siguen siendo 33, y las
 > finalizadas, las que digan sus marcas. Este anexo cuenta trabajo, no tareas.

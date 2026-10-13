@@ -106,7 +106,8 @@ Después, `docker compose up` otra vez: migra y siembra desde cero.
 ### [S1.2] Dejar el punto de venta listo para cobrar
 
 **`sembrar` no crea existencias ni saldo**, y hasta que las haya el punto de venta no puede
-cobrar: los dieciséis productos salen «Sin existencias» y cualquier venta se rechaza.
+cobrar: los dieciséis productos salen «Sin existencias» y cualquier venta se rechaza. **La
+reserva solo necesita el saldo**: es un encargo y no mira existencias (`DT-47`).
 
 No es un descuido del seed. **Ninguna de las dos cifras es un campo**: el saldo es la suma de
 los movimientos de la billetera (`DT-4`, `INV-2`) y las existencias, la de los movimientos de
