@@ -1,4 +1,5 @@
-{% comment %} `DT-45`. Nombre y correo de una cuenta del personal, en la modal del alta.
+{% comment %} `DT-45`, `DT-46`. Nombre y correo de una cuenta del personal: lo que comparten
+   el alta y la edición. Escrito una vez para que las dos pidan lo mismo y avisen igual.
 
    **La validación en el navegador es una comodidad, no la regla** (`DT-15`): el
    script de la modal lee `data-validar`; el formato del correo y que no se
@@ -38,7 +39,17 @@
       <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
     {% endif %}
     <p class="text-sm text-texto-suave">
-      Le llega la invitación para definir su contraseña. En local la atrapa Mailpit.
+      {% if usuario %}
+        {% comment %} En la edición, lo que cambia el correo (`DT-46`): es con lo que entra,
+           y la invitación ya enviada deja de valer. {% endcomment %}
+        {% if usuario.tiene_contrasena_definida %}
+          Es con lo que entra: si lo cambias, desde ahora inicia sesión con el nuevo.
+        {% else %}
+          Si lo cambias, la invitación que ya salió deja de valer y se envía otra al nuevo.
+        {% endif %}
+      {% else %}
+        Le llega la invitación para definir su contraseña. En local la atrapa Mailpit.
+      {% endif %}
     </p>
   </div>
 {% endwith %}

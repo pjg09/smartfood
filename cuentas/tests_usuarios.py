@@ -16,8 +16,11 @@ from django.test import TestCase
 from django.urls import reverse
 
 from cuentas.models import Rol, Usuario
+from django.contrib.auth.tokens import default_token_generator
+
 from cuentas.services import (
     crear_cuenta,
+    editar_cuenta_de_personal,
     reenviar_invitacion_de_personal,
     sincronizar_grupos_y_permisos,
 )
@@ -250,3 +253,87 @@ class ElReenvioTienePuertaTest(BaseDeUsuarios):
         with self.assertRaises(ValueError):
             reenviar_invitacion_de_personal(actor=self.actor, usuario=acudiente_sin_activar)
 
+
+class LaEdicionTest(BaseDeUsuarios):
+    """`DT-46`. Nombre y correo, por su servicio; el rol no se toca."""
+
+    def editar(self, usuario, **datos):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(reverse("edicion-de-personal", args=[usuario.pk]), datos)
+
+    def test_la_modal_trae_lo_que_hay_y_no_ofrece_el_rol(self):
+        cuerpo = self.client.get(
+            reverse("edicion-de-personal", args=[self.cajero.pk])
+        ).content.decode()
+        self.assertIn("data-edicion-de-personal", cuerpo)
+        self.assertIn('value="cajero@example.com"', cuerpo)
+        self.assertNotIn('name="rol"', cuerpo)
+        # Contraprueba: el alta sí lo ofrece.
+        self.assertIn('name="rol"', self.client.get(reverse("alta-de-personal")).content.decode())
+
+    def test_guarda_nombre_y_correo_y_avisa_a_la_tabla(self):
+        respuesta = self.editar(self.cajero, nombre="Luis Corregido", email="luis@example.com", rol=Rol.ADMINISTRADOR)
+
+        self.cajero.refresh_from_db()
+        self.assertEqual((self.cajero.nombre, self.cajero.email), ("Luis Corregido", "luis@example.com"))
+        self.assertEqual(self.cajero.rol, Rol.CAJERO)  # el `rol` enviado se ignora
+        self.assertFalse(self.cajero.is_staff)
+        self.assertEqual(respuesta["HX-Trigger"], "personal-cambiado")
+        self.assertIn("data-cuenta-guardada", respuesta.content.decode())
+
+    def test_con_contrasena_no_se_invita(self):
+        self.editar(self.cajero, nombre="Luis Cajero", email="luis@example.com")
+        self.assertEqual(mail.outbox, [])
+
+    def test_sin_contrasena_la_invitacion_vieja_caduca_y_sale_otra(self):
+        self.admin_cafeteria.is_active = True
+        self.admin_cafeteria.save(update_fields=["is_active"])
+        token_viejo = default_token_generator.make_token(self.admin_cafeteria)
+        # Contraprueba: antes del cambio, el enlace enviado vale.
+        self.assertTrue(default_token_generator.check_token(self.admin_cafeteria, token_viejo))
+
+        respuesta = self.editar(self.admin_cafeteria, nombre="Rosa", email="rosa@example.com")
+
+        self.admin_cafeteria.refresh_from_db()
+        self.assertFalse(default_token_generator.check_token(self.admin_cafeteria, token_viejo))
+        self.assertEqual([m.to for m in mail.outbox], [["rosa@example.com"]])
+        self.assertIn("data-invitacion-al-correo-nuevo", respuesta.content.decode())
+
+    def test_cambiar_solo_una_mayuscula_tambien_reinvita(self):
+        """El token se calcula sobre el correo exacto."""
+        self.editar(self.admin_cafeteria, nombre="Rosa", email="Admin@example.com")
+        self.assertEqual([m.to for m in mail.outbox], [["Admin@example.com"]])
+
+    def test_un_correo_de_otra_cuenta_se_rechaza(self):
+        respuesta = self.editar(self.cajero, nombre="Luis", email="MARTA@example.com")
+        self.assertIn("data-error-del-servidor", respuesta.content.decode())
+        self.cajero.refresh_from_db()
+        self.assertEqual(self.cajero.email, "cajero@example.com")
+
+    def test_ningun_otro_rol_y_solo_sobre_personal(self):
+        for ajeno in [self.acudiente, self.actor]:
+            with self.subTest(cuenta=ajeno.rol):
+                url = reverse("edicion-de-personal", args=[ajeno.pk])
+                self.assertEqual(self.client.get(url).status_code, 404)
+
+        self.client.force_login(self.cajero)
+        respuesta = self.editar(self.cajero, nombre="Me cambio yo", email="yo@example.com")
+        self.assertEqual(respuesta.status_code, 403)
+        self.cajero.refresh_from_db()
+        self.assertEqual(self.cajero.nombre, "Luis Cajero")
+
+    def test_el_servicio_tiene_su_puerta(self):
+        with self.assertRaises(PermissionDenied):
+            editar_cuenta_de_personal(
+                actor=self.cajero, usuario=self.admin_cafeteria, nombre="X", email="x@example.com"
+            )
+        with self.assertRaises(ValueError):
+            editar_cuenta_de_personal(
+                actor=self.actor, usuario=self.acudiente, nombre="X", email="x@example.com"
+            )
+
+    def test_la_fila_lleva_editar(self):
+        cuerpo = self.tabla().content.decode()
+        url = reverse("edicion-de-personal", args=[self.cajero.pk])
+        # Dos: la tabla de escritorio y la ficha de móvil.
+        self.assertEqual(cuerpo.count(f'hx-get="{url}"'), 2)

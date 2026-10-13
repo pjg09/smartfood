@@ -403,6 +403,47 @@ def reenviar_invitacion(usuario):
     invitar(usuario)
 
 
+@transaction.atomic
+def editar_cuenta_de_personal(*, actor, usuario, nombre, email):
+    """Corrige el nombre o el correo de un cajero o administrador (`DT-46`).
+
+    Lo hacía el formulario del admin escribiendo directamente, sin servicio; con
+    `/usuarios/` pasa por aquí, y con la misma puerta que el resto del personal:
+    la institución, activa, sobre `ROLES_DE_PERSONAL` (`HU-42`, `DT-15`). **El rol
+    no se edita**: arrastra el grupo de permisos y el acceso al admin, y eso se
+    decide al dar de alta (`crear_cuenta_de_personal`).
+
+    ── EL CORREO ES CON LO QUE SE ENTRA, Y ADONDE LLEGA LA INVITACIÓN ───────
+    Cambiarlo cambia el usuario con el que esa persona inicia sesión. Y **deja
+    sin valor la invitación ya enviada**: el token de Django incluye el correo,
+    así que el enlace que llegó a la dirección vieja deja de funcionar. Por eso,
+    si la cuenta todavía no tiene contraseña, se invita de nuevo a la nueva: sin
+    eso quedaría una cuenta que nadie puede activar.
+    ─────────────────────────────────────────────────────────────────────────
+
+    Devuelve si se reenvió la invitación. Lanza `ValueError` si el correo ya es
+    de otra cuenta, sin distinguir mayúsculas.
+    """
+    _comprobar_actor_institucional(actor, "editar")
+    _comprobar_es_personal(usuario)
+
+    email = Usuario.objects.normalize_email(email.strip())
+    if Usuario.objects.filter(email__iexact=email).exclude(pk=usuario.pk).exists():
+        raise ValueError("Ya hay una cuenta con ese correo.")
+
+    # Exacto y no sin mayúsculas: el token se calcula sobre el correo tal cual,
+    # así que cambiar solo una mayúscula también invalida la invitación enviada.
+    cambia_el_correo = email != usuario.email
+    usuario.nombre = nombre.strip()
+    usuario.email = email
+    usuario.save(update_fields=["nombre", "email"])
+
+    if cambia_el_correo and not usuario.tiene_contrasena_definida:
+        invitar(usuario)
+        return True
+    return False
+
+
 def reenviar_invitacion_de_personal(*, actor, usuario):
     """Reenvía la invitación a un cajero o administrador, desde `/usuarios/` (`DT-45`).
 
@@ -425,6 +466,7 @@ __all__ = [
     "crear_cuenta_de_personal",
     "desactivar_acudiente",
     "desactivar_cuenta",
+    "editar_cuenta_de_personal",
     "enviar_recuperacion",
     "generar_invitacion",
     "invitar",

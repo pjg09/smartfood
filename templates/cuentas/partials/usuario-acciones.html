@@ -10,6 +10,16 @@
    deshace con el botón de al lado. Reenviar la invitación solo se dibuja a quien
    todavía no la usó: a los demás el servicio se la negaría.
 {% endcomment %}
+{% comment %} `DT-46`. Editar abre la modal: no escribe, pide el formulario. {% endcomment %}
+<button type="button" data-editar-usuario
+        hx-get="{% url 'edicion-de-personal' usuario.id %}"
+        hx-target="#cuerpo-de-la-ficha"
+        hx-swap="innerHTML"
+        class="inline-flex items-center gap-1.5 text-base font-semibold
+               text-acento-fuerte hover:underline">
+  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+  Editar
+</button>
 {% if usuario.is_active %}
   {% if not usuario.tiene_contrasena_definida %}
     <form hx-post="{% url 'invitacion-de-personal' usuario.id %}"

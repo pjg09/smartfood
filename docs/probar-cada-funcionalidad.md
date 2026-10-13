@@ -384,6 +384,9 @@ Un correo que ya existe —también con otras mayúsculas— se rechaza junto al
 cuenta creada no se borra desde la aplicación**: en la base de trabajo, crea solo las que
 quieras conservar.
 
-En cada fila, **Desactivar** pide confirmación y deja la cuenta sin entrar ni operar; **Reactivar** la
+En cada fila, **Editar** abre la modal con el nombre y el correo; el rol se ve y no se cambia
+(`DT-46`). Si cambias el correo de alguien que todavía no activó su cuenta, sale una
+invitación nueva a la dirección nueva —se ve en Mailpit— y la anterior ya no funciona.
+**Desactivar** pide confirmación y deja la cuenta sin entrar ni operar; **Reactivar** la
 devuelve (`HU-42`). **Reenviar invitación** solo aparece a quien todavía no definió su
 contraseña.

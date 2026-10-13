@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`); 61 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-12; `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,10 +43,10 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las sesenta y una rutas
+## [S2] Las sesenta y dos rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **55 rutas propias** que resuelve Django fuera del
+los mismos colores desde `DT-23`. Son las **56 rutas propias** que resuelve Django fuera del
 admin, todas, y **6 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna.
 
@@ -78,6 +78,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/usuarios/` | El personal de la cafetería —cajeros y administración—, **sin acudientes ni la institución**: rol, último acceso y estado de la cuenta | Institución | `DT-45` |
 | `/usuarios/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DT-45` |
 | `/usuarios/nuevo/` | La modal de alta: nombre, correo y rol. **Sin contraseña**: la define el titular con la invitación | Institución | `DT-45`, `HU-40`, `HU-41` |
+| `/usuarios/<id>/editar/` | La modal de edición: nombre y correo. **El rol no se edita.** Si cambia el correo de quien no activó su cuenta, la invitación vieja caduca y sale otra | Institución | `DT-46` |
 | `/usuarios/<id>/desactivar/` | `POST`. Revoca el acceso; el historial se conserva | Institución | `DT-45`, `HU-42` |
 | `/usuarios/<id>/reactivar/` | `POST`. Devuelve el acceso | Institución | `DT-45`, `HU-42` |
 | `/usuarios/<id>/invitacion/` | `POST`. Reenvía la invitación a quien no definió su contraseña | Institución | `DT-45`, `HU-41` |
@@ -142,6 +143,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/acudientes/<id>/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/usuarios/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/usuarios/nuevo/` | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/usuarios/<id>/editar/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/usuarios/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/<id>/desactivar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -382,7 +384,9 @@ su pantalla— ni la propia institución. Cada fila dice el rol, el último acce
 de la cuenta —activa, sin activar o desactivada—, y lleva **Desactivar** (con confirmación),
 **Reactivar** y, a quien no usó su invitación, **Reenviar invitación** (`HU-41`, `HU-42`).
 **«Crear usuario» abre la modal de alta**: nombre, correo y rol, y **ninguna contraseña**,
-que la define el titular con la invitación (`HU-40`, `HU-41`).
+que la define el titular con la invitación (`HU-40`, `HU-41`). **Editar**, en cada fila,
+corrige el nombre y el correo, nunca el rol (`DT-46`): si cambia el correo de quien todavía
+no activó su cuenta, la invitación vieja caduca y sale otra a la nueva dirección.
 
 En el admin le quedan *Acudientes*, de solo consulta, e *Institución*, para sus datos.
 

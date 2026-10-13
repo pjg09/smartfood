@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-45` el 2026-10-12 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 45 (`DT-1` … `DT-45`) |
+| decisiones | 46 (`DT-1` … `DT-46`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-45`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-46`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -991,4 +991,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **`reenviar_invitacion` no recibía `actor`**: su único camino era el admin, que la protegía con su permiso. `reenviar_invitacion_de_personal` le pone la puerta —la institución, sobre personal— y es la que llama la pantalla (`DT-15`).
 - **El admin de usuarios no se retira**: sale del menú y sigue respondiendo por su URL, como el de acudientes tras `DEC-17`.
 
-**Consecuencia asumida.** **Es una excepción a la raya de `DEC-17`**, que solo sustituye una pantalla del admin cuando alguien la usa a diario, y el alta de personal no es diaria: se acepta porque la del admin no servía para lo que se usa, no por la frecuencia. Y **el alta con éxito no se probó en el navegador sobre la base de trabajo**, porque una cuenta creada no se borra desde la aplicación: se sirvió al navegador la respuesta que Django dio dentro de una transacción deshecha; el resto, contra el stack. Las pruebas son `cuentas/tests_usuarios.py`.
+**Consecuencia asumida.** **Es una excepción a la raya de `DEC-17`**, que solo sustituye una pantalla del admin cuando alguien la usa a diario, y el alta de personal no es diaria: se acepta porque la del admin no servía para lo que se usa, no por la frecuencia. Editar el nombre y el correo llega con `DT-46`. Y **el alta con éxito no se probó en el navegador sobre la base de trabajo**, porque una cuenta creada no se borra desde la aplicación: se sirvió al navegador la respuesta que Django dio dentro de una transacción deshecha; el resto, contra el stack. Las pruebas son `cuentas/tests_usuarios.py`.
+
+#### `[DT-46]` El nombre y el correo del personal se editan en `/usuarios/`, por un servicio
+
+**Completa** `DT-45`: lo único que el admin de usuarios hacía y la pantalla nueva no. **No amplía el alcance**: la institución ya podía editar esas cuentas (`cuentas.usuario`, `change`).
+
+**Razón:** decisión del equipo, tomada el 2026-10-12. Sin esto, corregir una errata en el nombre de un cajero obligaba a volver al admin por una URL que ya no está en el menú.
+
+**Decidido:**
+
+- **«Editar», en cada fila, abre la modal** con nombre y correo —los mismos campos que el alta, en un parcial compartido— y el rol y el estado de solo lectura. `GET` y `POST` de `/usuarios/<id>/editar/` devuelven la modal (`DT-16`); al guardar, la tabla se entera por `HX-Trigger: personal-cambiado`.
+- **Pasa por `editar_cuenta_de_personal`**, con la puerta del resto del personal (`DT-15`). El admin escribía estos cambios directamente, sin servicio.
+- **El rol no se edita.** Arrastra el grupo de permisos y el acceso al admin, que se deciden al dar de alta; un `rol` enviado a mano se ignora.
+- **Un correo de otra cuenta se rechaza**, sin distinguir mayúsculas, en el formulario y otra vez en el servicio.
+- **Cambiar el correo de quien no ha definido su contraseña lo vuelve a invitar.** El token de Django incluye el correo **exacto**, así que la invitación ya enviada deja de valer —también si solo cambia una mayúscula—, y sin otra la cuenta no la podría activar nadie. A quien ya tiene contraseña no se le escribe: el correo nuevo es, desde ese momento, con lo que inicia sesión.
+
+**Consecuencia asumida.** **A quien ya entra no se le avisa** de que su usuario cambió: lo sabrá quien lo cambió, que es quien se lo tiene que decir. Es el mismo punto abierto que los demás avisos (`ANEXO B` de `./decisiones-de-alcance.md`).

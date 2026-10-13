@@ -20,6 +20,7 @@ from cuentas.services import (
     ROLES_DE_PERSONAL,
     crear_cuenta_de_personal,
     desactivar_cuenta,
+    editar_cuenta_de_personal,
     enviar_recuperacion,
     reactivar_cuenta,
     reenviar_invitacion_de_personal,
@@ -124,6 +125,29 @@ class AltaDePersonalForm(forms.Form):
         return email
 
 
+class EdicionDePersonalForm(forms.Form):
+    """Lo que se corrige de una cuenta del personal (`DT-46`): nombre y correo.
+
+    El rol no está: arrastra los permisos y el acceso al admin, y se decide al
+    dar de alta. Las mismas longitudes que el alta, por los mismos campos.
+    """
+
+    email = forms.EmailField(label="Correo", max_length=254)
+    nombre = forms.CharField(label="Nombre completo", max_length=150)
+
+    def __init__(self, *args, usuario, **kwargs):
+        self.usuario = usuario
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        """Que no sea de otra cuenta. El servicio lo vuelve a comprobar (`DT-15`)."""
+        email = self.cleaned_data["email"]
+        otras = Usuario.objects.filter(email__iexact=email).exclude(pk=self.usuario.pk)
+        if otras.exists():
+            raise forms.ValidationError("Ya hay una cuenta con ese correo.")
+        return email
+
+
 def _contexto_del_personal(actor, *, busqueda=""):
     """Lo que la tabla necesita, venga de la página, del buscador o de una acción.
 
@@ -196,6 +220,52 @@ def alta_de_personal(request):
         return _alta(request, formulario)
 
     respuesta = _alta(request, creada=usuario)
+    respuesta["HX-Trigger"] = "personal-cambiado"
+    return respuesta
+
+
+def _edicion(request, usuario, formulario=None, **resultado):
+    if formulario is None:
+        formulario = EdicionDePersonalForm(
+            usuario=usuario, initial={"nombre": usuario.nombre, "email": usuario.email}
+        )
+    return render(request, "cuentas/partials/edicion-de-personal.html", {
+        "usuario": usuario,
+        "formulario": formulario,
+        **resultado,
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edicion_de_personal(request, usuario_id):
+    """Corrige el nombre o el correo de una cuenta del personal (`DT-46`).
+
+    `GET` pinta la modal y `POST` guarda; **las dos devuelven la modal**
+    (`DT-16`). Se lee la lista antes de nada, como en las acciones: el selector
+    exige la institución, y una cuenta que no es de personal da `404`.
+    """
+    usuario = get_object_or_404(personal_de_la_cafeteria(actor=request.user), pk=usuario_id)
+
+    if request.method == "GET":
+        return _edicion(request, usuario)
+
+    formulario = EdicionDePersonalForm(request.POST, usuario=usuario)
+    if not formulario.is_valid():
+        return _edicion(request, usuario, formulario)
+
+    datos = formulario.cleaned_data
+    try:
+        reinvitada = editar_cuenta_de_personal(
+            actor=request.user, usuario=usuario, nombre=datos["nombre"], email=datos["email"]
+        )
+    except ValueError as error:
+        formulario.add_error(None, str(error))
+        usuario.refresh_from_db()
+        return _edicion(request, usuario, formulario)
+
+    usuario.refresh_from_db()
+    respuesta = _edicion(request, usuario, guardada=True, reinvitada=reinvitada)
     respuesta["HX-Trigger"] = "personal-cambiado"
     return respuesta
 

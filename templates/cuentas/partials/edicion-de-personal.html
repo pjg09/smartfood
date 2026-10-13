@@ -1,0 +1,92 @@
+{% comment %} `DT-46`. Corregir el nombre o el correo de una cuenta del personal.
+
+   **Fragmento, no página** (`DT-16`): lo devuelven `GET` y `POST` de
+   `/usuarios/<id>/editar/`, en la misma modal que el alta, con los mismos dos
+   campos (`campos-de-personal.html`). Al guardar vuelve con el resultado dentro
+   y la tabla se entera por `HX-Trigger: personal-cambiado`.
+
+   **El rol se enseña y no se edita**: arrastra el grupo de permisos y el acceso
+   al admin, y eso se decide al dar de alta. Cambiarlo es otra cuenta.
+{% endcomment %}
+
+<div id="edicion-de-personal" data-edicion-de-personal class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Editar a {{ usuario.nombre|default:usuario.email }}</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% url 'edicion-de-personal' usuario.id %}"
+        hx-target="#edicion-de-personal"
+        hx-swap="outerHTML"
+        hx-indicator="#guardando-la-cuenta"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+      {% if guardada %}
+        <div role="status" data-cuenta-guardada
+             class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave
+                    px-3 py-2 text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <p>
+            Cambios guardados.
+            {% if reinvitada %}
+              <span data-invitacion-al-correo-nuevo>
+                La invitación salió de nuevo a
+                <span class="font-semibold break-all">{{ usuario.email }}</span>; la anterior ya no vale.
+              </span>
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+
+      {% if formulario.non_field_errors %}
+        <div role="alert" data-error-de-la-edicion
+             class="flex items-start gap-2 rounded-md border border-error bg-error-suave
+                    px-3 py-2 text-base text-error-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <div>{% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      {% include "cuentas/partials/campos-de-personal.html" %}
+
+      <dl class="grid grid-cols-1 gap-4 rounded-md bg-superficie-hover p-4 tablet:grid-cols-2">
+        <div class="flex flex-col gap-0.5">
+          <dt class="text-sm font-medium text-texto-suave">Rol</dt>
+          <dd class="text-base text-texto" data-rol-de-la-cuenta>{{ usuario.get_rol_display }}</dd>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <dt class="text-sm font-medium text-texto-suave">Estado de la cuenta</dt>
+          <dd>{% include "cuentas/partials/usuario-estado.html" %}</dd>
+        </div>
+      </dl>
+      <p class="-mt-3 text-sm text-texto-suave">
+        El rol no se cambia: decide los permisos y si entra a la administración. Quien cambie de
+        puesto necesita otra cuenta.
+      </p>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="guardando-la-cuenta" class="htmx-indicator mr-auto text-sm text-texto-suave">Guardando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if guardada %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
