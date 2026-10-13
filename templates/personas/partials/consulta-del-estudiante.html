@@ -1,0 +1,212 @@
+{% load dinero %}
+{% comment %} `DT-43`. La ficha del estudiante en solo lectura, al pulsar su fila del padrón.
+
+   **Fragmento, no página** (`DT-16`): lo devuelve `GET /padron/<id>/` y cae en la
+   misma modal que la ficha de edición. «Editar», abajo, pide esa otra ficha al
+   mismo cuerpo: se pasa de mirar a cambiar sin cerrar nada.
+
+   **Ni un solo campo**, ni siquiera de solo lectura: un control con borde se lee
+   como editable. Todo es texto en una lista de definiciones.
+
+   **Lo que no está, y no por olvido: el saldo, los consumos y las recargas.** En
+   `[S11]` la institución no consulta el saldo de nadie; es del acudiente. La
+   línea del pie lo dice, para que secretaría no lo busque.
+{% endcomment %}
+
+<div id="consulta-del-estudiante" data-consulta-del-estudiante
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Ficha del estudiante</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+    {% comment %} `HU-57`. **Cuadrada y grande**: aquí la cara es el dato que secretaría
+       compara con quien tiene delante, como en el punto de venta (`[S4]` del
+       sistema visual). Sin fotografía, la inicial ocupa el sitio. {% endcomment %}
+    <div class="flex flex-col items-start gap-4 tablet:flex-row">
+      <div class="h-32 w-32 shrink-0 overflow-hidden rounded-md border border-borde bg-superficie-hover">
+        {% if estudiante.tiene_foto %}
+          <img src="{{ estudiante.url_de_la_foto }}" alt="Foto de {{ estudiante.nombre }}"
+               data-foto-de-la-consulta class="h-full w-full object-cover">
+        {% else %}
+          <span aria-hidden="true"
+                class="flex h-full w-full items-center justify-center font-display text-4xl
+                       text-texto-suave">{{ estudiante.nombre|first|upper }}</span>
+        {% endif %}
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-1">
+        <p class="font-display text-xl break-words text-texto">{{ estudiante.nombre }}</p>
+        <p class="font-mono text-base tabular-nums text-texto-suave">{{ estudiante.documento }}</p>
+
+        {% comment %} El estado dicho entero y no solo la marca de la fila: aquí cabe el
+           porqué y el desde cuándo. Mismos colores que `padron-estado-del-estudiante.html`. {% endcomment %}
+        {% if estudiante.esta_de_baja %}
+          <p data-consulta-retirado class="mt-1 text-sm font-medium text-aviso-fuerte">
+            Retirado desde el {{ estudiante.dado_de_baja_en|date:"j \d\e F \d\e Y" }}
+          </p>
+        {% elif not estudiante.puede_operar %}
+          <p data-consulta-desactivado class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-error-fuerte">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-escudo"></use></svg>
+            Desactivado: su tarjeta no compra
+          </p>
+        {% else %}
+          <p data-consulta-activo class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-exito-fuerte">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+            Matriculado y activo
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <dl class="grid grid-cols-1 gap-4 rounded-md border border-borde p-4 tablet:grid-cols-2">
+      <div class="flex flex-col gap-1">
+        <dt class="text-sm font-medium text-texto-suave">Código de la tarjeta</dt>
+        <dd>
+          <span data-codigo-de-la-consulta
+                class="rounded bg-superficie-hover px-2 py-1 font-mono text-sm tracking-wider
+                       break-all text-texto">{{ estudiante.codigo_tarjeta }}</span>
+        </dd>
+        <dd>
+          <a href="{% url 'tarjeta-del-estudiante' estudiante.id %}" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 text-sm font-semibold text-acento-fuerte hover:underline">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+            Imprimir tarjeta
+          </a>
+        </dd>
+      </div>
+      <div class="flex flex-col gap-1">
+        <dt class="text-sm font-medium text-texto-suave">En el padrón desde</dt>
+        <dd class="text-base text-texto">{{ estudiante.creado_en|date:"j \d\e F \d\e Y" }}</dd>
+      </div>
+    </dl>
+
+    {% with acudiente=estudiante.acudiente %}
+      <section class="flex flex-col gap-3 rounded-md bg-superficie-hover p-4" data-consulta-acudiente>
+        <h3 class="inline-flex items-center gap-2 text-base font-semibold text-texto">
+          <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-personas"></use></svg>
+          Acudiente
+        </h3>
+        <dl class="grid grid-cols-1 gap-3 tablet:grid-cols-2">
+          <div class="flex flex-col gap-0.5">
+            <dt class="text-sm font-medium text-texto-suave">Nombre</dt>
+            <dd class="text-base text-texto">{{ acudiente.nombre }}</dd>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <dt class="text-sm font-medium text-texto-suave">Cuenta</dt>
+            {% comment %} Tres estados y no dos: cortada (`DEC-20`) va antes que sin activar,
+               porque una cuenta cortada no entra aunque tenga contraseña. {% endcomment %}
+            <dd class="text-base">
+              {% if not acudiente.usuario.is_active %}
+                <span data-consulta-acceso-cortado class="inline-flex items-center gap-1.5 font-medium text-error-fuerte">
+                  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+                  Acceso cortado por la institución
+                </span>
+              {% elif acudiente.usuario.tiene_contrasena_definida %}
+                <span class="inline-flex items-center gap-1.5 font-medium text-exito-fuerte">
+                  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+                  Activa
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 font-medium text-aviso-fuerte">
+                  <svg class="h-4 w-4" aria-hidden="true"><use href="#i-alerta"></use></svg>
+                  Sin activar: la invitación sigue pendiente
+                </span>
+              {% endif %}
+            </dd>
+          </div>
+          {% comment %} El correo, a lo ancho: en media columna se parte a mitad de
+             dominio, y es el dato que secretaría dicta por teléfono. {% endcomment %}
+          <div class="flex flex-col gap-0.5 tablet:col-span-2">
+            <dt class="text-sm font-medium text-texto-suave">Correo</dt>
+            <dd class="text-base break-all text-texto">{{ acudiente.usuario.email }}</dd>
+          </div>
+          <div class="flex flex-col gap-0.5 tablet:col-span-2">
+            <dt class="text-sm font-medium text-texto-suave">Otros estudiantes a su cargo</dt>
+            <dd class="text-base text-texto" data-consulta-hermanos>
+              {% if hermanos %}{{ hermanos|join:", " }}{% else %}Ninguno{% endif %}
+            </dd>
+          </div>
+        </dl>
+      </section>
+    {% endwith %}
+
+    {% comment %} `HU-38`: la institución consulta las restricciones, y las pone y las
+       quita solo el acudiente (`INV-4`). Las tres juntas, como las lee el resto
+       del sistema (`RestriccionesVigentes`). **Los alérgenos en rojo**: es lo que
+       el rojo significa aquí, una venta que se va a rechazar. {% endcomment %}
+    <section class="flex flex-col gap-3 rounded-md border border-borde p-4" data-consulta-restricciones>
+      <h3 class="inline-flex items-center gap-2 text-base font-semibold text-texto">
+        <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+        Restricciones
+      </h3>
+      {% if restricciones.hay_alguna %}
+        <dl class="flex flex-col gap-3">
+          <div class="flex flex-col gap-0.5">
+            <dt class="text-sm font-medium text-texto-suave">Límite diario</dt>
+            <dd class="text-base text-texto" data-consulta-limite>
+              {% if restricciones.limite %}{{ restricciones.limite.monto|dinero }}{% else %}Sin límite{% endif %}
+            </dd>
+          </div>
+          <div class="flex flex-col gap-1">
+            <dt class="text-sm font-medium text-texto-suave">Alérgenos bloqueados</dt>
+            <dd class="flex flex-wrap gap-1.5">
+              {% for r in restricciones.alergenos %}
+                <span data-consulta-alergeno
+                      class="rounded-full bg-error-suave px-2.5 py-0.5 text-sm font-medium text-error-fuerte">{{ r.alergeno.nombre }}</span>
+              {% empty %}
+                <span class="text-base text-texto">Ninguno</span>
+              {% endfor %}
+            </dd>
+          </div>
+          <div class="flex flex-col gap-1">
+            <dt class="text-sm font-medium text-texto-suave">Productos bloqueados</dt>
+            <dd class="flex flex-wrap gap-1.5">
+              {% for r in restricciones.productos %}
+                <span data-consulta-producto
+                      class="rounded-full bg-superficie-hover px-2.5 py-0.5 text-sm text-texto">{{ r.producto.nombre }}</span>
+              {% empty %}
+                <span class="text-base text-texto">Ninguno</span>
+              {% endfor %}
+            </dd>
+          </div>
+        </dl>
+      {% else %}
+        <p data-consulta-sin-restricciones class="text-base text-texto-suave">
+          Su acudiente no ha configurado ninguna: compra lo que quiera, hasta su saldo.
+        </p>
+      {% endif %}
+    </section>
+
+    <p class="flex items-start gap-1.5 text-sm text-texto-suave">
+      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-informacion"></use></svg>
+      El saldo y los consumos no se consultan desde aquí: son de su acudiente.
+    </p>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Cerrar
+    </button>
+    {% comment %} Pasar a editar no escribe nada: pide la ficha de edición (`DT-40`) al
+       mismo cuerpo de la modal. {% endcomment %}
+    <button type="button" data-editar-desde-la-consulta
+            hx-get="{% url 'ficha-del-estudiante' estudiante.id %}"
+            hx-target="#cuerpo-de-la-ficha"
+            hx-swap="innerHTML"
+            class="inline-flex h-11 items-center gap-2 rounded-md bg-primario px-5 text-base
+                   font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+      Editar
+    </button>
+  </div>
+</div>

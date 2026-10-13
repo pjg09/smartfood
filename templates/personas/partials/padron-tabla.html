@@ -87,11 +87,15 @@
        Misma composición que los movimientos del acudiente. {% endcomment %}
     <ul class="flex flex-col gap-3 tablet:hidden">
       {% for estudiante in estudiantes %}
-        <li data-fila-del-padron
-            class="overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
+        <li data-fila-del-padron data-fila-consultable
+            class="cursor-pointer overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
           <div class="flex items-start justify-between gap-3 px-4 py-3">
             <div class="flex min-w-0 flex-col">
-              <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
+              <button type="button" data-consultar data-consultar-estudiante
+                      hx-get="{% url 'consulta-del-estudiante' estudiante.id %}"
+                      hx-target="#cuerpo-de-la-ficha"
+                      hx-swap="innerHTML"
+                      class="text-left font-semibold text-texto hover:underline">{{ estudiante.nombre }}</button>
               <span class="font-mono text-sm tabular-nums text-texto-suave">
                 {{ estudiante.documento }}
               </span>
@@ -159,11 +163,19 @@
           </thead>
           <tbody>
             {% for estudiante in estudiantes %}
-              <tr data-fila-del-padron
-                  class="border-b border-borde transition-colors last:border-b-0
+              <tr data-fila-del-padron data-fila-consultable
+                  class="cursor-pointer border-b border-borde transition-colors last:border-b-0
                          even:bg-superficie-hover hover:bg-primario-suave">
                 <td class="px-4 py-3">
-                  <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
+                  {% comment %} `DT-43`. **El nombre es el control; la fila, un atajo.** Pulsar en
+                 cualquier parte de la fila abre la consulta (`assets/js/interfaz.js`),
+                 pero un `<tr>` no se enfoca con teclado ni lo anuncia un lector de
+                 pantalla: este botón sí, y la fila solo lo pulsa. {% endcomment %}
+              <button type="button" data-consultar data-consultar-estudiante
+                      hx-get="{% url 'consulta-del-estudiante' estudiante.id %}"
+                      hx-target="#cuerpo-de-la-ficha"
+                      hx-swap="innerHTML"
+                      class="text-left font-semibold text-texto hover:underline">{{ estudiante.nombre }}</button>
                   {% include "personas/partials/padron-estado-del-estudiante.html" %}
                 </td>
                 <td class="px-4 py-3 font-mono text-base tabular-nums whitespace-nowrap text-texto-suave">

@@ -24,6 +24,7 @@ from personas.views import (
     reactivacion_de_estudiante,
     carga_de_estudiantes,
     padron_de_estudiantes,
+    consulta_del_estudiante,
     estudiante_seleccionado,
     ficha_del_estudiante,
     panel_del_acudiente,
@@ -222,6 +223,13 @@ urlpatterns = [
         "padron/matricular/acudientes/",
         acudientes_para_matricular,
         name="acudientes-para-matricular",
+    ),
+    # `DT-43`. La ficha en solo lectura, al pulsar la fila del padrón. Solo
+    # `GET`: lo que se escribe sigue yendo por la ficha de edición.
+    path(
+        "padron/<uuid:estudiante_id>/",
+        consulta_del_estudiante,
+        name="consulta-del-estudiante",
     ),
     # `DT-40`, `HU-44`, `HU-57`, `HU-51`, `HU-63`. La ficha del estudiante, en la
     # modal del padrón: `GET` la pinta y `POST` la guarda. Las dos devuelven el

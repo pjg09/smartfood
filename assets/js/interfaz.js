@@ -826,6 +826,22 @@
     // siguiente ficha no enseñe un instante la anterior.
     modal.addEventListener("close", function () { cuerpo.innerHTML = ""; });
 
+    // ── La fila abre la consulta (`DT-43`) ──────────────────────────────────
+    // La fila solo pulsa el botón del nombre, que es quien pide la ficha: así
+    // hay una sola petición escrita, y el teclado llega por el botón. Se escucha
+    // en el documento porque la tabla se reemplaza a cada búsqueda.
+    document.addEventListener("click", function (evento) {
+      var fila = evento.target.closest("[data-fila-consultable]");
+      if (!fila) return;
+      // Lo que ya es un control hace lo suyo: «Editar», «Desactivar», el
+      // propio nombre. Pulsarlo no puede abrir además la consulta.
+      if (evento.target.closest("button, a, input, label, form")) return;
+      // Quien arrastra para copiar un documento no quiere abrir nada.
+      if (String(window.getSelection())) return;
+      var boton = fila.querySelector("[data-consultar]");
+      if (boton) boton.click();
+    });
+
     modal.addEventListener("change", function (evento) {
       var entrada = evento.target.closest("[data-foto-entrada]");
       if (!entrada || !entrada.files || !entrada.files[0]) return;

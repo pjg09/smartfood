@@ -42,6 +42,7 @@ from restricciones.selectors import (
     alergenos_bloqueados_de,
     limite_diario_de,
     productos_bloqueados_de,
+    restricciones_vigentes,
 )
 from ventas.selectors import pedidos_pendientes_de
 
@@ -646,6 +647,35 @@ def _avisar_a_la_tabla(respuesta):
     """
     respuesta["HX-Trigger"] = "padron-cambiado"
     return respuesta
+
+
+@login_required
+@require_http_methods(["GET"])
+def consulta_del_estudiante(request, estudiante_id):
+    """La ficha del estudiante en solo lectura, al pulsar su fila del padrón (`DT-43`).
+
+    **No concede nada que el padrón no diera ya.** Quién pasa lo decide el mismo
+    selector que la ficha de edición (`DT-15`), y lo que se enseña es lo que la
+    institución ya veía repartido: la fila, la ficha de edición y la consulta de
+    restricciones (`HU-38`, `DEC-17`).
+
+    **Sin saldo, sin consumos y sin recargas, y no por olvido**: en `[S11]` la
+    institución no consulta el saldo de nadie. Esta vista no llama a
+    `billetera` ni a `reportes`, aunque el módulo los importe para el acudiente.
+    """
+    estudiante = _estudiante_de_la_institucion(request.user, estudiante_id)
+
+    return render(request, "personas/partials/consulta-del-estudiante.html", {
+        "estudiante": estudiante,
+        "restricciones": restricciones_vigentes(estudiante),
+        # Los hermanos, que comparten acudiente: secretaría pregunta por la
+        # familia, y cortar el acceso del acudiente alcanza a todos (`DEC-20`).
+        "hermanos": list(
+            estudiante.acudiente.estudiantes.exclude(pk=estudiante.pk)
+            .order_by("nombre")
+            .values_list("nombre", flat=True)
+        ),
+    })
 
 
 @login_required

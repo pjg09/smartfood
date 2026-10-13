@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` el 2026-10-12 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 42 (`DT-1` … `DT-42`) |
+| decisiones | 43 (`DT-1` … `DT-43`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-42`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-43`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -942,3 +942,19 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Los campos numéricos tampoco son filtros**: el monto de la recarga y del límite, las cantidades de la reserva y el efectivo del cierre son datos de un formulario que se envía.
 
 **Consecuencia asumida.** **Cada pausa al teclear es una página completa del admin**, con su consulta del listado, sus filtros y su consolidado: más trabajo para el servidor que el fragmento de las pantallas propias. Con los volúmenes del prototipo no se nota. **Y la conducta no la vigila la suite**: es JavaScript, que las pruebas de Django no ejecutan; se comprobó con Playwright contra el stack (`[S3.1]` de `./desarrollo.md`).
+
+#### `[DT-43]` La fila del padrón abre la ficha del estudiante en solo lectura
+
+**Extiende** `DT-40`: la modal del padrón, que solo se abría para editar o matricular, también enseña al estudiante sin campos. **No amplía el alcance ni toca `[S11]`**: reúne lo que la institución ya veía repartido entre la fila, la ficha de edición y la consulta de restricciones (`HU-38`, `DEC-17`). Por eso no lleva historia ni `DEC`.
+
+**Razón:** decisión del equipo, tomada el 2026-10-12. Para mirar a un estudiante, secretaría tenía que abrir la ficha de edición —con sus interruptores de baja y de acceso a mano— o ir a otra pantalla a ver sus restricciones.
+
+**Decidido:**
+
+- **`GET /padron/<id>/` devuelve la ficha en solo lectura**, y solo `GET`: `POST` responde `405`. Es un fragmento (`DT-16`) que cae en el mismo `<dialog>` que la de edición. Quién pasa lo decide el mismo selector, `estudiante_para_la_institucion` (`DT-15`).
+- **Enseña**: la foto en grande —o la inicial—, nombre, documento, estado dicho entero (activo, desactivado, retirado desde cuándo), código de tarjeta con su enlace para imprimirla (`HU-45`), desde cuándo está en el padrón, el acudiente con el estado de su cuenta —activa, sin activar o con el acceso cortado (`DEC-20`)— y los demás estudiantes a su cargo, y las tres restricciones juntas (`RestriccionesVigentes`, `HU-38`).
+- **No enseña el saldo, los consumos ni las recargas.** En `[S11]`, «Consultar saldo de un estudiante» es `–` para la institución. La vista no llama a `billetera` ni a `reportes`, y `personas/tests_consulta.py` lo vigila sobre el bytecode y sobre lo pintado.
+- **Ni un solo campo**, ni siquiera deshabilitado: un control con borde se lee como editable. **Editar**, en el pie, pide la ficha de edición al mismo cuerpo de la modal.
+- **El nombre de cada fila es un botón y la fila, un atajo.** Pulsar en cualquier parte de la fila pulsa ese botón (`assets/js/interfaz.js`): un `<tr>` no se enfoca con teclado ni lo anuncia un lector de pantalla. Lo que ya es un control —«Editar», «Desactivar», «Reactivar»— hace lo suyo y no abre la consulta, y arrastrar para seleccionar un documento tampoco.
+
+**Consecuencia asumida.** **El clic en la fila no lo vigila la suite**: es JavaScript; se comprobó con Playwright contra el stack, en claro, oscuro y a 390 px. Lo que sí vigila es que cada fila lleve el botón con su ruta.

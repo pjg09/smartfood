@@ -8,8 +8,8 @@
    aunque se le envió la invitación (`DEC-18`)—. El admin contesta la primera en tres clics y la segunda no la
    contesta.
 
-   **Lee, desactiva y abre la ficha.** Desactivar y reactivar van en la fila, a
-   un clic, porque su razón de ser es la inmediatez (`DT-29`, `DT-30`). Editar,
+   **Lee, desactiva y abre la ficha.** Pulsar la fila la abre en solo lectura
+   (`DT-43`); desactivar y reactivar van en la fila, a un clic, porque su razón de ser es la inmediatez (`DT-29`, `DT-30`). Editar,
    la fotografía, la baja, la reasignación del código y el acceso del acudiente
    van en la ficha, que se abre en una modal sobre esta misma pantalla
    (`DT-40`, `DEC-16`). Las reglas siguen en los servicios, no aquí.
@@ -130,7 +130,8 @@
     {% include "personas/partials/padron-tabla.html" %}
   </div>
 
-  {% comment %} `DT-40`. La modal de la ficha. Nace vacía: «Editar» pide el fragmento y
+  {% comment %} `DT-40`, `DT-43`. La modal de la ficha. Nace vacía: la fila, «Editar» o
+     «Cargar un solo estudiante» piden el fragmento y
      `assets/js/interfaz.js` la abre al recibirlo.
 
      Es un `<dialog>`, como la del admin: el navegador lleva el foco, la tecla de

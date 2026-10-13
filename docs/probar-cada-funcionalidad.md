@@ -8,7 +8,7 @@
 | titulo | Cómo poner a prueba cada funcionalidad del prototipo en el entorno local |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./desarrollo.md` (de donde sale); `./mapa-de-la-aplicacion.md`; `./decisiones-de-alcance.md` |
-| actualizado | 2026-10-01 |
+| actualizado | 2026-10-12 |
 | idioma | es-CO |
 | version | 1.2 |
 
@@ -343,3 +343,16 @@ matriculado**, tampoco sin foto—.
 **El estudiante de prueba no se puede borrar desde la aplicación**: ninguna pantalla lo hace,
 a propósito (`DT-12`). En la base de trabajo, uno recién creado y sin movimientos se borra
 desde la consola de Django; con historia, no hay forma, y lo que procede es la baja.
+
+## [S16] Mirar la ficha de un estudiante sin editarla
+
+Como institución, en `/padron/`, **pulsar en cualquier parte de la fila** de un estudiante
+(`DT-43`). Se abre la ficha en solo lectura: la foto en grande, nombre, documento, estado,
+código con **Imprimir tarjeta**, desde cuándo está en el padrón, el acudiente con el estado
+de su cuenta y los demás estudiantes a su cargo, y sus restricciones. **Editar**, abajo, pasa
+a la ficha de edición sin cerrar la modal.
+
+Con teclado se llega por el **nombre**, que es un botón. Lo que no tiene que pasar: que
+**Desactivar** o **Editar** en la fila abran la consulta además de lo suyo, o que aparezca el
+**saldo** —en `[S11]` no es de la institución—. Para ver restricciones en ella, ponlas antes
+como acudiente (`[S1]`).
