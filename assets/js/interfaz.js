@@ -665,6 +665,129 @@
     if (cerrarlo) cerrarlo.addEventListener("click", cerrar);
   }
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // EL BUSCADOR DE LOS LISTADOS DEL ADMIN, MIENTRAS SE ESCRIBE (`DT-42`)
+  //
+  // Es el mismo trato que el buscador de `[S2.5]` del sistema visual: pide con
+  // 400 ms de espera y reemplaza solo lo que cambia. Las pantallas propias lo
+  // hacen con htmx contra un fragmento; el admin no tiene fragmento —su listado
+  // es una página—, así que aquí se pide la página entera y se trasplanta
+  // `#changelist`, como hace la modal con el formulario.
+  //
+  // **El campo no se reemplaza: se muda.** El nodo en el que se está escribiendo
+  // pasa al listado nuevo en lugar del que trae la respuesta. Reemplazarlo
+  // perdería lo tecleado mientras viajaba la petición, y con ello el foco.
+  //
+  // Sin JavaScript —o si la petición falla— el formulario es el del admin y
+  // Enter busca como siempre. No se toca `admin/search_form.html`: está anclado
+  // a la versión de Django y una prueba lo compara con el original.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  function montarBuscadorDelAdmin() {
+    var campo = document.getElementById("searchbar");
+    if (!campo || !document.getElementById("changelist-search")) return;
+
+    var ESPERA_MS = 400;
+    var CLAVE_FILTROS = "django.admin.filtersState";  // la de `admin/js/filters.js`
+    var espera = null;
+    var enCurso = null;
+    var buscado = campo.value;
+
+    function urlDeLaBusqueda() {
+      // El formulario se vuelve a leer cada vez: sus campos ocultos —los demás
+      // filtros activos— llegan con cada respuesta.
+      var formulario = document.getElementById("changelist-search");
+      var parametros = new URLSearchParams(new FormData(formulario));
+      return window.location.pathname + "?" + parametros.toString();
+    }
+
+    function recordarPlegado(detalle) {
+      // Lo que `filters.js` hace al cargar, para los paneles que llegan después.
+      detalle.addEventListener("toggle", function () {
+        var estado;
+        try { estado = JSON.parse(sessionStorage.getItem(CLAVE_FILTROS)) || {}; }
+        catch (e) { estado = {}; }
+        estado[detalle.dataset.filterTitle] = detalle.open;
+        try { sessionStorage.setItem(CLAVE_FILTROS, JSON.stringify(estado)); } catch (e) {}
+      });
+    }
+
+    function trasplantar(html) {
+      var nuevo = new DOMParser().parseFromString(html, "text/html").getElementById("changelist");
+      var actual = document.getElementById("changelist");
+      if (!nuevo || !actual) return false;
+
+      // Los filtros que se plegaron siguen plegados: la respuesta los trae
+      // todos abiertos.
+      actual.querySelectorAll("details[data-filter-title]").forEach(function (viejo) {
+        var selector = 'details[data-filter-title="' + CSS.escape(viejo.dataset.filterTitle) + '"]';
+        var gemelo = nuevo.querySelector(selector);
+        if (gemelo) gemelo.open = viejo.open;
+      });
+
+      var inicio = campo.selectionStart;
+      var fin = campo.selectionEnd;
+      var suCampo = nuevo.querySelector("#searchbar");
+      if (suCampo) suCampo.replaceWith(campo);
+      actual.replaceWith(nuevo);
+      campo.focus();
+      campo.setSelectionRange(inicio, fin);
+
+      nuevo.querySelectorAll("details[data-filter-title]").forEach(recordarPlegado);
+
+      // Las casillas de las acciones masivas se enlazan al cargar
+      // (`admin/js/actions.js`): las que acaban de llegar no las conoce nadie.
+      var casillas = nuevo.querySelectorAll("tr input.action-select");
+      if (casillas.length > 0 && typeof window.Actions === "function") {
+        window.Actions(casillas);
+      }
+      return true;
+    }
+
+    function buscar() {
+      clearTimeout(espera);
+      if (campo.value === buscado) return;
+      buscado = campo.value;
+
+      // Solo cuenta la última: una respuesta lenta que llegara después de una
+      // rápida pintaría la búsqueda de hace dos letras.
+      if (enCurso) enCurso.abort();
+      enCurso = new AbortController();
+      var url = urlDeLaBusqueda();
+
+      fetch(url, { credentials: "same-origin", signal: enCurso.signal })
+        .then(function (respuesta) {
+          if (!respuesta.ok) throw new Error(respuesta.status);
+          return respuesta.text().then(function (html) {
+            if (!trasplantar(html)) throw new Error("sin listado");
+            // `replaceState` y no `pushState`: una entrada en el historial por
+            // pausa al teclear haría inservible el botón de volver. La URL sí
+            // cambia, para que recargar o compartir conserve la búsqueda.
+            history.replaceState(null, "", respuesta.url);
+          });
+        })
+        .catch(function (error) {
+          if (error.name === "AbortError") return;
+          // Si algo falla, la búsqueda de siempre: que el error lo enseñe el
+          // admin y no un listado que se quedó sin actualizar.
+          window.location.assign(url);
+        });
+    }
+
+    campo.addEventListener("input", function () {
+      clearTimeout(espera);
+      espera = setTimeout(buscar, ESPERA_MS);
+    });
+
+    // Enter busca ya, sin esperar y sin recargar. Se escucha en el documento:
+    // el formulario llega nuevo con cada respuesta.
+    document.addEventListener("submit", function (evento) {
+      if (evento.target.id !== "changelist-search") return;
+      evento.preventDefault();
+      buscar();
+    });
+  }
+
   // ── La ficha del estudiante, en la modal del padrón (`DT-40`) ──────────────
   //
   // **Aquí no se pide nada al servidor**: lo hace htmx. Esto solo abre y cierra
@@ -842,6 +965,7 @@
     montarModosDeBusqueda();
     montarMediosDePago();
     montarModalDelAdmin();
+    montarBuscadorDelAdmin();
     montarFichaDelEstudiante();
   });
 })();

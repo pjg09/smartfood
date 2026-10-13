@@ -194,6 +194,10 @@ dentro de un `<form method="get">` de verdad, con su botón de envío en `sr-onl
 JavaScript sigue buscando al pulsar Enter, porque la vista lee el término de la URL venga de
 donde venga. **HTMX acelera lo que ya funcionaba; no lo sustituye.**
 
+**Los listados del admin buscan igual**, con la misma espera (`DT-42`). No tienen fragmento,
+así que `assets/js/interfaz.js` pide la página y trasplanta el listado, y el campo en el que
+se escribe se muda al nuevo sin perder el foco. Sin JavaScript, Enter.
+
 El interruptor es un `<input type="checkbox">` con `sr-only` y el carril pintado desde `peer`.
 No es un `<div>` con un `click`: así se enfoca con teclado y se alterna con espacio sin una
 línea de JavaScript, y sin `role` ni `aria-checked` que mantener.

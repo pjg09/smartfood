@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` el 2026-10-03 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 41 (`DT-1` … `DT-41`) |
+| decisiones | 42 (`DT-1` … `DT-42`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-41`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-42`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -923,3 +923,22 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Abrir un Pull Request sigue siendo posible** cuando convenga, con el flujo de siempre: squash, título validado y plantilla.
 
 **Consecuencia asumida.** **Nadie revisa un cambio antes de que llegue a `main`**: ni el otro desarrollador, ni la CI (`DT-39`), ni GitHub, porque `main` no tiene protección activa. **El mensaje de cada commit tampoco se valida**: `convencion-de-commits.yml` solo corre en Pull Requests, y un tipo mal escrito no da error, simplemente no cuenta para la versión o cuenta como otra cosa. **Y una nota `BREAKING CHANGE:`, `BREAKING-CHANGE:` o `CAMBIO INCOMPATIBLE:` en el cuerpo de un commit ahora sí publica una versión mayor**, porque el cuerpo llega a `main` (`noteKeywords` de `.releaserc.json`). A cambio, el cuerpo de cada commit —con sus `Refs:` y la evidencia de `DoD-4`— queda en el historial, cosa que el squash descartaba.
+
+#### `[DT-42]` Los buscadores de los listados del admin buscan mientras se escribe
+
+**Extiende** `[S2.5]` de `./sistema-visual.md` —«el buscador pide a cada tecla, con 400 ms de espera»— a los listados del admin, que eran los únicos buscadores que esperaban Enter. **No amplía el alcance**: los listados, sus campos de búsqueda y lo que encuentran son los mismos; cambia cuándo se pide.
+
+**Razón:** decisión del equipo, tomada el 2026-10-03. Con dos comportamientos, quien pasa del padrón a los productos escribe, espera y no ve nada.
+
+**Decidido:**
+
+- **Los once listados con `search_fields` —diez de los dominios y los grupos de `auth`— piden con 400 ms de espera tras la última tecla**, y Enter pide en el acto. Es la espera de las pantallas propias; pedir de verdad con cada tecla lanzaría una consulta por letra, y una respuesta lenta podría pintar la búsqueda de hace dos letras. Por eso, además, solo cuenta la última petición: la anterior se aborta.
+- **Se pide la página entera y se trasplanta `#changelist`**, con `fetch` desde `assets/js/interfaz.js`, como ya hace la modal del admin con el formulario (`DEC-16`). No es una excepción a `DT-16`: no hay ninguna vista HTMX nueva; el admin sigue sirviendo su página, y lo que cambia es que el navegador no la recarga. Entra con el listado todo lo que vive dentro de él: los filtros, el recuento y los consolidados de `TT-168`, `TT-170` y `TT-176`, que se calculan sobre el mismo `QuerySet`.
+- **El campo no se reemplaza: se muda** al listado nuevo, con su foco y su cursor. Reemplazarlo perdería lo tecleado mientras viajaba la petición.
+- **Lo que el admin enlaza al cargar se vuelve a enlazar**: las casillas de las acciones masivas (`admin/js/actions.js`) y el plegado de los filtros (`admin/js/filters.js`), que además se conserva.
+- **La URL cambia con `replaceState`**, así que recargar o compartir conserva la búsqueda, y el botón de volver no acumula una entrada por pausa.
+- **`templates/admin/search_form.html` no se toca**: es una copia anclada a Django que `cuentas/tests_traducciones.py` compara con el original. Sin JavaScript, o si la petición falla, buscar es lo de siempre: el formulario se envía y el admin responde.
+- **El punto de venta queda fuera**, a propósito. Sus dos campos —código de tarjeta y documento— no filtran una lista: identifican a **un** estudiante, se vacían tras cada búsqueda (`TT-71`) y el lector termina cada código con Enter. Buscar con un documento a medio escribir podría poner delante del cajero a otro estudiante, al que se le cobraría.
+- **Los campos numéricos tampoco son filtros**: el monto de la recarga y del límite, las cantidades de la reserva y el efectivo del cierre son datos de un formulario que se envía.
+
+**Consecuencia asumida.** **Cada pausa al teclear es una página completa del admin**, con su consulta del listado, sus filtros y su consolidado: más trabajo para el servidor que el fragmento de las pantallas propias. Con los volúmenes del prototipo no se nota. **Y la conducta no la vigila la suite**: es JavaScript, que las pruebas de Django no ejecutan; se comprobó con Playwright contra el stack (`[S3.1]` de `./desarrollo.md`).
