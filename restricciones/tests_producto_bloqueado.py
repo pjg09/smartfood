@@ -18,6 +18,7 @@ productos—, y cuando eso pase esta prueba será la que lo note: un bloqueo por
 producto que arrastra a sus hermanos de alérgeno es exactamente el síntoma.
 """
 
+import re
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied
@@ -438,3 +439,52 @@ class LaPantallaDeProductosBloqueadosTest(TestCase):
         self.assertContains(respuesta, "Ninguna")
         # La puerta a la pantalla sigue ahí aunque no haya nada bloqueado.
         self.assertContains(respuesta, self.url)
+
+
+class LaListaPintaLaImagenDelProductoTest(TestCase):
+    """`HU-59`. La imagen del producto en la lista que el acudiente bloquea.
+
+    Sobre el fragmento y por `data-*` (`[S3.5]` y `[S3.6]` de
+    `escribir-pruebas.md`): es lo que llega igual a la página, al buscador y al
+    interruptor. No toca el almacenamiento: la URL sale de la clave, y servirla
+    es de `catalogo/tests_imagen*` (`[S3.7]`).
+    """
+
+    def setUp(self):
+        self.usuario, _, (self.estudiante,) = acudiente_con_estudiantes()
+        self.con_imagen = producto("Empanada de carne")
+        Producto.objects.filter(pk=self.con_imagen.pk).update(
+            imagen_clave="0123456789abcdef0123456789abcdef.webp"
+        )
+        self.con_imagen.refresh_from_db()
+        self.sin_imagen = producto("Jugo de mora", "2500")
+        self.client.login(email=self.usuario.email, password=CLAVE)
+
+    def _lista(self):
+        respuesta = self.client.get(
+            reverse("productos-bloqueados-lista", args=[self.estudiante.id])
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        return respuesta.content.decode()
+
+    def test_el_producto_con_imagen_la_pinta(self):
+        imagenes = re.findall(r'<img src="([^"]*)"[^>]*data-imagen-del-producto', self._lista())
+
+        self.assertEqual(imagenes, [self.con_imagen.url_de_la_imagen])
+
+    def test_el_producto_sin_imagen_marca_el_hueco_sin_img_vacio(self):
+        """Un `src` vacío pide la propia página y deja un icono roto."""
+        cuerpo = self._lista()
+
+        self.assertEqual(cuerpo.count("data-sin-imagen-del-producto"), 1)
+        self.assertNotIn('src=""', cuerpo)
+
+    def test_tambien_tras_tocar_el_interruptor(self):
+        """El `POST` devuelve la misma lista: la imagen no se pierde al bloquear."""
+        respuesta = self.client.post(
+            reverse("bloqueo-de-producto", args=[self.estudiante.id]),
+            {"producto": str(self.con_imagen.id), "accion": "bloquear"},
+        )
+
+        self.assertContains(respuesta, self.con_imagen.url_de_la_imagen)
+

@@ -31,12 +31,34 @@
                    transition-colors
                    {% if fila.bloqueado %}border-error{% else %}border-borde{% endif %}">
 
-          <div class="flex flex-1 flex-col gap-1 p-4">
-            <span class="text-base font-medium text-texto">{{ fila.producto.nombre }}</span>
-            <span class="text-sm text-texto-suave">{{ fila.producto.categoria.nombre }}</span>
-            <span class="mt-auto pt-2 font-display text-lg tabular-nums text-texto">
-              {{ fila.producto.precio|dinero }}
-            </span>
+          {% comment %} La imagen del producto (`HU-59`, `DEC-8`), a la izquierda y
+             cuadrada: es lo que se reconoce antes de leer el nombre. `alt` vacío
+             porque el nombre va justo al lado, y un lector de pantalla lo diría
+             dos veces.
+
+             Sin imagen no hay `<img>` con `src` vacío, que pide la propia
+             página y deja un icono roto (`[S5]` de `sistema-visual.md`): el
+             hueco se marca con borde discontinuo. Un producto sin imagen se
+             bloquea igual. {% endcomment %}
+          <div class="flex flex-1 gap-3 p-4">
+            {% if fila.producto.tiene_imagen %}
+              <img src="{{ fila.producto.url_de_la_imagen }}" alt=""
+                   width="64" height="64" loading="lazy" data-imagen-del-producto
+                   class="h-16 w-16 shrink-0 rounded-md border border-borde object-cover">
+            {% else %}
+              <span aria-hidden="true" data-sin-imagen-del-producto
+                    class="flex h-16 w-16 shrink-0 items-center justify-center rounded-md
+                           border border-dashed border-borde text-texto-suave">
+                <svg class="h-6 w-6"><use href="#i-cafeteria"></use></svg>
+              </span>
+            {% endif %}
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+              <span class="text-base font-medium text-texto">{{ fila.producto.nombre }}</span>
+              <span class="text-sm text-texto-suave">{{ fila.producto.categoria.nombre }}</span>
+              <span class="mt-auto pt-2 font-display text-lg tabular-nums text-texto">
+                {{ fila.producto.precio|dinero }}
+              </span>
+            </div>
           </div>
 
           {% comment %} El rojo aquí **sí significa lo que significa** (`[S1]`, regla 3): un
