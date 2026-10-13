@@ -105,14 +105,20 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/punto-de-venta/cobrar/` | `POST`. **La transacción**: descuenta saldo y existencias a la vez | **Solo cajero** | `TT-80`, `TT-81` |
 | `/punto-de-venta/entregar/` | `POST`. Registra la entrega de un pedido anticipado. **No descuenta saldo**: ya se pagó al reservarse | **Solo cajero** | `TT-150` |
 | `/punto-de-venta/cierre/` | Cierre de caja: el efectivo esperado de la jornada, calculado desde las ventas registradas, contra lo que el cajero cuenta | **Solo cajero** | `TT-173` |
-| `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: catálogo con cantidades, cobro al confirmar y reservas pendientes | **Solo su acudiente** | `TT-145` |
-| `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente | **Cajero y administración** | `TT-148` |
+| `/mis-estudiantes/<id>/reservar/` | Reserva anticipada: filtros, tarjetas **sin existencias** —es un encargo— con su ticket al lado, y los pedidos del estudiante debajo | **Solo su acudiente** | `TT-145`, `DT-47`, `DEC-24` |
+| `/mis-estudiantes/<id>/reservar/ticket/` | Fragmento HTMX del ticket para las cantidades elegidas: total, calorías, saldo después y cupo | **Solo su acudiente** | `DEC-24` |
+| `/mis-estudiantes/<id>/reservar/productos/<producto>/` | Fragmento HTMX: la ficha nutricional del producto, para la modal | **Solo su acudiente** | `DEC-24` |
+| `/mis-estudiantes/<id>/pedidos/` | Fragmento HTMX: la lista de pedidos de la pantalla de reserva, que se repinta al cancelar | **Solo su acudiente** | `HU-65` |
+| `/mis-estudiantes/<id>/pedidos/<pedido>/` | Fragmento HTMX: el detalle de un pedido en la modal, con su cancelación si está pendiente | **Solo su acudiente** | `HU-65` |
+| `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Solo su acudiente** | `HU-66` |
+| `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente, con **Cancelar** en cada una | **Cajero y administración** | `TT-148`, `HU-67` |
+| `/reservas/<pedido>/cancelar/` | Confirmar la cancelación de un pedido de la cola, con motivo; `POST` devuelve el importe | **Cajero y administración** | `HU-67` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
 | `/admin/panel/` | Panel de la cafetería: la jornada, existencias por agotarse y el mes (`DEC-16`) | Administración | `DEC-16` |
-| `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cuatro clases de operación, con quién hizo qué y cuándo | **Solo administración** | `TT-178` |
+| `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cinco clases de operación —también la cancelación de pedidos—, con quién hizo qué y cuándo | **Solo administración** | `TT-178`, `DT-48` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
@@ -132,6 +138,14 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/mis-estudiantes/<id>/restricciones/productos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/restricciones/alergenos/bloqueo/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/reservar/ticket/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/reservar/productos/<producto>/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/pedidos/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/pedidos/<pedido>/` | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |
+| `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | 403 | 403 | **200** | 302 → acceso |
+| `/reservas/<pedido>/cancelar/` | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | **200** | **200** | 403 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/matricular/` | **200** | 403 | 403 | 403 | 302 → acceso |

@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 23 (`DEC-1` … `DEC-23`) |
+| decisiones | 24 (`DEC-1` … `DEC-24`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.9 |
+| version | 1.10 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-23` |
+| S1 | Decisiones | `DEC-1` … `DEC-24` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -476,6 +476,28 @@ Esa consulta ya tiene respuesta: **la asignatura no lo exige.** Con eso desapare
 
 **Consecuencia asumida.** **Un acudiente recién creado recibe la invitación antes de tener ningún estudiante**: si entra en ese intervalo, ve su panel vacío. Matricular al estudiante justo después lo evita, y la modal dice dónde hacerlo. Es funcionalidad nueva con el backlog cerrado, y se registra como `HU-64` antes de construirla.
 
+### `[DEC-24]` La reserva es un encargo, y un pedido pendiente se cancela con devolución
+
+*No cierra ningún `VAC`: **resuelve un punto del `ANEXO B`**, «Pedidos anticipados de un estudiante desactivado». Decisión posterior, tomada el 2026-10-13. **Amplía `[S11]`** con una fila que no tenía —cancelar un pedido anticipado— para el acudiente y para los dos roles de la cafetería. **Corrige `DT-33`** en su tercer punto: la reserva deja de apartar existencias (`DT-47`).*
+
+**El hecho que lo obliga.** La reserva comprobaba las existencias de hoy —descontando lo ya apartado— y la pantalla las enseñaba: «quedan 2», «sin existencias», con el campo deshabilitado. Eso trata la reserva como un **apartado** de lo que hay en la vitrina, y no lo es: `FUN-5` separa a quien **prepara** de quien entrega, y la cola de `HU-24` existe para tener preparado lo pedido. Lo que el acudiente reserva para mañana no tiene por qué estar en la vitrina hoy. Con el inventario recién sembrado, en cero, no se podía reservar nada.
+
+Y quitar esa comprobación deja a la vista el hueco que ya estaba: **una reserva se cobra y nada la deshace**. Si la cafetería no puede entregarla, o el estudiante no puede retirarla (`INVD-2`), el dinero queda en un pedido pendiente para siempre.
+
+**Decidido:**
+
+- **La reserva es un encargo.** No consulta, no enseña ni aparta existencias; la cafetería lo prepara a partir de la cola. **Las otras cinco comprobaciones de la venta se mantienen** —estudiante que no opera, alérgeno bloqueado, producto bloqueado, cupo del día y saldo—: quitarlas abriría una puerta trasera al control parental (`[S2.1]` de `./reglas-del-pedido-anticipado.md`).
+- **El acudiente ve todos los pedidos de su estudiante**: por recoger, entregados y cancelados (`HU-65`).
+- **Un pedido pendiente se puede cancelar.** Lo cancelan **el acudiente**, sobre los de sus estudiantes (`HU-66`), y **el cajero y la administración de la cafetería**, sobre cualquiera (`HU-67`). Uno entregado o ya cancelado, no; y uno cancelado no se entrega.
+- **Toda cancelación lleva motivo**, sea quien sea quien cancela. Lo impone la base, como el de la merma (`INV-8`), y el acudiente lo ve.
+- **Cancelar devuelve el importe íntegro a la billetera del estudiante**, en el acto y una sola vez, como un movimiento de devolución que dice de qué venta sale (`INV-2`). Es saldo simulado, como el resto: `ALC-OUT-01` y `ALC-OUT-02` no cambian.
+- **Una devolución no es una recarga.** Un pedido se cancela y se devuelve **aunque el estudiante esté desactivado o dado de baja**: no entra dinero nuevo, se deshace un cobro. `INVD-7` sigue prohibiendo las recargas.
+- **Un pedido cancelado no es una venta ni un consumo.** No cuenta en el cupo del día —libera el que consumió al pagarse—, ni en el reporte de ventas, ni en la frecuencia ni en los agregados nutricionales. **Sí aparece** en el historial del acudiente, en su resumen de gasto —como gastado y devuelto, que es lo que pasó en la billetera— y en la auditoría, con quién lo canceló y por qué.
+
+**Lo que NO se decide aquí.** No se cancela una parte de un pedido: se cancela entero. Las reservas no caducan solas. No se avisa por correo al acudiente cuando la cafetería cancela: lo ve en sus pedidos, con el motivo. Y la caja sigue sin restar lo reservado (`DT-35`).
+
+**Consecuencia asumida.** **Se cobra sin garantía de que haya con qué entregar**: si la cafetería no puede, cancela y el saldo vuelve. Y como la entrega nunca se rechaza por existencias (`DT-35`), **entregar lo que se preparó sin registrar su ingreso deja el libro de inventario en negativo**: con esta decisión deja de ser un caso raro, y el ingreso de mercancía antes de entregar pasa a ser parte del trabajo de la cafetería. Es funcionalidad nueva con el backlog cerrado, y se registra como `HU-65`, `HU-66` y `HU-67` antes de construirla.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -523,6 +545,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-21` | **No añade alcance ni recorta `[S11]`.** Quita a la institución la pantalla y el proxy de restricciones de todos; las consulta en la ficha del padrón (`DT-43`) |
 | `DEC-22` | **No añade alcance ni recorta `[S11]`.** Retira la edición de los datos de la institución en el admin, que nadie usaba; su nombre lo pone el seed (`HU-39`) |
 | `DEC-23` | Alta de un solo acudiente por la institución, sin la carga masiva. Amplía el mecanismo de `HU-01`; la fila de `[S11]` ya era suya |
+| `DEC-24` | Consulta y cancelación de pedidos anticipados con devolución a la billetera, por el acudiente, el cajero y la administración. Amplía `[S11]` con una fila nueva. La reserva deja de apartar existencias |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -551,6 +574,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (punto abierto del `ANEXO B`) Recuperación de contraseña olvidada | **Resuelto** | `DEC-19` | `HU-62` |
 | — (hueco detectado) Corte de acceso de un acudiente | **Decidido** | `DEC-20` | `HU-63` |
 | — (`ANEXO B`) Matricular a una familia nueva de una en una | **Decidido** | `DEC-23` | `HU-64` |
+| — (`ANEXO B`) Pedidos anticipados de un estudiante desactivado | **Decidido** | `DEC-24` | `HU-65`, `HU-66`, `HU-67` |
 
 ---
 
@@ -561,7 +585,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Devolución del saldo congelado.** `DEC-7` la deja fuera del sistema. Es coherente con `ALC-OUT-02`, pero en una implementación real habría que definirla; conviene decirlo así en el informe final (`ENT-06`) como limitación identificada.
 - **Notificación al acudiente.** Cuando la institución desactiva o da de baja a un estudiante (`DEC-5`, `DEC-7`), el acudiente no recibe aviso. No se decidió si debe recibirlo.
 - **Respaldo bibliográfico de la justificación de `DEC-1`.** Ver la advertencia en esa decisión.
-- **Pedidos anticipados de un estudiante desactivado.** `INVD-2` impide retirarlos, y desde `HU-25` el sistema lo aplica: la entrega los rechaza. **Sigue sin decidirse qué ocurre con ese pedido ya pagado**: si se devuelve el saldo, si queda pendiente indefinidamente o si se anula. Mientras tanto se queda en la cola de `HU-24`, **marcado «No puede retirar»** para que nadie lo prepare en balde — esconderlo lo volvería invisible, y hay dinero de por medio. Es lo que se puede hacer sin decidir; decidirlo es una historia.
+- **Pedidos anticipados de un estudiante desactivado.** `INVD-2` impide retirarlos, y desde `HU-25` el sistema lo aplica: la entrega los rechaza. **Sigue sin decidirse qué ocurre con ese pedido ya pagado**: si se devuelve el saldo, si queda pendiente indefinidamente o si se anula. Mientras tanto se queda en la cola de `HU-24`, **marcado «No puede retirar»** para que nadie lo prepare en balde — esconderlo lo volvería invisible, y hay dinero de por medio. Es lo que se puede hacer sin decidir; decidirlo es una historia. **Resuelto el 2026-10-13 por `DEC-24`**: el pedido se cancela, por la cafetería o por el acudiente, y el importe vuelve a la billetera aunque el estudiante no opere — una devolución no es una recarga. Se registra como `HU-66` y `HU-67`.
 - **Retención y borrado de fotografías.** `DEC-8` no decide cuánto tiempo se conserva la fotografía de un estudiante dado de baja (`DEC-7`), ni si el acudiente puede exigir su eliminación. En una implementación real la Ley 1581 de 2012 lo exigiría.
 - **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido. **Resuelto el 2026-10-01 por `DEC-19`**, que lo registra como `HU-62`.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.

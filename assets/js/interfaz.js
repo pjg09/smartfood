@@ -1019,6 +1019,130 @@
     modal.addEventListener("close", function () { imagen.removeAttribute("src"); });
   }
 
+  // ── La reserva como un punto de venta (`DEC-24`) ─────────────────────────
+  //
+  // **Aquí no se calcula dinero.** «+» y «−» cambian un entero en el campo
+  // oculto `cantidad-<id>` de la tarjeta y avisan con `cantidades-cambiadas`;
+  // el ticket lo vuelve a pedir HTMX y lo calcula y formatea el servidor, que
+  // es el único sitio donde se escribe el dinero. Los botones del ticket
+  // cambian el mismo campo que los de la tarjeta: hay una sola cantidad por
+  // producto, viva en el formulario que se envía.
+  //
+  // **Los filtros esconden tarjetas y no piden nada**: si recargaran el
+  // catálogo, lo elegido en lo que queda oculto se perdería. Los campos de lo
+  // oculto siguen en el formulario y se envían igual. Comparan contra los
+  // `data-*` de cada tarjeta —el precio sin formato, que es un número y no una
+  // cifra para leer—.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  var MAXIMO_POR_PRODUCTO = 99;
+
+  function sinAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function montarReserva() {
+    var formulario = document.querySelector("[data-formulario-de-reserva]");
+    if (!formulario) return;
+
+    function campoDe(producto) {
+      return formulario.querySelector('input[name="cantidad-' + producto + '"]');
+    }
+
+    function fijar(producto, cantidad) {
+      var campo = campoDe(producto);
+      if (!campo) return;
+      cantidad = Math.max(0, Math.min(MAXIMO_POR_PRODUCTO, cantidad));
+      campo.value = cantidad ? String(cantidad) : "";
+
+      var tarjeta = formulario.querySelector('[data-tarjeta-de-producto="' + producto + '"]');
+      if (tarjeta) {
+        tarjeta.querySelector("[data-agregar]").hidden = cantidad > 0;
+        tarjeta.querySelector("[data-contador]").hidden = cantidad === 0;
+        tarjeta.querySelector("[data-cantidad-visible]").textContent = String(cantidad);
+      }
+    }
+
+    function avisar() {
+      htmx.trigger(document.body, "cantidades-cambiadas");
+    }
+
+    // Se escucha en el documento: los botones del ticket llegan por HTMX.
+    document.addEventListener("click", function (evento) {
+      var boton = evento.target.closest(
+        "[data-agregar], [data-paso], [data-quitar], [data-vaciar-pedido]"
+      );
+      if (!boton || !formulario.contains(boton)) return;
+
+      if (boton.hasAttribute("data-vaciar-pedido")) {
+        formulario.querySelectorAll('input[name^="cantidad-"]').forEach(function (campo) {
+          fijar(campo.name.slice("cantidad-".length), 0);
+        });
+      } else {
+        var producto = boton.getAttribute("data-producto");
+        var actual = parseInt((campoDe(producto) || {}).value, 10) || 0;
+        if (boton.hasAttribute("data-agregar")) fijar(producto, 1);
+        else if (boton.hasAttribute("data-quitar")) fijar(producto, 0);
+        else fijar(producto, actual + parseInt(boton.getAttribute("data-paso"), 10));
+      }
+      avisar();
+    });
+
+    var filtros = document.querySelector("[data-filtros-de-la-reserva]");
+    if (!filtros) return;
+    var tarjetas = formulario.querySelectorAll("[data-tarjeta-de-producto]");
+    var vacio = formulario.querySelector("[data-sin-resultados]");
+
+    function valor(nombre) {
+      return filtros.querySelector('[data-filtro="' + nombre + '"]').value.trim();
+    }
+
+    function aplicar() {
+      var nombre = sinAcentos(valor("nombre"));
+      var categoria = valor("categoria");
+      var minimo = valor("minimo") === "" ? null : Number(valor("minimo"));
+      var maximo = valor("maximo") === "" ? null : Number(valor("maximo"));
+      var sin = Array.prototype.map.call(
+        filtros.querySelectorAll('[data-filtro-sin][aria-pressed="true"]'),
+        function (pastilla) { return pastilla.getAttribute("data-filtro-sin"); }
+      );
+      var visibles = 0;
+
+      tarjetas.forEach(function (tarjeta) {
+        var precio = Number(tarjeta.getAttribute("data-precio"));
+        var declara = tarjeta.getAttribute("data-alergenos").split(" ");
+        var pasa =
+          sinAcentos(tarjeta.getAttribute("data-nombre")).indexOf(nombre) !== -1 &&
+          (!categoria || tarjeta.getAttribute("data-categoria") === categoria) &&
+          (minimo === null || precio >= minimo) &&
+          (maximo === null || precio <= maximo) &&
+          sin.every(function (alergeno) { return declara.indexOf(alergeno) === -1; });
+        tarjeta.hidden = !pasa;
+        if (pasa) visibles += 1;
+      });
+      if (vacio) vacio.hidden = visibles > 0 || tarjetas.length === 0;
+    }
+
+    filtros.addEventListener("input", aplicar);
+    filtros.addEventListener("change", aplicar);
+    filtros.addEventListener("click", function (evento) {
+      var pastilla = evento.target.closest("[data-filtro-sin]");
+      if (!pastilla) return;
+      pastilla.setAttribute(
+        "aria-pressed", pastilla.getAttribute("aria-pressed") === "true" ? "false" : "true"
+      );
+      aplicar();
+    });
+    document.addEventListener("click", function (evento) {
+      if (!evento.target.closest("[data-limpiar-filtros]")) return;
+      filtros.querySelectorAll("[data-filtro]").forEach(function (campo) { campo.value = ""; });
+      filtros.querySelectorAll("[data-filtro-sin]").forEach(function (pastilla) {
+        pastilla.setAttribute("aria-pressed", "false");
+      });
+      aplicar();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
@@ -1034,5 +1158,6 @@
     montarBuscadorDelAdmin();
     montarFichaDelEstudiante();
     montarImagenAmpliable();
+    montarReserva();
   });
 })();

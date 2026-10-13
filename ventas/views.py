@@ -6,14 +6,16 @@ renderizar. **Cero lógica de negocio** (`DT-15`).
 Una vista HTMX devuelve **un fragmento, nunca una página** (`DT-16`).
 """
 
+import uuid
 from decimal import Decimal
 
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import saldo_de
@@ -33,13 +35,17 @@ from ventas.selectors import (
     informacion_de_cobro,
     informacion_del_cierre,
     lineas_del_carrito,
+    pedido_de,
+    pedidos_de,
     pedidos_pendientes_de,
     reservas_pendientes,
+    resumen_de_la_reserva,
 )
 from ventas.models import PedidoAnticipado
 from ventas.services import (
     CierreRechazado,
     VentaRechazada,
+    cancelar_pedido,
     cerrar_caja,
     entregar,
     registrar_venta,
@@ -345,6 +351,45 @@ def cliente_generico(request):
     return render(request, "ventas/partials/cliente-generico.html")
 
 
+def _cantidades_de(datos):
+    """`{id_de_producto: unidades}` a partir de los campos `cantidad-<id>`.
+
+    Trabajo de HTTP, así que vive aquí: el servicio y el selector reciben las
+    cantidades ya limpias (`DT-15`). Lo que no es un entero o no es positivo se
+    ignora al pintar el ticket; al reservar, `_cantidades_o_error` lo rechaza.
+    """
+    cantidades = {}
+    for clave, crudo in datos.items():
+        if not clave.startswith("cantidad-"):
+            continue
+        try:
+            producto_id = uuid.UUID(clave.removeprefix("cantidad-"))
+            cuantas = int((crudo or "").strip() or 0)
+        except ValueError:
+            continue
+        if cuantas > 0:
+            cantidades[producto_id] = cuantas
+    return cantidades
+
+
+def _cantidades_o_error(datos):
+    """Como `_cantidades_de`, pero un valor que no es un entero es un error."""
+    for clave, crudo in datos.items():
+        if clave.startswith("cantidad-") and (crudo or "").strip():
+            try:
+                int(crudo.strip())
+            except ValueError:
+                return {}, "Las cantidades se escriben en números enteros."
+    return _cantidades_de(datos), None
+
+
+def _estudiante_del_acudiente(request, estudiante_id):
+    try:
+        return estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
+    except Estudiante.DoesNotExist:
+        raise Http404("Ese estudiante no está a tu cargo.") from None
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def reserva(request, estudiante_id):
@@ -353,58 +398,38 @@ def reserva(request, estudiante_id):
     Tercer criterio de la historia: **se gestiona desde la aplicación del
     acudiente** (`INT-1`), así que vive aquí y no en el admin.
 
+    **Una sola pantalla para reservar y para ver los pedidos** (`DEC-24`):
+    arriba los filtros, debajo el catálogo con su ticket, y al final los pedidos
+    del estudiante, que se abren en una modal donde se cancelan (`HU-65`,
+    `HU-66`). Dos pantallas con el mismo dato acaban diciendo cosas distintas.
+
     **La autorización la hace el selector**, no un `if` de esta vista: un
     estudiante que no está a cargo de quien pregunta es un 404, igual que uno
-    que no existe. Los dos casos se responden igual a propósito — distinguirlos
-    confirmaría a un desconocido que ese estudiante existe. Es el mismo patrón
-    que la recarga (`TT-61`).
-
-    El servicio vuelve a comprobar quién reserva, y esa repetición no sobra: la
-    vista corta antes para no enseñar un formulario que va a fallar, y el
-    servicio corta siempre, entre por donde entre (`DT-15`).
+    que no existe. El servicio vuelve a comprobar quién reserva (`DT-15`).
 
     ── NO HAY CARRITO EN SESIÓN, Y NO ES UN OLVIDO ────────────────────────
     El punto de venta lo tiene (`DT-26`) porque el cajero monta la venta gesto a
-    gesto con una fila delante. Aquí no hay fila: el acudiente rellena las
-    cantidades que quiere y envía una vez. Un carrito de servidor añadiría
-    estado que nadie necesita y una segunda forma de que la reserva quede a
-    medias.
+    gesto con una fila delante. Aquí las cantidades viven en el propio
+    formulario: los botones «+» y «−» cambian un entero en el navegador, el
+    ticket se pide al servidor con esas cantidades (`ticket_de_la_reserva`), y
+    se envía una vez. Ningún estado queda a medias en el servidor.
     ─────────────────────────────────────────────────────────────────────────
     """
-    try:
-        estudiante = estudiante_a_cargo(usuario=request.user, estudiante_id=estudiante_id)
-    except Estudiante.DoesNotExist:
-        raise Http404("Ese estudiante no está a tu cargo.") from None
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
 
-    productos = catalogo_para_reservar()
+    productos = catalogo_para_reservar(estudiante)
     error = None
     cantidades = {}
 
     if request.method == "POST":
-        # Las cantidades llegan como `cantidad-<id>`. Se parsean aquí —es
-        # trabajo de HTTP— y el servicio recibe `{id: entero}` ya limpio, que es
-        # lo que sabe validar (`DT-15`).
-        for producto in productos:
-            crudo = (request.POST.get(f"cantidad-{producto.id}") or "").strip()
-            if not crudo:
-                continue
-            try:
-                cuantas = int(crudo)
-            except ValueError:
-                error = "Las cantidades se escriben en números enteros."
-                break
-            if cuantas > 0:
-                cantidades[producto.id] = cuantas
-
+        cantidades, error = _cantidades_o_error(request.POST)
         if error is None:
             try:
-                pedido = reservar(
-                    actor=request.user, estudiante=estudiante, lineas=cantidades
-                )
+                reservar(actor=request.user, estudiante=estudiante, lineas=cantidades)
             except (VentaRechazada, EstudianteNoOperativo) as rechazo:
-                # Se devuelve `200` con el motivo dentro de la pantalla, no un
-                # `400`: el estado de la petición y lo que hay que enseñar son
-                # dos preguntas distintas, y es el precedente del repositorio.
+                # `200` con el motivo dentro de la pantalla, no un `400`: el
+                # estado de la petición y lo que hay que enseñar son dos
+                # preguntas distintas, y es el precedente del repositorio.
                 error = "; ".join(rechazo.messages) if hasattr(rechazo, "messages") else str(rechazo)
             else:
                 messages.success(
@@ -414,12 +439,11 @@ def reserva(request, estudiante_id):
                 )
                 return redirect("reserva", estudiante_id=estudiante.id)
 
-    # Lo que se escribió se devuelve escrito. Se adjunta al producto, como las
-    # disponibles: una plantilla no sabe indexar un diccionario por una clave
-    # que sale de una variable, y quien acaba de ver un rechazo no debería tener
-    # que teclear otra vez lo que ya tecleó.
+    # Lo que se escribió se devuelve escrito, también tras un rechazo: se
+    # adjunta al producto porque una plantilla no sabe indexar un diccionario
+    # por una clave que sale de una variable.
     for producto in productos:
-        producto.cantidad_pedida = cantidades.get(producto.id, "")
+        producto.cantidad_pedida = cantidades.get(producto.id, 0)
 
     return render(
         request,
@@ -427,11 +451,215 @@ def reserva(request, estudiante_id):
         {
             "estudiante": estudiante,
             "productos": productos,
-            "saldo": saldo_de(estudiante),
-            "pendientes": pedidos_pendientes_de(estudiante),
+            "categorias": sorted(
+                {p.categoria for p in productos}, key=lambda categoria: categoria.nombre
+            ),
+            "alergenos": sorted(
+                {a for p in productos for a in p.alergenos_declarados},
+                key=lambda alergeno: alergeno.nombre,
+            ),
+            "resumen": resumen_de_la_reserva(estudiante, cantidades),
+            "pedidos": pedidos_de(estudiante),
             "error": error,
         },
     )
+
+
+@login_required
+@require_http_methods(["GET"])
+def ticket_de_la_reserva(request, estudiante_id):
+    """El ticket de la reserva para unas cantidades (`DEC-24`).
+
+    **Un fragmento, nunca una página** (`DT-16`): lo pide la pantalla a cada
+    «+» o «−», con las cantidades del formulario en la consulta. `GET` porque no
+    escribe nada: calcula un resumen y lo devuelve. Las cifras las formatea el
+    servidor, que es el único sitio donde se escribe el dinero.
+    """
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
+    return render(
+        request,
+        "ventas/partials/ticket-de-la-reserva.html",
+        {
+            "estudiante": estudiante,
+            "resumen": resumen_de_la_reserva(estudiante, _cantidades_de(request.GET)),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def detalle_del_producto(request, estudiante_id, producto_id):
+    """La ficha nutricional de un producto, para la modal (`DEC-24`).
+
+    Con lo que ese estudiante tiene bloqueado, porque es lo que el acudiente
+    viene a mirar: si puede llevarlo y qué declara. Fragmento (`DT-16`).
+    """
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
+    producto = next(
+        (p for p in catalogo_para_reservar(estudiante) if p.id == producto_id), None
+    )
+    if producto is None:
+        raise Http404("Ese producto no está en el catálogo.")
+    return render(
+        request,
+        "ventas/partials/detalle-del-producto.html",
+        {"estudiante": estudiante, "producto": producto},
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def pedidos_del_estudiante(request, estudiante_id):
+    """La lista de pedidos del estudiante, como fragmento (`HU-65`, `DEC-24`).
+
+    Vive dentro de la pantalla de reserva, y esta ruta es la que la repinta
+    cuando un pedido se cancela: la modal responde con `HX-Trigger:
+    pedidos-cambiado` y la lista se vuelve a pedir (`DT-40`). La autorización
+    la hace `estudiante_a_cargo`: uno ajeno es un 404.
+    """
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
+    return render(
+        request,
+        "ventas/partials/pedidos-del-estudiante.html",
+        {"estudiante": estudiante, "pedidos": pedidos_de(estudiante)},
+    )
+
+
+def _pedido_del_estudiante(estudiante, pedido_id):
+    try:
+        return pedido_de(estudiante, pedido_id)
+    except PedidoAnticipado.DoesNotExist:
+        raise Http404("Ese pedido no existe.") from None
+
+
+@login_required
+@require_http_methods(["GET"])
+def detalle_del_pedido(request, estudiante_id, pedido_id):
+    """El detalle de un pedido en la modal, con su cancelación si procede.
+
+    `HU-65` y `HU-66`. Fragmento (`DT-16`). El pedido se busca **dentro** del
+    estudiante a cargo: uno de otro estudiante es un 404 aunque exista.
+    """
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
+    return render(
+        request,
+        "ventas/partials/detalle-del-pedido.html",
+        {"estudiante": estudiante, "pedido": _pedido_del_estudiante(estudiante, pedido_id)},
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def cancelacion_por_el_acudiente(request, estudiante_id, pedido_id):
+    """El acudiente cancela un pedido desde su modal (`HU-66`, `DT-48`).
+
+    **Devuelve la misma modal**, con el error o ya cancelada (`DT-16`): lo que
+    quedara fuera del fragmento no se intercambiaría. Si se canceló, la
+    respuesta lleva `HX-Trigger: pedidos-cambiado`, y la lista y el ticket —que
+    enseña el saldo— se vuelven a pedir solos (`DT-40`).
+
+    Quién puede lo decide el servicio; un rechazo vuelve en `200` con su motivo
+    dentro, porque HTMX no intercambia lo que llega en `4xx`.
+    """
+    estudiante = _estudiante_del_acudiente(request, estudiante_id)
+    pedido = _pedido_del_estudiante(estudiante, pedido_id)
+
+    error = None
+    motivo = request.POST.get("motivo", "")
+    try:
+        cancelar_pedido(actor=request.user, pedido=pedido, motivo=motivo)
+    except ValidationError as rechazo:
+        error = " ".join(rechazo.messages)
+
+    respuesta = render(
+        request,
+        "ventas/partials/detalle-del-pedido.html",
+        {
+            "estudiante": estudiante,
+            "pedido": _pedido_del_estudiante(estudiante, pedido_id),
+            "error": error,
+            "motivo": motivo if error else "",
+            "recien_cancelado": error is None,
+        },
+    )
+    if error is None:
+        respuesta["HX-Trigger"] = "pedidos-cambiado"
+    return respuesta
+
+
+def _cancelacion(request, *, pedido, volver_a, al_terminar):
+    """La confirmación de una cancelación desde la cola (`HU-67`, `DT-48`).
+
+    `GET` enseña el pedido, lo que se devolverá y el campo del motivo; `POST`
+    cancela y redirige. Quién puede lo decide el servicio (`DT-15`).
+
+    Un rechazo —sin motivo, o el pedido ya no está pendiente— vuelve en `200`
+    con el mensaje dentro: el estado de la petición y lo que hay que enseñar
+    son dos preguntas distintas.
+    """
+    error = None
+    motivo = ""
+
+    if request.method == "POST":
+        motivo = request.POST.get("motivo", "")
+        try:
+            cancelado = cancelar_pedido(actor=request.user, pedido=pedido, motivo=motivo)
+        except ValidationError as rechazo:
+            error = " ".join(rechazo.messages)
+        else:
+            messages.success(
+                request,
+                f"Pedido cancelado: {dinero(total_de(cancelado.venta))} volvieron a la "
+                f"billetera de {cancelado.venta.estudiante.nombre}.",
+            )
+            return redirect(al_terminar)
+        pedido.refresh_from_db()
+
+    return render(
+        request,
+        "ventas/cancelar-pedido.html",
+        {
+            "pedido": pedido,
+            "estudiante": pedido.venta.estudiante,
+            "total": total_de(pedido.venta),
+            "motivo": motivo,
+            "error": error,
+            "volver_a": volver_a,
+        },
+    )
+
+
+def _pedido_para_cancelar(**filtro):
+    """El pedido con lo que la confirmación enseña, o un 404."""
+    pedido = (
+        PedidoAnticipado.objects.filter(**filtro)
+        .select_related("venta__estudiante", "cancelado_por")
+        .prefetch_related("venta__lineas__producto")
+        .first()
+    )
+    if pedido is None:
+        raise Http404("Ese pedido no existe.")
+    return pedido
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def cancelacion_por_la_cafeteria(request, pedido_id):
+    """El cajero o la administración cancelan un pedido de la cola (`HU-67`).
+
+    El rol se comprueba aquí **y** en el servicio, como en el punto de venta:
+    aquí para responder `403` antes de enseñar un pedido ajeno, allí para que
+    la regla valga entre por donde entre (`DT-15`).
+    """
+    if request.user.rol not in (Rol.CAJERO, Rol.ADMINISTRADOR):
+        raise PermissionDenied(
+            "Cancelar un pedido desde la cola es del personal de la cafetería "
+            "([S11], DEC-24)."
+        )
+
+    pedido = _pedido_para_cancelar(pk=pedido_id)
+    volver_a = reverse("reservas")
+    return _cancelacion(request, pedido=pedido, volver_a=volver_a, al_terminar=volver_a)
 
 
 @login_required

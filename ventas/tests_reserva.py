@@ -21,6 +21,7 @@ Ninguna de esas pruebas mira el código: todas cobran de verdad y comprueban que
 el saldo no se movió.
 """
 
+import re
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied
@@ -49,7 +50,6 @@ from ventas.models import (
     PedidoAnticipado,
     Venta,
 )
-from ventas.selectors import existencias_sin_reservar, unidades_reservadas_pendientes
 from ventas.services import (
     AlergenoBloqueado,
     CarritoVacio,
@@ -155,11 +155,7 @@ class ElCobroOcurreAlReservarTest(BaseReserva):
         self.assertIsNone(pedido.entregado_por)
 
     def test_la_reserva_no_descuenta_inventario_todavia(self):
-        """`DT-33`. El libro de inventario lo mueve la entrega (`HU-25`).
-
-        Es la mitad que hace falta sostener con `existencias_sin_reservar`: las
-        unidades siguen en el libro, así que hay que apartarlas de otro modo.
-        """
+        """`DT-33`. El libro de inventario lo mueve la entrega (`HU-25`)."""
         reservar(
             actor=self.acudiente,
             estudiante=self.estudiante,
@@ -345,76 +341,65 @@ class LaReservaHeredaLasReglasDeLaVentaTest(BaseReserva):
         self._no_deja_reservar(LimiteDiarioSuperado, lineas={self.empanada.id: 2})
 
     def test_no_se_reserva_sin_saldo(self):
-        """`INV-1`. Ninguna venta deja saldo negativo, y una reserva es una venta.
-
-        El producto es caro y hay de sobra: si faltaran existencias saltaría
-        antes `ExistenciasInsuficientes`, que es el orden que `DT-6` fija, y esta
-        prueba pasaría por el motivo equivocado.
-        """
+        """`INV-1`. Ninguna venta deja saldo negativo, y una reserva es una venta."""
         caro = producto("Almuerzo completo", "30000", existencias=10)
 
         self._no_deja_reservar(SaldoInsuficiente, lineas={caro.id: 3})
-
-    def test_no_se_reserva_lo_que_no_hay(self):
-        self._no_deja_reservar(ExistenciasInsuficientes, lineas={self.empanada.id: 11})
 
     def test_no_se_reserva_nada(self):
         self._no_deja_reservar(CarritoVacio, lineas={})
 
 
-class LaReservaApartaLoQueYaReservoTest(BaseReserva):
-    """`DT-33`. Como no descuenta inventario, hay que apartarlo de otro modo.
+class LaReservaEsUnEncargoTest(BaseReserva):
+    """`DEC-24`, `DT-47`. La reserva no mira la vitrina: la cafetería la prepara.
 
-    Sin esto, dos reservas del último paquete pasarían las dos —las existencias
-    dicen «queda 1» las dos veces— y quien reservó segundo habría pagado por algo
-    que no va a recibir.
+    Antes validaba contra lo que quedaba sin apartar, y con el inventario a
+    cero no se podía reservar nada. **Las otras cinco comprobaciones siguen**:
+    las ejercita `LaReservaHeredaLasReglasDeLaVentaTest`.
     """
 
-    def test_lo_reservado_no_se_puede_volver_a_reservar(self):
-        escaso = producto("Torta", "2000", existencias=2)
-        reservar(
-            actor=self.acudiente, estudiante=self.estudiante, lineas={escaso.id: 2}
+    def test_se_reserva_aunque_no_haya_existencias(self):
+        agotado = producto("Torta", "2000", existencias=0)
+
+        pedido = reservar(
+            actor=self.acudiente, estudiante=self.estudiante, lineas={agotado.id: 3}
         )
 
-        with self.assertRaises(ExistenciasInsuficientes):
-            reservar(
-                actor=self.acudiente, estudiante=self.estudiante, lineas={escaso.id: 1}
-            )
+        self.assertTrue(pedido.esta_pendiente)
+        self.assertEqual(saldo_de(self.estudiante), Decimal("44000.00"))
 
-    def test_las_unidades_apartadas_se_cuentan(self):
-        reservar(
-            actor=self.acudiente,
-            estudiante=self.estudiante,
-            lineas={self.empanada.id: 3},
-        )
-
-        self.assertEqual(
-            unidades_reservadas_pendientes()[self.empanada.id], 3
-        )
-        self.assertEqual(existencias_sin_reservar()[self.empanada.id], 7)
-        # Las existencias **reales** no cambian: `INV-3` sigue siendo la suma del
-        # historial, y esto es otra cifra que se lee al lado.
-        self.assertEqual(existencias_de(self.empanada), 10)
-
-    def test_un_pedido_entregado_deja_de_apartar(self):
-        """Al entregarse, las unidades salen del libro y ya no hay que apartarlas.
-
-        La entrega es `TT-149` (`HU-25`); aquí se fija el estado a mano para
-        comprobar que el selector mira el estado y no la existencia del pedido.
-        """
+    def test_se_reserva_mas_de_lo_que_hay(self):
         pedido = reservar(
             actor=self.acudiente,
             estudiante=self.estudiante,
-            lineas={self.empanada.id: 3},
-        )
-        PedidoAnticipado.objects.filter(pk=pedido.pk).update(
-            estado=EstadoDelPedido.ENTREGADO,
-            entregado_en="2026-09-18T12:00:00Z",
-            entregado_por=self.acudiente,
+            lineas={self.empanada.id: 11},
         )
 
-        self.assertEqual(unidades_reservadas_pendientes(), {})
-        self.assertEqual(existencias_sin_reservar()[self.empanada.id], 10)
+        self.assertTrue(pedido.esta_pendiente)
+
+    def test_lo_reservado_se_puede_volver_a_reservar(self):
+        """Nada se aparta: dos encargos del mismo producto pasan los dos."""
+        escaso = producto("Torta", "2000", existencias=2)
+        for _ in range(2):
+            reservar(
+                actor=self.acudiente, estudiante=self.estudiante, lineas={escaso.id: 2}
+            )
+
+        self.assertEqual(PedidoAnticipado.objects.count(), 2)
+        # El libro no se movió: lo mueve la entrega (`DT-33`).
+        self.assertEqual(existencias_de(escaso), 2)
+
+    def test_la_caja_sigue_mirando_las_existencias(self):
+        """La contraprueba: solo cambió la reserva. Si `_bloquear_y_validar`
+        dejara de mirar existencias para todos, esta caería y las de arriba no."""
+        cajero = Usuario.objects.crear_usuario(
+            email="cajero-encargo@example.com", rol=Rol.CAJERO, nombre="Cajero"
+        )
+
+        with self.assertRaises(ExistenciasInsuficientes):
+            registrar_venta(
+                actor=cajero, estudiante=self.estudiante, lineas={self.empanada.id: 11}
+            )
 
 
 # --- Criterio 3: se gestiona desde la aplicación del acudiente ------------
@@ -526,24 +511,22 @@ class LaPantallaDeReservaTest(BaseReserva):
         pedido = PedidoAnticipado.objects.get()
         self.assertEqual(pedido.venta.lineas.count(), 1)
 
-    def test_la_pantalla_enseña_lo_que_queda_sin_apartar(self):
-        """No ofrece lo que el servicio va a rechazar."""
-        reservar(
-            actor=self.acudiente,
-            estudiante=self.estudiante,
-            lineas={self.empanada.id: 4},
-        )
+    def test_la_pantalla_no_limita_por_existencias(self):
+        """`DT-47`. Un producto agotado se ofrece igual: ni `max`, ni campo
+        deshabilitado. Se mira el `<input>` y no la copia (`[S3.6]`)."""
+        agotado = producto("Torta", "2000", existencias=0)
 
-        respuesta = self.client.get(self.url)
-        pintado = [
-            p for p in respuesta.context["productos"] if p.id == self.empanada.id
-        ][0]
+        cuerpo = self.client.get(self.url).content.decode()
+        campo = re.search(
+            rf'<input[^>]*name="cantidad-{agotado.id}"[^>]*>', cuerpo
+        ).group(0)
 
-        self.assertEqual(pintado.disponibles, 6)
+        self.assertNotIn("max=", campo)
+        self.assertNotIn("disabled", campo)
 
-    def test_la_pantalla_enseña_las_reservas_pendientes(self):
+    def test_la_pantalla_enseña_sus_pedidos(self):
         """Responde a «¿no acabo de reservar esto?», que es lo que evita la
-        reserva repetida por no acordarse de la anterior."""
+        reserva repetida por no acordarse de la anterior (`HU-65`)."""
         reservar(
             actor=self.acudiente,
             estudiante=self.estudiante,
@@ -552,8 +535,8 @@ class LaPantallaDeReservaTest(BaseReserva):
 
         respuesta = self.client.get(self.url)
 
-        self.assertEqual(len(respuesta.context["pendientes"]), 1)
-        self.assertContains(respuesta, "data-pedido-pendiente")
+        self.assertEqual(len(respuesta.context["pedidos"]), 1)
+        self.assertContains(respuesta, 'data-pedido="pendiente"')
 
     def test_un_estudiante_ajeno_es_un_404_igual_que_uno_inexistente(self):
         """Distinguirlos confirmaría a un desconocido que ese estudiante existe."""
@@ -581,17 +564,129 @@ class LaPantallaDeReservaTest(BaseReserva):
         self.assertContains(respuesta, self.url)
 
 
-class ElCampoNoOfreceLoQueNoHayTest(BaseReserva):
-    """Hallazgo de la revisión de cierre del Sprint 4.
+class LaPantallaEnsenaLaImagenDelProductoTest(BaseReserva):
+    """La imagen del producto en la tarjeta de la reserva (`HU-59`, `DEC-24`).
 
-    **Las disponibles pueden ser negativas.** Pasa cuando la caja vende unidades
-    apartadas para una reserva pagada, que es el hueco que `DT-33` dejó abierto y
-    `DT-35` decidió sobrellevar.
+    Sobre el marcado y por `data-*` (`[S3.6]` de `escribir-pruebas.md`). La URL
+    sale de la clave, así que no hace falta almacenamiento (`[S3.7]`).
+    """
 
-    La pantalla preguntaba por «igual a cero» para deshabilitar el campo, así que
-    con −4 se quedaba **habilitado** y con `max="-4"` sobre `min="0"`: un rango
-    imposible, y una cifra que el servicio iba a rechazar. Ahora pregunta por
-    «mayor que cero», que es lo que de verdad decide si hay algo que reservar.
+    def setUp(self):
+        super().setUp()
+        Producto.objects.filter(pk=self.empanada.pk).update(
+            imagen_clave="0123456789abcdef0123456789abcdef.webp"
+        )
+        self.empanada.refresh_from_db()
+        self.client.force_login(self.acudiente)
+        self.url = reverse("reserva", args=[self.estudiante.id])
+
+    def test_con_imagen_la_tarjeta_la_pinta(self):
+        self.assertRegex(
+            self.client.get(self.url).content.decode(),
+            r'<img src="' + re.escape(self.empanada.url_de_la_imagen) + r'"[^>]*data-imagen-del-producto',
+        )
+
+    def test_sin_imagen_marca_el_hueco_sin_img_vacio(self):
+        Producto.objects.filter(pk=self.empanada.pk).update(imagen_clave="")
+        cuerpo = self.client.get(self.url).content.decode()
+
+        self.assertEqual(cuerpo.count("data-sin-imagen-del-producto"), 1)
+        self.assertNotIn('src=""', cuerpo)
+
+    def test_reservar_y_pagar_es_la_accion_principal(self):
+        """Como «Recargar»: `bg-primario`, no el acento de los enlaces. Sale en
+        el ticket en cuanto hay algo elegido y el saldo alcanza."""
+        ticket = self.client.get(
+            reverse("ticket-de-la-reserva", args=[self.estudiante.id]),
+            {f"cantidad-{self.empanada.id}": "1"},
+        ).content.decode()
+        boton = re.search(r"<button[^>]*data-reservar[^>]*>", ticket).group(0)
+
+        self.assertIn("bg-primario", boton)
+        self.assertNotIn("bg-acento", boton)
+
+
+class ElTicketDeLaReservaTest(BaseReserva):
+    """`DEC-24`. El ticket lo calcula y lo formatea el servidor a cada cambio.
+
+    Saldo de partida: 50.000. La empanada cuesta 3.500.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.acudiente)
+        self.url = reverse("ticket-de-la-reserva", args=[self.estudiante.id])
+
+    def _ticket(self, **cantidades):
+        return self.client.get(
+            self.url, {f"cantidad-{k}": v for k, v in cantidades.items()}
+        )
+
+    def test_es_un_fragmento_con_el_total_y_el_saldo_despues(self):
+        respuesta = self._ticket(**{str(self.empanada.id): "3"})
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotContains(respuesta, "<html")
+        resumen = respuesta.context["resumen"]
+        self.assertEqual(resumen.total, Decimal("10500.00"))
+        self.assertEqual(resumen.saldo_despues, Decimal("39500.00"))
+        self.assertContains(respuesta, "data-linea-de-la-reserva", count=1)
+
+    def test_vacio_no_ofrece_reservar(self):
+        """Un hueco nunca es un botón deshabilitado (`[S2.4]`)."""
+        respuesta = self._ticket()
+
+        self.assertNotContains(respuesta, "data-reservar")
+        self.assertEqual(respuesta.context["resumen"].lineas, ())
+
+    def test_lo_que_no_es_un_entero_o_no_es_de_ningun_producto_se_ignora(self):
+        respuesta = self.client.get(
+            self.url,
+            {
+                f"cantidad-{self.empanada.id}": "dos",
+                "cantidad-no-es-un-uuid": "4",
+                "cantidad-0123e456-e89b-12d3-a456-426614174000": "4",
+            },
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.context["resumen"].lineas, ())
+
+    def test_si_no_alcanza_dice_cuanto_falta_y_no_ofrece_reservar(self):
+        """`INV-1`. Se dice antes de enviar; quien rechaza sigue siendo el servicio."""
+        caro = producto("Almuerzo completo", "30000")
+
+        respuesta = self._ticket(**{str(caro.id): "2"})
+
+        self.assertContains(respuesta, "data-no-alcanza")
+        self.assertNotContains(respuesta, "data-reservar")
+        self.assertEqual(respuesta.context["resumen"].faltan, Decimal("10000.00"))
+        self.assertContains(respuesta, reverse("recarga", args=[self.estudiante.id]))
+
+    def test_si_supera_el_cupo_lo_dice_y_no_ofrece_reservar(self):
+        """`HU-20`: la reserva cuenta en el cupo del día."""
+        fijar_limite_diario(
+            actor=self.acudiente, estudiante=self.estudiante, monto=Decimal("5000")
+        )
+
+        respuesta = self._ticket(**{str(self.empanada.id): "2"})
+
+        self.assertContains(respuesta, "data-supera-el-cupo")
+        self.assertNotContains(respuesta, "data-reservar")
+
+    def test_de_un_estudiante_ajeno_es_un_404(self):
+        _, ajeno = familia("1009999960", email="ajena-ticket@example.com")
+
+        respuesta = self.client.get(reverse("ticket-de-la-reserva", args=[ajeno.id]))
+
+        self.assertEqual(respuesta.status_code, 404)
+
+
+class LasTarjetasAvisanDeLoBloqueadoTest(BaseReserva):
+    """`HU-10`, `HU-11`. La tarjeta dice **antes** de añadir que no se podrá.
+
+    Es aviso, no autorización: la que rechaza es `reservar`, y sus pruebas
+    están en `LaReservaHeredaLasReglasDeLaVentaTest`.
     """
 
     def setUp(self):
@@ -599,64 +694,104 @@ class ElCampoNoOfreceLoQueNoHayTest(BaseReserva):
         self.client.force_login(self.acudiente)
         self.url = reverse("reserva", args=[self.estudiante.id])
 
-    def _deja_las_disponibles_en_negativo(self):
-        """Reserva cuatro y deja que la caja venda las diez que hay."""
-        reservar(
-            actor=self.acudiente,
-            estudiante=self.estudiante,
-            lineas={self.empanada.id: 4},
-        )
-        cajero = Usuario.objects.crear_usuario(
-            email="cajero-negativo@example.com", rol=Rol.CAJERO, nombre="Cajero"
-        )
-        otro_acudiente, otro = familia("1009999950", email="otra-n@example.com")
-        recargar(actor=otro_acudiente, estudiante=otro, monto=Decimal("100000"))
-        registrar_venta(
-            actor=cajero, estudiante=otro, lineas={self.empanada.id: 10}
+    def _tarjeta(self, articulo):
+        cuerpo = self.client.get(self.url).content.decode()
+        inicio = cuerpo.index(f'data-tarjeta-de-producto="{articulo.id}"')
+        return cuerpo[inicio : cuerpo.index("</li>", inicio)]
+
+    def test_un_producto_bloqueado_no_tiene_cantidad_que_elegir(self):
+        bloquear_producto(
+            actor=self.acudiente, estudiante=self.estudiante, producto=self.empanada
         )
 
-    def test_las_disponibles_pueden_ser_negativas(self):
-        """Primero se fija el hecho: si dejara de pasar, las de abajo probarían
-        sobre un escenario que ya no existe."""
-        self._deja_las_disponibles_en_negativo()
+        tarjeta = self._tarjeta(self.empanada)
 
-        self.assertEqual(existencias_sin_reservar()[self.empanada.id], -4)
+        self.assertIn("data-no-reservable", tarjeta)
+        self.assertNotIn(f'name="cantidad-{self.empanada.id}"', tarjeta)
 
-    def test_el_campo_queda_deshabilitado_con_disponibles_negativas(self):
-        self._deja_las_disponibles_en_negativo()
+    def test_un_alergeno_bloqueado_se_nombra_en_la_tarjeta(self):
+        mani, _ = Alergeno.objects.get_or_create(nombre="Maní")
+        ProductoAlergeno.objects.create(producto=self.empanada, alergeno=mani)
+        bloquear_alergeno(actor=self.acudiente, estudiante=self.estudiante, alergeno=mani)
 
-        cuerpo = self.client.get(self.url).content.decode()
-        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+        tarjeta = self._tarjeta(self.empanada)
 
-        self.assertIn("data-sin-disponibles", fila)
+        self.assertIn("data-aviso-de-restriccion", tarjeta)
+        self.assertIn("maní", tarjeta)
+        self.assertIn("data-no-reservable", tarjeta)
 
-    def test_no_se_emite_un_max_negativo(self):
-        """`min="0"` con `max="-4"` es un rango imposible: el navegador no sabe
-        qué hacer con él y el atributo miente sobre lo que se puede pedir."""
-        self._deja_las_disponibles_en_negativo()
+    def test_la_contraprueba_un_producto_libre_se_puede_agregar(self):
+        tarjeta = self._tarjeta(self.empanada)
 
-        cuerpo = self.client.get(self.url).content.decode()
+        self.assertIn("data-agregar", tarjeta)
+        self.assertNotIn("data-no-reservable", tarjeta)
 
-        self.assertNotIn('max="-', cuerpo)
+    def test_lleva_lo_que_filtra_el_navegador_sin_formato(self):
+        """El precio como número —`3500.00`, no «$3.500»— para comparar."""
+        tarjeta = self._tarjeta(self.empanada)
 
-    def test_con_disponibles_de_cero_tambien_queda_deshabilitado(self):
-        """El caso que sí funcionaba, para que el arreglo no lo rompa."""
-        reservar(
-            actor=self.acudiente,
-            estudiante=self.estudiante,
-            lineas={self.empanada.id: 10},
+        self.assertIn('data-precio="3500.00"', tarjeta)
+        self.assertIn(f'data-categoria="{self.empanada.categoria_id}"', tarjeta)
+
+    def test_tras_un_rechazo_las_cantidades_siguen_elegidas(self):
+        caro = producto("Almuerzo completo", "30000")
+
+        cuerpo = self.client.post(self.url, {f"cantidad-{caro.id}": "2"}).content.decode()
+
+        self.assertIn("data-reserva-rechazada", cuerpo)
+        self.assertRegex(cuerpo, rf'name="cantidad-{caro.id}"\s+value="2"')
+
+
+class LaFichaDelProductoTest(BaseReserva):
+    """«Detalle»: la ficha nutricional en la modal (`DEC-24`)."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.acudiente)
+
+    def test_es_un_fragmento_con_lo_que_declara(self):
+        Producto.objects.filter(pk=self.empanada.pk).update(energia_kcal=290)
+
+        respuesta = self.client.get(
+            reverse("detalle-del-producto", args=[self.estudiante.id, self.empanada.id])
         )
 
-        cuerpo = self.client.get(self.url).content.decode()
-        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotContains(respuesta, "<html")
+        self.assertContains(respuesta, "data-detalle-del-producto")
+        self.assertContains(respuesta, "290 kcal")
 
-        self.assertIn("data-sin-disponibles", fila)
+    def test_un_alergeno_bloqueado_se_marca(self):
+        mani, _ = Alergeno.objects.get_or_create(nombre="Maní")
+        ProductoAlergeno.objects.create(producto=self.empanada, alergeno=mani)
+        bloquear_alergeno(actor=self.acudiente, estudiante=self.estudiante, alergeno=mani)
 
-    def test_con_disponibles_el_campo_se_puede_usar(self):
-        """La contraprueba: si esto fallara, las de arriba pasarían por deshabilitar
-        siempre."""
-        cuerpo = self.client.get(self.url).content.decode()
-        fila = cuerpo[cuerpo.index(f"cantidad-{self.empanada.id}") :][:600]
+        respuesta = self.client.get(
+            reverse("detalle-del-producto", args=[self.estudiante.id, self.empanada.id])
+        )
 
-        self.assertNotIn("data-sin-disponibles", fila)
-        self.assertIn('max="10"', fila)
+        self.assertContains(respuesta, "data-alergeno-bloqueado", count=1)
+
+    def test_un_producto_retirado_es_un_404(self):
+        Producto.objects.filter(pk=self.empanada.pk).update(activo=False)
+
+        respuesta = self.client.get(
+            reverse("detalle-del-producto", args=[self.estudiante.id, self.empanada.id])
+        )
+
+        self.assertEqual(respuesta.status_code, 404)
+
+
+class QuienNoOperaVeSusPedidosTest(BaseReserva):
+    """`INVD-2`: no reserva, pero sus pedidos siguen en la pantalla (`DEC-24`)."""
+
+    def test_sin_catalogo_y_con_sus_pedidos(self):
+        reservar(actor=self.acudiente, estudiante=self.estudiante, lineas={self.empanada.id: 1})
+        desactivar(actor=self.acudiente, estudiante=self.estudiante)
+        self.client.force_login(self.acudiente)
+
+        respuesta = self.client.get(reverse("reserva", args=[self.estudiante.id]))
+
+        self.assertContains(respuesta, "data-no-puede-reservar")
+        self.assertNotContains(respuesta, "data-formulario-de-reserva")
+        self.assertContains(respuesta, 'data-pedido="pendiente"')

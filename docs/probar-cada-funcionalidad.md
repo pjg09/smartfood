@@ -8,9 +8,9 @@
 | titulo | Cómo poner a prueba cada funcionalidad del prototipo en el entorno local |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./desarrollo.md` (de donde sale); `./mapa-de-la-aplicacion.md`; `./decisiones-de-alcance.md` |
-| actualizado | 2026-10-12 |
+| actualizado | 2026-10-13 |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 **Qué hacer para ver funcionando cada cosa**, una por sección: qué cuenta usar, qué pantalla
 abrir, qué tiene que pasar y qué hay que preparar antes. Es lo que se repasa para preparar
@@ -162,13 +162,22 @@ la clave, así que cambia la URL y no hay nada que invalidar.
 
 ## [S8] Reservar y pagar por adelantado
 
-Como acudiente, en el panel de un estudiante: tarjeta **Reservas** → *Reservar consumo*. Se
-escriben las cantidades y se envía una vez. **El saldo baja al confirmar**, no al recoger
-(`HU-23`, `DT-33`), y el movimiento queda en el historial de la billetera como cualquier
-venta.
+Como acudiente, en el panel de un estudiante: tarjeta **Reservas** → *Reservar consumo*. La
+pantalla es un punto de venta (`DEC-24`): **filtros** arriba —nombre, categoría, precio y
+«Sin …» por alérgeno—, las **tarjetas** de los productos y, al lado, **Tu pedido**.
 
-La cifra que acompaña a cada producto es lo que queda **sin apartar** por otras reservas
-pendientes, no las existencias: la pantalla no ofrece lo que el servicio va a rechazar.
+**Agregar** pasa a «− 1 +» en la tarjeta, y el ticket enseña cada línea —cantidad, precio por
+unidad, importe y calorías—, el **total a pagar**, el saldo actual y el que quedará. Lo
+recalcula el servidor a cada pulsación: se ve en la pestaña de red del navegador, una
+petición a `…/reservar/ticket/` por gesto. Si el saldo no alcanza o se pasa del cupo del día,
+en lugar del botón sale qué falta y el enlace para arreglarlo. **El saldo baja al pulsar
+Reservar y pagar**, no al recoger (`HU-23`, `DT-33`), y el movimiento queda en el historial de
+la billetera.
+
+**No enseña existencias, y se reserva aunque no haya** (`DT-47`): es un encargo que la
+cafetería prepara a partir de su cola. Para verlo recién sembrado basta recargar la
+billetera. Lo que el acudiente bloqueó —por producto o por alérgeno— sale en rojo en la
+tarjeta, sin contador; **Detalle** abre la ficha nutricional con sus alérgenos.
 
 **La reserva pasa por la misma validación que el cobro del mostrador.** Si el estudiante está
 desactivado, si el producto lleva un alérgeno bloqueado, si está bloqueado, si se pasa del
@@ -176,9 +185,8 @@ cupo del día o si no alcanza el saldo, la reserva se rechaza igual que la venta
 `HU-23` mencione ninguna de esas reglas. Para verlo, bloquea un producto en
 *Restricciones → Productos* e intenta reservarlo.
 
-**El inventario no se mueve hasta la entrega** (`HU-25`, `[S10]`). Mientras tanto las
-unidades siguen en el libro pero apartadas: las existencias reales no cambian y
-`existencias_sin_reservar` sí.
+**El inventario no se mueve hasta la entrega** (`HU-25`, `[S10]`): reservar no mira ni toca
+las existencias.
 
 ## [S9] Ver qué hay que preparar para el descanso
 
@@ -194,7 +202,7 @@ entrega no tienen por qué ser la misma persona. La institución y el acudiente 
 aunque escriban la URL.
 
 Para verla con datos, reserva desde un acudiente (`[S8]`) y entra con
-`cajero@example.com`.
+`cajero@example.com`. Cada pedido lleva su **Cancelar** (`[S20]`).
 
 ## [S10] Entregar un pedido en la caja
 
@@ -405,3 +413,35 @@ ya lo encuentra al buscarlo.
 Lo que tiene que rechazar, junto al campo: un correo que ya es de otra cuenta —también con
 otras mayúsculas— y un documento que ya es de otro acudiente. **El acudiente creado no se
 borra desde la aplicación**: en la base de trabajo, crea solo los que quieras conservar.
+
+## [S20] Ver y cancelar los pedidos reservados
+
+**Como acudiente** (`HU-65`, `HU-66`): en la misma pantalla de reservar, debajo del catálogo —o
+desde el panel, tarjeta **Reservas** → *Ver pedidos*, que lleva ahí—. Una fila por pedido, del
+más reciente al más antiguo, con su estado, sus calorías y su total. **Pulsar la fila abre el
+detalle** en una modal: cada producto con su precio por unidad y su importe, y el total. Si
+está por recoger, la modal trae **Cancelar**, con el motivo obligatorio. Al cancelar, la modal
+lo confirma y la lista y el saldo del ticket se actualizan solos. De un cancelado, la modal
+dice cuándo, por qué y si lo canceló el acudiente o la cafetería.
+
+Con el estudiante desactivado o dado de baja, la pantalla no ofrece el catálogo, pero **los
+pedidos siguen**: el pendiente es justo el que hay que cancelar (`DEC-24`).
+
+**Como cajero o administración** (`HU-67`): en la cola de **Reservas** (`[S9]`), **Cancelar** en
+cada pedido abre una página de confirmación que dice cuánto vuelve y pide el motivo.
+
+Al cancelar, por cualquiera de los dos caminos:
+
+- el saldo sube exactamente lo que se cobró al reservar, aunque el producto haya cambiado de
+  precio, y el historial de la billetera lo enseña como **Devolución**;
+- el pedido sale de la cola y el cupo del día se libera;
+- el reporte de ventas del admin deja de contarlo, y la auditoría enseña la cancelación con
+  quién y por qué.
+
+**Se cancela aunque el estudiante esté desactivado o dado de baja**: una devolución no es una
+recarga. Lo que tiene que rechazar: cancelar sin motivo —tres espacios no cuentan—, cancelar
+un pedido ya entregado o ya cancelado, y entregar en la caja uno cancelado.
+
+**Cancelar no tiene vuelta.** Para probarlo sin dejar rastro en la base de trabajo, con
+`django.test.Client` dentro de una transacción que se deshace (`[S4]` de
+`./escribir-pruebas.md`).

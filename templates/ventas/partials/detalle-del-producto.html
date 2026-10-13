@@ -1,0 +1,84 @@
+{% load dinero %}
+{% comment %} DEC-24. La ficha nutricional de un producto, en la modal de la reserva.
+
+   Lo que el producto **declara hoy** (`TT-44`, `campos-nutricionales.md`), con lo que ese
+   estudiante tiene bloqueado: es lo que el acudiente viene a mirar antes de añadirlo. Un
+   dato que el producto no declara dice «Sin dato», no un cero: un cero sería una
+   afirmación. Fragmento (`DT-16`) con la forma de la modal de ficha (`[S2.10]`).
+{% endcomment %}
+<div data-detalle-del-producto class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <div class="flex flex-col">
+      <span class="text-sm font-semibold text-acento-fuerte">{{ producto.categoria.nombre }}</span>
+      <h2 class="font-display text-lg text-texto">{{ producto.nombre }}</h2>
+    </div>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+    {% if producto.tiene_imagen %}
+      <img src="{{ producto.url_de_la_imagen }}" alt="" class="aspect-video w-full rounded-md object-cover">
+    {% endif %}
+
+    <p class="flex items-baseline justify-between gap-3">
+      <span class="text-base text-texto-suave">Precio</span>
+      <span class="font-display text-xl tabular-nums text-texto">{{ producto.precio|dinero:"COP" }}</span>
+    </p>
+
+    {% if producto.bloqueado %}
+      <p class="flex items-start gap-2 rounded-md bg-error-suave p-3 text-sm text-error-fuerte">
+        <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+        Lo bloqueaste para {{ estudiante.nombre }}: no se puede reservar.
+      </p>
+    {% endif %}
+
+    <section class="flex flex-col gap-2">
+      <h3 class="text-base font-semibold text-texto">Información nutricional</h3>
+      <dl class="flex flex-col">
+        {% with p=producto %}
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Porción</dt><dd class="text-sm text-texto">{{ p.porcion|default:"Sin dato" }}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Energía</dt><dd class="text-sm tabular-nums text-texto">{% if p.energia_kcal is not None %}{{ p.energia_kcal }} kcal{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Proteínas</dt><dd class="text-sm tabular-nums text-texto">{% if p.proteinas_g is not None %}{{ p.proteinas_g|floatformat:"-1" }} g{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Carbohidratos</dt><dd class="text-sm tabular-nums text-texto">{% if p.carbohidratos_g is not None %}{{ p.carbohidratos_g|floatformat:"-1" }} g{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Azúcares</dt><dd class="text-sm tabular-nums text-texto">{% if p.azucares_g is not None %}{{ p.azucares_g|floatformat:"-1" }} g{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Grasas totales</dt><dd class="text-sm tabular-nums text-texto">{% if p.grasas_totales_g is not None %}{{ p.grasas_totales_g|floatformat:"-1" }} g{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 border-b border-borde py-1.5"><dt class="text-sm text-texto-suave">Grasas saturadas</dt><dd class="text-sm tabular-nums text-texto">{% if p.grasas_saturadas_g is not None %}{{ p.grasas_saturadas_g|floatformat:"-1" }} g{% else %}Sin dato{% endif %}</dd></div>
+          <div class="flex justify-between gap-3 py-1.5"><dt class="text-sm text-texto-suave">Sodio</dt><dd class="text-sm tabular-nums text-texto">{% if p.sodio_mg is not None %}{{ p.sodio_mg }} mg{% else %}Sin dato{% endif %}</dd></div>
+        {% endwith %}
+      </dl>
+    </section>
+
+    <section class="flex flex-col gap-2">
+      <h3 class="text-base font-semibold text-texto">Alérgenos que declara</h3>
+      {% if producto.alergenos_declarados %}
+        <ul class="flex flex-wrap gap-2">
+          {% for alergeno in producto.alergenos_declarados %}
+            {% if alergeno.nombre in producto.contiene_bloqueados %}
+              <li data-alergeno-bloqueado
+                  class="rounded-full bg-error-suave px-3 py-1 text-sm font-medium text-error-fuerte">
+                {{ alergeno.nombre }} · bloqueado
+              </li>
+            {% else %}
+              <li class="rounded-full bg-superficie-hover px-3 py-1 text-sm font-medium text-texto">{{ alergeno.nombre }}</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-sm text-texto-suave">No declara ninguno.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="flex justify-end border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Cerrar
+    </button>
+  </div>
+</div>

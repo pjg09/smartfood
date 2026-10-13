@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado: las 64 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
+**El producto está terminado: las 67 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
 **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
 Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
 (`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
@@ -22,6 +22,9 @@ estudiantes (`DT-40`, con `DEC-20` y `HU-63`: la institución corta el acceso de
 El 2026-10-12 entraron las pantallas de la institución: fichas de solo lectura, `/usuarios/`
 en lugar del admin, fuera restricciones e institución, y el alta de un acudiente
 (`DT-42` … `DT-46`, `DEC-21` … `DEC-23`, `HU-64`).
+El 2026-10-13, la reserva pasó a ser un encargo que no mira existencias, y un pedido
+pendiente se cancela con motivo y devolución a la billetera (`DEC-24`, `DT-47`, `DT-48`,
+`HU-65` … `HU-67`).
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -49,7 +52,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/mapa-de-la-aplicacion.md` | **Todas las rutas**, quién alcanza cada una y el recorrido de demostración. Los puertos de los servicios están en `[S4]` de `desarrollo.md` |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
 | `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
-| `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar— y las siete reglas que ninguna historia dice |
+| `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar, cancelar— y las doce reglas que ninguna historia dice |
 | `docs/reglas-del-cierre-de-caja.md` | **Qué entra en el cuadre de la caja y qué no**, y por qué el efectivo esperado no se digita (`INVD-5`) |
 | `docs/reglas-de-frecuencia-de-consumo.md` | **Qué alerta de frecuencia se publica y con qué umbral**, y por qué el umbral es el mismo para todas las categorías (`ALC-OUT-20`) |
 | `docs/valores-de-referencia-nutricional.md` | **Contra qué cifras se comparan los agregados**, con la norma que las publica y las tres salvedades declaradas (`TT-162`) |
@@ -61,7 +64,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-**Doce** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20` y `DEC-23`) y **dos lo
+**Trece** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20`, `DEC-23` y `DEC-24`) y **dos lo
 recortan** (`DEC-14`, `DEC-15`); `DEC-18` devuelve lo que `DEC-9` recortó. Ninguna está
 incorporada a él. Para responder qué hace o no hace el sistema
 hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
@@ -320,10 +323,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.727 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
+La suite completa son **1.786 pruebas** y **tarda entre tres y seis minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.727, no corrió entera.
+menos de esas 1.786, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

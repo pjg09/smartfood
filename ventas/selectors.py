@@ -17,7 +17,13 @@ from billetera.selectors import consumo_del_dia, saldo_de
 from catalogo.selectors import productos_en_el_catalogo
 from cuentas.models import Rol
 from inventario.selectors import existencias_por_producto
-from restricciones.selectors import RestriccionesVigentes, restricciones_vigentes
+from restricciones.selectors import (
+    RestriccionesVigentes,
+    identificadores_de_alergenos_bloqueados,
+    identificadores_de_productos_bloqueados,
+    limite_diario_de,
+    restricciones_vigentes,
+)
 
 # El importe de un renglón, calculado por la base: precio congelado por unidades
 # (`DT-8`). Se declara **una vez y aquí**, que es de donde es el renglón, porque
@@ -198,86 +204,153 @@ def lineas_del_carrito(carrito):
     return lineas, total
 
 
-def unidades_reservadas_pendientes(productos=None):
-    """`{id_de_producto: unidades}` apartadas por reservas sin entregar.
+def sin_pedidos_cancelados(consulta, *, venta="venta__"):
+    """La misma consulta sin lo que pertenece a un pedido cancelado (`DT-48`).
 
-    `TT-144`, `HU-23`. Un pedido anticipado **cobra al reservarse pero no
-    descuenta inventario hasta que se entrega** (`HU-25`), así que entre las dos
-    cosas hay unidades pagadas que todavía están en el libro.
+    **Un pedido cancelado no es una venta ni un consumo** (`DEC-24`): se cobró
+    y se devolvió, y el estudiante no recibió nada. Esta es la única definición
+    de esa regla, y la aplican el cupo del día, el reporte de ventas, el panel
+    de la cafetería, la frecuencia y los agregados. Dos copias de un `exclude`
+    acaban discrepando en la tercera pantalla.
 
-    ── POR QUÉ ESTA FUNCIÓN EXISTE ─────────────────────────────────────────
-    Sin ella, dos reservas del último paquete pasarían las dos: las existencias
-    dicen «queda 1» las dos veces, porque ninguna lo ha descontado. El acudiente
-    que reservó segundo habría pagado por algo que no va a recibir.
+    `venta` es el camino desde el modelo de la consulta hasta la venta:
+    `"venta__"` para las líneas y los movimientos de billetera, `""` para las
+    propias ventas.
 
-    No es una columna ni una caché: se cuenta desde las líneas de las ventas de
-    origen `reserva` cuyo pedido sigue pendiente. `INV-3` no se toca — las
-    existencias siguen siendo la suma del historial, y esto es otra cifra que se
-    lee al lado.
-    ─────────────────────────────────────────────────────────────────────────
-
-    Los productos sin nada reservado no aparecen en el resultado, así que quien
-    lo use debe leerlo con `.get(id, 0)` — igual que `existencias_por_producto`.
+    `exclude` sobre un uno a uno inverso **conserva las ventas sin pedido** —las
+    del mostrador—: Django lo traduce a un `NOT IN` sobre los pedidos
+    cancelados, no a un `JOIN` que las dejaría fuera por tener el lado nulo.
     """
-    from django.db.models import Sum
+    from ventas.models import EstadoDelPedido
 
-    from ventas.models import EstadoDelPedido, LineaVenta, OrigenDeLaVenta
-
-    lineas = LineaVenta.objects.filter(
-        venta__origen=OrigenDeLaVenta.RESERVA,
-        venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
+    return consulta.exclude(
+        **{f"{venta}pedido_anticipado__estado": EstadoDelPedido.CANCELADO}
     )
-    if productos is not None:
-        lineas = lineas.filter(producto__in=productos)
-
-    return {
-        fila["producto"]: fila["total"]
-        for fila in lineas.values("producto").annotate(total=Sum("cantidad"))
-    }
 
 
-def existencias_sin_reservar(productos=None):
-    """Lo que de verdad se puede comprometer: existencias menos lo apartado.
+def catalogo_para_reservar(estudiante):
+    """Lo que hoy se puede reservar para **este** estudiante (`TT-145`, `DEC-24`).
 
-    `TT-144`. Es lo que mira la reserva en lugar de las existencias a secas, y
-    la única diferencia entre validar una reserva y validar una venta del
-    mostrador (`_bloquear_y_validar`).
+    **Sin existencias, y no es un olvido**: la reserva es un encargo que la
+    cafetería prepara a partir de la cola, no un apartado de lo que hay en la
+    vitrina (`DT-47`). Ni las enseña ni las comprueba.
 
-    **La venta del mostrador sigue mirando las existencias reales**, y eso deja
-    un hueco conocido: el cajero puede vender unidades que están apartadas para
-    una reserva pagada. Está anotado en `[S6]` de `./docs/reglas-de-la-venta.md`
-    y lo decide `HU-25`, que es quien tiene que saber qué hacer cuando llega el
-    estudiante y no hay lo suyo. Cambiarlo aquí sería añadir una condición a la
-    venta sin historia que la pida.
+    Cada producto lleva lo que la tarjeta necesita para decir **antes** de
+    añadirlo que no se va a poder: `bloqueado` si su acudiente lo bloqueó
+    (`HU-10`) y `contiene_bloqueados` con los nombres de los alérgenos
+    bloqueados que declara (`HU-11`). **Es aviso, no autorización**: quien
+    rechaza es `reservar`, que cruza las restricciones dentro del bloqueo y en
+    el momento de cobrar (`INV-5`, `DT-7`). Aquí no se guarda ninguna lista:
+    se cruza al pintar, con dos consultas para todo el catálogo.
+
+    `alergenos_declarados` sirve también al filtro «Sin …» de la pantalla.
+    Ordenado por categoría y nombre, como la carta que es.
     """
-    existencias = existencias_por_producto(productos)
-    reservadas = unidades_reservadas_pendientes(productos)
-
-    return {
-        producto_id: cuantas - reservadas.get(producto_id, 0)
-        for producto_id, cuantas in existencias.items()
-    }
-
-
-def catalogo_para_reservar():
-    """Lo que hoy se puede reservar, con lo que queda **sin apartar** (`TT-145`).
-
-    Gemelo de `catalogo_de_venta` con una diferencia: la cifra que acompaña a
-    cada producto es `existencias_sin_reservar`, no las existencias a secas. Es
-    la misma que valida `reservar`, así que la pantalla no ofrece lo que el
-    servicio va a rechazar.
-
-    **Lo que devuelve es informativo, no autorizante**, igual que en el punto de
-    venta: entre este pintado y el envío del formulario puede haber otra reserva.
-    La cifra que decide se lee **dentro** del bloqueo (`DT-6`).
-    """
-    productos = list(productos_en_el_catalogo().order_by("categoria__nombre", "nombre"))
-    disponibles = existencias_sin_reservar(productos)
+    productos = list(
+        productos_en_el_catalogo()
+        .prefetch_related("alergenos")
+        .order_by("categoria__nombre", "nombre")
+    )
+    productos_bloqueados = identificadores_de_productos_bloqueados(estudiante)
+    alergenos_bloqueados = identificadores_de_alergenos_bloqueados(estudiante)
 
     for producto in productos:
-        producto.disponibles = disponibles.get(producto.id, 0)
-
+        producto.alergenos_declarados = list(producto.alergenos.all())
+        producto.bloqueado = producto.id in productos_bloqueados
+        producto.contiene_bloqueados = [
+            alergeno.nombre
+            for alergeno in producto.alergenos_declarados
+            if alergeno.id in alergenos_bloqueados
+        ]
+        producto.se_puede_reservar = not (
+            producto.bloqueado or producto.contiene_bloqueados
+        )
     return productos
+
+
+@dataclass(frozen=True)
+class ResumenDeLaReserva:
+    """El ticket de una reserva todavía sin enviar (`DEC-24`).
+
+    **Lo calcula el servidor a cada cambio de cantidad**, y no el navegador: el
+    dinero se escribe en un solo sitio (`billetera/templatetags/dinero.py`), y
+    una suma en JavaScript sería el segundo. Tampoco hay carrito en sesión: las
+    cantidades viajan en la propia petición, así que no queda estado a medias.
+
+    `saldo_despues` puede ser negativo, y eso es exactamente lo que la pantalla
+    tiene que decir antes de que el cobro lo rechace (`INV-1`). Lo mismo
+    `supera_el_cupo` con el límite diario (`HU-20`): **es aviso**, quien rechaza
+    es `reservar`.
+    """
+
+    lineas: tuple
+    total: Decimal
+    kcal: int
+    lineas_sin_kcal: int
+    saldo: Decimal
+    saldo_despues: Decimal
+    cupo_restante: object
+    supera_el_cupo: bool
+
+    @property
+    def alcanza(self):
+        return self.saldo_despues >= 0
+
+    @property
+    def faltan(self):
+        """Cuánto le falta al saldo, en positivo, o cero si alcanza."""
+        return max(-self.saldo_despues, Decimal("0.00"))
+
+
+def resumen_de_la_reserva(estudiante, cantidades):
+    """`ResumenDeLaReserva` de `{id_de_producto: unidades}`.
+
+    Solo cuenta productos del catálogo: un identificador que no es de ninguno
+    —o de uno retirado— se ignora, igual que en `lineas_del_carrito`. Las
+    calorías son las que el producto declara hoy (`energia_kcal`); las de un
+    producto sin ese dato no se inventan, se cuentan aparte para decirlo.
+    """
+    productos = {
+        p.id: p
+        for p in productos_en_el_catalogo().filter(id__in=list(cantidades))
+    }
+    lineas = []
+    total = Decimal("0.00")
+    kcal = 0
+    sin_kcal = 0
+    for producto_id, cantidad in cantidades.items():
+        producto = productos.get(producto_id)
+        if producto is None or cantidad <= 0:
+            continue
+        importe = producto.precio * cantidad
+        total += importe
+        if producto.energia_kcal is None:
+            sin_kcal += 1
+            kcal_linea = None
+        else:
+            kcal_linea = producto.energia_kcal * cantidad
+            kcal += kcal_linea
+        lineas.append(
+            {"producto": producto, "cantidad": cantidad, "importe": importe, "kcal": kcal_linea}
+        )
+    lineas.sort(key=lambda linea: linea["producto"].nombre)
+
+    saldo = saldo_de(estudiante)
+    limite = limite_diario_de(estudiante)
+    cupo_restante = None
+    if limite is not None:
+        cupo_restante = max(limite.monto - consumo_del_dia(estudiante), Decimal("0.00"))
+
+    return ResumenDeLaReserva(
+        lineas=tuple(lineas),
+        total=total,
+        kcal=kcal,
+        lineas_sin_kcal=sin_kcal,
+        saldo=saldo,
+        saldo_despues=saldo - total,
+        cupo_restante=cupo_restante,
+        supera_el_cupo=cupo_restante is not None and total > cupo_restante,
+    )
 
 
 def pedidos_pendientes_de(estudiante):
@@ -296,6 +369,76 @@ def pedidos_pendientes_de(estudiante):
         .select_related("venta")
         .prefetch_related("venta__lineas__producto")
     )
+
+
+def pedidos_de(estudiante):
+    """Todos los pedidos anticipados de un estudiante (`HU-65`, `DEC-24`).
+
+    Por recoger, entregados y cancelados, **del más reciente al más antiguo**:
+    esto sí es un historial, al revés que la cola de la cafetería. Con las
+    líneas y quién canceló ya traídos, porque la pantalla enseña lo que lleva
+    cada uno y, del cancelado, quién y por qué.
+
+    **No autoriza a nadie**, como `pedidos_pendientes_de`: quien la llama ya
+    pasó por `estudiante_a_cargo`, que es donde vive la regla de que los
+    pedidos de un estudiante solo los ve su acudiente (`DT-11`).
+
+    Devuelve una lista, y cada pedido con su `numero`, sus `kcal` y su `total`
+    —lo que se cobró y, si se canceló, lo que se devolvió—, calculados sobre las
+    líneas ya traídas: sin consulta por pedido (`_completar_el_pedido`).
+    """
+    from ventas.models import PedidoAnticipado
+
+    pedidos = list(
+        PedidoAnticipado.objects.filter(venta__estudiante=estudiante)
+        .select_related("venta", "cancelado_por")
+        .prefetch_related("venta__lineas__producto")
+        .order_by("-creado_en")
+    )
+    for numero, pedido in zip(range(len(pedidos), 0, -1), pedidos):
+        _completar_el_pedido(pedido, numero)
+    return pedidos
+
+
+def _completar_el_pedido(pedido, numero):
+    """Lo que la lista y la ficha de un pedido enseñan además de la venta.
+
+    `numero` es su orden entre los pedidos del estudiante, empezando por el más
+    antiguo: «Pedido #3» se lee mejor que un UUID, y no cambia nunca, porque un
+    pedido no se borra (`INV-2`). `kcal` sale de la instantánea de cada línea
+    (`DT-8`): lo que el producto declaraba al reservarse, no hoy.
+    """
+    from ventas.services import total_de
+
+    lineas = list(pedido.venta.lineas.all())
+    pedido.numero = numero
+    pedido.total = total_de(pedido.venta)
+    pedido.kcal = sum(
+        linea.energia_kcal * linea.cantidad
+        for linea in lineas
+        if linea.energia_kcal is not None
+    )
+    return pedido
+
+
+def pedido_de(estudiante, pedido_id):
+    """Un pedido del estudiante, con su número, o `PedidoAnticipado.DoesNotExist`.
+
+    Se busca **dentro** del estudiante: un pedido de otro no se alcanza ni
+    sabiendo su identificador. Quien llama ya pasó por `estudiante_a_cargo`.
+    """
+    from ventas.models import PedidoAnticipado
+
+    pedido = (
+        PedidoAnticipado.objects.filter(venta__estudiante=estudiante)
+        .select_related("venta__estudiante", "cancelado_por")
+        .prefetch_related("venta__lineas__producto")
+        .get(pk=pedido_id)
+    )
+    numero = PedidoAnticipado.objects.filter(
+        venta__estudiante=estudiante, creado_en__lte=pedido.creado_en
+    ).count()
+    return _completar_el_pedido(pedido, numero)
 
 
 def reservas_pendientes(*, actor):
@@ -326,21 +469,15 @@ def reservas_pendientes(*, actor):
     ─────────────────────────────────────────────────────────────────────────
 
     **No filtra por día.** Ninguna historia dice hasta cuándo vale una reserva, y
-    el sistema no sabe anularlas (`EstadoDelPedido` tiene dos estados y ninguno
-    es «caducado»). Una reserva de anteayer sin recoger **sigue pendiente**, y
-    esconderla la dejaría pagada y olvidada. Si algún día se decide que caducan,
-    eso es una decisión de alcance con su historia, no un `filter` aquí.
+    las reservas no caducan solas (`DEC-24`). Una de anteayer sin recoger
+    **sigue pendiente** hasta que se entrega o alguien la cancela; esconderla la
+    dejaría pagada y olvidada.
 
     **Tampoco esconde los pedidos que hoy no se pueden entregar.** Un estudiante
-    desactivado o de baja no retira (`INVD-2`), y su pedido sigue aquí: está
-    pagado y sin anular, así que quitarlo lo volvería invisible — justo lo que no
-    conviene con dinero de por medio. La pantalla lo **marca** en vez de
-    esconderlo, preguntándole al estudiante que viene en `select_related`.
-
-    Que un pedido así **no tiene salida hoy** es un punto abierto declarado en el
-    `ANEXO B` de `./docs/decisiones-de-alcance.md` —no se decidió si se devuelve
-    el saldo, si queda pendiente o si se anula—. Esto lo hace visible en vez de
-    resolverlo por su cuenta.
+    desactivado o de baja no retira (`INVD-2`), y su pedido sigue aquí,
+    **marcado**, preguntándole al estudiante que viene en `select_related`. Su
+    salida es cancelarlo: el importe vuelve a la billetera aunque el estudiante
+    no opere, porque una devolución no es una recarga (`DEC-24`, `HU-67`).
     """
     from cuentas.models import Rol
     from ventas.models import EstadoDelPedido, PedidoAnticipado

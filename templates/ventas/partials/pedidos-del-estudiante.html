@@ -1,0 +1,55 @@
+{% load dinero %}
+{% comment %} HU-65, DEC-24. Los pedidos del estudiante, del más reciente al más antiguo.
+
+   Fragmento (`DT-16`): lo incluye la pantalla de reserva y lo vuelve a pedir cuando la
+   modal cancela un pedido (`HX-Trigger: pedidos-cambiado`). **Una fila por pedido, y la
+   fila entera abre su detalle** en la modal: `interfaz.js` pulsa el botón del número,
+   que es quien la pide —una sola petición escrita, y el teclado llega por el botón—,
+   como en el padrón (`DT-43`).
+
+   El estado no va en rojo ni en ámbar: ninguno es un fallo. Por recoger lleva el acento
+   porque es lo que todavía se puede tocar; entregado, éxito; cancelado, neutro.
+{% endcomment %}
+{% if pedidos %}
+  <ul class="flex flex-col gap-2" data-lista-de-pedidos>
+    {% for pedido in pedidos %}
+      {% comment %} Dos franjas por debajo de `tablet` —el pedido arriba, su estado y sus
+         cifras abajo—, una sola fila desde ahí. En una sola fila a 390 px el número y la
+         fecha caían palabra a palabra y la etiqueta se montaba encima: se vio en la
+         captura. {% endcomment %}
+      <li data-fila-consultable data-pedido="{{ pedido.estado }}"
+          class="flex cursor-pointer flex-col gap-3 rounded-md border border-borde bg-superficie p-4
+                 shadow-sm transition-colors hover:border-acento tablet:flex-row tablet:items-center">
+        <button type="button" data-consultar
+                hx-get="{% url 'detalle-del-pedido' estudiante.id pedido.id %}"
+                hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                class="flex min-w-0 flex-1 items-center gap-3 text-left">
+          <svg class="h-4 w-4 shrink-0 rotate-180 text-texto-suave" aria-hidden="true"><use href="#i-atras"></use></svg>
+          <span class="flex flex-col">
+            <span class="text-base font-semibold text-texto">Pedido #{{ pedido.numero }}</span>
+            <span class="text-sm text-texto-suave">
+              {{ pedido.creado_en|date:"j" }} de {{ pedido.creado_en|date:"F"|lower }} de
+              {{ pedido.creado_en|date:"Y, H:i" }}
+            </span>
+          </span>
+        </button>
+
+        <div class="flex items-center gap-4 pl-7 tablet:pl-0">
+          {% if pedido.esta_pendiente %}
+            <span class="rounded-full bg-acento-suave px-3 py-1 text-sm font-medium whitespace-nowrap text-acento-fuerte">Por recoger</span>
+          {% elif pedido.esta_cancelado %}
+            <span class="rounded-full bg-superficie-hover px-3 py-1 text-sm font-medium whitespace-nowrap text-texto-suave">Cancelado</span>
+          {% else %}
+            <span class="rounded-full bg-exito-suave px-3 py-1 text-sm font-medium whitespace-nowrap text-exito-fuerte">Entregado</span>
+          {% endif %}
+          <span class="text-sm tabular-nums whitespace-nowrap text-texto-suave">{{ pedido.kcal }} kcal</span>
+          <span class="ml-auto font-display text-lg tabular-nums whitespace-nowrap text-texto tablet:w-32 tablet:text-right">{{ pedido.total|dinero:"COP" }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="rounded-md border border-dashed border-borde p-6 text-center text-sm text-texto-suave">
+    Todavía no has reservado nada para {{ estudiante.nombre }}.
+  </p>
+{% endif %}

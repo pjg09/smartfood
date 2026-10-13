@@ -9,18 +9,18 @@
 | doc_id | SMARTFOOD-TIC1-BACKLOG |
 | titulo | Backlog de historias de usuario del prototipo SmartFood |
 | archivo_origen | — · documento derivado; no reexpresa ningún original |
-| documentos_fuente | `./smartfood.md` (`S4`, `S5`, `S9`, `S10`, `S11`); `./decisiones-de-alcance.md` (`DEC-1` … `DEC-20`, `INVD-1` … `INVD-7`); `corpus:semana-5-gestion-de-proyectos-con-metodologias-agiles.md` (`D07`, `D14`); `corpus:guia-de-scrum-2020.md` (`ART-1`, `COM-1`) |
+| documentos_fuente | `./smartfood.md` (`S4`, `S5`, `S9`, `S10`, `S11`); `./decisiones-de-alcance.md` (`DEC-1` … `DEC-24`, `INVD-1` … `INVD-7`); `corpus:semana-5-gestion-de-proyectos-con-metodologias-agiles.md` (`D07`, `D14`); `corpus:guia-de-scrum-2020.md` (`ART-1`, `COM-1`) |
 | tipo_documento | Artefacto de gestión producido por el equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-04` de `./smartfood.md` — «backlog priorizado» |
 | institucion | Universidad Pontificia Bolivariana (UPB) |
 | asignatura | Proyecto Aplicado en TIC 1 |
 | periodo | 202601 |
-| historias | 64 (`HU-01` … `HU-64`) — **las 64 terminadas**. El desglose y qué PR cerró cada una están en `[S4]` |
+| historias | 67 (`HU-01` … `HU-67`) — **las 67 terminadas**. El desglose y qué PR cerró cada una están en `[S4]` |
 | epicas | 11 (`EPI-1` … `EPI-11`) |
 | vacios_detectados | 6 (`VAC-1` … `VAC-6`) — **todos resueltos**, ver ANEXO B |
 | idioma | es-CO |
-| version | 3.2 |
+| version | 3.4 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -506,6 +506,47 @@ Ninguna historia queda fuera del alcance: todo lo listado en `[S9.2]` (`ALC-OUT-
  - La entrega se registra en el punto de venta.
  - El pedido ya pagado no vuelve a descontar saldo al entregarse.
 - **Origen:** `ALC-IN-10`, `FUN-5`
+
+#### `[HU-65]` Consulta de los pedidos del estudiante
+
+> **Como** acudiente
+> **Quiero** ver los pedidos anticipados de mi hijo, los que esperan y los que ya se cerraron
+> **Para** saber qué tiene por recoger y qué pasó con lo que pagué
+
+- **Actor:** `USR-2` · **Prioridad:** Should
+- **Criterios de aceptación:**
+ - Se ven todos los pedidos del estudiante —por recoger, entregados y cancelados—, con lo que lleva cada uno y lo que costó.
+ - De un pedido cancelado se ve quién lo canceló, cuándo, el motivo y que el importe volvió a la billetera.
+ - Los pedidos de un estudiante solo los ve su acudiente.
+- **Origen:** `DEC-24`, `FUN-5`
+
+#### `[HU-66]` Cancelación de un pedido por el acudiente
+
+> **Como** acudiente
+> **Quiero** cancelar un pedido que mi hijo todavía no ha recogido
+> **Para** recuperar el saldo y que compre otra cosa
+
+- **Actor:** `USR-2` · **Prioridad:** Should
+- **Criterios de aceptación:**
+ - Solo se cancela un pedido pendiente, y solo uno de un estudiante a su cargo.
+ - La cancelación exige un motivo.
+ - El importe pagado vuelve íntegro a la billetera del estudiante en el acto, y el historial de la billetera lo enseña como devolución de ese pedido.
+ - El pedido cancelado no consume el cupo diario del estudiante.
+- **Origen:** `DEC-24`, `INV-2`
+
+#### `[HU-67]` Cancelación de un pedido por la cafetería
+
+> **Como** personal de la cafetería
+> **Quiero** cancelar un pedido reservado que no se va a poder entregar, diciendo por qué
+> **Para** que el estudiante recupere su saldo y su acudiente sepa qué pasó
+
+- **Actor:** `USR-3` / `USR-4` · **Prioridad:** Should
+- **Criterios de aceptación:**
+ - El cajero y la administración cancelan un pedido pendiente desde la cola de reservas.
+ - La cancelación exige un motivo, que el acudiente ve en los pedidos del estudiante (`HU-65`).
+ - El importe vuelve íntegro a la billetera del estudiante, también si está desactivado o dado de baja.
+ - Un pedido cancelado no se entrega, y uno entregado no se cancela.
+- **Origen:** `DEC-24`, `FUN-5`, `INVD-2`
 
 ---
 
@@ -1062,8 +1103,11 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 | 62 | `HU-62` | Recuperación de la contraseña olvidada | EPI-9 | USR-2/3/4/5 | Should | ☑ |
 | 63 | `HU-63` | Desactivación y reactivación de la cuenta de un acudiente | EPI-9 | USR-5 | Should | ☑ |
 | 64 | `HU-64` | Alta de un solo acudiente | EPI-1 | USR-5 | Should | ☑ |
+| 65 | `HU-65` | Consulta de los pedidos del estudiante | EPI-6 | USR-2 | Should | ☑ |
+| 66 | `HU-66` | Cancelación de un pedido por el acudiente | EPI-6 | USR-2 | Should | ☑ |
+| 67 | `HU-67` | Cancelación de un pedido por la cafetería | EPI-6 | USR-3/4 | Should | ☑ |
 
-**Las 64 terminadas.**
+**Las 67 terminadas.**
 
 **Sprints 1 y 2.** Las 18 del Sprint 1 más `HU-06`, `HU-08`, `HU-07`, `HU-52`, `HU-27`, `HU-15`, `HU-16`, `HU-58`, `HU-54`, `HU-21`, `HU-22`, `HU-19` y `HU-53`, que cierran `PR-02` … `PR-08` y `PR-10` … `PR-15` del Sprint 2, Con `HU-53` queda cerrado **`VAC-1`** también en el código: `USR-6` compra y su venta queda registrada. **El Sprint 2 queda cerrado del todo**: `HU-17` era la única que arrastraba, le faltaba el bloque de restricciones, y `PR-06` del Sprint 3 se lo dio. Sus 14 de 14 historias, con una de retraso — que es lo que el `ANEXO A` de aquel sprint backlog anticipó. Con `HU-19` queda demostrado **`TST-2`** en su mitad del saldo; la del límite diario es `HU-20`, del Sprint 3. **`HU-21` es la que hace que el sistema venda**: `INV-1`, `INV-2` e `INV-3` se sostienen a la vez en una sola transacción. `HU-15` se cerró al ejecutarse `TT-72` el 2026-09-11, la prueba con tarjetas impresas y lector físico (`ENT-02`). **`HU-17` se cerró con `PR-06` del Sprint 3**, no con `PR-09` ni `PR-10` del Sprint 2: su primer criterio pide los tres datos al identificar, y el tercero —las restricciones vigentes— no existía hasta que `TT-94`, `TT-97` y `TT-100` lo construyeron.
 
@@ -1075,7 +1119,7 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 
 **Sprint 5 · la cafetería y el cierre de caja.** **`HU-35` con `PR-05`**, el primero de los reportes de la cafetería: el libro de ventas en el admin, con el consolidado **del listado que se está mirando** —filtros, búsqueda y navegación por fechas incluidos— y sus desgloses por medio de pago y por origen. Entra en `INT-3` sin abrir una tercera excepción a `DT-2`, por el camino que `TT-141` estrenó. **Nadie escribe una venta desde ahí**: `ventas` pasa a `APPS_SIN_ESCRITURA_PARA_NINGUN_ROL`, así que el permiso no existe en ningún grupo — una venta se registra en el punto de venta, con su transacción, o no existe (`INV-1`, `INV-2`, `INV-3`). **Y `HU-36` con `PR-06`**, que resultó ser la pantalla que ya existía: el libro del admin enseñaba entradas, ventas y mermas con su motivo desde `TT-69`, así que el «en un solo lugar» de la historia estaba cumplido. Lo que le faltaba para ser un reporte era acotar un periodo y **decir cuánto suma lo que se está mirando** — eso es `TT-169` y `TT-170`. El consolidado enseña además **cuántas mermas van sin motivo**, que es siempre cero porque lo impone una `CheckConstraint` (`INV-8`): la invariante puesta donde la administración puede verla. **Y `HU-55` con `PR-07`**, la única historia del Sprint 5 que añade un modelo y la que convierte el proceso de `PA-7` en otra cosa: hasta hoy la cafetería cuadraba el efectivo contra **su estimación** de lo vendido, y ahora lo cuadra contra ventas registradas. `INVD-5` no se sostiene con un cálculo bien hecho sino con **una ausencia**: `cerrar_caja` no tiene parámetro para el efectivo esperado y el formulario no tiene campo, así que no hay camino por el que la cifra entre digitada — y hay una prueba de ausencia, con su contraprueba, que lo fija. **Las transferencias quedan fuera del cuadre** (`DEC-6`): ese dinero va de banco a banco y nunca pasó por el cajón. Y el motivo obligatorio cuando la diferencia no es cero lo impone una `CheckConstraint`, como la merma de `INV-8`: el servicio da el mensaje y la base da la garantía. Lo que queda escrito de todo ello es `./reglas-del-cierre-de-caja.md`. **Y `HU-56` con `PR-08`**, que cierra los reportes de la cafetería: el histórico de cuadres en el admin, con el mismo camino de `TT-141` y el mismo consolidado del listado que se está mirando. Trae **dos cifras de descuadre y no una**, y esa es la decisión de la historia: la suma con signo se compensa sola —un sobrante y un faltante iguales dan cero— y un mes con veinte descuadres se leería como un mes que cuadra. Arriba va el descuadre **total**, que es lo que permite detectar el patrón que la historia pide. El tercer criterio —que el efectivo esperado de un día se explique desde sus ventas en efectivo (`INVD-5`)— **no se cumple enseñando la cifra**: cada cierre enlaza al reporte de ventas de esa jornada ya filtrado por efectivo, y hay una prueba que sigue el enlace y comprueba que lo que trae suma exactamente esa cifra. **Y `HU-37` con `PR-09`, que cierra el backlog: las 61 historias del proyecto están terminadas.** El reporte de auditoría es una sola línea de tiempo con las cuatro clases de operación —ventas, entregas de pedidos, movimientos de inventario y cierres—, y su único criterio significa algo concreto: **no hay tabla de auditoría**. Ninguna operación se escribe dos veces, porque dos fuentes de la misma verdad acaban divergiendo (`DT-19`) y la segunda es la que nadie mira cuando falla; esto lee los libros que ya existen y los mezcla al leerlos, que es la decisión de `DT-4` y `DT-5` aplicada a la trazabilidad. **Los movimientos de tipo venta quedan fuera y eso no deja ningún hueco**: un cobro asienta la venta y su salida a la vez, así que incluirlos pondría cada venta dos veces con el mismo instante y el mismo actor. La **entrega** sí entra, y es la que más fácil se cae — no crea venta ni mueve saldo, solo cambia un estado y descuenta existencias. El «para» de la historia —rastrear quién hizo qué— se cumple en tres de las cuatro clases y **se declara donde no**: `MovimientoInventario` recibe el actor, lo comprueba y no lo guarda, así que el ingreso y la merma dicen qué y cuándo pero no quién. Está en el `ANEXO B` de `./decisiones-de-alcance.md`.
 
-**43 Must · 21 Should · 0 Could.** De ellas, **39 provienen del anteproyecto** (`ALC-IN`, `FUN`) —las 38 originales y `HU-60`, el hueco del Sprint 3— y **25 de las decisiones de alcance** —`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20` y `DEC-23`—, que todavía no están incorporadas a `[S9.1]`.
+**43 Must · 24 Should · 0 Could.** De ellas, **39 provienen del anteproyecto** (`ALC-IN`, `FUN`) —las 38 originales y `HU-60`, el hueco del Sprint 3— y **28 de las decisiones de alcance** —`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20`, `DEC-23` y `DEC-24`—, que todavía no están incorporadas a `[S9.1]`.
 
 > **`HU-62` cerró con el mismo PR que la registró, fuera del backlog del Sprint 5.** La trajo
 > `DEC-19` el 2026-10-01: la pantalla de acceso de `DEC-12` no tenía «¿olvidaste tu
@@ -1094,6 +1138,14 @@ Orden: primero los `Must` que sostienen invariantes o escenarios críticos, desp
 > familia nueva solo entraba con un archivo de carga. **Corrige el segundo criterio de
 > `HU-05`**, que decía que toda cuenta de acudiente nace de la carga; sigue sin haber
 > autorregistro, porque la cuenta la crea la institución.
+
+> **`HU-65`, `HU-66` y `HU-67` se registraron y se cerraron en el mismo cambio.** Las trajo
+> `DEC-24` el 2026-10-13: la reserva deja de apartar existencias —es un encargo que la cafetería
+> prepara— y, a cambio, **un pedido pendiente se puede cancelar** con su motivo, por el acudiente
+> o por la cafetería, y el importe vuelve a la billetera. Resuelve otro punto del `ANEXO B`: el
+> pedido pagado de un estudiante que no puede retirarlo ya tiene salida. **No cambian los
+> criterios de `HU-23` … `HU-25`**: la regla del apartado no salía de ninguna historia, sino de
+> `DT-33`, y la corrige `DT-47`.
 
 > **`PR-06` cerró DOS historias: `HU-13` y `HU-17`.** Es la única vez en el proyecto que un
 > PR salda una historia de un sprint anterior, y estaba señalada como la marca más fácil
@@ -1268,7 +1320,7 @@ absorbe el retraso acumulado antes del Avance 2, que vale el 20 % (`EVA-4`).
 
 ### Sprint 5 · semanas 14–15 — Reportes de consumo y ejecución del plan de pruebas
 
-**13 historias.** Al cerrar, el acudiente ve el consumo con recomendaciones y la cafetería tiene sus reportes. En paralelo se ejecutan los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`. `HU-62`, `HU-63` y `HU-64` entraron al final, con `DEC-19`, `DEC-20` y `DEC-23`.
+**16 historias.** Al cerrar, el acudiente ve el consumo con recomendaciones y la cafetería tiene sus reportes. En paralelo se ejecutan los cuatro escenarios críticos `TST-1` … `TST-4` de `ENT-05`. `HU-62` … `HU-67` entraron al final, con `DEC-19`, `DEC-20`, `DEC-23` y `DEC-24`.
 
 | # | ID | Historia | Depende de | Prioridad |
 |---|---|---|---|---|
@@ -1285,6 +1337,9 @@ absorbe el retraso acumulado antes del Avance 2, que vale el 20 % (`EVA-4`).
 | 11 | `HU-62` | Recuperación de la contraseña olvidada | `HU-03`, `HU-41` | Should |
 | 12 | `HU-63` | Desactivación y reactivación de la cuenta de un acudiente | `HU-03`, `HU-42` | Should |
 | 13 | `HU-64` | Alta de un solo acudiente | `HU-01`, `HU-03` | Should |
+| 14 | `HU-65` | Consulta de los pedidos del estudiante | `HU-23` | Should |
+| 15 | `HU-66` | Cancelación de un pedido por el acudiente | `HU-23`, `HU-65` | Should |
+| 16 | `HU-67` | Cancelación de un pedido por la cafetería | `HU-24`, `HU-25` | Should |
 
 `HU-34` va en tercer lugar, no al final: `INV-9` exige que el aviso de que las recomendaciones son
 orientativas esté presente **desde la primera recomendación publicada**, no cuando se acaben todas.
@@ -1346,8 +1401,9 @@ Cobertura de las decisiones de alcance (`./decisiones-de-alcance.md`):
 | `DEC-19` Recuperación de la contraseña olvidada | `HU-62` |
 | `DEC-20` Corte de acceso de un acudiente | `HU-63` |
 | `DEC-23` Alta de un solo acudiente | `HU-64` |
+| `DEC-24` La reserva como encargo, y su cancelación con devolución | `HU-65`, `HU-66`, `HU-67` |
 
-**Cobertura de decisiones: 12/12** de las que crean historias. Ninguna historia carece de origen. La fila de `DEC-13` faltaba desde el Sprint 3 y se añadió junto a la de `DEC-19`.
+**Cobertura de decisiones: 13/13** de las que crean historias. Ninguna historia carece de origen. La fila de `DEC-13` faltaba desde el Sprint 3 y se añadió junto a la de `DEC-19`.
 
 Invariantes y su historia guardiana:
 
@@ -1446,6 +1502,7 @@ El recorrido del documento:
 | 3.1 | 62 | `HU-62`, de `DEC-19`, registrada y cerrada en el mismo PR. `HU-03` recupera su segundo criterio (`DEC-18`) |
 | 3.2 | 63 | `HU-63`, de `DEC-20`, registrada y cerrada en el mismo PR |
 | 3.3 | 64 | `HU-64`, de `DEC-23`, registrada y cerrada en el mismo cambio. `HU-05` corrige su segundo criterio |
+| 3.4 | 67 | `HU-65`, `HU-66` y `HU-67`, de `DEC-24`, registradas y cerradas en el mismo cambio |
 
 Las 38 historias originales **no se modificaron ni se renumeraron** en ninguna de esas versiones.
 
@@ -1467,7 +1524,7 @@ El grafo de dependencias de las 64 historias se comprobó por script sobre el or
 
 | Comprobación | Resultado |
 |---|---|
-| Historias colocadas | 64 de 64, ninguna repetida |
+| Historias colocadas | 67 de 67, ninguna repetida |
 | Historias antes de algo de lo que dependen | **0** |
 | Dependencias que cruzan de sprint hacia adelante | **0** |
 
@@ -1514,6 +1571,10 @@ Las dependencias entre sprints —todas hacia atrás— son:
 | `HU-63` Desactivación y reactivación de la cuenta de un acudiente | 5 | `HU-42` Desactivación y reactivación de cuentas de personal | 1 |
 | `HU-64` Alta de un solo acudiente | 5 | `HU-01` Carga masiva de estudiantes y acudientes | 1 |
 | `HU-64` Alta de un solo acudiente | 5 | `HU-03` Invitación por correo y definición de contraseña | 1 |
+| `HU-65` Consulta de los pedidos del estudiante | 5 | `HU-23` Reserva y pago anticipado | 4 |
+| `HU-66` Cancelación de un pedido por el acudiente | 5 | `HU-23` Reserva y pago anticipado | 4 |
+| `HU-67` Cancelación de un pedido por la cafetería | 5 | `HU-24` Consulta de reservas pendientes | 4 |
+| `HU-67` Cancelación de un pedido por la cafetería | 5 | `HU-25` Registro de la entrega del pedido | 4 |
 
 **Las cuatro historias raíz** —sin ninguna dependencia— son `HU-39` (seed institucional), `HU-05`
 (autorregistro bloqueado), `HU-14` (generación del código) y `HU-26` (catálogo). Son los cuatro

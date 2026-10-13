@@ -39,7 +39,7 @@ from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
 from personas.services import dar_de_baja, desactivar
 from ventas.models import EstadoDelPedido, PedidoAnticipado
-from ventas.selectors import existencias_sin_reservar, reservas_pendientes
+from ventas.selectors import reservas_pendientes
 from ventas.services import (
     EstudianteNoPuedeComprar,
     PedidoYaEntregado,
@@ -189,16 +189,6 @@ class LaEntregaMueveElInventarioTest(BaseEntrega):
         )
         self.assertEqual(movimiento.venta_id, self.pedido.venta_id)
         self.assertEqual(movimiento.cantidad, -2)
-
-    def test_al_entregar_las_unidades_dejan_de_estar_apartadas(self):
-        """Antes de entregar estaban en el libro pero apartadas; después salen
-        del libro. La cifra disponible no cambia — cambia de sitio."""
-        self.assertEqual(existencias_sin_reservar()[self.empanada.id], 8)
-
-        entregar(actor=self.cajero, pedido=self.pedido)
-
-        self.assertEqual(existencias_sin_reservar()[self.empanada.id], 8)
-        self.assertEqual(existencias_de(self.empanada), 8)
 
     def test_la_entrega_no_se_rechaza_por_falta_de_existencias(self):
         """**La decisión que `[S7]` de reglas-de-la-venta.md dejó a esta historia.**

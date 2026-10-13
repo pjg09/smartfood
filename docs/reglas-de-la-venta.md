@@ -27,7 +27,7 @@ del código y repartida entre cuatro planes de PR.
 **Se escribió antes de que el Sprint 4 tocara esta misma transacción, y sirvió.** Los
 pedidos anticipados (`HU-23` … `HU-25`) llegaron, retiran mercancía y pasan por la misma
 puerta de `INVD-2` — y **no añadieron ninguna comprobación**: la reserva valida por esta
-misma lista (`[S7]`). Siguen siendo seis.
+misma lista, menos las existencias, que un encargo no mira (`[S7]`). Siguen siendo seis.
 
 Quien vaya a tocar este servicio necesita saber qué hay aquí dentro **antes** de añadir la
 séptima.
@@ -209,35 +209,26 @@ la misma función, `_bloquear_y_validar` (`TT-144`).
 Que sea la misma no es higiene: `HU-23` **no menciona ninguna de las seis**. Con un flujo
 propio, un acudiente no podría comprarle a su hijo en la caja algo con un alérgeno
 bloqueado, pero sí reservárselo la noche anterior — y el control parental entero tendría una
-puerta trasera. `ventas/tests_reserva.py` ejercita las seis sobre la reserva.
+puerta trasera. `ventas/tests_reserva.py` ejercita sobre la reserva las cinco que le tocan.
 
-**Lo único que cambia es qué cuenta como disponible.** La venta del mostrador mira las
-existencias; la reserva mira `existencias_sin_reservar`, que les resta lo apartado por
-pedidos pendientes. Es consecuencia de `DT-33`: la reserva cobra pero no descuenta
-inventario hasta la entrega, así que sin restar lo apartado dos reservas del último paquete
-pasarían las dos.
+**Lo único que cambia es que la reserva no mira existencias** (`DEC-24`, `DT-47`). Es un
+encargo que la cafetería prepara a partir de su cola, no un apartado de lo que hay hoy en la
+vitrina. `_bloquear_y_validar` recibe qué existencias mirar **sin valor por defecto**: la venta
+del mostrador pasa las reales, la reserva pasa `None`. Lo que no se pueda preparar se cancela,
+y el importe vuelve a la billetera (`[S5]` de `./reglas-del-pedido-anticipado.md`).
 
-> ### ✅ Hueco resuelto por `HU-25`, y las comprobaciones siguen siendo seis
+> ### ✅ La caja y la reserva no compiten, y las comprobaciones siguen siendo seis
 >
-> **La caja mira las existencias reales, así que puede vender unidades apartadas para una
-> reserva ya pagada.** Eso no cambia, y es deliberado: cerrarlo aquí habría sido la séptima
-> comprobación, y en una caja con fila el cajero leería «no hay existencias» de algo que
-> tiene delante en la vitrina, porque está apartado para otro.
+> **La caja mira las existencias reales y la reserva no aparta nada**, así que no hay
+> unidades «de otro» en la vitrina: lo reservado se prepara para la reserva. Restar lo
+> reservado aquí habría sido la séptima comprobación, y en una caja con fila el cajero leería
+> «no hay existencias» de algo que tiene delante.
 >
-> Lo que se decidió es **qué hace la entrega cuando pasa**, que era la pregunta que este
-> documento remitió a `HU-25`: la entrega **se registra igual** y el libro puede quedar en
-> negativo (`DT-35`). El compromiso ya se adquirió y se cobró; rechazarla dejaría al
-> estudiante sin lo suyo y con el dinero pagado, y el sistema no sabe devolver (`ALC-OUT-01`).
->
-> El negativo no se esconde: es el descuadre que `HU-29` existe para auditar, y la pantalla
-> del historial lo enseña con la venta que lo originó.
->
-> **Y la caja no es la única vía.** `registrar_merma` valida contra las existencias reales,
-> así que **también puede dar de baja unidades apartadas** — se dañó la bandeja con las
-> empanadas de una reserva, y el libro baja igual. La consecuencia es la misma y la salida
-> también: la entrega se registra, el libro queda en negativo y el descuadre se audita. No se
-> cierra por lo mismo que en la caja: exigiría que la merma supiera de reservas, y ninguna
-> historia lo pide. Se anotó al revisar el cierre del Sprint 4.
+> **La entrega se registra siempre** (`DT-35`): si se entrega algo que el libro no tenía
+> registrado —se preparó y no se ingresó, o la caja vendió lo que se había preparado—, el
+> libro queda en negativo, y ese negativo es el descuadre que `HU-29` existe para auditar. La
+> pantalla del historial lo enseña con la venta que lo originó. Lo mismo si una merma da de
+> baja lo preparado: la merma no sabe de reservas, y ninguna historia lo pide.
 
 ---
 

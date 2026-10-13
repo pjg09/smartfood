@@ -68,9 +68,10 @@ conocer antes de copiarlas.
 **Tres las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
 porque el padrón estrenó a la vez el buscador que pide a cada tecla, el interruptor accesible
 y el orden de los tres controles, y esas tres decisiones se toman una vez o se vuelven a
-discutir en la siguiente pantalla que lleve una tabla. La **lista con cantidad**, porque es
-una variante de la lista con interruptor y lo que la separa de ella —un solo envío en vez de
-un gesto por fila— es justo lo que habría que volver a razonar en la próxima. Y el
+discutir en la siguiente pantalla que lleve una tabla. El **catálogo con ticket**, porque
+reparte el trabajo entre el navegador y el servidor de una forma que no es obvia —quién
+cuenta las unidades y quién suma el dinero— y es justo lo que habría que volver a razonar en
+la próxima. Y el
 **medidor de proporción**, porque lo que decide no es cómo se ve sino qué se recorta y qué
 no, y eso hay que saberlo **antes** de dibujar el segundo.
 
@@ -84,7 +85,7 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **qué historia lo trae** |
 | Barra de filtros | `templates/personas/padron.html` | Buscador con icono dentro, interruptor y acción **en una fila** desde `tablet`; apilados por debajo |
 | Lista con interruptor | `templates/restricciones/partials/lista-de-productos.html` | Una fila por elemento, el estado pintado en el borde y el fondo, y un botón que dice **la acción**, no el estado |
-| Lista con cantidad | `templates/ventas/reserva.html` | La fila de `[S2.6]` con un campo numérico en vez del interruptor; **un solo envío**, no un gesto por fila |
+| Catálogo con ticket | `templates/ventas/reserva.html` | Filtros arriba, tarjetas con «Agregar» que pasa a «− n +», y el ticket al lado; **las cantidades en el formulario, el dinero en el servidor** |
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 | Medidor de proporción | `templates/reportes/partials/recomendaciones.html` | Barra fina bajo la cifra; **se recorta la barra a 100, nunca el número**, y el color no significa nada |
 | Consolidado de reporte | `templates/admin/ventas/venta/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
@@ -222,26 +223,30 @@ Cada fila es un `<form>` con `hx-post` que devuelve **la lista entera**, no la f
 recuento de arriba y el historial de abajo cambian con cada gesto, y un intercambio por fila
 los dejaría desfasados.
 
-### [S2.6.1] Lista con cantidad
+### [S2.6.1] Catálogo con ticket
 
-La variante de `[S2.6]` para cuando lo que se elige no es sí o no, sino cuántos: la reserva
-anticipada (`HU-23`). **Misma fila** —nombre y precio a la izquierda, control a la derecha,
-borde y fondo de superficie— cambiando el botón por un `<input type="number">`.
+La reserva anticipada (`HU-23`, `DEC-24`), con la forma del punto de venta: **filtros arriba,
+tarjetas de producto y el ticket al lado**, que en `escritorio` se queda pegado mientras se
+baja por el catálogo. Debajo, los pedidos, cuyas filas abren la modal de ficha (`[S2.10]`).
+Se copia de `templates/ventas/reserva.html` y de
+`templates/ventas/partials/ticket-de-la-reserva.html`.
 
-**Un solo envío, no un gesto por fila.** La lista con interruptor pide a cada clic porque
-cada bloqueo es una decisión que vale por sí sola y hay que asentarla. Aquí no: las
-cantidades son un único acto de compra, y enviarlas una a una cobraría por partes algo que
-el acudiente piensa entero. Por eso el formulario es clásico y no lleva HTMX — no hay nada
-que refrescar entre gesto y gesto.
-
-**No es el carrito del punto de venta.** Aquel vive en la sesión (`DT-26`) porque el cajero
-monta la venta gesto a gesto con una fila delante; aquí no hay fila y no hace falta estado
-de servidor.
-
-**El `max` de cada campo es lo que queda sin apartar**, no las existencias: ofrecer más de lo
-que el servicio va a aceptar es enseñar un rechazo antes de tiempo. Y lo que se escribió se
-devuelve escrito cuando hay un rechazo — quien acaba de leer un motivo no debería teclear
-otra vez lo mismo.
+- **Las cantidades viven en el formulario, el dinero en el servidor.** «Agregar», «−» y «+»
+  cambian un entero en un campo oculto por producto (`assets/js/interfaz.js`), y el ticket
+  se vuelve a pedir con esas cantidades; lo calcula y lo formatea el servidor, porque el
+  dinero se escribe en un solo sitio. Los botones del ticket cambian el mismo campo que los
+  de la tarjeta. **No hay carrito en sesión**: se envía una vez.
+- **Los filtros esconden tarjetas y no piden nada.** Si recargaran el catálogo, lo elegido
+  en lo que queda oculto se perdería. Comparan contra `data-*` de cada tarjeta: el precio va
+  sin formato (`unlocalize`), porque es un número para comparar, no una cifra para leer.
+- **Lo que va a fallar se dice antes**: la tarjeta de un producto bloqueado o con un alérgeno
+  bloqueado lo dice en rojo y no tiene contador; el ticket que no alcanza o que pasa del cupo
+  no tiene botón, sino qué falta y dónde se arregla (`[S2.4]`). Es aviso: quien rechaza es el
+  servicio.
+- **La rejilla de tarjetas no fija columnas**: mete tantas como quepan de 15 rem. El ancho
+  del catálogo depende del menú lateral y del ticket, no solo de la pantalla.
+- **Lo elegido vuelve elegido** tras un rechazo: quien acaba de leer un motivo no debería
+  volver a montar el pedido.
 
 ### [S2.7] Historial de cambios
 

@@ -391,16 +391,17 @@ class LineaVenta(models.Model):
 
 
 class EstadoDelPedido(models.TextChoices):
-    """Los dos estados de un pedido anticipado (`TT-143`, `HU-23`, `HU-25`).
+    """Los tres estados de un pedido anticipado (`HU-23`, `HU-25`, `DEC-24`).
 
-    **No hay un tercero.** Ninguna historia pide anular una reserva, y el
-    sistema no sabe devolver dinero (`ALC-OUT-01`): un estado «anulado» sin
-    quién reintegre el saldo sería una promesa que nadie cumple. Si alguna vez
-    hace falta, se registra como decisión y llega con su historia.
+    **Un pedido solo sale de `pendiente`, y sale una vez**: o se entrega o se
+    cancela. El tercero llegó con `DEC-24` y con quien reintegra el saldo:
+    `cancelar_pedido` asienta la devolución en el mismo acto (`DT-48`). Sin
+    eso, un estado «cancelado» habría sido una promesa que nadie cumple.
     """
 
     PENDIENTE = "pendiente", "Pendiente de entrega"
     ENTREGADO = "entregado", "Entregado"
+    CANCELADO = "cancelado", "Cancelado"
 
 
 class PedidoAnticipado(models.Model):
@@ -463,6 +464,21 @@ class PedidoAnticipado(models.Model):
         related_name="pedidos_entregados",
         verbose_name="entregado por",
     )
+    # `DEC-24`, `DT-48`. Quién canceló, cuándo y por qué. Vacíos mientras el
+    # pedido no se cancela; la restricción de abajo dice cuándo tienen que
+    # estar, y que el motivo diga algo.
+    cancelado_en = models.DateTimeField("cancelado en", null=True, blank=True)
+    cancelado_por = models.ForeignKey(
+        "cuentas.Usuario",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="pedidos_cancelados",
+        verbose_name="cancelado por",
+    )
+    motivo_de_cancelacion = models.CharField(
+        "motivo de la cancelación", max_length=200, blank=True, default=""
+    )
 
     class Meta:
         verbose_name = "pedido anticipado"
@@ -475,28 +491,46 @@ class PedidoAnticipado(models.Model):
             models.Index(fields=["estado", "creado_en"], name="pedido_por_estado"),
         ]
         constraints = [
-            # `HU-25`, segundo criterio, en la capa donde no se olvida. Un
-            # pedido entregado dice cuándo y quién; uno pendiente no puede
-            # decirlo, porque todavía no ha pasado.
+            # `HU-25` y `DT-48`, en la capa donde no se olvida. Cada estado dice
+            # qué ha pasado y nada más: uno pendiente no tiene entrega ni
+            # cancelación, porque todavía no ha pasado ninguna; uno entregado
+            # dice cuándo y quién, y no puede estar además cancelado; y uno
+            # cancelado dice cuándo, quién y **por qué**, y no se entregó.
             #
-            # Es además lo que impide **entregar dos veces sin darse cuenta**:
-            # la entrega de `TT-149` solo puede pasar de `pendiente` a
-            # `entregado`, y un pedido ya entregado no vuelve a estar pendiente
-            # porque perdería la fecha y el cajero que lo atendió.
+            # Es lo que impide entregar dos veces —o entregar lo cancelado— sin
+            # darse cuenta: volver a `pendiente` perdería la fecha y quien lo
+            # atendió, y eso la base no lo admite.
+            #
+            # El motivo con `\S` y no `!= ""`, como la merma (`INV-8`,
+            # `TT-140`): tres espacios no son un motivo.
             models.CheckConstraint(
                 condition=(
                     models.Q(
                         estado=EstadoDelPedido.PENDIENTE,
                         entregado_en__isnull=True,
                         entregado_por__isnull=True,
+                        cancelado_en__isnull=True,
+                        cancelado_por__isnull=True,
+                        motivo_de_cancelacion="",
                     )
                     | models.Q(
                         estado=EstadoDelPedido.ENTREGADO,
                         entregado_en__isnull=False,
                         entregado_por__isnull=False,
+                        cancelado_en__isnull=True,
+                        cancelado_por__isnull=True,
+                        motivo_de_cancelacion="",
+                    )
+                    | models.Q(
+                        estado=EstadoDelPedido.CANCELADO,
+                        entregado_en__isnull=True,
+                        entregado_por__isnull=True,
+                        cancelado_en__isnull=False,
+                        cancelado_por__isnull=False,
+                        motivo_de_cancelacion__regex=r"\S",
                     )
                 ),
-                name="pedido_entrega_completa_o_ninguna",
+                name="pedido_estado_coherente",
             ),
         ]
 
@@ -506,6 +540,10 @@ class PedidoAnticipado(models.Model):
     @property
     def esta_pendiente(self):
         return self.estado == EstadoDelPedido.PENDIENTE
+
+    @property
+    def esta_cancelado(self):
+        return self.estado == EstadoDelPedido.CANCELADO
 
 
 class CierreDeCaja(models.Model):

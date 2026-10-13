@@ -85,11 +85,12 @@ def consumo_del_dia(estudiante, dia=None):
     maneras.
     ─────────────────────────────────────────────────────────────────────────
 
-    **Solo cuenta `VENTA`.** Una recarga no es consumo, y una devolución tampoco
-    lo descuenta: devolver dinero no deshace que ese día se compró. Si `HU-20`
-    —el límite diario, del Sprint 3— decide que una devolución sí libera cupo,
-    esa decisión se toma allí, con su historia delante; adelantarla aquí sería
-    inventar una regla que ningún criterio pide.
+    **Solo cuenta `VENTA`, y no la de un pedido cancelado** (`DEC-24`, `HU-66`).
+    Una recarga no es consumo. Un pedido cancelado tampoco: se cobró y se
+    devolvió sin que el estudiante recibiera nada, y si siguiera contando le
+    quitaría cupo por algo que no comió. Se excluye **la venta**, no se suma la
+    devolución: así la cuenta no depende de que la devolución caiga el mismo
+    día que el cobro. La regla vive en `ventas.selectors.sin_pedidos_cancelados`.
 
     El filtro es un **rango de fechas y hora**, no `creado_en__date`. Los dos
     devuelven lo mismo, pero `__date` envuelve la columna en una función y deja
@@ -109,11 +110,16 @@ def consumo_del_dia(estudiante, dia=None):
     comienzo = timezone.make_aware(datetime.combine(dia, time.min))
     siguiente = comienzo + timedelta(days=1)
 
-    total = MovimientoBilletera.objects.filter(
-        billetera__estudiante=estudiante,
-        tipo=TipoDeMovimiento.VENTA,
-        creado_en__gte=comienzo,
-        creado_en__lt=siguiente,
+    # Importado aquí y no arriba: `ventas.selectors` importa este módulo.
+    from ventas.selectors import sin_pedidos_cancelados
+
+    total = sin_pedidos_cancelados(
+        MovimientoBilletera.objects.filter(
+            billetera__estudiante=estudiante,
+            tipo=TipoDeMovimiento.VENTA,
+            creado_en__gte=comienzo,
+            creado_en__lt=siguiente,
+        )
     ).aggregate(total=Sum("monto"))["total"]
 
     return -total if total is not None else Decimal("0.00")

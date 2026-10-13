@@ -53,7 +53,7 @@ from ventas.models import (
     PedidoAnticipado,
     Venta,
 )
-from ventas.selectors import efectivo_esperado_de, existencias_sin_reservar
+from ventas.selectors import efectivo_esperado_de
 
 
 class VentaRechazada(ValidationError):
@@ -334,7 +334,7 @@ def _normalizar_lineas(lineas, *, vacio="No hay nada que cobrar."):
     return lineas
 
 
-def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los=None):
+def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los):
     """Los pasos 1 y 2 de `DT-6`, **compartidos por la venta y la reserva**.
 
     Devuelve `(productos, total)`, con los productos ya bloqueados.
@@ -343,7 +343,7 @@ def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los=None):
     Es **el riesgo de diseño que el plan del Sprint 4 marcó en rojo**. Aquí
     dentro viven las cuatro reglas de rechazo que construyeron los Sprints 2 y 3
     —estudiante desactivado, alérgeno bloqueado, producto bloqueado y cupo del
-    día— más las existencias y el saldo.
+    día— más el saldo, y las existencias cuando quien llama las pide.
 
     Si la reserva tuviera su propio flujo, esas reglas **no se le aplicarían**, y
     quedaría una puerta trasera para saltarse el control parental entero: el
@@ -355,17 +355,16 @@ def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los=None):
     ─────────────────────────────────────────────────────────────────────────
 
     ── `existencias_de_los` ────────────────────────────────────────────────
-    Qué cuenta como disponible. La venta del mostrador mira las existencias
-    reales; la reserva mira las que quedan **descontando lo ya reservado y no
-    entregado** (`existencias_sin_reservar`, `TT-144`), porque no descuenta
-    inventario al cobrar y dos reservas del último paquete pasarían las dos.
+    Qué cuenta como disponible, o `None` si no se mira. La venta del mostrador
+    pasa `existencias_por_producto`: vende lo que hay en la vitrina. La reserva
+    pasa `None`, porque **es un encargo** que la cafetería prepara a partir de
+    la cola, no un apartado de lo que hay hoy (`DEC-24`, `DT-47`).
 
-    Es lo único que cambia entre las dos, y por eso es un argumento y no una
-    rama dentro de la función: una rama invita a añadir la segunda.
+    Es lo único que cambia entre las dos, y por eso es un argumento **sin valor
+    por defecto**: quien llame tiene que decir qué existencias mira, en vez de
+    heredar sin saberlo la respuesta de otro.
     ─────────────────────────────────────────────────────────────────────────
     """
-    if existencias_de_los is None:
-        existencias_de_los = existencias_por_producto
 
     # ── 1. BLOQUEAR ─────────────────────────────────────────────────────────
     # `list()` no es decorativo: sin evaluar el `QuerySet` no se emite ningún
@@ -469,14 +468,15 @@ def _bloquear_y_validar(*, estudiante, lineas, existencias_de_los=None):
                 productos=nombres,
             )
 
-    existencias = existencias_de_los(productos)
-    for producto in productos:
-        disponibles = existencias.get(producto.id, 0)
-        if disponibles < lineas[producto.id]:
-            raise ExistenciasInsuficientes(
-                f"De «{producto.nombre}» quedan {disponibles} y se piden "
-                f"{lineas[producto.id]}."
-            )
+    if existencias_de_los is not None:
+        existencias = existencias_de_los(productos)
+        for producto in productos:
+            disponibles = existencias.get(producto.id, 0)
+            if disponibles < lineas[producto.id]:
+                raise ExistenciasInsuficientes(
+                    f"De «{producto.nombre}» quedan {disponibles} y se piden "
+                    f"{lineas[producto.id]}."
+                )
 
     total = sum(
         (producto.precio * lineas[producto.id] for producto in productos),
@@ -604,7 +604,11 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
 
     medio_pago = _medio_de_pago_de(estudiante, medio_pago)
 
-    productos, total = _bloquear_y_validar(estudiante=estudiante, lineas=lineas)
+    productos, total = _bloquear_y_validar(
+        estudiante=estudiante,
+        lineas=lineas,
+        existencias_de_los=existencias_por_producto,
+    )
 
     # ── 3. ESCRIBIR ─────────────────────────────────────────────────────────
     venta = Venta.objects.create(
@@ -730,19 +734,15 @@ def reservar(*, actor, estudiante, lineas):
     plan del sprint marcó en rojo, y la única defensa es que no haya dos copias.
     ─────────────────────────────────────────────────────────────────────────
 
-    ── LO QUE SÍ CAMBIA: NO DESCUENTA INVENTARIO ──────────────────────────
+    ── LO QUE SÍ CAMBIA: NI MIRA NI DESCUENTA INVENTARIO ──────────────────
     El libro de inventario se mueve **al entregar** (`HU-25`, `TT-149`), no
-    aquí. Decisión del equipo, registrada en `DT-33`.
+    aquí (`DT-33`). Y la reserva **no comprueba existencias**: es un encargo
+    que la cafetería prepara a partir de la cola de `HU-24`, no un apartado de
+    lo que hay hoy en la vitrina (`DEC-24`, `DT-47`).
 
-    Tiene una consecuencia que hay que sostener: como las unidades no salen del
-    libro, dos reservas del último paquete pasarían las dos. Por eso la reserva
-    valida contra `existencias_sin_reservar` —existencias menos lo apartado por
-    pedidos pendientes— y no contra las existencias a secas.
-
-    **El hueco que queda es la caja**, que sigue mirando las existencias reales
-    y puede vender lo apartado. Está anotado en `[S6]` de
-    `./docs/reglas-de-la-venta.md` y lo decide `HU-25`, que es quien tiene que
-    saber qué hacer cuando el estudiante llega y no hay lo suyo.
+    Lo que no se puede preparar se cancela, y el importe vuelve a la billetera
+    (`cancelar_pedido`). La entrega, por su parte, nunca se rechaza por falta
+    de existencias (`DT-35`).
     ─────────────────────────────────────────────────────────────────────────
 
     **El medio de pago es la billetera y no se pregunta.** Hay estudiante, así
@@ -757,7 +757,8 @@ def reservar(*, actor, estudiante, lineas):
     productos, total = _bloquear_y_validar(
         estudiante=estudiante,
         lineas=lineas,
-        existencias_de_los=existencias_sin_reservar,
+        # Un encargo no mira la vitrina (`DEC-24`, `DT-47`).
+        existencias_de_los=None,
     )
 
     venta = Venta.objects.create(
@@ -882,10 +883,13 @@ def entregar(*, actor, pedido):
         .get(pk=pedido.pk)
     )
 
+    if bloqueado.esta_cancelado:
+        raise PedidoCancelado(_ya_cancelado(bloqueado, "No se entrega."))
     if not bloqueado.esta_pendiente:
         raise PedidoYaEntregado(
             f"Este pedido ya se entregó el "
-            f"{bloqueado.entregado_en:%d/%m/%Y a las %H:%M}. No se entrega dos veces."
+            f"{timezone.localtime(bloqueado.entregado_en):%d/%m/%Y a las %H:%M}. "
+            "No se entrega dos veces."
         )
 
     try:
@@ -910,6 +914,128 @@ def entregar(*, actor, pedido):
     bloqueado.entregado_en = timezone.now()
     bloqueado.entregado_por = actor
     bloqueado.save(update_fields=["estado", "entregado_en", "entregado_por"])
+
+    return bloqueado
+
+
+class PedidoCancelado(VentaRechazada):
+    """`DEC-24`: un pedido cancelado no se entrega ni se cancela otra vez.
+
+    Hereda de `VentaRechazada` por lo mismo que `PedidoYaEntregado`: quien lo
+    recibe lo trata como un rechazo con su motivo, no como un fallo.
+    """
+
+
+def _ya_cancelado(pedido, consecuencia):
+    return (
+        f"Este pedido se canceló el "
+        f"{timezone.localtime(pedido.cancelado_en):%d/%m/%Y a las %H:%M} y su importe "
+        f"volvió a la billetera. {consecuencia}"
+    )
+
+
+def _puede_cancelar(actor, pedido):
+    """`[S11]` con la fila de `DEC-24`: quién cancela un pedido anticipado.
+
+    El acudiente, **los de sus estudiantes** —la comprobación va sobre el
+    vínculo, no sobre el rol, como al reservar—; el cajero y la administración
+    de la cafetería, cualquiera, que son los dos roles de la cola (`HU-24`).
+    Ningún otro: la institución tiene el padrón, no la cafetería.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Cancelar un pedido exige identificarse.")
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+    if actor.rol in (Rol.CAJERO, Rol.ADMINISTRADOR):
+        return
+    if actor.rol == Rol.ACUDIENTE:
+        if pedido.venta.estudiante.acudiente.usuario_id != actor.id:
+            raise PermissionDenied(
+                "Solo se cancelan los pedidos de los estudiantes a cargo de quien cancela."
+            )
+        return
+    raise PermissionDenied(
+        "Cancelar un pedido anticipado es del acudiente del estudiante y del "
+        "personal de la cafetería, y de ningún otro rol ([S11], DEC-24)."
+    )
+
+
+@transaction.atomic
+def cancelar_pedido(*, actor, pedido, motivo):
+    """Cancela un pedido pendiente y devuelve su importe (`HU-66`, `HU-67`).
+
+    Devuelve el `PedidoAnticipado` ya cancelado.
+
+    ── LO QUE HACE, Y SOLO ESO ─────────────────────────────────────────────
+    Cambia el estado —con quién, cuándo y el motivo— y asienta **una**
+    devolución por el importe íntegro de la venta, que apunta a ella (`DT-48`).
+    **No toca el inventario**: la reserva no lo movió (`DT-33`) y no hay nada
+    que reponer. Y no borra nada: la venta se cobró y la devolución se asentó,
+    y el libro tiene que poder explicar las dos (`INV-2`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── NO SE DEVUELVE DOS VECES, Y LA BASE TAMBIÉN LO IMPIDE ──────────────
+    El pedido se bloquea antes de mirar su estado, como en `entregar`: una
+    cancelación y una entrega simultáneas no pueden pasar las dos, ni dos
+    cancelaciones. Por debajo, `movimiento_una_devolucion_por_venta` impide
+    la segunda devolución aunque alguien escriba otro camino mañana (`DT-15`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── SE CANCELA AUNQUE EL ESTUDIANTE NO OPERE ────────────────────────────
+    Una devolución **no es una recarga**: no entra dinero nuevo, se deshace un
+    cobro (`DEC-24`). Por eso aquí no se llama a `comprobar_que_puede_operar`,
+    y `billetera.services.asentar` tampoco lo hace para las devoluciones. Es lo
+    que da salida al pedido pagado de un estudiante que no puede retirarlo
+    (`INVD-2`), que estaba en el `ANEXO B`.
+    ─────────────────────────────────────────────────────────────────────────
+
+    **El motivo es obligatorio para todos**, también para el acudiente. Aquí se
+    rechaza con un mensaje; la restricción `pedido_estado_coherente` lo impide
+    en la base (`DT-48`).
+    """
+    _puede_cancelar(actor, pedido)
+
+    motivo = (motivo or "").strip()
+    if not motivo:
+        raise ValidationError("Escribe el motivo de la cancelación.")
+    largo = PedidoAnticipado._meta.get_field("motivo_de_cancelacion").max_length
+    if len(motivo) > largo:
+        raise ValidationError(f"El motivo no puede pasar de {largo} caracteres.")
+
+    # `of=("self",)` por lo mismo que en `entregar`: `venta.estudiante` es
+    # opcional y PostgreSQL no bloquea el lado nulo de un LEFT JOIN.
+    bloqueado = (
+        PedidoAnticipado.objects.select_for_update(of=("self",))
+        .select_related("venta", "venta__estudiante")
+        .get(pk=pedido.pk)
+    )
+
+    if bloqueado.esta_cancelado:
+        raise PedidoCancelado(_ya_cancelado(bloqueado, "No se cancela dos veces."))
+    if not bloqueado.esta_pendiente:
+        raise PedidoYaEntregado(
+            f"Este pedido ya se entregó el "
+            f"{timezone.localtime(bloqueado.entregado_en):%d/%m/%Y a las %H:%M}: "
+            "lo entregado no se cancela."
+        )
+
+    bloqueado.estado = EstadoDelPedido.CANCELADO
+    bloqueado.cancelado_en = timezone.now()
+    bloqueado.cancelado_por = actor
+    bloqueado.motivo_de_cancelacion = motivo
+    bloqueado.save(
+        update_fields=["estado", "cancelado_en", "cancelado_por", "motivo_de_cancelacion"]
+    )
+
+    # La devolución, por el único punto de asiento del libro (`DT-24`). El
+    # importe sale de las líneas congeladas (`DT-8`): se devuelve lo que se
+    # cobró, no lo que el producto cuesta hoy.
+    asentar_en_la_billetera(
+        estudiante=bloqueado.venta.estudiante,
+        tipo=TipoDeMovimiento.DEVOLUCION,
+        monto=total_de(bloqueado.venta),
+        venta=bloqueado.venta,
+    )
 
     return bloqueado
 

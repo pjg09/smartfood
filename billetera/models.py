@@ -68,15 +68,11 @@ class TipoDeMovimiento(models.TextChoices):
 
     Los tres se declararon con el libro, antes de que hubiera quién los
     asentara: **el libro de movimientos se define entero o no explica el
-    saldo** (`INV-2`). Hoy la recarga la asienta `recargar` (`TT-60`) y la
-    venta, `registrar_venta` (`TT-80`).
-
-    **`DEVOLUCION` sigue sin tener quién la asiente, y eso no es una tarea
-    pendiente**: el sistema no mueve dinero real ni sabe devolverlo
-    (`ALC-OUT-01`, `ALC-OUT-02`), y ninguna historia lo pide. El tipo existe
-    porque el libro tiene que poder explicar cualquier saldo, no porque falte
-    un servicio que lo escriba. Lo que sí lo lee ya es el resumen de gasto
-    (`TT-165`), justamente para no quedarse callado el día que algo lo asiente.
+    saldo** (`INV-2`). La recarga la asienta `recargar` (`TT-60`); la venta,
+    `registrar_venta` (`TT-80`) y `reservar`; y la devolución,
+    `cancelar_pedido` (`DEC-24`, `DT-48`), que reintegra lo que costó un pedido
+    anticipado cancelado. Es saldo simulado, como el resto: no mueve dinero
+    real (`ALC-OUT-01`, `ALC-OUT-02`).
     """
 
     RECARGA = "recarga", "Recarga"
@@ -188,6 +184,17 @@ class MovimientoBilletera(models.Model):
                     | models.Q(venta__isnull=True)
                 ),
                 name="movimiento_de_recarga_sin_venta",
+            ),
+            # `DT-48`. **Una venta se devuelve una vez.** Devolver dos veces es
+            # el gemelo de cobrar dos veces (`HU-25`), y tampoco lo detecta
+            # ninguna invariante: el libro cuadraría con el doble. El servicio
+            # lo evita bloqueando el pedido; esto lo impide también al camino
+            # que alguien escriba mañana (`DT-15`). Las devoluciones sin venta
+            # no entran en la cuenta: `NULL` no se compara igual a nada.
+            models.UniqueConstraint(
+                fields=["venta"],
+                condition=models.Q(tipo=TipoDeMovimiento.DEVOLUCION),
+                name="movimiento_una_devolucion_por_venta",
             ),
         ]
 

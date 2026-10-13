@@ -19,6 +19,11 @@
    **La pantalla la comparten el cajero y la administración** (`USR-3` y `USR-4`),
    que no comparten interfaz: por eso vive en el armazón de la aplicación y no
    dentro de `INT-2`, y por eso no está en el admin. Está razonado en `DT-34`.
+
+   **Los dos cancelan desde aquí** (`HU-67`, `DEC-24`): lo que no se va a poder
+   preparar o entregar se cancela con su motivo, y el importe vuelve a la
+   billetera. «Cancelar» es un enlace a la confirmación, no un botón que cancele
+   en el acto: mueve dinero y pide un motivo.
 {% endcomment %}
 
 {% block titulo %}Reservas pendientes | SmartFood{% endblock %}
@@ -64,6 +69,10 @@
                 <li class="text-base text-texto">{{ linea.cantidad }} × {{ linea.producto.nombre }}</li>
               {% endfor %}
             </ul>
+            <div class="flex justify-end border-t border-borde p-3">
+              <a href="{% url 'cancelacion-por-la-cafeteria' pedido.id %}" data-cancelar-pedido
+                 class="text-base font-semibold text-acento-fuerte hover:underline">Cancelar</a>
+            </div>
           </li>
         {% endfor %}
       </ul>
@@ -75,6 +84,9 @@
               <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Estudiante</th>
               <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Reservado</th>
               <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">Qué lleva</th>
+              <th scope="col" class="p-3 text-sm font-semibold text-texto-suave">
+                <span class="sr-only">Acción</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -101,6 +113,10 @@
                     {% endfor %}
                   </ul>
                 </td>
+                <td class="p-3 text-right">
+                  <a href="{% url 'cancelacion-por-la-cafeteria' pedido.id %}" data-cancelar-pedido
+                     class="text-base font-semibold text-acento-fuerte hover:underline">Cancelar</a>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -108,14 +124,12 @@
       </div>
 
       {% comment %} `INVD-2`. Un estudiante desactivado o de baja **no retira** su pedido,
-         y la caja lo rechazará. Se marca en vez de esconderlo: está pagado y sin
-         anular, y quitarlo de la lista lo volvería invisible — justo lo que no
-         conviene con dinero de por medio.
+         y la caja lo rechazará. Se marca en vez de esconderlo: está pagado, y
+         quitarlo de la lista lo volvería invisible.
 
-         Qué hacer con ese pedido **no está decidido** (`ANEXO B` de
-         `decisiones-de-alcance.md`: si se devuelve el saldo, si queda pendiente o si
-         se anula), así que la pantalla no propone nada: dice lo que pasa y a quién
-         preguntar. Va en `aviso` y no en `error`: no ha fallado nada. {% endcomment %}
+         **Su salida es cancelarlo** (`DEC-24`): el importe vuelve a la billetera
+         aunque el estudiante no opere, porque una devolución no es una recarga.
+         Va en `aviso` y no en `error`: no ha fallado nada. {% endcomment %}
       {% if hay_sin_salida %}
         <div role="note" data-avisos-sin-salida
              class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
@@ -123,8 +137,8 @@
           <p class="text-sm text-aviso-fuerte">
             <strong class="font-semibold">Hay pedidos marcados «No puede retirar».</strong>
             Su tarjeta está desactivada o el estudiante se dio de baja, así que la caja no
-            los entrega. No los prepares: están pagados y sin anular, y qué hacer con ese
-            dinero lo decide la institución.
+            los entrega. No los prepares: cancélalos con su motivo y el importe volverá a su
+            billetera.
           </p>
         </div>
       {% endif %}

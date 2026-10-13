@@ -1,31 +1,33 @@
 {% extends "base-aplicacion.html" %}
-{% load dinero %}
+{% load dinero l10n %}
 
-{% comment %} TT-145. Pantalla de reserva anticipada (`HU-23`, `INT-1`).
+{% comment %} TT-145, DEC-24. La reserva anticipada y los pedidos del estudiante (`HU-23`,
+   `HU-65`, `HU-66`, `INT-1`).
 
-   Tercer criterio: se gestiona desde la aplicación del acudiente. Encabezado de
-   pantalla copiado de `billetera/recarga.html` y filas de producto copiadas de
-   `restricciones/partials/lista-de-productos.html` (`DT-25`), cambiando el
-   interruptor por un campo de cantidad — es la misma fila y el mismo recorrido.
+   **Una sola pantalla, en tres franjas**: arriba los filtros, debajo el catálogo con su
+   ticket al lado —la composición del punto de venta, `[S2.6.1]` de `sistema-visual.md`—
+   y al final los pedidos, que se abren en la modal de ficha (`[S2.10]`) y se cancelan
+   dentro de ella.
 
-   **El pago es simulado y la pantalla lo dice, arriba del todo**, igual que la
-   recarga: `ALC-OUT-01` y `ALC-OUT-02` excluyen la pasarela y el dinero real. Lo
-   que sí es real es el cobro contra la billetera, que se asienta al reservar y
-   no al entregar (segundo criterio de `HU-23`).
+   **Las cantidades viven en el formulario y el dinero en el servidor.** «+» y «−»
+   cambian un entero en un campo oculto (`assets/js/interfaz.js`); el ticket lo calcula
+   y lo formatea el servidor a cada cambio (`ticket_de_la_reserva`), porque el dinero se
+   escribe en un solo sitio. No hay carrito en sesión: se envía una vez.
 
-   **No hay carrito**: un solo formulario que se envía una vez. El carrito de
-   servidor es del punto de venta (`DT-26`), donde el cajero monta la venta gesto
-   a gesto con una fila delante; aquí no hay fila.
+   **Los filtros los aplica el navegador**, escondiendo tarjetas. Si volvieran a pedir el
+   catálogo al servidor, las cantidades de lo que queda oculto se perderían.
 
-   La cifra de cada producto es lo que queda **sin apartar** por otras reservas
-   pendientes, que es lo mismo que valida el servicio: la pantalla no ofrece lo
-   que el cobro va a rechazar.
+   **Sin existencias, y no es un olvido** (`DT-47`): la reserva es un encargo que la
+   cafetería prepara, no un apartado de lo que hay hoy en la vitrina.
+
+   **El pago es simulado y la pantalla lo dice**: `ALC-OUT-01` y `ALC-OUT-02` excluyen la
+   pasarela y el dinero real. Lo que sí es real es el cobro contra la billetera.
 {% endcomment %}
 
 {% block titulo %}Reservar | {{ estudiante.nombre }} | SmartFood{% endblock %}
 
 {% block contenido %}
-  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
 
     <header class="flex flex-col gap-1">
       <a href="{% url 'mis-estudiantes' %}?estudiante={{ estudiante.pk }}"
@@ -38,26 +40,14 @@
       <p class="text-base font-medium text-texto-suave">
         Elige lo que quieres que
         <strong class="font-semibold text-texto">{{ estudiante.nombre }}</strong> reciba y
-        págalo ahora. Lo recoge en la cafetería con su tarjeta, sin depender de lo que elija
-        en la fila.
+        déjalo pagado. Lo recoge en la cafetería con su tarjeta; mientras no lo recoja puedes
+        cancelarlo y el importe vuelve a su billetera.
       </p>
     </header>
 
-    <div role="note"
-         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
-      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
-      <p class="text-sm text-aviso-fuerte">
-        <strong class="font-semibold">Se cobra al reservar, no al recoger.</strong>
-        El importe sale de la billetera de {{ estudiante.nombre }} en el momento en que
-        confirmas, y queda asentado en su historial. El pago es simulado: no se pide ningún
-        dato de tarjeta ni se mueve dinero real.
-      </p>
-    </div>
-
     {% if error %}
       {% comment %} El rechazo llega en `200` con el motivo dentro de la pantalla, no en un
-         `400`: el estado de la petición y lo que hay que enseñar son dos preguntas
-         distintas, y es lo que ya hacen el cobro y el padrón. {% endcomment %}
+         `400`, y las cantidades se quedan como estaban. {% endcomment %}
       <div role="alert" data-reserva-rechazada
            class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4">
         <svg class="mt-0.5 h-5 w-5 shrink-0 text-error-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
@@ -65,103 +55,251 @@
       </div>
     {% endif %}
 
-    <div class="flex flex-col gap-6 escritorio:flex-row escritorio:items-start">
+    {% if estudiante.puede_operar %}
+      <section aria-labelledby="que-reservar" class="flex flex-col gap-3">
+        <h2 id="que-reservar" class="font-display text-lg text-texto">Qué quieres dejar pagado</h2>
 
-      <form method="post" class="flex w-full flex-col gap-3">
+        {% comment %} La barra de filtros (`[S2.5]`): en una fila desde `escritorio`, apilada
+           por debajo. Sin `name` en ningún control, a propósito: no viajan con la reserva.
+           «Sin …» sale de los alérgenos que el catálogo declara (`HU-11`): no hay campo
+           de dieta, y un filtro que no se puede responder con datos no se pinta. {% endcomment %}
+        <div role="search" aria-label="Filtrar el catálogo" data-filtros-de-la-reserva
+             class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+          <div class="grid gap-3 tablet:grid-cols-2 escritorio:grid-cols-4">
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-medium text-texto">Nombre</span>
+              <input type="search" data-filtro="nombre" placeholder="Empanada, arepa…"
+                     class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                            transition-colors hover:border-acento focus:border-acento focus:outline-none">
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-medium text-texto">Categoría</span>
+              <select data-filtro="categoria"
+                      class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                             transition-colors hover:border-acento focus:border-acento focus:outline-none">
+                <option value="">Todas</option>
+                {% for categoria in categorias %}
+                  <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-medium text-texto">Precio mínimo</span>
+              <input type="number" data-filtro="minimo" min="0" step="100" inputmode="numeric"
+                     placeholder="0"
+                     class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                            transition-colors hover:border-acento focus:border-acento focus:outline-none">
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-medium text-texto">Precio máximo</span>
+              <input type="number" data-filtro="maximo" min="0" step="100" inputmode="numeric"
+                     placeholder="Sin tope"
+                     class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                            transition-colors hover:border-acento focus:border-acento focus:outline-none">
+            </label>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            {% if alergenos %}
+              <span class="text-sm font-medium text-texto">Sin</span>
+              {% for alergeno in alergenos %}
+                <button type="button" data-filtro-sin="{{ alergeno.id }}" aria-pressed="false"
+                        class="inline-flex h-10 items-center rounded-full border border-borde bg-superficie
+                               px-4 text-base font-medium text-texto transition-colors hover:border-acento
+                               aria-pressed:border-transparente aria-pressed:bg-primario
+                               aria-pressed:text-sobre-primario">
+                  {{ alergeno.nombre|lower }}
+                </button>
+              {% endfor %}
+            {% endif %}
+            <button type="button" data-limpiar-filtros
+                    class="ml-auto inline-flex h-10 items-center gap-2 rounded-md px-3 text-base
+                           font-medium text-texto-suave transition-colors hover:text-acento-fuerte">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <form method="post" data-formulario-de-reserva
+            class="grid gap-6 escritorio:grid-cols-[minmax(0,1fr)_24rem] escritorio:items-start">
         {% csrf_token %}
 
-        <div class="flex items-baseline justify-between gap-3">
-          <h2 class="font-display text-lg text-texto">Catálogo</h2>
-          <p class="text-sm text-texto-suave">
-            Saldo disponible: <strong class="font-semibold text-texto">{{ saldo|dinero:"COP" }}</strong>
-          </p>
+        <div class="flex flex-col gap-4">
+          {% comment %} **Tantas columnas como quepan, y no un número por punto de ruptura.** El
+             ancho que le queda al catálogo depende del menú lateral y del ticket, no solo de
+             la pantalla: con tres fijas a 1366 px el precio se partía en dos líneas y
+             «Detalle» se cortaba. Se vio en la captura. {% endcomment %}
+          <ul data-catalogo-reservable class="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">
+            {% for producto in productos %}
+              {% comment %} Los `data-*` son lo que filtra el navegador: el nombre en minúscula,
+                 la categoría, el precio sin formato —`unlocalize`: es un número para comparar,
+                 no una cifra para leer— y los alérgenos que declara. {% endcomment %}
+              <li data-tarjeta-de-producto="{{ producto.id }}"
+                  data-nombre="{{ producto.nombre|lower }}"
+                  data-categoria="{{ producto.categoria_id }}"
+                  data-precio="{{ producto.precio|unlocalize }}"
+                  data-alergenos="{% for alergeno in producto.alergenos_declarados %}{{ alergeno.id }} {% endfor %}"
+                  class="flex flex-col overflow-hidden rounded-md border border-borde bg-superficie shadow-sm">
+
+                {% if producto.tiene_imagen %}
+                  {% comment %} No se amplía al pulsarla: «Detalle» la enseña a lo grande, con
+                     su ficha (`[S2.13]` es para las miniaturas). {% endcomment %}
+                  <img src="{{ producto.url_de_la_imagen }}" alt="" loading="lazy" width="480" height="270"
+                       data-imagen-del-producto class="aspect-video w-full object-cover">
+                {% else %}
+                  <span aria-hidden="true" data-sin-imagen-del-producto
+                        class="flex aspect-video w-full items-center justify-center border-b border-dashed
+                               border-borde text-texto-suave">
+                    <svg class="h-8 w-8"><use href="#i-cafeteria"></use></svg>
+                  </span>
+                {% endif %}
+
+                <div class="flex flex-1 flex-col gap-3 p-4">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-acento-fuerte">{{ producto.categoria.nombre }}</span>
+                    <span class="font-display text-lg text-texto">{{ producto.nombre }}</span>
+                  </div>
+
+                  {% comment %} Rojo, y es lo que significa: lo que su acudiente bloqueó por
+                     producto o por alérgeno, que la reserva va a rechazar (`[S1]` de
+                     `sistema-visual.md`, regla 3). Se dice **antes** de añadirlo. {% endcomment %}
+                  {% if producto.bloqueado %}
+                    <p data-aviso-de-restriccion
+                       class="flex items-start gap-2 rounded-md bg-error-suave p-3 text-sm text-error-fuerte">
+                      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+                      Lo bloqueaste para {{ estudiante.nombre }}.
+                    </p>
+                  {% endif %}
+                  {% for nombre in producto.contiene_bloqueados %}
+                    <p data-aviso-de-restriccion
+                       class="flex items-start gap-2 rounded-md bg-error-suave p-3 text-sm text-error-fuerte">
+                      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-escudo"></use></svg>
+                      Contiene {{ nombre|lower }}, que tiene bloqueado.
+                    </p>
+                  {% endfor %}
+
+                  <dl class="mt-auto grid grid-cols-2 gap-2">
+                    <div class="flex flex-col">
+                      <dt class="text-sm text-texto-suave">Precio</dt>
+                      <dd class="font-display text-base tabular-nums whitespace-nowrap text-texto">{{ producto.precio|dinero:"COP" }}</dd>
+                    </div>
+                    <div class="flex flex-col">
+                      <dt class="text-sm text-texto-suave">Calorías</dt>
+                      <dd class="font-display text-base tabular-nums text-texto">
+                        {% if producto.energia_kcal is not None %}{{ producto.energia_kcal }} kcal{% else %}<span class="text-sm text-texto-suave">Sin dato</span>{% endif %}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 border-t border-borde px-4 py-3">
+                  {% if producto.se_puede_reservar %}
+                    <input type="hidden" name="cantidad-{{ producto.id }}"
+                           value="{% if producto.cantidad_pedida %}{{ producto.cantidad_pedida }}{% endif %}">
+                    {% comment %} Dos estados del mismo hueco, y los alterna `interfaz.js`:
+                       «Agregar» con cero, y el contador con «−» y «+» en cuanto hay uno.
+                       Nacen ya como corresponden, para que un rechazo devuelva la
+                       pantalla con lo que se había elegido. {% endcomment %}
+                    <button type="button" data-agregar data-producto="{{ producto.id }}"
+                            {% if producto.cantidad_pedida %}hidden{% endif %}
+                            class="inline-flex h-10 items-center gap-2 rounded-md bg-primario px-4 text-base
+                                   font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte">
+                      <span aria-hidden="true">+</span> Agregar
+                    </button>
+                    <div data-contador data-producto="{{ producto.id }}"
+                         {% if not producto.cantidad_pedida %}hidden{% endif %}
+                         class="flex items-center gap-2">
+                      <button type="button" data-paso="-1" data-producto="{{ producto.id }}"
+                              aria-label="Una unidad menos de {{ producto.nombre }}"
+                              class="flex h-10 w-10 items-center justify-center rounded-md border border-borde
+                                     text-lg text-texto transition-colors hover:bg-superficie-hover">−</button>
+                      <span data-cantidad-visible aria-live="polite"
+                            class="w-6 text-center font-display text-lg tabular-nums text-texto">{{ producto.cantidad_pedida }}</span>
+                      <button type="button" data-paso="1" data-producto="{{ producto.id }}"
+                              aria-label="Una unidad más de {{ producto.nombre }}"
+                              class="flex h-10 w-10 items-center justify-center rounded-md border border-borde
+                                     text-lg text-texto transition-colors hover:bg-superficie-hover">+</button>
+                    </div>
+                  {% else %}
+                    {% comment %} **No es un botón deshabilitado** (`[S2.4]`): dice qué pasa. Se
+                       quita en Restricciones, que es donde se puso. {% endcomment %}
+                    <span data-no-reservable
+                          class="inline-flex items-center gap-2 text-base font-semibold text-error-fuerte">
+                      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-restriccion"></use></svg>
+                      Bloqueado
+                    </span>
+                  {% endif %}
+                  <button type="button"
+                          hx-get="{% url 'detalle-del-producto' estudiante.id producto.id %}"
+                          hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                          class="shrink-0 text-base font-semibold text-acento-fuerte hover:underline">
+                    Detalle
+                  </button>
+                </div>
+              </li>
+            {% empty %}
+              <li class="rounded-md border border-dashed border-borde p-6 text-center text-sm
+                         text-texto-suave">
+                No hay productos en el catálogo todavía. Los publica la cafetería.
+              </li>
+            {% endfor %}
+          </ul>
+
+          <div data-sin-resultados hidden
+               class="flex flex-col items-center gap-2 rounded-md border border-dashed border-borde p-6
+                      text-center">
+            <p class="text-base font-medium text-texto">Ningún producto coincide con los filtros</p>
+            <button type="button" data-limpiar-filtros
+                    class="text-base font-semibold text-acento-fuerte hover:underline">
+              Quitar los filtros
+            </button>
+          </div>
         </div>
 
-        <ul class="flex flex-col gap-2" data-catalogo-reservable>
-          {% for producto in productos %}
-            <li class="flex flex-wrap items-center justify-between gap-3 rounded-md
-                       border border-borde bg-superficie p-3">
-              <div class="flex min-w-0 flex-col">
-                <span class="truncate text-base font-medium text-texto">{{ producto.nombre }}</span>
-                <span class="text-sm text-texto-suave">
-                  {{ producto.precio|dinero }}
-                  {% if producto.disponibles > 0 %}
-                    · quedan {{ producto.disponibles }}
-                  {% else %}
-                    · <span class="text-error-fuerte">sin existencias</span>
-                  {% endif %}
-                </span>
-              </div>
-
-              <label class="flex items-center gap-2 text-sm text-texto-suave">
-                <span class="sr-only">Unidades de {{ producto.nombre }}</span>
-                {% comment %} `|unlocalize` no hace falta aquí —la cantidad es un entero y
-                   no un `Decimal`—, pero el `max` sí: ofrecer más de lo que queda sin
-                   apartar es enseñar algo que el servicio va a rechazar.
-
-                   **Las disponibles pueden ser NEGATIVAS**, y por eso las dos condiciones
-                   preguntan por «mayor que cero» y no por «igual a cero». Pasa cuando la
-                   caja vende unidades apartadas para una reserva pagada (`DT-33`, `DT-35`):
-                   entonces quedan menos de cero. Con `== 0` el campo se quedaba habilitado
-                   y con `max` negativo —un rango imposible—, así que el acudiente podía
-                   teclear una cifra que el servicio iba a rechazar. {% endcomment %}
-                <input type="number" name="cantidad-{{ producto.id }}"
-                       min="0" step="1"
-                       {% if producto.disponibles > 0 %}max="{{ producto.disponibles }}"{% endif %}
-                       value="{{ producto.cantidad_pedida }}"
-                       {% if producto.disponibles <= 0 %}disabled data-sin-disponibles{% endif %}
-                       placeholder="0"
-                       class="h-11 w-20 rounded-md border border-borde bg-superficie px-3
-                              text-center text-base text-texto transition-colors
-                              hover:border-acento focus:border-acento focus:outline-none
-                              disabled:opacity-50">
-              </label>
-            </li>
-          {% empty %}
-            <li class="rounded-md border border-dashed border-borde p-6 text-center
-                       text-sm text-texto-suave">
-              No hay productos en el catálogo todavía.
-            </li>
-          {% endfor %}
-        </ul>
-
-        <button type="submit"
-                class="h-12 w-full rounded-md bg-acento px-6 text-base font-semibold
-                       text-sobre-acento transition-colors hover:bg-acento-fuerte
-                       escritorio:w-fit">
-          Reservar y pagar
-        </button>
+        {% comment %} El ticket se vuelve a pedir cuando cambia una cantidad o cuando se cancela
+           un pedido —el saldo cambió—. Viaja con las cantidades del formulario y nada más:
+           `hx-include` las elige por nombre, sin el `csrfmiddlewaretoken`, que no tiene por
+           qué acabar en la URL de un `GET`. {% endcomment %}
+        <aside id="ticket-de-la-reserva" aria-label="Tu pedido"
+               hx-get="{% url 'ticket-de-la-reserva' estudiante.id %}"
+               hx-trigger="cantidades-cambiadas from:body, pedidos-cambiado from:body"
+               hx-include="[data-formulario-de-reserva] input[name^='cantidad-']"
+               hx-swap="innerHTML"
+               class="escritorio:sticky escritorio:top-28">
+          {% include "ventas/partials/ticket-de-la-reserva.html" %}
+        </aside>
       </form>
+    {% else %}
+      {% comment %} `INVD-2`. No puede reservar, pero **sus pedidos siguen abajo**: el que esté
+         pendiente es justo el que su acudiente querrá cancelar (`DEC-24`). Un hueco que
+         dice por qué, no un catálogo con todo deshabilitado (`[S2.4]`). {% endcomment %}
+      <div role="note" data-no-puede-reservar
+           class="flex items-start gap-3 rounded-md border border-dashed border-borde bg-superficie p-4">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+        <p class="text-sm text-texto-suave">
+          <strong class="font-semibold text-texto">{{ estudiante.nombre }} no puede reservar ahora</strong>:
+          {% if estudiante.esta_de_baja %}se dio de baja del colegio{% else %}su tarjeta está desactivada{% endif %}.
+          Sus pedidos pendientes se pueden cancelar abajo, y el importe vuelve a su billetera.
+        </p>
+      </div>
+    {% endif %}
 
-      <aside class="flex w-full flex-col gap-3 escritorio:max-w-sm">
-        <h2 class="font-display text-lg text-texto">Reservas pendientes</h2>
-
-        {% comment %} Responde a «¿no acabo de reservar esto?», que es la pregunta que evita
-           la reserva repetida por no acordarse de la anterior. Es el mismo motivo por el que
-           la recarga enseña las últimas recargas (`TT-61`). {% endcomment %}
-        {% for pedido in pendientes %}
-          <article data-pedido-pendiente
-                   class="flex flex-col gap-1 rounded-md border border-borde bg-superficie p-3">
-            <span class="text-sm text-texto-suave">
-              {{ pedido.creado_en|date:"j" }} de
-              {{ pedido.creado_en|date:"F"|lower }}, {{ pedido.creado_en|date:"H:i" }}
-            </span>
-            <ul class="flex flex-col gap-0.5">
-              {% for linea in pedido.venta.lineas.all %}
-                <li class="text-base text-texto">
-                  {{ linea.cantidad }} × {{ linea.producto.nombre }}
-                </li>
-              {% endfor %}
-            </ul>
-            <span class="text-sm text-texto-suave">Pagado. Pendiente de recoger.</span>
-          </article>
-        {% empty %}
-          <p class="rounded-md border border-dashed border-borde p-6 text-center
-                    text-sm text-texto-suave">
-            No hay nada reservado ahora mismo.
-          </p>
-        {% endfor %}
-      </aside>
-    </div>
+    <section id="pedidos" aria-labelledby="titulo-de-los-pedidos" class="flex scroll-mt-28 flex-col gap-3">
+      <h2 id="titulo-de-los-pedidos" class="font-display text-lg text-texto">Pedidos</h2>
+      <div hx-get="{% url 'pedidos-del-estudiante' estudiante.id %}"
+           hx-trigger="pedidos-cambiado from:body" hx-swap="innerHTML">
+        {% include "ventas/partials/pedidos-del-estudiante.html" %}
+      </div>
+    </section>
   </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`, `DT-40`): nace vacía, la llenan «Detalle» y la
+     fila de un pedido, y `interfaz.js` la abre al recibir el fragmento. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Detalle"
+          class="m-auto w-[min(40rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
 {% endblock %}

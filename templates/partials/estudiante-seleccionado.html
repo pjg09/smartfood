@@ -324,17 +324,28 @@
             depender de lo que elija en la fila.
           </p>
         {% endif %}
-        {% if seleccionado.puede_operar %}
-          {% comment %} **Esconder el enlace no es lo que lo impide**: `reservar` valida por la
-             misma función que el cobro y rechaza al desactivado por `INVD-2` entre por
-             donde entre (`DT-15`). Esto solo evita ofrecer algo que va a fallar, igual
-             que hace la tarjeta del saldo con la recarga. {% endcomment %}
-          <a href="{% url 'reserva' seleccionado.id %}"
-             data-enlace-a-reserva
-             class="mt-auto text-base font-semibold text-acento-fuerte hover:underline">
-            Reservar consumo
+        {% comment %} **Esconder «Reservar» no es lo que lo impide**: `reservar` valida por la
+           misma función que el cobro y rechaza al desactivado por `INVD-2` entre por
+           donde entre (`DT-15`). Esto solo evita ofrecer algo que va a fallar, igual que
+           hace la tarjeta del saldo con la recarga.
+
+           **«Ver pedidos» no se esconde nunca** (`HU-65`): el pedido pendiente de un
+           estudiante desactivado es justo el que su acudiente querrá cancelar
+           (`DEC-24`). Dos enlaces en una fila, como la tarjeta de restricciones. {% endcomment %}
+        <p class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+          {% if seleccionado.puede_operar %}
+            <a href="{% url 'reserva' seleccionado.id %}"
+               data-enlace-a-reserva
+               class="text-base font-semibold text-acento-fuerte hover:underline">
+              Reservar consumo
+            </a>
+          {% endif %}
+          <a href="{% url 'reserva' seleccionado.id %}#pedidos"
+             data-enlace-a-pedidos
+             class="text-base font-semibold text-acento-fuerte hover:underline">
+            Ver pedidos
           </a>
-        {% endif %}
+        </p>
       </article>
 
       {% comment %} `TT-156`, `HU-30`. Tarjeta de resumen (`[S2.1]`) como las cuatro de

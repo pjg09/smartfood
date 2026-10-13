@@ -1,0 +1,125 @@
+{% load dinero %}
+{% comment %} DEC-24. El ticket de la reserva, con lo que se lleva elegido.
+
+   Fragmento (`DT-16`): lo pinta la pantalla al cargar y lo vuelve a pedir a cada «+» o
+   «−» (`ticket_de_la_reserva`). **Las cifras las calcula y formatea el servidor**; los
+   botones de aquí solo cambian el entero de un campo oculto del formulario, que es el
+   mismo que cambian las tarjetas (`interfaz.js`). La composición es la del ticket del
+   punto de venta (`ventas/partials/ticket.html`).
+
+   **Lo que va a fallar no se ofrece** (`[S2.4]`): si el saldo no alcanza (`INV-1`) o se
+   pasa del cupo del día (`HU-20`), en lugar del botón se dice qué falta y dónde se
+   arregla. Es aviso, no autorización: quien rechaza es `reservar`.
+{% endcomment %}
+<div data-ticket-de-la-reserva
+     class="flex flex-col gap-4 rounded-md border border-borde bg-superficie p-4 shadow-sm">
+
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="inline-flex items-center gap-2 font-display text-lg text-texto">
+      <svg class="h-5 w-5 text-acento-fuerte" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+      Tu pedido
+    </h2>
+    {% if resumen.lineas %}
+      <button type="button" data-vaciar-pedido
+              class="text-sm font-semibold text-texto-suave transition-colors hover:text-acento-fuerte">
+        Vaciar
+      </button>
+    {% endif %}
+  </div>
+
+  {% if resumen.lineas %}
+    <ul class="flex flex-col gap-3">
+      {% for linea in resumen.lineas %}
+        <li data-linea-de-la-reserva class="flex flex-col gap-2 border-b border-borde pb-3">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="min-w-0 text-base font-medium text-texto">{{ linea.producto.nombre }}</span>
+            <button type="button" data-quitar data-producto="{{ linea.producto.id }}"
+                    aria-label="Quitar {{ linea.producto.nombre }} del pedido"
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-texto-suave
+                           transition-colors hover:bg-superficie-hover hover:text-texto">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+            </button>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <button type="button" data-paso="-1" data-producto="{{ linea.producto.id }}"
+                      aria-label="Una unidad menos de {{ linea.producto.nombre }}"
+                      class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                             text-texto transition-colors hover:bg-superficie-hover">−</button>
+              <span class="w-6 text-center font-display tabular-nums text-texto">{{ linea.cantidad }}</span>
+              <button type="button" data-paso="1" data-producto="{{ linea.producto.id }}"
+                      aria-label="Una unidad más de {{ linea.producto.nombre }}"
+                      class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                             text-texto transition-colors hover:bg-superficie-hover">+</button>
+            </div>
+            <div class="flex flex-col items-end">
+              <span class="font-display tabular-nums text-texto">{{ linea.importe|dinero:"COP" }}</span>
+              <span class="text-sm tabular-nums text-texto-suave">{{ linea.producto.precio|dinero }} c/u</span>
+            </div>
+          </div>
+          <span class="text-sm text-texto-suave">
+            {% if linea.kcal is not None %}{{ linea.kcal }} kcal · {{ linea.producto.energia_kcal }} c/u{% else %}Sin dato de calorías{% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <p class="flex items-baseline justify-between gap-3 rounded-md bg-superficie-hover p-3">
+      <span class="text-sm text-texto-suave">
+        Calorías
+        {% if resumen.lineas_sin_kcal %}<br>sin contar {{ resumen.lineas_sin_kcal }} producto{{ resumen.lineas_sin_kcal|pluralize }} sin dato{% endif %}
+      </span>
+      <span class="font-display tabular-nums text-texto">{{ resumen.kcal }} kcal</span>
+    </p>
+
+    <dl class="flex flex-col gap-1">
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-base font-semibold text-texto">Total a pagar</dt>
+        <dd class="font-display text-2xl tabular-nums text-texto" data-total-de-la-reserva>{{ resumen.total|dinero:"COP" }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-sm text-texto-suave">Saldo actual</dt>
+        <dd class="text-sm tabular-nums text-texto">{{ resumen.saldo|dinero:"COP" }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-sm text-texto-suave">Saldo después</dt>
+        <dd class="text-sm font-semibold tabular-nums {% if resumen.alcanza %}text-texto{% else %}text-error-fuerte{% endif %}">
+          {% if resumen.alcanza %}{{ resumen.saldo_despues|dinero:"COP" }}{% else %}No alcanza{% endif %}
+        </dd>
+      </div>
+      {% if resumen.cupo_restante is not None %}
+        <div class="flex items-baseline justify-between gap-3">
+          <dt class="text-sm text-texto-suave">Cupo de hoy disponible</dt>
+          <dd class="text-sm tabular-nums text-texto">{{ resumen.cupo_restante|dinero:"COP" }}</dd>
+        </div>
+      {% endif %}
+    </dl>
+
+    {% if not resumen.alcanza %}
+      <div role="alert" data-no-alcanza
+           class="flex flex-col gap-2 rounded-md border border-error bg-error-suave p-3 text-sm text-error-fuerte">
+        <p>El saldo de {{ estudiante.nombre }} no alcanza: faltan {{ resumen.faltan|dinero:"COP" }}.</p>
+        <a href="{% url 'recarga' estudiante.id %}" class="font-semibold underline">Recargar su billetera</a>
+      </div>
+    {% elif resumen.supera_el_cupo %}
+      <div role="alert" data-supera-el-cupo
+           class="flex flex-col gap-2 rounded-md border border-aviso bg-aviso-suave p-3 text-sm text-aviso-fuerte">
+        <p>Supera el cupo diario que le fijaste: hoy le quedan {{ resumen.cupo_restante|dinero:"COP" }}.</p>
+        <a href="{% url 'limite-diario' estudiante.id %}" class="font-semibold underline">Cambiar el límite diario</a>
+      </div>
+    {% else %}
+      <button type="submit" data-reservar
+              class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-primario
+                     px-6 text-lg font-medium whitespace-nowrap text-sobre-primario transition-colors
+                     hover:bg-primario-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-cafeteria"></use></svg>
+        Reservar y pagar
+      </button>
+    {% endif %}
+    <p class="text-sm text-texto-suave">Se cobra al reservar. El pago es simulado: no se mueve dinero real.</p>
+  {% else %}
+    <p class="rounded-md border border-dashed border-borde p-6 text-center text-base text-texto-suave">
+      Todavía no has añadido nada.
+    </p>
+  {% endif %}
+</div>

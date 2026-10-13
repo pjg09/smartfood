@@ -103,6 +103,16 @@
                                  whitespace-nowrap text-aviso-fuerte">
                       Reserva sin recoger
                     </span>
+                  {% elif compra.pedido_anticipado.esta_cancelado %}
+                    {% comment %} `DEC-24`. Se cobró y se devolvió: sigue aquí porque el dinero
+                       salió y volvió, y esconderla dejaría el historial de la billetera sin
+                       explicar. **No se comió**, y la frecuencia y los agregados no la
+                       cuentan. {% endcomment %}
+                    <span data-reserva-cancelada
+                          class="rounded bg-aviso-suave px-2 py-0.5 text-sm font-medium
+                                 whitespace-nowrap text-aviso-fuerte">
+                      Reserva cancelada · importe devuelto
+                    </span>
                   {% else %}
                     <span data-reserva-entregada
                           class="rounded bg-superficie-hover px-2 py-0.5 text-sm font-medium

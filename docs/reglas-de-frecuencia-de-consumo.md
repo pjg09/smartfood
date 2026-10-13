@@ -99,10 +99,12 @@ más.
 | Venta del mostrador | Sí | La de la venta |
 | Reserva **entregada** | Sí | **La de la entrega** |
 | Reserva **pendiente** | **No** | — |
+| Reserva **cancelada** | **No** | — |
 
 Una reserva es una venta (`DT-32`), pero esta regla no habla de compras: habla de
 **consumo**. Una reserva pagada que sigue en el mostrador todavía no se ha consumido, y
-contarla diría que el estudiante comió algo que no ha recogido.
+contarla diría que el estudiante comió algo que no ha recogido. Una cancelada no se consumió
+nunca: se cobró y se devolvió (`DEC-24`, `sin_pedidos_cancelados`).
 
 Por lo mismo, la reserva entregada cuenta **el día en que se recogió** y no el día en que se
 pagó: el acudiente puede reservar el domingo por la noche lo del lunes.
@@ -216,7 +218,7 @@ Con el historial de `HU-30` delante, en la misma pantalla:
 1. Tomar la categoría de la alerta.
 2. Contar en el historial **los días distintos** —no las compras— con al menos un renglón de
    esa categoría, dentro de los últimos 14 días.
-3. Descontar las reservas marcadas «sin recoger», que no cuentan (`[S2.3]`).
+3. Descontar las reservas marcadas «sin recoger» o «cancelada», que no cuentan (`[S2.3]`).
 
 El número tiene que ser el mismo que enseña la alerta. **Que esto se pueda hacer a mano es la
 prueba de que la regla es determinística**, y es el motivo por el que las alertas viven

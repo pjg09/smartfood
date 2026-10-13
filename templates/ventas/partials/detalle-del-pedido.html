@@ -1,0 +1,136 @@
+{% load dinero %}
+{% comment %} HU-65, HU-66. El detalle de un pedido en la modal, y su cancelación.
+
+   Fragmento (`DT-16`) con la forma de la modal de ficha (`[S2.10]`): cabecera con el
+   título y la equis, cuerpo con desplazamiento propio y pie con las acciones. **`GET` y
+   `POST` devuelven este mismo fragmento**: el detalle, el detalle con el error del
+   motivo, y el detalle ya cancelado. La lista de detrás se entera por
+   `HX-Trigger: pedidos-cambiado`.
+
+   **Precio por unidad y calorías de entonces** (`DT-8`): salen de la línea, no del
+   producto de hoy.
+{% endcomment %}
+<div data-detalle-del-pedido="{{ pedido.estado }}" class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <div class="flex flex-col">
+      <h2 class="font-display text-lg text-texto">Pedido #{{ pedido.numero }}</h2>
+      <span class="text-sm text-texto-suave">
+        Reservado el {{ pedido.creado_en|date:"j" }} de {{ pedido.creado_en|date:"F"|lower }}
+        a las {{ pedido.creado_en|date:"H:i" }}
+      </span>
+    </div>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+    {% comment %} El rechazo va **fuera** del formulario: si otro canceló o entregó el pedido
+       mientras la modal estaba abierta, el formulario ya no se pinta, y el aviso se iría
+       con él. Se vio en una prueba, no en la pantalla. {% endcomment %}
+    {% if error %}
+      <p role="alert" data-cancelacion-rechazada
+         class="rounded-md border border-error bg-error-suave p-3 text-sm text-error-fuerte">{{ error }}</p>
+    {% endif %}
+    {% if recien_cancelado %}
+      <div role="status" data-pedido-recien-cancelado
+           class="flex items-start gap-3 rounded-md border border-exito bg-exito-suave p-3">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-exito-fuerte" aria-hidden="true"><use href="#i-correcto"></use></svg>
+        <p class="text-sm text-exito-fuerte">
+          <strong class="font-semibold">Pedido cancelado.</strong>
+          {{ pedido.total|dinero:"COP" }} volvieron a la billetera de {{ estudiante.nombre }}.
+        </p>
+      </div>
+    {% endif %}
+
+    <table class="w-full border-collapse text-left">
+      <thead>
+        <tr class="border-b border-borde">
+          <th scope="col" class="py-2 text-sm font-semibold text-texto-suave">Producto</th>
+          <th scope="col" class="py-2 text-right text-sm font-semibold text-texto-suave">Cant.</th>
+          <th scope="col" class="py-2 text-right text-sm font-semibold text-texto-suave">Precio c/u</th>
+          <th scope="col" class="py-2 text-right text-sm font-semibold text-texto-suave">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for linea in pedido.venta.lineas.all %}
+          <tr class="border-b border-borde align-top">
+            <td class="py-2">
+              <span class="block text-base text-texto">{{ linea.producto.nombre }}</span>
+              {% if linea.energia_kcal is not None %}
+                <span class="text-sm text-texto-suave">{{ linea.energia_kcal }} kcal c/u</span>
+              {% endif %}
+            </td>
+            <td class="py-2 text-right tabular-nums whitespace-nowrap text-texto">{{ linea.cantidad }}</td>
+            <td class="py-2 text-right tabular-nums whitespace-nowrap text-texto">{{ linea.precio_unitario|dinero }}</td>
+            <td class="py-2 text-right tabular-nums whitespace-nowrap text-texto">{{ linea.importe|dinero }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" colspan="3" class="pt-3 text-right text-base font-semibold text-texto">Total pagado</th>
+          <td class="pt-3 text-right font-display text-lg tabular-nums whitespace-nowrap text-texto" data-total-del-pedido>{{ pedido.total|dinero:"COP" }}</td>
+        </tr>
+        <tr>
+          <th scope="row" colspan="3" class="text-right text-sm font-normal text-texto-suave">Calorías</th>
+          <td class="text-right text-sm tabular-nums text-texto-suave">{{ pedido.kcal }} kcal</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    {% if pedido.esta_cancelado %}
+      {% comment %} Quién: «tú» si fue el propio acudiente, y si no la cafetería, que es a
+         quien preguntar. Ámbar y no rojo: no ha fallado nada. {% endcomment %}
+      <div data-cancelacion class="flex flex-col gap-1 rounded-md bg-aviso-suave p-3">
+        <p class="text-sm font-semibold text-aviso-fuerte">
+          Cancelado el {{ pedido.cancelado_en|date:"j" }} de {{ pedido.cancelado_en|date:"F"|lower }},
+          {{ pedido.cancelado_en|date:"H:i" }},
+          {% if pedido.cancelado_por_id == user.id %}por ti{% else %}por la cafetería{% endif %}.
+        </p>
+        <p class="text-sm text-aviso-fuerte">Motivo: «{{ pedido.motivo_de_cancelacion }}»</p>
+        <p class="text-sm text-aviso-fuerte">{{ pedido.total|dinero:"COP" }} volvieron a su billetera.</p>
+      </div>
+    {% elif pedido.esta_pendiente %}
+      <form hx-post="{% url 'cancelacion-por-el-acudiente' estudiante.id pedido.id %}"
+            hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+            data-formulario-de-cancelacion class="flex flex-col gap-3 border-t border-borde pt-4">
+        {% csrf_token %}
+        <h3 class="text-base font-semibold text-texto">Cancelar este pedido</h3>
+        <p class="text-sm text-texto-suave">
+          Todavía no lo ha recogido. Si lo cancelas, {{ pedido.total|dinero:"COP" }} vuelven a la
+          billetera de {{ estudiante.nombre }} en el acto, para que compre otra cosa. No se
+          puede deshacer.
+        </p>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-texto">Motivo <span class="font-normal text-texto-suave">· obligatorio, lo verá la cafetería</span></span>
+          <textarea name="motivo" required maxlength="200" rows="2"
+                    class="rounded-md border border-borde bg-superficie p-3 text-base text-texto
+                           transition-colors hover:border-acento focus:border-acento focus:outline-none">{{ motivo }}</textarea>
+        </label>
+        <button type="submit" data-confirmar-cancelacion
+                class="inline-flex h-11 items-center justify-center rounded-md bg-primario px-5
+                       text-base font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                       tablet:self-end">
+          Cancelar y devolver {{ pedido.total|dinero:"COP" }}
+        </button>
+      </form>
+    {% else %}
+      <p class="rounded-md bg-exito-suave p-3 text-sm text-exito-fuerte">
+        Entregado el {{ pedido.entregado_en|date:"j" }} de {{ pedido.entregado_en|date:"F"|lower }}
+        a las {{ pedido.entregado_en|date:"H:i" }}.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="flex justify-end border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Cerrar
+    </button>
+  </div>
+</div>

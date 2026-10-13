@@ -32,6 +32,7 @@ permiso tampoco existe en ningún grupo. Dos sitios, como en el resto de
 from urllib.parse import urlencode
 
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.urls import reverse
 from django.utils.html import format_html
@@ -43,7 +44,7 @@ from reportes.selectors import (
     resumen_de_ventas,
 )
 from ventas.models import CierreDeCaja, LineaVenta, MedioDePago, Venta
-from ventas.selectors import DIFERENCIA_DEL_CIERRE
+from ventas.selectors import DIFERENCIA_DEL_CIERRE, sin_pedidos_cancelados
 
 
 class LineaVentaInline(admin.TabularInline):
@@ -154,8 +155,29 @@ class VentaAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         """Con el estudiante y el cajero traídos: sin esto son dos consultas por
-        fila, y un reporte de ventas de un colegio no es corto."""
-        return super().get_queryset(request).select_related("estudiante", "cajero")
+        fila, y un reporte de ventas de un colegio no es corto.
+
+        **Sin las reservas canceladas** (`DEC-24`): se cobraron y se devolvieron,
+        y no se vendió nada. Van fuera del listado **y por eso** del consolidado,
+        que suma este mismo `QuerySet`. La regla es `sin_pedidos_cancelados`.
+        """
+        return sin_pedidos_cancelados(
+            super().get_queryset(request), venta=""
+        ).select_related("estudiante", "cajero")
+
+    def get_object(self, request, object_id, from_field=None):
+        """**La ficha sí se abre**, también la de una reserva cancelada.
+
+        El listado no la cuenta, pero la auditoría enlaza con ella: la venta se
+        cobró de verdad y su devolución apunta aquí (`DT-48`). Sin esto, el
+        enlace de la auditoría diría que la venta no existe.
+        """
+        queryset = Venta.objects.select_related("estudiante", "cajero")
+        campo = from_field or "pk"
+        try:
+            return queryset.get(**{campo: object_id})
+        except (Venta.DoesNotExist, ValidationError, ValueError):
+            return None
 
     # --- Solo consulta ------------------------------------------------------
 

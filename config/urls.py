@@ -58,15 +58,21 @@ from restricciones.views import (
     retiro_del_limite_diario,
 )
 from ventas.views import (
+    cancelacion_por_el_acudiente,
+    cancelacion_por_la_cafeteria,
     carrito,
     cierre_de_caja,
     cliente_generico,
     cobrar,
     entrega,
     identificacion,
+    detalle_del_pedido,
+    detalle_del_producto,
+    pedidos_del_estudiante,
     punto_de_venta,
     reserva,
     reservas,
+    ticket_de_la_reserva,
 )
 
 # `INT-3` no lleva plantillas propias: lo cubre el admin generado (`DT-2`). Lo
@@ -98,6 +104,14 @@ urlpatterns = [
     # la cafetería también la consulta (`FUN-5`) y `INT-2` le responde `403`.
     # Una ruta compartida es lo que evita dos pantallas del mismo dato.
     path("reservas/", reservas, name="reservas"),
+    # `HU-67`, `DEC-24`. Cancelar un pedido de la cola, con su motivo. Cuelga de
+    # la cola porque es desde donde lo ven los dos roles que pueden hacerlo. `GET`
+    # confirma y `POST` cancela: mueve dinero, y no se hace con un solo clic.
+    path(
+        "reservas/<uuid:pedido_id>/cancelar/",
+        cancelacion_por_la_cafeteria,
+        name="cancelacion-por-la-cafeteria",
+    ),
     # Acceso al sistema (`TT-56`, `DEC-12`). **No es un camino de alta**: aquí
     # solo entra quien ya tiene cuenta y ya definió su contraseña con la
     # invitación. `INV-6` e `INVD-1` no se tocan.
@@ -329,6 +343,39 @@ urlpatterns = [
         "mis-estudiantes/<uuid:estudiante_id>/reservar/",
         reserva,
         name="reserva",
+    ),
+    # `DEC-24`. Los fragmentos de la pantalla de reserva, que es una sola: el
+    # ticket que se recalcula a cada «+» o «−» y la ficha de un producto en la
+    # modal. Todos `GET`: no escriben, y devuelven un fragmento (`DT-16`).
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/reservar/ticket/",
+        ticket_de_la_reserva,
+        name="ticket-de-la-reserva",
+    ),
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/reservar/productos/<uuid:producto_id>/",
+        detalle_del_producto,
+        name="detalle-del-producto",
+    ),
+    # Los pedidos del estudiante (`HU-65`): la lista, el detalle en la modal y
+    # la cancelación por su acudiente (`HU-66`), que devuelve la misma modal.
+    # Cuelgan del estudiante por lo mismo que la reserva: **los pedidos son
+    # suyos**, y uno de otro estudiante no se alcanza ni sabiendo su
+    # identificador.
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/pedidos/",
+        pedidos_del_estudiante,
+        name="pedidos-del-estudiante",
+    ),
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/pedidos/<uuid:pedido_id>/",
+        detalle_del_pedido,
+        name="detalle-del-pedido",
+    ),
+    path(
+        "mis-estudiantes/<uuid:estudiante_id>/pedidos/<uuid:pedido_id>/cancelar/",
+        cancelacion_por_el_acudiente,
+        name="cancelacion-por-el-acudiente",
     ),
     # Límite diario de gasto (`TT-96`, `HU-09`). Cuelga de la ruta del
     # estudiante por el mismo motivo que la recarga: **el límite es por

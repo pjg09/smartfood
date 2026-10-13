@@ -48,7 +48,12 @@ from ventas.models import (
 # desde `TT-172` también lo usa el cierre de caja. Se importa en vez de
 # repetirlo: dos expresiones para la misma cifra es como acaban dando cifras
 # distintas (`DT-19`).
-from ventas.selectors import DIFERENCIA_DEL_CIERRE, IMPORTE_DE_LA_LINEA
+from ventas.selectors import (
+    DIFERENCIA_DEL_CIERRE,
+    IMPORTE_DE_LA_LINEA,
+    sin_pedidos_cancelados,
+)
+from ventas.services import total_de
 
 # **Cuándo se consumió un renglón**, que no siempre es cuándo se pagó (`[S2.3]`
 # de `docs/reglas-de-frecuencia-de-consumo.md`). En el mostrador son el mismo
@@ -175,7 +180,7 @@ def _lineas_consumidas(estudiante, hoy=None):
     se ha consumido (`[S2.3]` de `docs/reglas-de-frecuencia-de-consumo.md`). Se
     excluye por el estado del pedido y no dejando que su fecha nula se caiga del
     rango — la regla merece leerse en el código tal cual, no deducirse de cómo
-    compara un nulo.
+    compara un nulo. **La cancelada tampoco**: no se consumió nunca (`DEC-24`).
 
     **No autoriza a nadie**: es privada del módulo y quien la usa ya pasó por
     `_solo_su_acudiente`.
@@ -185,7 +190,7 @@ def _lineas_consumidas(estudiante, hoy=None):
     desde = hoy - timedelta(days=reglas.DIAS_DE_LA_VENTANA - 1)
 
     return (
-        LineaVenta.objects.filter(venta__estudiante=estudiante)
+        sin_pedidos_cancelados(LineaVenta.objects.filter(venta__estudiante=estudiante))
         .exclude(
             venta__origen=OrigenDeLaVenta.RESERVA,
             venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE,
@@ -576,7 +581,8 @@ def ventas_registradas(*, actor, desde=None, hasta=None):
     igual que las demás, y `[S5]` del anteproyecto lo dice expreso: las compras
     de docentes y visitantes «forman parte de las ventas totales de la cafetería
     y son necesarias para que el cierre de caja y los reportes diarios reflejen
-    la actividad real».
+    la actividad real». **Menos las reservas canceladas**: se cobraron y se
+    devolvieron, y no se vendió nada (`DEC-24`, `sin_pedidos_cancelados`).
 
     `desde` y `hasta` son fechas locales inclusivas. Sin ellas devuelve el libro
     entero: quien acota es quien pregunta, y en el admin lo hace la navegación
@@ -584,7 +590,7 @@ def ventas_registradas(*, actor, desde=None, hasta=None):
     """
     _solo_la_administracion(actor)
 
-    ventas = Venta.objects.all()
+    ventas = sin_pedidos_cancelados(Venta.objects.all(), venta="")
 
     # Rango sobre la columna y no `creado_en__date`, por lo mismo que en
     # `consumo_del_dia`: `__date` envuelve la columna en una función y deja
@@ -1033,13 +1039,15 @@ class Operacion:
         return f"admin:{self.modelo.replace('.', '_')}_change"
 
 
-#: Las cuatro clases de operación, y el orden en que se declaran en la pantalla.
-#: No son las tres tablas: la entrega de un pedido es una operación por derecho
-#: propio —mueve existencias y la hace otra persona en otro momento— y sale de
-#: `PedidoAnticipado`, que es quien guarda **quién** entregó.
+#: Las cinco clases de operación, y el orden en que se declaran en la pantalla.
+#: No son las tres tablas: la entrega y la cancelación de un pedido son
+#: operaciones por derecho propio —la una mueve existencias, la otra devuelve
+#: saldo, y las hace otra persona en otro momento— y salen de
+#: `PedidoAnticipado`, que es quien guarda **quién** entregó o canceló.
 CLASES_DE_OPERACION = (
     ("venta", "Ventas"),
     ("entrega", "Entregas de pedidos"),
+    ("cancelacion", "Pedidos cancelados"),
     ("inventario", "Movimientos de inventario"),
     ("cierre", "Cierres de caja"),
 )
@@ -1111,6 +1119,7 @@ def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS):
     operaciones = [
         *_ventas_de_la_auditoria(acotar, limite),
         *_entregas_de_la_auditoria(acotar, limite),
+        *_cancelaciones_de_la_auditoria(acotar, limite),
         *_movimientos_de_la_auditoria(acotar, limite),
         *_cierres_de_la_auditoria(acotar, limite),
     ]
@@ -1198,6 +1207,46 @@ def _entregas_de_la_auditoria(acotar, limite):
             # registrado en el admin —no hay nada que administrar en él, su
             # única escritura es la entrega (`DT-34`)— y la venta es donde está
             # lo que se entregó, con sus renglones.
+            modelo="ventas.venta",
+            objeto_id=pedido.venta_id,
+        )
+
+
+def _cancelaciones_de_la_auditoria(acotar, limite):
+    """La cancelación de un pedido anticipado: **devuelve saldo y no mueve
+    existencias** (`DEC-24`, `DT-48`).
+
+    Es la otra salida de un pedido, junto a la entrega, y la que más conviene
+    poder rastrear: mueve dinero hacia una billetera, la puede hacer el
+    acudiente o la cafetería, y lleva un motivo. La venta que se canceló **sigue
+    en su línea**, porque se cobró de verdad; esta línea es la devolución.
+    """
+    consulta = (
+        acotar(
+            PedidoAnticipado.objects.filter(estado=EstadoDelPedido.CANCELADO),
+            campo="cancelado_en",
+        )
+        .select_related("cancelado_por", "venta__estudiante")
+        .prefetch_related("venta__lineas")
+        .order_by("-cancelado_en")[:limite]
+    )
+
+    for pedido in consulta:
+        yield Operacion(
+            cuando=pedido.cancelado_en,
+            clase="cancelacion",
+            accion="Canceló un pedido anticipado",
+            quien=pedido.cancelado_por.nombre,
+            detalle=(
+                f"de {pedido.venta.estudiante.nombre}: "
+                f"«{pedido.motivo_de_cancelacion}»"
+            ),
+            # Lo que volvió a la billetera: el importe de la venta, por la única
+            # definición que tiene (`total_de`, sobre las líneas ya traídas).
+            importe=total_de(pedido.venta),
+            # A la venta, como la entrega: `PedidoAnticipado` no está en el
+            # admin (`DT-34`), y la ficha de la venta se abre aunque el
+            # listado de ventas ya no la cuente (`VentaAdmin.get_object`).
             modelo="ventas.venta",
             objeto_id=pedido.venta_id,
         )
@@ -1415,7 +1464,9 @@ def panel_de_la_cafeteria(*, actor, hoy=None):
         # que sí depende de un `distinct` de verdad es `cuantas`, y eso vive en
         # `resumen_de_ventas` con su propia prueba.
         ultimas_ventas=tuple(
-            Venta.objects.order_by("-creado_en").annotate(
+            sin_pedidos_cancelados(Venta.objects.all(), venta="")
+            .order_by("-creado_en")
+            .annotate(
                 renglones=Count("lineas", distinct=True),
                 total_cobrado=Sum(IMPORTE_DE_LA_LINEA),
             )[:CUANTOS_EN_EL_PANEL]
@@ -1454,7 +1505,7 @@ def _mas_vendidos(desde, hasta):
     lo que hay en la vitrina—; el reporte de ventas es el que responde qué se
     cobró y a cuánto.
     """
-    lineas = LineaVenta.objects.filter(
+    lineas = sin_pedidos_cancelados(LineaVenta.objects.all()).filter(
         venta__creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min)),
         venta__creado_en__lt=timezone.make_aware(
             datetime.combine(hasta + timedelta(days=1), time.min)

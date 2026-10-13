@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 46 (`DT-1` … `DT-46`) |
+| decisiones | 48 (`DT-1` … `DT-48`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-46`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-48`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1008,3 +1008,33 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Cambiar el correo de quien no ha definido su contraseña lo vuelve a invitar.** El token de Django incluye el correo **exacto**, así que la invitación ya enviada deja de valer —también si solo cambia una mayúscula—, y sin otra la cuenta no la podría activar nadie. A quien ya tiene contraseña no se le escribe: el correo nuevo es, desde ese momento, con lo que inicia sesión.
 
 **Consecuencia asumida.** **A quien ya entra no se le avisa** de que su usuario cambió: lo sabrá quien lo cambió, que es quien se lo tiene que decir. Es el mismo punto abierto que los demás avisos (`ANEXO B` de `./decisiones-de-alcance.md`).
+
+#### `[DT-47]` La reserva no comprueba existencias: es un encargo
+
+**Corrige:** `DT-33` en su tercer punto —«la reserva valida contra `existencias_sin_reservar`»—. Los dos primeros siguen en pie: se cobra al reservar y el inventario se mueve al entregar.
+
+**Obliga:** `DEC-24`.
+
+**Decidido:**
+
+- **`_bloquear_y_validar` sigue siendo una sola para la caja y la reserva**, y lo que cambia es su argumento: `existencias_de_los=None` significa que **no se comprueban**. La venta del mostrador pasa `existencias_por_producto` de forma explícita; la reserva no pasa nada. Las otras cinco comprobaciones no dependen del argumento y se aplican igual a las dos.
+- **`existencias_sin_reservar` y `unidades_reservadas_pendientes` se retiran.** Su único lector era la reserva, y una cifra de «lo apartado» que nadie consulta es un número que alguien acabará enseñando como si significara algo.
+- **La pantalla de reserva no enseña existencias** ni limita el campo: ni «quedan», ni «sin existencias», ni `max`.
+
+**Lo que no cambia.** La caja mira las existencias reales y la entrega no se rechaza por falta de ellas (`DT-35`). Lo que `DT-35` llamaba «vender lo apartado» deja de existir como caso, porque nada se aparta: lo reservado se prepara, y si no se puede preparar, se cancela (`DT-48`).
+
+#### `[DT-48]` Cancelar un pedido es un tercer estado y una devolución en el libro
+
+**Obliga:** `DEC-24`, `HU-65`, `HU-66` y `HU-67`.
+
+**Decidido:**
+
+- **`EstadoDelPedido` gana `cancelado`**, y el pedido gana quién, cuándo y el motivo. **Una sola `CheckConstraint` sustituye a `pedido_entrega_completa_o_ninguna`** y dice qué combinación vale en cada estado: pendiente sin entrega ni cancelación, entregado con su entrega y sin cancelación, cancelado con su cancelación y sin entrega. **El motivo tiene que tener algo que no sea espacio** (`\S`), como la merma (`INV-8`, `TT-140`).
+- **La devolución es un `MovimientoBilletera` de tipo `devolucion`** por el importe íntegro de la venta, que apunta a ella. El tipo existía desde `TT-59` sin que nada lo asentara. **Una `UniqueConstraint` parcial impide dos devoluciones de la misma venta**: devolver dos veces es el gemelo de cobrar dos veces, y tampoco lo detecta ninguna invariante — el libro cuadraría con el doble.
+- **Pasa por `billetera.services.asentar`, que no llama a la puerta de `INVD-2` e `INVD-7` para las devoluciones**: ya era así, porque esa puerta solo cubre la recarga y la venta. Es lo que hace cierto que un pedido de un estudiante que no opera se pueda cancelar.
+- **Un solo servicio, `cancelar_pedido(actor, pedido, motivo)`, para los tres roles**: el acudiente sobre sus estudiantes, el cajero y la administración sobre cualquiera. Bloquea el pedido con `select_for_update(of=("self",))`, como `entregar`, así que una cancelación y una entrega simultáneas no pueden pasar las dos: la segunda lee el estado nuevo y se rechaza.
+- **Un pedido cancelado deja de contar como venta y como consumo**, y la regla vive en `ventas.selectors`, una vez: el cupo del día (`consumo_del_dia`), el reporte de ventas del admin, los más vendidos y las últimas ventas del panel, la frecuencia y los agregados. **La auditoría sí lo enseña**, con la venta y con la cancelación, porque las dos ocurrieron.
+- **El acudiente lo tiene todo en la pantalla de reserva**: los pedidos van debajo del catálogo, cada fila abre su detalle en la modal de ficha (`[S2.10]` de `./sistema-visual.md`) y la cancelación se hace dentro de ella. `GET` y `POST` devuelven la misma modal, y al cancelar la respuesta lleva `HX-Trigger: pedidos-cambiado`, que repinta la lista y el ticket —el saldo cambió— (`DT-16`, `DT-40`). **La cafetería**, en cambio, cancela desde la cola con una página de confirmación, `/reservas/<pedido>/cancelar/`: un `GET` enseña y un `POST` cancela y redirige.
+- **`PedidoAnticipado` sigue fuera del admin** (`DT-34`): la cola es la pantalla compartida, y cancelar desde ella es la escritura que esa pantalla gana.
+
+**Por qué el pedido y la venta no se borran.** La venta se cobró y la devolución se asentó: los dos movimientos tienen que poder explicarse (`INV-2`), y los dos apuntan a la venta con `PROTECT`.
