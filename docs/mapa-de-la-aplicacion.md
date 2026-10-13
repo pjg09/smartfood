@@ -85,7 +85,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/usuarios/<id>/invitacion/` | `POST`. Reenvía la invitación a quien no definió su contraseña | Institución | `DT-45`, `HU-41` |
 | `/restricciones/` | Qué tiene bloqueado cada estudiante, **en consulta** (`HU-38`, `INV-4`). La institución no la tiene: consulta en la ficha del padrón (`DEC-21`) | Administración | `DEC-17`, `DEC-21` |
 | `/restricciones/tabla/` | Fragmento HTMX de esa tabla, filtrada | Administración | `DEC-17` |
-| `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
+| `/mis-estudiantes/` | Panel del acudiente con sus estudiantes. Abre en el primero, o en el de `?estudiante=<id>`: así vuelven recargar, el límite, las restricciones, la reserva y el consumo, y así queda la barra al cambiar de estudiante | Acudiente | `TT-29` |
 | `/mis-estudiantes/<id>/` | Fragmento HTMX del estudiante elegido | Acudiente, **solo los suyos** | `TT-29` |
 | `/mis-estudiantes/<id>/recargar/` | Recargar la billetera de un estudiante a cargo | Acudiente, **solo los suyos** | `TT-61` |
 | `/mis-estudiantes/<id>/consumo/` | Historial de consumo: qué compró, con la información nutricional **del día de la compra**, las alertas de frecuencia, el aporte frente a la referencia sanitaria y el gasto frente a lo recargado, con su descargo | Acudiente, **solo los suyos** | `TT-156`, `TT-160`, `TT-164`, `TT-166` |

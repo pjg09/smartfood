@@ -194,6 +194,12 @@
    * **Es cromo y nada más.** Qué estudiante puede ver quién lo decide el
    * selector de datos del servidor, que responde 404 para uno que no esté a
    * cargo aunque el chip se marque a la fuerza desde la consola (`DT-15`).
+   *
+   * Y lleva la URL al estudiante elegido. `replaceState` y no `pushState`,
+   * como el buscador del admin: cambiar de hijo no es navegar, y una entrada
+   * por chip haría inservible el botón de volver. Sin esto, recargar la página
+   * o volver a ella con «Atrás» la abre en el primer estudiante, no en el que
+   * se estaba mirando.
    */
   function montarSelectorDeEstudiante() {
     var grupo = document.querySelector("[data-selector-estudiante]");
@@ -207,6 +213,9 @@
         boton.removeAttribute("aria-current");
       });
       pulsado.setAttribute("aria-current", "true");
+      if (pulsado.dataset.urlDelPanel) {
+        history.replaceState(null, "", pulsado.dataset.urlDelPanel);
+      }
     });
   }
 

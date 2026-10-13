@@ -282,7 +282,12 @@ class LaPantallaDelRetiroTest(TestCase):
 
         respuesta = self.client.post(self.url_retiro)
 
-        self.assertRedirects(respuesta, reverse("mis-estudiantes"))
+        # Con el estudiante elegido: si no, el panel abre en el primero y
+        # quien recargó al segundo no ve lo que acaba de hacer.
+        self.assertRedirects(
+            respuesta,
+            f"{reverse('mis-estudiantes')}?estudiante={self.estudiante.pk}",
+        )
         self.assertIsNone(limite_diario_de(self.estudiante))
 
     def test_un_get_al_retiro_no_retira_nada(self):

@@ -375,6 +375,74 @@ class ElSelectorDeEstudianteTest(BaseDeCarga):
         self.assertEqual(respuesta.status_code, 302)
 
 
+class ElPanelVuelveAlEstudianteElegidoTest(BaseDeCarga):
+    """El panel abre en el estudiante de `?estudiante=`, no siempre en el primero.
+
+    Es por donde vuelven recargar, el límite y las restricciones: quien acaba de
+    recargar al segundo hijo y aterriza en el primero puede creer que el cambio
+    no se hizo, o que se hizo en el otro.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.cargar()
+        self.marta = Usuario.objects.get(email="marta.ruiz@example.com")
+        self.ana = Estudiante.objects.get(documento="1001234501")
+        self.tomas = Estudiante.objects.get(documento="1001234502")
+        self.client.force_login(self.marta)
+
+    def _seleccionado(self, consulta=None):
+        respuesta = self.client.get(reverse("mis-estudiantes"), consulta)
+        self.assertEqual(respuesta.status_code, 200)
+        return respuesta.context["seleccionado"]
+
+    def test_sin_parametro_abre_en_el_primero(self):
+        self.assertEqual(self._seleccionado(), self.ana)
+
+    def test_con_el_parametro_abre_en_ese(self):
+        self.assertEqual(self._seleccionado({"estudiante": self.tomas.pk}), self.tomas)
+
+    def test_el_chip_marcado_es_el_del_elegido(self):
+        """El `aria-current` lo pinta el servidor al cargar la página."""
+        respuesta = self.client.get(
+            reverse("mis-estudiantes"), {"estudiante": self.tomas.pk}
+        )
+        marcados = re.findall(
+            r'hx-get="([^"]+)"[^>]*aria-current="true"', respuesta.content.decode()
+        )
+        self.assertEqual(
+            marcados, [reverse("estudiante-seleccionado", args=[self.tomas.pk])]
+        )
+
+    def test_un_estudiante_ajeno_cae_en_el_primero_sin_revelar_nada(self):
+        """Ni 404 ni su nombre: el panel no distingue ajeno de inexistente (`DT-11`)."""
+        ajeno = Estudiante.objects.get(documento="1001234503")
+        respuesta = self.client.get(
+            reverse("mis-estudiantes"), {"estudiante": ajeno.pk}
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.context["seleccionado"], self.ana)
+        self.assertNotContains(respuesta, "Julián Ospina Vélez")
+
+    def test_un_identificador_mal_formado_cae_en_el_primero(self):
+        self.assertEqual(self._seleccionado({"estudiante": "no-es-un-uuid"}), self.ana)
+
+    def test_cada_chip_lleva_la_direccion_del_panel_con_su_estudiante(self):
+        """La que `interfaz.js` pone en la barra al pulsar, para que recargar no
+        devuelva al primero."""
+        respuesta = self.client.get(reverse("mis-estudiantes"))
+        direcciones = re.findall(r'data-url-del-panel="([^"]+)"', respuesta.content.decode())
+
+        self.assertEqual(
+            direcciones,
+            [
+                f"{reverse('mis-estudiantes')}?estudiante={estudiante.pk}"
+                for estudiante in (self.ana, self.tomas)
+            ],
+        )
+
+
 class LoQueEsPorEstudianteYNoPorAcudienteTest(BaseDeCarga):
     """`TT-29`. Segundo criterio de `HU-04`.
 

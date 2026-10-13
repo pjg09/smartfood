@@ -21,6 +21,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import consumo_del_dia
@@ -133,7 +134,8 @@ def limite_diario(request, estudiante_id):
                 request,
                 f"{estudiante.nombre} puede gastar hasta {limite.monto:.2f} al día.",
             )
-            return redirect("mis-estudiantes")
+            # Al panel con este estudiante elegido, no con el primero.
+            return redirect(f"{reverse('mis-estudiantes')}?estudiante={estudiante.pk}")
 
     return render(
         request,
@@ -190,7 +192,7 @@ def retiro_del_limite_diario(request, estudiante_id):
         # acudiente se quede dudando de si el botón hizo algo.
         messages.info(request, f"{estudiante.nombre} no tenía ningún límite diario.")
 
-    return redirect("mis-estudiantes")
+    return redirect(f"{reverse('mis-estudiantes')}?estudiante={estudiante.pk}")
 
 
 @login_required

@@ -43,7 +43,12 @@
          fragmento que devuelve HTMX es el detalle, no el selector (`DT-16`), así
          que `interfaz.js` mueve el `aria-current` al pulsar. Es cromo — quién
          puede ver a qué estudiante lo decide el selector de datos, que responde
-         404 para uno que no esté a cargo. {% endcomment %}
+         404 para uno que no esté a cargo.
+
+         `data-url-del-panel` es la dirección de esta página con ese estudiante
+         elegido: `interfaz.js` la pone en la barra al pulsar, para que recargar
+         no devuelva al primero. La escribe el servidor y no el JavaScript, que
+         no tiene por qué saber cómo se llama el parámetro. {% endcomment %}
       {% if estudiantes|length > 1 %}
         <div class="flex flex-col gap-2">
         <p class="text-base font-medium text-texto-suave">
@@ -57,6 +62,7 @@
                     hx-target="#detalle-del-estudiante"
                     hx-swap="innerHTML"
                     hx-indicator="#cargando-estudiante"
+                    data-url-del-panel="{% url 'mis-estudiantes' %}?estudiante={{ estudiante.pk }}"
                     {% if estudiante == seleccionado %}aria-current="true"{% endif %}
                     class="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4
                            text-base font-medium whitespace-nowrap transition-colors

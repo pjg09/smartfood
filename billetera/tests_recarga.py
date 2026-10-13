@@ -312,8 +312,26 @@ class LaPantallaDeRecargaTest(TestCase):
     def test_recargar_asienta_el_movimiento_y_vuelve_al_panel(self):
         respuesta = self.client.post(self.url, {"monto": "25000"})
 
-        self.assertRedirects(respuesta, reverse("mis-estudiantes"))
+        # Con el estudiante elegido: si no, el panel abre en el primero y
+        # quien recargó al segundo no ve lo que acaba de hacer.
+        self.assertRedirects(
+            respuesta,
+            f"{reverse('mis-estudiantes')}?estudiante={self.estudiante.pk}",
+        )
         self.assertEqual(saldo_de(self.estudiante), Decimal("25000"))
+
+    def test_volver_al_panel_lleva_al_mismo_estudiante(self):
+        """Los dos enlaces de la pantalla —«Mis estudiantes» y «Ver el historial
+        completo», que solo sale con alguna recarga anterior—. El del menú
+        lateral no: ese es entrar al panel."""
+        recargar(actor=self.usuario, estudiante=self.estudiante, monto=Decimal("5000"))
+        respuesta = self.client.get(self.url)
+
+        self.assertContains(
+            respuesta,
+            f'href="{reverse("mis-estudiantes")}?estudiante={self.estudiante.pk}"',
+            count=2,
+        )
 
     def test_un_monto_invalido_no_asienta_nada(self):
         respuesta = self.client.post(self.url, {"monto": "-1"})

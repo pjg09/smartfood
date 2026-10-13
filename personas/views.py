@@ -252,9 +252,20 @@ def panel_del_acudiente(request):
     """
     estudiantes = estudiantes_a_cargo(usuario=request.user)
 
-    # El primero queda seleccionado: con un solo hijo, el selector sobra y la
-    # pantalla ya muestra lo que el acudiente venía a ver.
-    seleccionado = estudiantes.first()
+    # `?estudiante=<id>` abre con ese elegido. Es como vuelven aquí las
+    # pantallas de un estudiante —recargar, el límite, las restricciones—: sin
+    # él, quien acaba de recargar al segundo hijo aterriza en el primero y puede
+    # creer que el cambio no se hizo, o que se hizo en el otro.
+    #
+    # Se busca **entre los suyos**, no con `estudiante_a_cargo`: uno ajeno, uno
+    # inexistente o un identificador mal formado caen igual en el primero, sin
+    # un 404 que confirme nada (`DT-11`). Sin parámetro, el primero: con un solo
+    # hijo, el selector sobra y la pantalla ya muestra lo que venía a ver.
+    elegido = request.GET.get("estudiante")
+    seleccionado = next(
+        (estudiante for estudiante in estudiantes if str(estudiante.pk) == elegido),
+        None,
+    ) or estudiantes.first()
 
     return render(
         request,

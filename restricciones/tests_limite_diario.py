@@ -314,7 +314,12 @@ class LaPantallaDelLimiteTest(TestCase):
 
         respuesta = self.client.post(self.url, {"monto": "6500"})
 
-        self.assertRedirects(respuesta, reverse("mis-estudiantes"))
+        # Con el estudiante elegido: si no, el panel abre en el primero y
+        # quien recargó al segundo no ve lo que acaba de hacer.
+        self.assertRedirects(
+            respuesta,
+            f"{reverse('mis-estudiantes')}?estudiante={self.estudiante.pk}",
+        )
         self.assertEqual(limite_diario_de(self.estudiante).monto, Decimal("6500.00"))
 
     def test_un_cero_no_escribe_nada_y_la_pantalla_lo_dice(self):

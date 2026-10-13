@@ -17,6 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from billetera.selectors import historial_de, saldo_de
@@ -98,7 +99,8 @@ def recarga(request, estudiante_id):
                 f"Recarga de {movimiento.monto:.2f} asentada en la billetera de "
                 f"{estudiante.nombre}.",
             )
-            return redirect("mis-estudiantes")
+            # Al panel con este estudiante elegido, no con el primero.
+            return redirect(f"{reverse('mis-estudiantes')}?estudiante={estudiante.pk}")
 
     # El saldo y las últimas recargas son lectura del mismo historial que ya
     # sostiene `HU-07`: no hay consulta nueva ni columna nueva, es la suma de los
