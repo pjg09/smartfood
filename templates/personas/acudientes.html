@@ -7,11 +7,12 @@
    debajo la tabla de datos. No es una pantalla nueva que inventa nada: es la
    misma que secretaría ya conoce, sobre la otra mitad de la carga.
 
-   **No tiene ni una acción que escriba, y eso es lo que dice `[S11]`**: sobre
-   `personas.acudiente` la institución solo tiene `view`. La cuenta se crea con
-   la carga (`HU-01`), se activa por invitación (`HU-03`) y se desactiva desde
-   usuarios (`HU-42`). Un botón aquí sería prometer algo que la capa de datos
-   rechaza.
+   **No tiene ni una acción que escriba.** La cuenta se crea con la carga
+   (`HU-01`), se activa por invitación (`HU-03`), y cortar o devolver el acceso
+   (`DEC-20`, `HU-63`) vive en la ficha del estudiante, en el padrón.
+
+   **Pulsar la fila abre la ficha del acudiente en solo lectura** (`DT-44`), con
+   sus estudiantes, en la misma modal que el padrón.
 {% endcomment %}
 
 {% block titulo %}Acudientes | SmartFood{% endblock %}
@@ -31,7 +32,7 @@
        Enter, porque la vista lee `busqueda` de la URL venga de donde venga. {% endcomment %}
     <form method="get" action="{% url 'acudientes' %}"
           hx-get="{% url 'acudientes-tabla' %}"
-          hx-trigger="input changed delay:400ms from:#busqueda"
+          hx-trigger="input changed delay:400ms from:#busqueda, change from:#retirados"
           hx-target="#acudientes-tabla"
           hx-swap="outerHTML"
           hx-indicator="#buscando-acudientes"
@@ -54,11 +55,43 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-4 tablet:shrink-0 tablet:pb-1">
+          {% comment %} `DT-44`. El mismo interruptor que el padrón, y con el mismo sentido:
+             la lista responde por **hoy**, y una familia sin ningún estudiante
+             matriculado ya no está. Marcarlo la trae de vuelta. {% endcomment %}
+          <label for="retirados" class="inline-flex cursor-pointer items-center gap-2">
+            <input type="checkbox" id="retirados" name="retirados" value="1"
+                   {% if incluir_retirados %}checked{% endif %}
+                   class="peer sr-only">
+            <span aria-hidden="true"
+                  class="relative h-6 w-11 shrink-0 rounded-full border border-borde
+                         bg-superficie-hover transition-colors
+                         peer-checked:border-primario peer-checked:bg-primario
+                         peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                         after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                         after:rounded-full after:bg-texto-suave after:transition-transform
+                         peer-checked:after:translate-x-5
+                         peer-checked:after:bg-sobre-primario"></span>
+            <span class="text-base font-medium text-texto">Ver retirados</span>
+          </label>
+
           <p id="buscando-acudientes" class="htmx-indicator text-sm text-texto-suave">Buscando…</p>
         </div>
       </div>
+
+      {% comment %} Sin JavaScript, este botón es lo que envía el formulario: el
+         interruptor no busca solo. `sr-only` lo deja operable con teclado. {% endcomment %}
+      <button type="submit" class="sr-only">Buscar</button>
     </form>
 
     {% include "personas/partials/acudientes-tabla.html" %}
   </div>
+
+  {% comment %} `DT-44`. La misma modal que el padrón, con los mismos nombres: así la
+     abre y la cierra el mismo código de `assets/js/interfaz.js`. Nace vacía; la
+     fila pide la ficha y la modal se abre al recibirla. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Acudiente"
+          class="m-auto w-[min(36rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
 {% endblock %}

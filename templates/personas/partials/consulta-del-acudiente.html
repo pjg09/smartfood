@@ -1,0 +1,111 @@
+{% comment %} `DT-44`. La ficha del acudiente en solo lectura, al pulsar su fila.
+
+   **Fragmento, no página** (`DT-16`): lo devuelve `GET /acudientes/<id>/` y cae
+   en la modal de la pantalla de acudientes, la misma que usa el padrón.
+
+   **Sin una sola acción que escriba.** Sobre el acudiente la institución
+   consulta (`[S11]`, `DEC-17`); lo único que escribe, el acceso (`DEC-20`), vive
+   en la ficha de edición del estudiante, y aquí se dice dónde.
+
+   **Sus estudiantes, retirados incluidos**, con su estado: la pregunta es «¿de
+   quién responde?», y un hijo que se fue sigue siendo suyo. Sin saldo ni
+   consumos de ninguno (`[S11]`), como en la ficha del estudiante (`DT-43`).
+{% endcomment %}
+
+<div id="consulta-del-acudiente" data-consulta-del-acudiente
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Ficha del acudiente</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+    {% comment %} **En redondo, con la inicial**: el acudiente no tiene fotografía y aquí
+       nadie comprueba una cara. El cuadrado es para el estudiante, cuya foto sí se
+       compara con quien está delante (`[S4]` del sistema visual). {% endcomment %}
+    <div class="flex items-center gap-4">
+      <span aria-hidden="true"
+            class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primario-suave
+                   font-display text-2xl text-primario">{{ acudiente.nombre|first|upper }}</span>
+      <div class="flex min-w-0 flex-col gap-1">
+        <p class="font-display text-xl break-words text-texto">{{ acudiente.nombre }}</p>
+        <p class="font-mono text-base tabular-nums text-texto-suave">{{ acudiente.documento }}</p>
+      </div>
+    </div>
+
+    <dl class="grid grid-cols-1 gap-4 rounded-md border border-borde p-4 tablet:grid-cols-2">
+      <div class="flex flex-col gap-1 tablet:col-span-2">
+        <dt class="text-sm font-medium text-texto-suave">Correo</dt>
+        <dd class="text-base break-all text-texto">{{ acudiente.usuario.email }}</dd>
+      </div>
+      <div class="flex flex-col gap-1">
+        <dt class="text-sm font-medium text-texto-suave">Cuenta</dt>
+        <dd data-consulta-cuenta>{% include "personas/partials/acudiente-estado-de-la-cuenta.html" %}</dd>
+      </div>
+      <div class="flex flex-col gap-1">
+        <dt class="text-sm font-medium text-texto-suave">Cuenta creada el</dt>
+        <dd class="text-base text-texto">{{ acudiente.usuario.creado_en|date:"j \d\e F \d\e Y" }}</dd>
+      </div>
+    </dl>
+
+    <section class="flex flex-col gap-3" data-consulta-a-su-cargo>
+      <h3 class="inline-flex items-center gap-2 text-base font-semibold text-texto">
+        <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-estudiantes"></use></svg>
+        Estudiantes a su cargo
+        <span class="font-normal text-texto-suave">({{ estudiantes|length }})</span>
+      </h3>
+
+      <ul class="flex flex-col divide-y divide-borde overflow-hidden rounded-md border border-borde">
+        {% for estudiante in estudiantes %}
+          <li data-consulta-estudiante class="flex items-center gap-3 px-4 py-3">
+            <div class="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-superficie-hover">
+              {% if estudiante.tiene_foto %}
+                <img src="{{ estudiante.url_de_la_foto }}" alt="" class="h-full w-full object-cover">
+              {% else %}
+                <span aria-hidden="true"
+                      class="flex h-full w-full items-center justify-center font-display text-lg
+                             text-texto-suave">{{ estudiante.nombre|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="flex min-w-0 flex-col">
+              <span class="flex flex-wrap items-center gap-x-2">
+                <span class="font-semibold text-texto">{{ estudiante.nombre }}</span>
+                {% include "personas/partials/padron-estado-del-estudiante.html" %}
+              </span>
+              {% comment %} Documento y código como dos piezas que saltan de línea enteras: con
+                 un «·» en medio, a 390 px el separador quedaba colgando. {% endcomment %}
+              <span class="flex flex-wrap gap-x-3 font-mono text-sm tabular-nums text-texto-suave">
+                <span>{{ estudiante.documento }}</span>
+                <span class="tracking-wider">{{ estudiante.codigo_tarjeta }}</span>
+              </span>
+            </div>
+          </li>
+        {% empty %}
+          <li class="px-4 py-3 text-base text-texto-suave">No tiene estudiantes a su cargo.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <p class="flex items-start gap-1.5 text-sm text-texto-suave">
+      <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-informacion"></use></svg>
+      <span>
+        El acceso se corta o se devuelve desde la ficha de cualquiera de sus estudiantes, en
+        el padrón. El saldo y los consumos no se consultan desde aquí.
+      </span>
+    </p>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Cerrar
+    </button>
+  </div>
+</div>

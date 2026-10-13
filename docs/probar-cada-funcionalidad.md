@@ -356,3 +356,18 @@ Con teclado se llega por el **nombre**, que es un botón. Lo que no tiene que pa
 **Desactivar** o **Editar** en la fila abran la consulta además de lo suyo, o que aparezca el
 **saldo** —en `[S11]` no es de la institución—. Para ver restricciones en ella, ponlas antes
 como acudiente (`[S1]`).
+
+## [S17] Mirar a un acudiente y sus estudiantes
+
+Como institución, en `/acudientes/`, **pulsar en cualquier parte de la fila** (`DT-44`). Se
+abre su ficha en solo lectura: nombre, documento, correo, el estado de su cuenta, cuándo se
+creó y **sus estudiantes, retirados incluidos**, cada uno con foto, documento, código y
+estado. Con teclado se llega por el nombre. No tiene acciones: el acceso se corta desde la
+ficha del estudiante en el padrón (`[S14]`).
+
+**Ver retirados** trae a las familias sin ningún estudiante matriculado, con la marca
+«Retirado». Sin marcarlo no salen. Para verlo hace falta dar de baja a todos los estudiantes
+de un acudiente (`[S5]`), **que no tiene vuelta**: en la base de trabajo, mejor no.
+
+Lo que tiene que verse en cualquier caso: un acudiente con el **acceso cortado** sale como
+**«Acceso cortado»**, en rojo, aquí y en el padrón, y nunca como «Activa».

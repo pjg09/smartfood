@@ -30,6 +30,7 @@
     <p class="rounded-md border border-borde bg-superficie px-4 py-6 text-center text-base text-texto-suave">
       {% if busqueda %}
         Ningún acudiente coincide con «{{ busqueda }}».
+        {% if not incluir_retirados %}Puede que su familia se haya retirado: marca «Ver retirados».{% endif %}
       {% else %}
         Todavía no hay acudientes. Llegan con la carga de estudiantes.
       {% endif %}
@@ -40,9 +41,21 @@
        vistazo y abajo el detalle sobre fondo hundido. {% endcomment %}
     <ul class="flex flex-col gap-3 tablet:hidden">
       {% for acudiente in acudientes %}
-        <li class="overflow-hidden rounded-md border border-borde bg-superficie">
+        <li data-fila-consultable
+            class="cursor-pointer overflow-hidden rounded-md border border-borde bg-superficie">
           <div class="flex items-start justify-between gap-3 px-4 py-3">
-            <span class="font-semibold text-texto">{{ acudiente.nombre }}</span>
+            <div class="flex min-w-0 flex-col gap-1">
+              <button type="button" data-consultar data-consultar-acudiente
+                    hx-get="{% url 'consulta-del-acudiente' acudiente.id %}"
+                    hx-target="#cuerpo-de-la-ficha"
+                    hx-swap="innerHTML"
+                    class="text-left font-semibold text-texto hover:underline">{{ acudiente.nombre }}</button>
+              {% if acudiente.cuantos and not acudiente.matriculados %}
+                <span data-acudiente-retirado
+                      class="inline-flex w-fit items-center rounded-full bg-aviso-suave px-2 py-0.5
+                             text-sm font-medium whitespace-nowrap text-aviso-fuerte">Retirado</span>
+              {% endif %}
+            </div>
             {% include "personas/partials/acudiente-estado-de-la-cuenta.html" %}
           </div>
           <dl class="grid grid-cols-2 gap-x-4 gap-y-2 bg-superficie-hover px-4 py-3 text-sm">
@@ -99,11 +112,24 @@
           </thead>
           <tbody>
             {% for acudiente in acudientes %}
-              <tr data-fila-de-acudiente
-                  class="border-b border-borde transition-colors last:border-b-0
+              <tr data-fila-de-acudiente data-fila-consultable
+                  class="cursor-pointer border-b border-borde transition-colors last:border-b-0
                          even:bg-superficie-hover hover:bg-primario-suave">
                 <td class="px-4 py-3">
-                  <span class="block font-semibold text-texto">{{ acudiente.nombre }}</span>
+                  {% comment %} `DT-44`. El nombre es el control y la fila, un atajo: como en
+                     el padrón (`DT-43`), un `<tr>` no se enfoca con teclado. {% endcomment %}
+                  <span class="flex flex-wrap items-center gap-2">
+                    <button type="button" data-consultar data-consultar-acudiente
+                    hx-get="{% url 'consulta-del-acudiente' acudiente.id %}"
+                    hx-target="#cuerpo-de-la-ficha"
+                    hx-swap="innerHTML"
+                    class="text-left font-semibold text-texto hover:underline">{{ acudiente.nombre }}</button>
+                    {% if acudiente.cuantos and not acudiente.matriculados %}
+                    <span data-acudiente-retirado
+                          class="inline-flex w-fit items-center rounded-full bg-aviso-suave px-2 py-0.5
+                                 text-sm font-medium whitespace-nowrap text-aviso-fuerte">Retirado</span>
+                  {% endif %}
+                  </span>
                   <span class="block text-sm break-all text-texto-suave">
                     {{ acudiente.usuario.email }}
                   </span>

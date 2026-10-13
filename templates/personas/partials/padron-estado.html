@@ -10,9 +10,19 @@
    recarga. `ámbar` porque es exactamente lo que el ámbar significa aquí —algo a
    punto de quedarse sin—, no un error: la cuenta existe y la invitación se
    envió (`DEC-18`); lo que falta es que la usen.
+
+   **Y el acceso cortado va primero** (`DEC-20`, `HU-63`): cortarlo no borra la
+   contraseña, así que preguntando solo por ella una cuenta cortada se pintaba
+   «Activa». Rojo, porque es un bloqueo de verdad: no entra ni recarga.
 {% endcomment %}
 
-{% if estudiante.acudiente.usuario.tiene_contrasena_definida %}
+{% if not estudiante.acudiente.usuario.is_active %}
+  <span class="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-error-fuerte"
+        data-cuenta-cortada>
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+    Acceso cortado
+  </span>
+{% elif estudiante.acudiente.usuario.tiene_contrasena_definida %}
   <span class="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-exito-fuerte"
         data-cuenta-activa>
     <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>

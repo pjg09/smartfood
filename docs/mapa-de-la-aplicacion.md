@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; la ficha en solo lectura al pulsar la fila del padrón (`DT-43`), y la tabla de `[S2]` recontada por script: 54 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-12; las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,10 +43,10 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las cincuenta y cuatro rutas
+## [S2] Las cincuenta y cinco rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **48 rutas propias** que resuelve Django fuera del
+los mismos colores desde `DT-23`. Son las **49 rutas propias** que resuelve Django fuera del
 admin, todas, y **6 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna.
 
@@ -72,8 +72,9 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/padron/<id>/ficha/` | La ficha del estudiante, en la modal del padrón. `GET` la pinta; `POST` guarda nombre, documento, fotografía, baja y acceso del acudiente **en una sola transacción** | Institución | `DT-40`, `HU-63` |
 | `/padron/<id>/reasignar/` | `POST`. Reasigna el código de tarjeta desde la ficha: el anterior deja de comprar en el acto (`INVD-4`) | Institución | `HU-46`, `DT-40` |
 | `/carga/` | Carga masiva de estudiantes y acudientes por CSV | Institución | `TT-24` |
-| `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`) | Institución | `DEC-17` |
+| `/acudientes/` | Quién responde por cada estudiante y quién ha activado su cuenta (`DEC-17`). Las familias que ya se fueron solo salen con **Ver retirados** (`DT-44`) | Institución | `DEC-17`, `DT-44` |
 | `/acudientes/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución | `DEC-17` |
+| `/acudientes/<id>/` | La ficha del acudiente **en solo lectura**, al pulsar su fila: sus datos, el estado de su cuenta y sus estudiantes, retirados incluidos. Solo `GET`; **sin saldo ni consumos** | Institución | `DT-44` |
 | `/restricciones/` | Qué tiene bloqueado cada estudiante, **en consulta** (`HU-38`, `INV-4`) | Institución, administración | `DEC-17` |
 | `/restricciones/tabla/` | Fragmento HTMX de esa tabla, filtrada | Institución, administración | `DEC-17` |
 | `/mis-estudiantes/` | Panel del acudiente con sus estudiantes | Acudiente | `TT-29` |
@@ -132,6 +133,7 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/padron/<id>/ficha/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/ficha/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reasignar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
+| `/acudientes/<id>/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/mis-estudiantes/<id>/desactivar/` (`POST`) | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/estudiantes/<id>/tarjeta/` | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/punto-de-venta/` | 403 | 403 | **200** | 403 | 302 → acceso |

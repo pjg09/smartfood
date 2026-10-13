@@ -1,14 +1,22 @@
 {% comment %} Si el acudiente ya puede entrar (`HU-03`, `DEC-18`).
 
-   **Se pregunta por la contraseña y no por `is_active`**: la cuenta nace activa
-   con la carga, lo que le falta es que su titular haya definido su clave desde
-   la invitación. Son dos cosas distintas y mezclarlas diría que alguien está
-   bloqueado cuando lo que pasa es que nunca ha entrado.
+   **Tres estados, y dos preguntas distintas.** Primero `is_active`: si la
+   institución cortó el acceso (`DEC-20`, `HU-63`), eso es lo que hay que ver,
+   tenga o no contraseña —cortarlo no la borra—. Rojo, porque es un bloqueo de
+   verdad: no entra y nadie recarga a los suyos.
 
-   El ámbar es el del límite a punto de agotarse, no el rojo: no hay nada roto
+   Después, la contraseña: la cuenta nace activa con la carga, y lo que le
+   falta es que su titular la defina desde la invitación. No es un bloqueo, y
+   por eso va en ámbar, el del límite a punto de agotarse: no hay nada roto
    —la invitación existe—, hay algo pendiente.
 {% endcomment %}
-{% if acudiente.usuario.tiene_contrasena_definida %}
+{% if not acudiente.usuario.is_active %}
+  <span class="inline-flex items-center gap-1.5 font-medium whitespace-nowrap text-error-fuerte text-base"
+        data-cuenta-cortada>
+    <svg class="h-4 w-4" aria-hidden="true"><use href="#i-candado"></use></svg>
+    Acceso cortado
+  </span>
+{% elif acudiente.usuario.tiene_contrasena_definida %}
   <span class="inline-flex items-center gap-1.5 text-base font-medium text-exito-fuerte">
     <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
     Activa

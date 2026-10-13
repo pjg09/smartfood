@@ -19,6 +19,7 @@ from cuentas.models import Rol
 from personas.carga import ArchivoIlegible
 from personas.models import Acudiente, Estudiante, Institucion
 from personas.selectors import (
+    acudiente_para_la_institucion,
     acudientes_de_la_institucion,
     acudientes_sin_activar,
     cuentas_sin_activar,
@@ -554,18 +555,27 @@ def padron_de_estudiantes(request):
     return render(request, "personas/padron.html", contexto)
 
 
-def _contexto_de_los_acudientes(actor, *, busqueda=""):
+def _contexto_de_los_acudientes(actor, *, busqueda="", incluir_retirados=False):
     """Lo que la tabla de acudientes necesita, venga de la página o del buscador.
 
     La misma función para los dos caminos, por lo mismo que en el padrón:
     armarlo dos veces es cómo acaban enseñando cosas distintas.
+
+    `cuantos` es el total **sin la búsqueda** y con el mismo filtro de
+    retirados: es el «de 28» de «3 de 28», y contado sobre lo encontrado diría
+    siempre lo mismo que el número de al lado.
     """
-    acudientes = list(acudientes_de_la_institucion(actor=actor, busqueda=busqueda))
+    acudientes = list(acudientes_de_la_institucion(
+        actor=actor, busqueda=busqueda, incluir_retirados=incluir_retirados
+    ))
 
     return {
         "acudientes": acudientes,
         "busqueda": busqueda,
-        "cuantos": len(acudientes),
+        "incluir_retirados": incluir_retirados,
+        "cuantos": acudientes_de_la_institucion(
+            actor=actor, incluir_retirados=incluir_retirados
+        ).count(),
         "sin_activar": acudientes_sin_activar(acudientes),
     }
 
@@ -583,20 +593,45 @@ def acudientes_de_la_carga(request):
     dice `resolver_match.url_name` y no una cabecera que el cliente pueda
     falsear (`DT-16`).
 
-    **Solo lee.** `[S11]` concede `view` sobre `personas.acudiente` y nada más:
-    la cuenta se crea con la carga (`HU-01`), se activa por invitación (`HU-03`)
-    y se desactiva desde el listado de usuarios (`HU-42`). Aquí no hay ni un
-    botón que escriba, y esa ausencia es la pantalla diciendo lo mismo que la
-    matriz.
+    **Solo lee.** La tabla no escribe nada: la cuenta se crea con la carga
+    (`HU-01`), se activa por invitación (`HU-03`) y su acceso se corta desde la
+    ficha del estudiante, en el padrón (`DEC-20`). Las familias que se fueron
+    solo salen con «Ver retirados» (`DT-44`).
     """
     contexto = _contexto_de_los_acudientes(
-        request.user, busqueda=request.GET.get("busqueda", "")
+        request.user,
+        busqueda=request.GET.get("busqueda", ""),
+        # Como en el padrón: la casilla solo llega marcada (`DT-44`).
+        incluir_retirados=request.GET.get("retirados") == "1",
     )
 
     if request.resolver_match.url_name == "acudientes-tabla":
         return render(request, "personas/partials/acudientes-tabla.html", contexto)
 
     return render(request, "personas/acudientes.html", contexto)
+
+
+@login_required
+@require_http_methods(["GET"])
+def consulta_del_acudiente(request, acudiente_id):
+    """La ficha del acudiente en solo lectura, al pulsar su fila (`DT-44`).
+
+    Sus datos, el estado de su cuenta y **sus estudiantes, retirados incluidos**:
+    la pregunta de secretaría es «¿de quién es responsable?», y un hijo que se
+    fue sigue siendo suyo. Sin saldo ni consumos de ninguno, como en la ficha
+    del estudiante (`DT-43`, `[S11]`).
+    """
+    try:
+        acudiente = acudiente_para_la_institucion(
+            actor=request.user, acudiente_id=acudiente_id
+        )
+    except Acudiente.DoesNotExist:
+        raise Http404("No hay ningún acudiente con ese identificador.") from None
+
+    return render(request, "personas/partials/consulta-del-acudiente.html", {
+        "acudiente": acudiente,
+        "estudiantes": list(acudiente.estudiantes.order_by("nombre")),
+    })
 
 
 def _estudiante_de_la_institucion(actor, estudiante_id):
@@ -823,7 +858,11 @@ def acudientes_para_matricular(request):
     recorrido de `TT-35` descartó.
     """
     busqueda = request.GET.get("buscar_acudiente", "").strip()
-    acudientes = acudientes_de_la_institucion(actor=request.user, busqueda=busqueda)
+    # Con las familias que ya se fueron: un hermano menor que entra al colegio
+    # se matricula con el acudiente que ya existe (`DT-44`).
+    acudientes = acudientes_de_la_institucion(
+        actor=request.user, busqueda=busqueda, incluir_retirados=True
+    )
     return render(request, "personas/partials/acudientes-para-matricular.html", {
         "busqueda": busqueda,
         "acudientes": list(acudientes[:ACUDIENTES_EN_EL_BUSCADOR]) if busqueda else [],

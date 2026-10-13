@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` el 2026-10-12 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` y `DT-44` el 2026-10-12 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 43 (`DT-1` … `DT-43`) |
+| decisiones | 44 (`DT-1` … `DT-44`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-43`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-44`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -958,3 +958,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El nombre de cada fila es un botón y la fila, un atajo.** Pulsar en cualquier parte de la fila pulsa ese botón (`assets/js/interfaz.js`): un `<tr>` no se enfoca con teclado ni lo anuncia un lector de pantalla. Lo que ya es un control —«Editar», «Desactivar», «Reactivar»— hace lo suyo y no abre la consulta, y arrastrar para seleccionar un documento tampoco.
 
 **Consecuencia asumida.** **El clic en la fila no lo vigila la suite**: es JavaScript; se comprobó con Playwright contra el stack, en claro, oscuro y a 390 px. Lo que sí vigila es que cada fila lleve el botón con su ruta.
+
+#### `[DT-44]` La fila de un acudiente abre su ficha en solo lectura, y las familias que se fueron no salen por defecto
+
+**Extiende** `DT-43` a la pantalla de acudientes (`DEC-17`), con la misma modal y el mismo código, y le da el interruptor **Ver retirados** del padrón (`DT-27`). **No amplía el alcance ni toca `[S11]`**: sobre el acudiente la institución consulta, y esto es consulta.
+
+**Razón:** decisión del equipo, tomada el 2026-10-12. Para saber de qué estudiantes responde un acudiente había que buscarlo en el padrón por su nombre; y la lista mezclaba con las familias de hoy a las que ya no tienen a nadie en el colegio.
+
+**Decidido:**
+
+- **`GET /acudientes/<id>/` devuelve la ficha en solo lectura**, y solo `GET`. Fragmento (`DT-16`); quién pasa lo decide `acudiente_para_la_institucion`, con la misma regla que la lista (`DT-15`). Enseña nombre, documento, correo, el estado de su cuenta, cuándo se creó y **sus estudiantes, retirados incluidos**, cada uno con foto, documento, código y estado. **Sin saldo ni consumos de ninguno** (`[S11]`) y **sin acciones**: el acceso se corta desde la ficha de edición del estudiante (`DEC-20`), y la ficha lo dice.
+- **La fila pulsa el botón del nombre**, como en el padrón: el atajo de `assets/js/interfaz.js` es ya el mismo para las dos pantallas, que marcan la fila con `data-fila-consultable` y el botón con `data-consultar`.
+- **Un acudiente no se retira: se retiran sus estudiantes** (`HU-51`), y su cuenta sigue viva para el historial y el saldo congelado (`HU-52`). En esta lista, **retirado es la familia que tiene estudiantes y ninguno matriculado**. No sale por defecto; **Ver retirados** la trae, con la marca «Retirado». **No son retirados**, y salen siempre: el **acceso cortado** (`DEC-20`), porque esa familia sigue en el colegio, y el **acudiente sin ningún estudiante**, que no se fue de ninguna parte y es justo lo que conviene ver.
+- **El buscador del alta individual sí encuentra a las familias que se fueron** (`DT-40`): un hermano menor que entra al colegio se matricula con el acudiente que ya existe.
+- **El «de N» del recuento es el total sin la búsqueda**, con el mismo filtro de retirados. Se contaba sobre lo encontrado, y decía siempre lo mismo que el número de al lado.
+- **«Acceso cortado» es un estado de la cuenta**, en rojo, en esta lista, en el padrón y en las dos fichas. Cortar el acceso no borra la contraseña, y el estado solo preguntaba por ella: desde `DEC-20`, una cuenta cortada se pintaba **«Activa»** en las dos tablas.
+
+**Consecuencia asumida.** **La marca «Retirado» no se vio sobre la base de trabajo**: haría falta una baja, que no tiene vuelta. Se miró con Playwright sirviendo al navegador los fragmentos que Django pintó dentro de una transacción deshecha; el resto, contra el stack. Las pruebas son `personas/tests_acudiente_consulta.py`.

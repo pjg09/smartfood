@@ -17,6 +17,7 @@ from config.salud import salud
 from cuentas.views import RecuperacionDeContrasenaForm, inicio, panel
 from personas.views import (
     acudientes_de_la_carga,
+    consulta_del_acudiente,
     acudientes_para_matricular,
     alta_de_estudiante,
     desactivacion_de_estudiante,
@@ -185,6 +186,12 @@ urlpatterns = [
     # envoltorio, no lo que se responde (`DT-16`).
     path("acudientes/", acudientes_de_la_carga, name="acudientes"),
     path("acudientes/tabla/", acudientes_de_la_carga, name="acudientes-tabla"),
+    # `DT-44`. La ficha del acudiente en solo lectura, al pulsar su fila.
+    path(
+        "acudientes/<uuid:acudiente_id>/",
+        consulta_del_acudiente,
+        name="consulta-del-acudiente",
+    ),
 
     # `DEC-17`. Las restricciones en consulta, con el sistema visual. Sustituye
     # al proxy del admin de `TT-112`.

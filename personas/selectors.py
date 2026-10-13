@@ -241,7 +241,7 @@ def cuentas_sin_activar(estudiantes):
     )
 
 
-def acudientes_de_la_institucion(*, actor, busqueda=""):
+def acudientes_de_la_institucion(*, actor, busqueda="", incluir_retirados=False):
     """Los acudientes con menores matriculados (`HU-44`, `[S11]`, `DEC-17`).
 
     **Es una lectura y nada más.** La matriz solo concede `view` sobre
@@ -255,8 +255,19 @@ def acudientes_de_la_institucion(*, actor, busqueda=""):
     de datos. Esta lista lleva nombre, documento y correo de adultos a cargo de
     menores; no es una lista que pueda ver la cafetería.
 
-    `cuantos` se anota en la misma consulta: con una propiedad por fila serían
-    tantas consultas como acudientes.
+    ── UN ACUDIENTE «RETIRADO» NO ES UN ESTADO, ES UNA CUENTA (`DT-44`) ────
+    El acudiente no se da de baja: se dan de baja sus estudiantes (`HU-51`), y
+    su cuenta sigue viva para consultar el historial y el saldo congelado
+    (`HU-52`). Pero esta lista responde, como el padrón, por **hoy**: por
+    defecto no salen las familias que ya se fueron —las que tienen estudiantes
+    y ninguno matriculado—, y `incluir_retirados` las trae. Dos casos que **no**
+    son retirados y salen siempre: **el acceso cortado** (`DEC-20`), porque esa
+    familia sigue en el colegio, y **el acudiente sin ningún estudiante**, que
+    nunca se fue de ninguna parte y es justo lo que conviene ver.
+    ─────────────────────────────────────────────────────────────────────────
+
+    `cuantos` y `matriculados` se anotan en la misma consulta: con una propiedad
+    por fila serían tantas consultas como acudientes.
     """
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied("Consultar los acudientes exige identificarse.")
@@ -269,8 +280,16 @@ def acudientes_de_la_institucion(*, actor, busqueda=""):
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
 
     acudientes = Acudiente.objects.select_related("usuario").annotate(
-        cuantos=Count("estudiantes", distinct=True)
+        cuantos=Count("estudiantes", distinct=True),
+        matriculados=Count(
+            "estudiantes",
+            filter=~Q(estudiantes__estado=EstadoDelEstudiante.BAJA),
+            distinct=True,
+        ),
     )
+
+    if not incluir_retirados:
+        acudientes = acudientes.exclude(cuantos__gt=0, matriculados=0)
 
     busqueda = busqueda.strip()
     if busqueda:
@@ -281,6 +300,26 @@ def acudientes_de_la_institucion(*, actor, busqueda=""):
         )
 
     return acudientes.order_by("nombre")
+
+
+def acudiente_para_la_institucion(*, actor, acudiente_id):
+    """Un acudiente y sus estudiantes, para la ficha de consulta (`DT-44`).
+
+    La misma regla que `acudientes_de_la_institucion`, porque es la misma
+    lectura de una fila: solo la institución, y solo consulta (`[S11]`,
+    `DEC-17`). Lanza `Acudiente.DoesNotExist` si no existe.
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar un acudiente exige identificarse.")
+    if actor.rol != Rol.INSTITUCION:
+        raise PermissionDenied(
+            "Los acudientes son de la institución educativa y de nadie más "
+            "(HU-44, [S11])."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return Acudiente.objects.select_related("usuario").get(pk=acudiente_id)
 
 
 def acudientes_sin_activar(acudientes):
