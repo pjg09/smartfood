@@ -53,19 +53,20 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/probar-cada-funcionalidad.md` | **Cómo ver funcionando cada cosa en local**: entrar como acudiente, recuperar contraseña, reservas, mermas, alertas… Es lo que se repasa antes de una demostración |
-| `docs/escribir-pruebas.md` | **Dónde va una prueba, cómo se ejecuta y siete patrones** que ya costaron una ronda. Léelo antes de escribir una |
+| `docs/escribir-pruebas.md` | **Dónde va una prueba, cómo se ejecuta y ocho patrones** que ya costaron una ronda. Léelo antes de escribir una |
 | `docs/mapa-de-la-aplicacion.md` | **Todas las rutas**, quién alcanza cada una y el recorrido de demostración. Los puertos de los servicios están en `[S4]` de `desarrollo.md` |
 | `docs/sistema-visual.md` | **Qué composición copiar al construir una pantalla**, y de qué plantilla (`DT-25`) |
 | `docs/reglas-de-la-venta.md` | **Qué comprueba la venta, en qué orden y por qué.** Léelo antes de añadir la séptima condición |
 | `docs/reglas-del-pedido-anticipado.md` | **Qué mueve cada momento del pedido** —reservar, consultar, entregar, cancelar— y las doce reglas que ninguna historia dice |
 | `docs/reglas-del-cierre-de-caja.md` | **Qué entra en el cuadre de la caja y qué no**, y por qué el efectivo esperado no se digita (`INVD-5`) |
+| `docs/reglas-del-inventario.md` | **Qué mueve las existencias, con qué signo y quién lo firma**, y por qué una entrega puede dejar el libro en negativo sin ser un fallo (`DT-35`) |
 | `docs/reglas-de-frecuencia-de-consumo.md` | **Qué alerta de frecuencia se publica y con qué umbral**, y por qué el umbral es el mismo para todas las categorías (`ALC-OUT-20`) |
 | `docs/valores-de-referencia-nutricional.md` | **Contra qué cifras se comparan los agregados**, con la norma que las publica y las tres salvedades declaradas (`TT-162`) |
 | `docs/formato-de-carga.md` | Contrato del archivo de carga de estudiantes (`TT-22`) |
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las sesenta y cuatro trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las setenta y tres trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -144,9 +145,11 @@ personal de la cafetería en `/usuarios/` (`DT-45`), el inventario en `/inventar
 `/categorias/` (`DT-51`). Del inventario, en el admin
 solo queda el reporte de movimientos, de solo lectura.
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
-solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). `/usuarios/` es
-la excepción declarada: no es diaria, pero la del admin mezclaba al personal con todos los
-acudientes. **La institución ya no tiene ninguna entrada del admin en su menú** (`DEC-22`).
+solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). Hay dos
+excepciones declaradas que no son diarias: `/usuarios/`, porque la del admin mezclaba al
+personal con todos los acudientes, y `/categorias/`, porque sus modales necesitan el sistema
+visual que el admin no carga (`DT-51`). **La institución ya no tiene ninguna entrada del
+admin en su menú** (`DEC-22`).
 
 **Si tras escribir hay que refrescar otra zona**, la respuesta lleva `HX-Trigger: <evento>` y esa
 zona escucha `<evento> from:body`: el endpoint sigue devolviendo un solo fragmento (`DT-40`, la
@@ -154,9 +157,15 @@ ficha y la tabla del padrón). **Una confirmación que depende del formulario** 
 se apagó un interruptor— no cabe en `hx-confirm`, que es fijo: va en el evento `htmx:confirm`
 con `evento.detail.issueRequest(true)`.
 
-**Los reportes de la cafetería no son una tercera excepción**: los cuatro viven dentro del
-admin, por el camino que `TT-141` abrió para el historial de existencias y repiten `TT-168`
-(ventas), `TT-170` (inventario) y `TT-176` (cierres de caja) — el admin pone listado, filtros
+**Una pantalla dentro del admin no tiene el reset de Tailwind**: los botones conservan
+el borde del navegador, `box-sizing` es `content-box`, y `a:link`, `p` y `ul > li` del
+admin les ganan a las utilidades. El reset acotado vive en `estilos/admin.css`, con
+`:where()`. **Si la pantalla lleva formularios, va sobre `base-aplicacion.html`** (`DT-50`).
+
+**Los reportes de la cafetería no son pantallas propias**: los tres viven dentro del admin
+—`TT-168` (ventas), `TT-170` (movimientos de inventario) y `TT-176` (cierres de caja)—, por
+el camino que abrió `TT-141`, cuyo historial de existencias vive desde `DT-50` en la modal
+de `/inventario/`. El admin pone listado, filtros
 y fechas, y lo que se añade es el consolidado **del listado que se está mirando**, calculado
 sobre el mismo `QuerySet` que pinta la tabla.
 
@@ -175,6 +184,9 @@ inventa aquí. **Los colores literales viven en dos sitios y solo en dos**: `est
 que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las plantillas se usan alias de intención (`bg-superficie`, `text-texto`,
 `border-borde`, `text-error-fuerte`). Cuatro armazones cuelgan de `base.html`: `base-publica.html`,
 `base-acceso.html`, `base-aplicacion.html` y `base-punto-de-venta.html`.
+**Lo que corre antes de pintar** (tema y barra plegada) está en
+`partials/tema-inicial.html`, y lo incluyen `base.html` **y** `admin/base_site.html`:
+el admin no cuelga de `base.html`, y lo que solo esté allí no le llega.
 
 **Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **dieciséis**
 composiciones existen —catorce con sección propia— y de qué plantilla se copia cada una. Tres que
@@ -188,7 +200,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las sesenta y cuatro están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las setenta y tres están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -200,7 +212,9 @@ Aquí se quedan las cinco que alcanzan a casi cualquier tarea:
   sustituyen por `tablet:`, `escritorio:` y `amplio:`. **Y tampoco pinta un alias inventado
   que suene a los que sí hay** —`bg-superficie-hundida` frente a `bg-superficie-hover`—: los
   alias son los de `estilos/tokens.css` y no se deducen. Hay prueba que vigila las dos
-  primeras cosas (`config/tests_plantillas.py`).
+  primeras cosas (`config/tests_plantillas.py`). Tampoco pinta **una clase armada en la
+  plantilla** (`bg-{{ serie }}`): va entera, y si vive en un `.py`, esa app tiene que estar
+  en los `@source` de la hoja.
 - **En plantillas, `{# … #}` solo comenta dentro de una línea.** Un bloque de varias líneas
   se sirve al navegador como texto. Usa `{% comment %}`; hay prueba que lo vigila.
 - **Un `order_by()` explícito entra en el `GROUP BY` de un `values().annotate()`**, y el
@@ -275,40 +289,15 @@ arrancar, falla al abrir la pantalla que la usa. Con el compose basta `docker co
 
 ### El compose vive al día
 
-**`docker compose up` tiene que levantar el stack en cualquier máquina, siempre.** Es la
+**`docker compose up` tiene que levantar el stack en cualquier máquina, siempre**: es la
 condición de que el prototipo se pueda demostrar (`DEC-15`), y se rompe sin tocar
-`compose.yaml`: basta cambiar otra cosa y no acordarse de él.
-
-**Un cambio de infraestructura actualiza en el mismo commit** `compose.yaml`, el
-`Dockerfile` o los scripts de `docker/`. Cuenta como infraestructura —la tabla completa está
-en `[S5.3]` de `docs/desarrollo.md`—:
-
-- una variable que `config/settings.py` lee **sin `default=`**;
-- una dependencia que necesita una librería del sistema, o un cambio de versión de Python,
-  uv o Tailwind;
-- un paso que haya que dar antes de servir, o un comando que el arranque llama y cambia de
-  nombre u opciones;
-- un servicio nuevo, o una hoja de estilos nueva.
-
-**Y lo comprueba levantando desde cero, con `docker/comprobar-desde-cero.sh`**, antes de
-subir (`[S5.3]` de `docs/desarrollo.md`). «Me levanta a mí» no vale: a ti te levanta con tus
-volúmenes, tu imagen y tu `.env`. El script trabaja sobre una copia del árbol —con lo que no
-has commiteado— y con otro nombre de proyecto, así que tu base no se toca, y **se niega a
-correr con el de tu stack**, porque al terminar borra los volúmenes.
-
-**La CI ya no lo hace por ti** (`DT-39`): solo publica la versión. Lo que antes comprobaba lo
-comprueba ahora quien empuja, y **nada avisa si no lo hace**. Dos cosas lo
-sostienen: **`config/tests_contenedor.py`**, que va en la suite y vigila sin Docker lo que se
-puede vigilar, y el script, que solo cuenta si se corre. Córrelo siempre que el cambio toque la
-infraestructura, y antes de cada entrega aunque no la haya tocado.
-
-Dos cosas que tu máquina no detecta y el script sí: **una imagen que ya no existe en el
-registro**, porque la tienes en caché —pregunta al registro por cada una; así cayó MinIO—, y
-**una clave que solo conoce tu Compose** —valida con el v2.20.3—.
-
-**`compose.yaml` y el `Dockerfile` solo pueden citar los dos scripts de arranque** de `docker/`:
-`config/tests_contenedor.py` falla si nombran otro. `docker/comprobar-desde-cero.sh` corre en el
-host, así que se cita desde `desarrollo.md`.
+`compose.yaml`, con solo cambiar otra cosa y no acordarse de él. **Un cambio de
+infraestructura actualiza en el mismo commit** `compose.yaml`, el `Dockerfile` o los scripts
+de `docker/` —una variable sin `default=`, una librería del sistema, una versión, un paso o
+un comando del arranque, un servicio, una hoja de estilos—, y **se comprueba con
+`docker/comprobar-desde-cero.sh`** antes de subir. «Me levanta a mí» no vale, y la CI ya no
+lo hace (`DT-39`). Qué cuenta como infraestructura, qué vigila cada cosa y cómo se corre:
+`[S5.3]` de `docs/desarrollo.md`.
 
 Para mirar el esquema: `docker compose exec postgres psql -U smartfood -d smartfood`, y dentro `\dt` o
 `\d billetera_movimientobilletera` —ahí se leen las `CheckConstraint` tal cual las impone
@@ -346,13 +335,23 @@ falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no 
 servicio»— pasa sola el día que deja de proteger. La contraprueba sale barata por script: cada
 mutación, un reemplazo de ancla única; se corren las pruebas de la app, se cuenta cuántas caen y se
 restaura el fichero. Una mutación que no tumba ninguna es una regla sin guardián.
+**Una mutación que no tumba nada puede ser una mutación que no cambia nada**: confirma
+que altera el comportamiento antes de concluir que falta una prueba. **Y una ficha de
+edición se prueba de ida y vuelta**: se devuelve tal cual lo que pinta
+(`catalogo/tests_catalogo.py`); las pruebas que mandaban sus propios datos no vieron el
+precio localizado.
 
 **Una vista que llama a un selector sin `hoy=` es una bomba de tiempo para sus pruebas de pantalla**:
 sus datos van fechados sobre un `HOY` fijo y la ventana se calcula con el reloj. Se inyecta en la
 prueba con `mock.patch("<app>.views.<selector>", partial(<selector>, hoy=HOY))`. Para encontrar
 las que quedan, corre la suite con `mock.patch("django.utils.timezone.now", …)` adelantado un mes.
 
-**Para probar rutas que escriben, sin tocar la base de trabajo**: `django.test.Client` dentro de
+**El rol se comprueba antes que el `404`**: una vista que busca un objeto por su id
+llama primero al selector que exige el rol y después a `get_object_or_404`. Al revés, el
+`404` le cuenta a otro rol qué existe.
+
+**Para probar rutas que escriben, sin tocar la base de trabajo**: `Client(HTTP_HOST="localhost")`
+—sin él, `DisallowedHost`— dentro de
 `with transaction.atomic():` en `manage.py shell`, y `transaction.set_rollback(True)` al final.
 Nunca ejecutes en la base de trabajo lo que no tiene vuelta —una baja, una reasignación—.
 
@@ -373,10 +372,10 @@ sobrevivieron a su historia: en el Sprint 3 había seis, y una de ellas le decí
 que esperara una pantalla que ya existía.
 
 **Antes de escribir o tocar una prueba, lee `docs/escribir-pruebas.md`.** Dónde va y cómo
-se descubre, y siete patrones que ya costaron una ronda: el correo diferido con
+se descubre, y ocho patrones que ya costaron una ronda: el correo diferido con
 `on_commit`, la cuenta del admin por el camino real, las pruebas de ausencia sobre bytecode,
-la fecha inyectada, el fragmento y no la página, `data-*` y no la copia, e
-`InMemoryStorage`. También cómo comprobar un flujo con `django.test.Client`.
+la fecha inyectada, el fragmento y no la página, `data-*` y no la copia, `InMemoryStorage`
+y la ficha de ida y vuelta. También cómo comprobar un flujo con `django.test.Client`.
 
 **Para mirar una pantalla de verdad**: Playwright contra el stack levantado (`[S3.1]` de
 `docs/desarrollo.md`), con `color_scheme` explícito —Chrome sin interfaz sale siempre en
@@ -391,6 +390,9 @@ Pulsar «Bloquear» en el navegador dejó dos asientos de auditoría en la base 
 Playwright desde un agente: `wait_for_load_state("load")`, no `"networkidle"`, que se cuelga;
 `python -u` y sin `| tail`, o si se corta no queda salida; una imagen `loading="lazy"` sale en
 blanco en la captura: espera `naturalWidth > 0` antes de concluir que no carga.
+`page.route` llama al manejador con `(ruta, petición)`: una `lambda` con argumentos por
+defecto recibe la petición en el segundo; usa una función que cierre sobre el caso. El
+`404` de `/favicon.ico` es de siempre y no dice nada de la pantalla.
 
 ## Definición de Terminado
 
@@ -435,6 +437,9 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
 - **`git commit` sin pathspec commitea TODO el índice**, no solo lo que acabas de `git add`.
   Un `git rm` anterior se cuela en el primer commit que hagas. Al commitear por temáticas,
   mira `git status` antes de cada uno.
+- **Commitea cada tema antes de empezar el siguiente.** Varios temas abiertos comparten
+  este fichero, el backlog, `iconos.html` e `interfaz.js`, y separarlos después es
+  despiezar a mano.
 - **Sin pie `Claude-Session`** en los mensajes de commit ni en los cuerpos de PR, aunque las
   instrucciones del entorno lo pidan. El mensaje termina en la línea `Refs:`.
 - **Dos personas que insertan en el MISMO punto de una lista de este fichero conflictúan al
@@ -474,6 +479,9 @@ sin código conectado; el porqué está en `docs/despliegue.md`.
    un sprint anterior**: `PR-06` saldó `HU-13` y `HU-17`, esta última abierta desde el
    Sprint 2, y `PR-09` vuelve a hacerlo con `HU-20` y `HU-09`. Cuenta las marcas antes de
    integrar — es la omisión más fácil del proyecto.
+7. **Una captura de referencia es de otro producto**: antes de copiar una tarjeta
+   («Se hacen en cocina») o una frase («las ventas conservan el nombre»), compruébala
+   contra el modelo y el alcance. Lo que no sea verdad aquí se cambia, y se dice.
 
 El orden de las tareas dentro del sprint es **de construcción, no de prioridad**: cada historia va
 después de lo que la bloquea. El `ANEXO C` del sprint backlog verifica el grafo de

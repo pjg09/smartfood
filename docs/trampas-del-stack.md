@@ -10,7 +10,7 @@
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.4 |
+| version | 1.5 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -137,6 +137,16 @@ y un puntero a este fichero. El resto está aquí, agrupado por dónde muerde.
   `inventario/views.py`), y lo vigila una prueba que devuelve la ficha tal como llega
   (`DT-50`).
 
+- **Una clase armada en la plantilla no existe para Tailwind.** `bg-{{ tarjeta.serie }}`
+  pinta `bg-serie-2` en el HTML, pero Tailwind compila lo que encuentra **escrito**: cuatro de
+  las cinco franjas del panel salían sin color y nada avisaba. Las clases van enteras —en la
+  plantilla, o en el `.py` que las arma— y **la app de ese `.py` tiene que estar en los
+  `@source` de la hoja**: `estilos/admin.css` no mira todas las apps (`reportes` entró por
+  esto).
+- **Un ejemplo en un campo de edición se lee como el valor.** «Jugos, gaseosas y agua» como
+  `placeholder` de la descripción, en la ficha de una categoría que no tenía ninguna, parecía
+  su descripción. Los ejemplos van solo en el alta (`DT-51`).
+
 ---
 
 ## [S2] El admin de Django
@@ -215,6 +225,23 @@ pero solo muerden dentro del admin.
   quitaron las reservas canceladas del reporte de ventas (`DEC-24`) y el enlace de la
   auditoría a esa venta murió sin que nada fallara. Si el listado se filtra y la ficha no,
   `get_object` busca en el `QuerySet` entero (`VentaAdmin`, `DT-48`).
+
+- **Dentro del admin no hay reset de Tailwind, y se nota en los botones.** `estilos/admin.css`
+  no trae `preflight` (`DT-36`): cada `<button>` conserva el borde de 2 px y el fondo gris del
+  navegador —los iconos del tema salían recuadrados— y `box-sizing` es `content-box`, así que
+  una navegación con `h-full` y `py-6` medía 48 px más que su barra y «Cerrar sesión» se
+  salía. El reset va acotado al armazón y **con especificidad cero**,
+  `:where(.armazon:not(dialog))`, para que cualquier utilidad le gane; la modal del admin queda
+  fuera porque dentro pinta formularios de Django.
+- **Las reglas del admin escritas a pelo les ganan a las utilidades.** `a:link` pesa (0,1,1) y
+  gana a `text-acento-fuerte`; `p` y `ul > li` dejan sus márgenes y su viñeta. Corregirlo con
+  `.armazon-panel ul > li` es peor: pesa más que `py-2` y las filas salen pegadas. Lo que
+  funciona es **empatar** —`:where(.armazon-panel) ul > li`, que pesa lo mismo que la regla del
+  admin y gana por venir después— y dejar que las utilidades ganen a las dos.
+- **Lo que `base.html` hace antes de pintar no le llega al admin**, que cuelga de
+  `admin/base.html` y no de `base.html`. El tema elegido no se aplicaba: el selector marcaba
+  «claro» y la pantalla salía en oscuro. El script vive en `partials/tema-inicial.html` y lo
+  incluyen las dos bases.
 
 ---
 
@@ -321,6 +348,19 @@ Cómo mirar sin que lo que se mira engañe.
   probar nada. Lo que funciona es adelantar el reloj del generador —`mock.patch.object(
   PasswordResetTokenGenerator, "_now", …)`— más allá de la caducidad, con su contraprueba
   antes de ella. Pasó con `HU-62`.
+
+- **`django.test.Client` en `manage.py shell` necesita `HTTP_HOST="localhost"`.** Sin él, cada
+  petición da `DisallowedHost` y la salida son trazas, no códigos: el ejecutor de pruebas añade
+  `testserver` a `ALLOWED_HOSTS` y el shell no.
+- **`page.route` llama al manejador con `(ruta, petición)`.** Una `lambda ruta, n=caso: …`
+  recibe la petición en `n` y revienta con un `KeyError` que parece del diccionario de
+  respuestas. Se usa una función que cierre sobre el caso.
+- **El `404` de la consola es `/favicon.ico`.** Lo pide el navegador en cada página, y
+  Playwright no lo reporta como respuesta de la página: no es un fallo de la pantalla que se
+  está mirando.
+- **Una mutación que no tumba ninguna prueba puede no haber cambiado nada.** `actor if False
+  else actor` sigue siendo `actor`: la contraprueba «pasó» y parecía que faltaba una prueba. Antes
+  de concluirlo, confirma que la mutación altera el comportamiento.
 
 ---
 

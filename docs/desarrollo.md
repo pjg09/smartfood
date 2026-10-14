@@ -521,6 +521,13 @@ y no acordarse de ellos. Cuenta como infraestructura:
 | Un servicio nuevo —una cola, una caché— | `compose.yaml`, con su `healthcheck` y su `depends_on` |
 | Una hoja de estilos nueva | `docker/vigilar-estilos.sh` |
 
+**`compose.yaml` y el `Dockerfile` solo pueden citar los dos scripts de arranque** de
+`docker/` —`arrancar-aplicacion.sh` y `vigilar-estilos.sh`—: `config/tests_contenedor.py`
+falla si nombran otro. `docker/comprobar-desde-cero.sh` corre en el host, así que se cita
+desde aquí y no desde ellos. Dos cosas que tu máquina no detecta y el script sí —una imagen
+que ya no existe en el registro y una clave que solo conoce tu Compose— están en `[S5]` de
+`./trampas-del-stack.md`.
+
 **Dos cosas lo vigilan**, y la segunda depende de acordarse de correrla (`DT-39`):
 
 - **`config/tests_contenedor.py`**, dentro de la suite: una variable obligatoria que el compose

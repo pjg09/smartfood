@@ -360,9 +360,18 @@ Cuatro decisiones que se copian con ella:
 
 ### [S2.11] Validación en vivo
 
-Los campos obligatorios de una ficha **dicen en rojo, debajo, qué les falta** mientras estén
-vacíos o no cumplan, y el botón de guardar está deshabilitado hasta que cumplen todos. Se
-copia de `templates/personas/partials/ficha-campos.html`, y lo mueve `assets/js/interfaz.js`.
+Los campos de una ficha **dicen en rojo, debajo, qué les falta** cuando no cumplen, y el botón
+de guardar está deshabilitado hasta que cumplen todos. Se copia de
+`templates/personas/partials/ficha-campos.html` —o, con números, de
+`templates/inventario/partials/ficha-del-producto.html`—, y lo mueve `assets/js/interfaz.js`.
+
+| Atributo | Qué comprueba |
+|---|---|
+| `data-validar` | Que el campo entra en la validación. Sin `data-aviso-vacio`, vacío vale: es opcional |
+| `data-minimo`, `data-maximo` | Longitudes, con `data-aviso-corto` y `data-aviso-largo` |
+| `data-numero="entero"` o `"decimal"` | Solo dígitos, o dígitos con punto y hasta dos decimales. **Sin signo**, con `data-aviso-numero` (`DT-50`) |
+| `data-no-mas-que="#id"` | Que no supere a otro campo, con `data-aviso-mayor`: las saturadas dentro de las grasas totales, los azúcares dentro de los carbohidratos —las `CheckConstraint` de `Producto`— |
+| `data-solo-digitos` | No avisa: **borra al teclear** lo que no sea un dígito. Para cantidades del inventario, donde un «-» escrito a mano es justo el error que el tipo evita |
 
 - **Es una comodidad, no la regla** (`DT-15`). El servidor rechaza igual lo que esto deje
   pasar, y vuelve la ficha con su error junto al campo.
@@ -372,6 +381,12 @@ copia de `templates/personas/partials/ficha-campos.html`, y lo mueve `assets/js/
   del servidor no pueden pedir cosas distintas.
 - **El error del servidor se borra en cuanto se toca el campo**: se refería a lo que había
   antes, y deja de ser verdad.
+- **Un campo vacío que nadie ha tocado no se pinta en rojo**, aunque cuente para apagar el
+  botón: una ficha recién abierta llena de avisos riñe a quien todavía no ha escrito nada. El
+  campo pasa a avisar cuando se toca (`data-tocado`, lo pone el script).
+- **Un número se pinta sin localizar.** Un `Decimal` en el `value` sale «3450,00» y el
+  formulario no lo acepta de vuelta; el valor inicial va como texto con punto (`DT-50`,
+  `[S3.8]` de `./escribir-pruebas.md`).
 - **Un formulario incompleto no es un hueco.** El botón deshabilitado de `[S2.4]` y `[S4]` está
   prohibido porque promete una función que no existe; este dice que a **esa ficha** le falta
   algo, y cada campo dice qué. Por eso es un botón deshabilitado y no un bloque punteado.

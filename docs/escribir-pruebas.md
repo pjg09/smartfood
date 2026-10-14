@@ -10,10 +10,10 @@
 | documentos_fuente | `../CLAUDE.md`, de donde sale; `./definicion-de-terminado.md` (`DoD-5`); `./trampas-del-stack.md` (`[S4]`); `./decisiones-tecnicas.md` (`DT-37`) |
 | actualizado | 2026-10-01 |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 **Léelo antes de escribir o tocar una prueba.** Recoge dónde va, cómo se ejecuta y
-**siete patrones** que el proyecto aprendió a fuerza de pruebas que pasaban sin probar nada,
+**ocho patrones** que el proyecto aprendió a fuerza de pruebas que pasaban sin probar nada,
 o que fallaban por un motivo que no era el suyo.
 
 Salió de `CLAUDE.md` el 2026-10-01: con el producto terminado se escriben pocas pruebas
@@ -64,9 +64,14 @@ que sí está. Sin ella, una expresión mal escrita que no encuentra nada pasa p
 garantía. `config/tests_contenedor.py` y `config/tests_descubrimiento.py` empiezan por la
 suya.
 
+**Y confirma que la mutación cambia algo.** Una que no tumba ninguna prueba puede ser una
+regla sin guardián, o una mutación que no altera nada: `actor if False else actor` sigue
+siendo `actor`, y la contraprueba «pasó» sin haber probado nada. Antes de escribir la prueba
+que falta, comprueba que la mutación cambia el comportamiento.
+
 ---
 
-## [S3] Siete patrones
+## [S3] Ocho patrones
 
 ### [S3.1] El correo sale al confirmar la transacción
 
@@ -163,6 +168,20 @@ Las pruebas usan `override_settings(STORAGES=…)` con `InMemoryStorage`. Por es
 almacenamiento a la definición de la clase, y el `override` no le llega. La firma contra la
 dirección pública se prueba sin servidor, porque prefirmar es un cálculo local
 (`config/tests_almacenamiento.py`).
+
+### [S3.8] Una ficha de edición se prueba de ida y vuelta
+
+Se abre la ficha con un `GET`, se lee lo que el navegador enviaría —los `value` de los
+campos, las casillas marcadas, la opción elegida— y se devuelve **tal cual** con un `POST`.
+Tiene que guardar sin errores y sin cambiar nada. La pieza está en
+`test_guardar_la_ficha_tal_como_llega_no_falla_ni_cambia_nada` de
+`catalogo/tests_catalogo.py`, con un `HTMLParser` de veinte líneas.
+
+**Las pruebas que mandan sus propios datos no lo ven.** La ficha del producto pintaba el
+precio como «3450,00» —Django localiza un `Decimal` al pintarlo— y el formulario no acepta
+la coma: guardar sin tocar el precio fallaba siempre, con la suite en verde (`DT-50`). Lo
+mismo cubre la otra mitad del caso: un campo que la ficha no trae marcado y el servicio
+reemplaza —los alérgenos declarados (`INV-5`)— se borraría al guardar.
 
 ---
 
