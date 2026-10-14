@@ -1,0 +1,34 @@
+{% comment %} El tema y el estado de la barra lateral, antes del primer píxel (DT-23).
+
+   **Va antes de la hoja de estilos y sin `defer`, a propósito.** Es lo único de
+   esta aplicación que tiene que correr antes de que el navegador pinte: si el
+   tema se aplicara desde `interfaz.js`, quien tiene el tema oscuro vería un
+   fogonazo blanco en cada navegación. Son seis líneas y no pueden vivir en el
+   fichero diferido.
+
+   `data-tema` sólo se pone si hay elección explícita; su ausencia significa
+   «lo que diga el sistema», que es lo que resuelve la media query.
+
+   **Es un fragmento porque lo incluyen dos plantillas que no comparten tronco**:
+   `base.html` y `admin/base_site.html`, que cuelga de la base de Django. Cuando
+   vivía solo en `base.html`, el admin nunca recibía `data-tema` al cargar: con
+   el sistema en oscuro y «claro» elegido, el selector marcaba claro —lo lee de
+   `localStorage`— y la pantalla se pintaba en oscuro, porque `tokens.css`
+   seguía a la media query. `interfaz.js` solo escribe el atributo al pulsar.
+{% endcomment %}
+  <script>
+    (function () {
+      try {
+        var tema = localStorage.getItem("smartfood:tema");
+        if (tema === "claro" || tema === "oscuro") {
+          document.documentElement.setAttribute("data-tema", tema);
+        }
+        if (localStorage.getItem("smartfood:barra-colapsada") === "si") {
+          document.documentElement.setAttribute("data-barra-colapsada", "si");
+        }
+      } catch (e) {
+        /* Navegación privada con el almacenamiento bloqueado: se queda el tema
+           del sistema, que es el valor por defecto y no rompe nada. */
+      }
+    })();
+  </script>

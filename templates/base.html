@@ -25,31 +25,9 @@
   <meta name="color-scheme" content="light dark">
   <title>{% block titulo %}SmartFood{% endblock %}</title>
 
-  {% comment %} **Va antes de la hoja de estilos y sin `defer`, a propósito.**
-
-     Es lo único de esta aplicación que tiene que correr antes de que el navegador
-     pinte el primer píxel: si el tema se aplicara desde `interfaz.js`, quien tiene
-     el tema oscuro vería un fogonazo blanco en cada navegación. Son seis líneas y
-     no pueden vivir en el fichero diferido.
-
-     `data-tema` sólo se pone si hay elección explícita; su ausencia significa
-     «lo que diga el sistema», que es lo que resuelve la media query. {% endcomment %}
-  <script>
-    (function () {
-      try {
-        var tema = localStorage.getItem("smartfood:tema");
-        if (tema === "claro" || tema === "oscuro") {
-          document.documentElement.setAttribute("data-tema", tema);
-        }
-        if (localStorage.getItem("smartfood:barra-colapsada") === "si") {
-          document.documentElement.setAttribute("data-barra-colapsada", "si");
-        }
-      } catch (e) {
-        /* Navegación privada con el almacenamiento bloqueado: se queda el tema
-           del sistema, que es el valor por defecto y no rompe nada. */
-      }
-    })();
-  </script>
+  {% comment %} El tema y la barra, antes de pintar. **Va antes de la hoja de estilos y
+     sin `defer`**: el porqué está en el fragmento, que comparte con el admin. {% endcomment %}
+  {% include "partials/tema-inicial.html" %}
 
   <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
   {% comment %} Vendorizado, sin CDN: la hoja de estilos y los scripts del prototipo no

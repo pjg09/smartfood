@@ -38,6 +38,10 @@
 {% endblock %}
 
 {% block extrahead %}{{ block.super }}
+  {% comment %} El tema elegido, antes de pintar: el mismo fragmento que `base.html`. Sin
+     él, el admin se pintaba con el tema del sistema aunque el selector marcara
+     otro (el porqué, en el fragmento). {% endcomment %}
+  {% include "partials/tema-inicial.html" %}
   {% comment %} El script del armazón: es quien abre y cierra la barra lateral y recuerda
      su estado. Sin él, el botón de las tres rayas no hace nada. {% endcomment %}
   <script src="{% static 'js/interfaz.js' %}" defer></script>

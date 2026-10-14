@@ -226,6 +226,23 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.assertIn("data-alternar-barra", cuerpo)
         self.assertIn("data-modal-admin", cuerpo)
 
+    def test_y_aplica_el_tema_elegido_antes_de_pintar(self):
+        """El script que pone `data-tema` va en el `<head>` del admin también.
+
+        Vivía solo en `base.html`, y el admin no cuelga de ella: con el sistema
+        en oscuro y «claro» elegido, el selector marcaba claro —lo lee de
+        `localStorage`— y la pantalla se pintaba en oscuro. Ninguna prueba lo
+        veía porque la pantalla respondía 200 y traía el selector.
+        """
+        respuesta = self.client.get("/admin/personas/acudiente/")
+        cuerpo = respuesta.content.decode()
+
+        self.assertTemplateUsed(respuesta, "partials/tema-inicial.html")
+        self.assertIn('localStorage.getItem("smartfood:tema")', cuerpo)
+        self.assertLess(
+            cuerpo.index('localStorage.getItem("smartfood:tema")'), cuerpo.index("</head>")
+        )
+
     def test_y_trae_las_entradas_del_rol_que_mira(self):
         """La barra del admin es la misma del resto, no una copia.
 
