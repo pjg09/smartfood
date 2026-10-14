@@ -131,14 +131,17 @@ MENU_POR_ROL = {
     # `USR-4`: la cafetería. El catálogo y el inventario son lo que administra;
     # ventas, cierres y auditoría, lo que consulta. La cola de reservas no vive
     # en el admin (`DT-34`) y va con lo demás igualmente.
+    #
+    # **Una sola entrada para el inventario** (`DEC-25`, `DT-50`): productos,
+    # ingresos, mermas y el libro de cada producto viven en `/inventario/`. Antes
+    # eran tres entradas del admin para tocar lo mismo. El reporte de
+    # movimientos (`HU-36`) se abre desde esa pantalla, no desde el menú.
     Rol.ADMINISTRADOR: (
         Entrada("panel-de-la-cafeteria", "Panel", "i-grafica"),
         Entrada("reservas", "Reservas", "i-cafeteria"),
-        _del_admin("catalogo_producto", "Productos", "i-manzana"),
+        Entrada("inventario", "Inventario", "i-inventario"),
         _del_admin("catalogo_categoria", "Categorías", "i-etiqueta"),
         _del_admin("catalogo_alergeno", "Alérgenos", "i-alerta"),
-        _del_admin("inventario_movimientoinventario", "Inventario", "i-inventario"),
-        _del_admin("inventario_merma", "Mermas", "i-restriccion"),
         _del_admin("ventas_venta", "Ventas", "i-recibo"),
         _del_admin("ventas_cierredecaja", "Cierres de caja", "i-efectivo"),
         Entrada("restricciones-de-estudiantes", "Restricciones", "i-escudo"),

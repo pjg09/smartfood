@@ -251,17 +251,31 @@ class SinImagenElProductoSeVendeIgualTest(BaseDeImagen):
     def test_esta_en_el_catalogo(self):
         self.assertIn(self.producto, productos_en_el_catalogo())
 
-    def test_la_ficha_lo_dice_en_vez_de_dejar_un_hueco(self):
+    def test_la_lista_pone_la_inicial_en_vez_de_dejar_un_hueco(self):
+        """`/inventario/` (`DT-50`): sin imagen, la fila lleva la inicial."""
         self.client.force_login(self.actor)
-        respuesta = self.client.get(
-            reverse("admin:catalogo_producto_change", args=[self.producto.pk])
-        )
-        self.assertContains(respuesta, "se vende igual")
+        respuesta = self.client.get(reverse("lista-del-inventario"))
 
-    def test_el_listado_dice_quien_tiene_imagen(self):
+        self.assertNotContains(respuesta, "<img")
+        self.assertContains(respuesta, "data-producto=")
+
+    def test_la_lista_ensena_la_imagen_cuando_la_hay(self):
+        self.subir()
+        self.producto.refresh_from_db()
         self.client.force_login(self.actor)
-        respuesta = self.client.get(reverse("admin:catalogo_producto_changelist"))
-        self.assertEqual(respuesta.status_code, 200)
+
+        respuesta = self.client.get(reverse("lista-del-inventario"))
+
+        self.assertContains(respuesta, self.producto.url_de_la_imagen)
+        # Y se amplía en la modal del armazón (`[S2.13]`), como en la reserva.
+        self.assertContains(respuesta, f'data-ampliar-imagen="{self.producto.nombre}"')
+
+    def test_sin_imagen_no_hay_nada_que_ampliar(self):
+        self.client.force_login(self.actor)
+
+        respuesta = self.client.get(reverse("lista-del-inventario"))
+
+        self.assertNotContains(respuesta, "data-ampliar-imagen")
 
 
 class SoloLaAdministracionCargaLaImagenTest(BaseDeImagen):
@@ -278,11 +292,12 @@ class SoloLaAdministracionCargaLaImagenTest(BaseDeImagen):
 
 
 class LaCargaDesdeLaFichaTest(BaseDeImagen):
-    """`TT-54`."""
+    """`TT-54`, desde `DT-50` en la ficha de `/inventario/`."""
 
     def setUp(self):
         super().setUp()
         self.client.force_login(self.actor)
+        self.url = reverse("edicion-del-producto", args=[self.producto.pk])
 
     def _cambiar(self, **extra):
         datos = {
@@ -293,32 +308,27 @@ class LaCargaDesdeLaFichaTest(BaseDeImagen):
             **extra,
         }
         with self.captureOnCommitCallbacks(execute=True):
-            return self.client.post(
-                reverse("admin:catalogo_producto_change", args=[self.producto.pk]),
-                datos,
-            )
+            return self.client.post(self.url, datos)
 
     def test_la_ficha_ofrece_el_campo(self):
-        cuerpo = self.client.get(
-            reverse("admin:catalogo_producto_change", args=[self.producto.pk])
-        ).content.decode()
+        cuerpo = self.client.get(self.url).content.decode()
         self.assertIn('name="imagen"', cuerpo)
 
     def test_subirla_desde_la_ficha(self):
         respuesta = self._cambiar(imagen=archivo())
-        self.assertEqual(respuesta.status_code, 302)
+        self.assertContains(respuesta, 'data-estado="guardado"')
 
         self.producto.refresh_from_db()
         self.assertTrue(self.producto.tiene_imagen)
 
     def test_la_ficha_la_muestra_despues(self):
         self._cambiar(imagen=archivo())
-        cuerpo = self.client.get(
-            reverse("admin:catalogo_producto_change", args=[self.producto.pk])
-        ).content.decode()
+        self.producto.refresh_from_db()
 
-        self.assertIn("<img", cuerpo)
-        self.assertIn("Imagen de Empanada de carne", cuerpo)
+        cuerpo = self.client.get(self.url).content.decode()
+
+        self.assertIn(self.producto.url_de_la_imagen, cuerpo)
+        self.assertIn('name="quitar_imagen"', cuerpo)
 
     def test_se_quita_marcando_la_casilla(self):
         self._cambiar(imagen=archivo())
@@ -328,11 +338,14 @@ class LaCargaDesdeLaFichaTest(BaseDeImagen):
         self.assertFalse(self.producto.tiene_imagen)
 
     def test_un_formato_no_aceptado_avisa_pero_no_tira_la_edicion(self):
+        """`HU-59`: la imagen no es obligatoria, así que su fallo no deshace el
+        resto. Vuelve como error de su campo, con lo demás guardado."""
         respuesta = self._cambiar(
             nombre="Empanada de pollo",
             imagen=archivo(imagen(formato="TIFF"), "empanada.tiff", "image/tiff"),
         )
-        self.assertEqual(respuesta.status_code, 302)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "data-error-del-servidor")
 
         self.producto.refresh_from_db()
         self.assertFalse(self.producto.tiene_imagen)

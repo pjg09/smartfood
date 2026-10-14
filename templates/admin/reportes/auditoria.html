@@ -97,15 +97,13 @@ Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado.
 
       {% if resumen.sin_actor %}
         {% comment %} El hueco declarado, arriba y no escondido en una celda. No es un
-           fallo: `MovimientoInventario` no guarda quién, y sus dos operaciones
-           —ingreso y merma— son exactamente estas. Está en el `ANEXO B` de
-           `decisiones-de-alcance.md`. {% endcomment %}
+           fallo: hasta `HU-69` el libro de inventario no guardaba quién, y los
+           ingresos y mermas de entonces son exactamente estos. {% endcomment %}
         <p style="margin:0 0 1.25rem;max-width:70ch" data-sin-actor>
           <strong>{{ resumen.sin_actor }}</strong>
           operacion{{ resumen.sin_actor|pluralize:"es" }} sin actor registrado. No es un
-          fallo de este reporte: el libro de inventario guarda qué se movió y cuándo, pero
-          no quién lo registró, así que el ingreso de mercancía y la merma no pueden
-          decirlo. Es una limitación conocida del prototipo.
+          fallo de este reporte: son ingresos o mermas anteriores a que el libro de
+          inventario guardara quién los registró, y no se les atribuye un autor a posteriori.
         </p>
       {% endif %}
 

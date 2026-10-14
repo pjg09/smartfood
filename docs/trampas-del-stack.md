@@ -10,7 +10,7 @@
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.3 |
+| version | 1.4 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -129,6 +129,13 @@ y un puntero a este fichero. El resto está aquí, agrupado por dónde muerde.
   botón dentro de un formulario los declara él mismo.
 - **Los acentos graves de Markdown no son nada en una plantilla.** `` `HU-25` `` se sirve con
   las comillas puestas. Dentro de `{% comment %}` da igual; en el texto visible, no.
+- **Un `Decimal` pintado en el `value` de un campo sale localizado, y el formulario no lo
+  acepta de vuelta.** `{{ campo.value }}` con `Decimal("3450.00")` pinta «3450,00» —el
+  idioma es `es`—, y un `DecimalField` sin `localize=True` solo entiende el punto: **guardar
+  la ficha sin tocar el precio fallaba**. Las pruebas no lo veían porque mandaban sus propios
+  datos. En `/inventario/` el valor inicial va como texto normalizado (`_sin_ceros` de
+  `inventario/views.py`), y lo vigila una prueba que devuelve la ficha tal como llega
+  (`DT-50`).
 
 ---
 

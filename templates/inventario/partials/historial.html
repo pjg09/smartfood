@@ -1,0 +1,75 @@
+{% comment %} DT-50. El libro de un producto, en la modal (`HU-29`, `INV-3`).
+
+   Del más reciente al más antiguo, que es como se lee un extracto. Cada línea suma o
+   resta, y **el total de arriba sale por otro camino**: `existencias_de` es un `SUM` de
+   la base y `suma` la cuenta de estas mismas líneas en Python. Si un día no
+   coincidieran, la modal lo dice en vez de esconderlo — es `TST-4` puesto donde lo ve
+   un humano, como hacía la pantalla del admin a la que sustituye (`TT-141`).
+
+   Quién: lo que registró el libro (`HU-69`); en lo escrito antes, el cajero de la
+   venta, y en un ingreso o una merma de entonces, «sin registrar», que es la verdad.
+{% endcomment %}
+<div data-historial-del-producto class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Historial de {{ producto.nombre }}</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+    <p class="text-base text-texto-suave">
+      Cada línea suma o resta. El total es exactamente las existencias de hoy:
+      <strong class="font-semibold text-texto" data-existencias-del-historial>{{ existencias }}</strong>.
+    </p>
+
+    {% if suma != existencias %}
+      <p role="alert" data-historial-descuadrado
+         class="rounded-md border border-error bg-error-suave px-3 py-2 text-sm text-error-fuerte">
+        Las líneas suman {{ suma }} y las existencias dicen {{ existencias }}. Eso no debería pasar
+        nunca (INV-3): avisa al equipo.
+      </p>
+    {% endif %}
+
+    {% if movimientos %}
+      <ul class="flex flex-col gap-2">
+        {% for movimiento in movimientos %}
+          <li data-movimiento="{{ movimiento.tipo }}"
+              class="flex items-start justify-between gap-4 rounded-md border border-borde p-3">
+            <div class="flex min-w-0 flex-col gap-0.5">
+              <span class="text-base font-semibold text-texto">
+                {% if movimiento.tipo == "venta" and movimiento.venta.estudiante_id and not movimiento.venta.cajero_id %}Entrega de un pedido{% else %}{{ movimiento.get_tipo_display }}{% endif %}
+              </span>
+              <span class="text-sm text-texto-suave">
+                {{ movimiento.creado_en|date:"j" }} de {{ movimiento.creado_en|date:"M"|lower }} de
+                {{ movimiento.creado_en|date:"Y, H:i" }} ·
+                {% if movimiento.responsable %}{{ movimiento.responsable }}{% else %}<span data-sin-responsable>sin registrar</span>{% endif %}
+              </span>
+              {% if movimiento.motivo %}
+                <span class="text-sm break-words text-texto">{{ movimiento.motivo }}</span>
+              {% endif %}
+            </div>
+            <span class="shrink-0 font-display text-lg tabular-nums {% if movimiento.cantidad > 0 %}text-exito-fuerte{% else %}text-error-fuerte{% endif %}">
+              {% if movimiento.cantidad > 0 %}+{% endif %}{{ movimiento.cantidad }}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="rounded-md border border-dashed border-borde p-6 text-center text-sm text-texto-suave">
+        Sin movimientos todavía: sus existencias son cero. Regístralas con «Ajustar».
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="flex justify-end border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Cerrar
+    </button>
+  </div>
+</div>

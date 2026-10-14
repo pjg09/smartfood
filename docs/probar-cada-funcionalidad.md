@@ -146,10 +146,17 @@ caduca en cinco minutos (`DT-18`, `DT-21`).
 **En el prototipo son avatares generados, nunca personas reales** (`INVD-6`,
 `ALC-OUT-07`). No es una preferencia: es la Ley 1581 de 2012 sobre datos de menores.
 
-## [S7] Cargar la imagen de un producto
+## [S7] Dar de alta un producto, editarlo y cargar su imagen
 
-En la ficha del producto, campo **Imagen**. Es opcional: sin ella el producto se vende
-igual (`HU-59`).
+Como administración, en **Inventario** (`DEC-25`): **Nuevo producto** abre la modal; el
+lápiz de cada fila abre la misma, con lo que el producto tiene. Se rellena la imagen, el
+nombre, el precio, la categoría, los alérgenos que contiene y la información nutricional
+(`HU-26`). **«Guardar» está apagado mientras quede algo mal**: un precio con coma o con
+signo, unas grasas saturadas por encima de las totales, unos azúcares por encima de los
+carbohidratos. El servidor lo rechaza igual si se fuerza, y la base, si el servidor no lo
+viera. Un producto nuevo entra con **cero unidades**: se ingresan con *Ajustar* (`[S12]`).
+
+La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y
 se reduce (`DT-20`)— pero va al prefijo `publico/`, que significa **no sensible**, no
@@ -232,26 +239,28 @@ de existencias (`[S11]`) con la venta que lo originó. El compromiso ya estaba c
 
 ## [S11] Averiguar de dónde salen unas existencias
 
-En el listado de productos del admin, **la cifra de la columna «existencias» es un enlace**.
-Lleva a una pantalla con esa misma cifra y, debajo, los movimientos que la suman: fecha,
-tipo, cantidad con su signo, qué lo explica —el motivo, o la venta si salió por una— y las
-**existencias que quedaban tras cada movimiento**.
+En **Inventario**, **Historial** en la fila del producto (`HU-29`). Abre una modal con las
+existencias de hoy y, debajo, cada movimiento del más reciente al más antiguo: el tipo, la
+fecha, **quién lo registró** (`HU-69`), el motivo y la cantidad con su signo.
 
-Esa última columna es la que sirve para auditar (`HU-29`): se sigue de abajo arriba y tiene
-que terminar en la cifra grande. Si no terminara, el renglón donde se tuerce es el problema.
+**Las dos cifras salen de caminos distintos a propósito.** El total de arriba es un `SUM` de
+PostgreSQL; la suma de las líneas se calcula en Python al pintar. Si no coincidieran, la
+modal lo dice en rojo — no debería pasar nunca (`INV-3`, `TST-4`). No se guarda ningún
+acumulado: sería la segunda fuente de verdad que `DT-5` evita.
 
-**Las dos cifras salen de caminos distintos a propósito.** La de arriba es un `SUM` de
-PostgreSQL; la columna se calcula en Python al pintar. No se guarda ningún acumulado: un
-acumulado almacenado sería la segunda fuente de verdad que `DT-5` evita, y la que acabaría
-discrepando del historial.
+**Quién**: la administración en un ingreso o una merma, el cajero en una venta, quien
+entregó en la entrega de un pedido. Los ingresos y las mermas anteriores al 2026-10-14 dicen
+«sin registrar»: el libro no lo guardaba, y no se le inventa un autor.
 
-## [S12] Dar de baja unidades que se perdieron
+## [S12] Ingresar mercancía o dar de baja unidades que se perdieron
 
-En el admin, entrada **Mermas** → *Añadir merma*. Tres campos: producto, **unidades
-perdidas** —en positivo— y **motivo**, que es obligatorio (`HU-28`, `INV-8`).
+En **Inventario**, **Ajustar** en la fila del producto. La modal sale en **Ingreso**; se
+cambia a **Merma** con el botón de al lado. Dos campos: las **unidades**, siempre en
+positivo, y el **motivo**, que es obligatorio en los dos (`HU-27`, `HU-28`, `INV-8`,
+`HU-29`). El campo de unidades **solo admite dígitos**: un «-» se borra al escribirlo.
 
-Es una entrada distinta de *Movimientos de inventario*, donde se registran los ingresos.
-Las dos escriben en el mismo libro: la merma es un proxy, no otra tabla.
+Al registrar, la modal dice lo que se hizo y cuántas quedan, y las cifras y la lista de
+detrás se actualizan solas.
 
 **Se pregunta en positivo y se asienta en negativo.** El servicio pone el signo, no quien
 registra: un «3» donde iba «-3» **sumaría** existencias que nadie ingresó, y el libro lo

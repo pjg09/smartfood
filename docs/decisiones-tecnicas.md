@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` el 2026-10-14 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` y `DT-50` el 2026-10-14 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 49 (`DT-1` … `DT-49`) |
+| decisiones | 50 (`DT-1` … `DT-50`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-49`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-50`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1055,3 +1055,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **La cafetería cancela desde esa modal**, como el acudiente: `POST /reservas/<pedido>/cancelar/` devuelve la modal —con el error o ya cancelada— y `HX-Trigger: pedidos-cambiado`, que repinta el tablero entero con su filtro (`DT-16`, `DT-40`). **La página de confirmación desaparece**; el `GET` de esa ruta responde `405`.
 
 **Por qué no basta con la página de confirmación.** Llevaba al personal fuera de la lista para cada pedido y lo devolvía con una redirección, y la confirmación que daba —el pedido y lo que se devuelve antes de pedir el motivo— ya la da la modal. Dos maneras de cancelar el mismo pedido según quién cancele acabarían diciendo cosas distintas.
+
+#### `[DT-50]` `/inventario/`: una pantalla propia sobre el armazón de la aplicación, con el libro firmado
+
+**Obliga:** `DEC-25` y `HU-69`. **Amplía** `DT-34`: es otra pantalla propia de la administración fuera del admin, junto al padrón (`DT-27`), la cola de reservas, los acudientes y `/usuarios/` (`DT-45`).
+
+**Decidido:**
+
+- **La pantalla vive en `base-aplicacion.html` y no dentro del admin.** Sus modales necesitan el sistema visual entero —formularios, interruptores, botones—, y el admin carga Tailwind sin `preflight` (`DT-36`): cada campo pelearía con los estilos de Django. Las vistas están en `inventario/views.py`, con sus dos formularios, como el padrón tiene los suyos.
+- **Ninguna vista escribe** (`DT-15`). Crear y editar llaman a `catalogo.services`; ingresar y mermar, a `inventario.services`. Las lecturas son selectores nuevos de `inventario.selectors` —`tablero_del_inventario`, `productos_del_inventario`, `historial_del_producto`—, que exigen el rol antes de leer.
+- **Una escritura responde con la misma modal y `HX-Trigger: inventario-cambiado`**; las cifras y la lista lo escuchan y se vuelven a pedir con los filtros que haya (`DT-16`, `DT-40`). Devolver al catálogo responde `204` y deja que la lista se repinte sola.
+- **`MovimientoInventario.registrado_por`**, clave ajena nula al usuario con `PROTECT`. **Nula solo por lo escrito antes**: no se puede imponer con una `CheckConstraint` sin inventar autores para esas filas, así que lo exige `asentar`, que es el único punto de escritura del libro, con el argumento sin valor por defecto. `ingresar_mercancia`, `registrar_merma`, `registrar_venta` y `entregar` le pasan su actor. En el historial, lo antiguo sin quién toma el cajero de la venta o quien entregó el pedido; un ingreso o una merma antiguos dicen «sin registrar».
+- **La validación en vivo del padrón se reutiliza y se amplía** (`assets/js/interfaz.js`): `data-numero` —entero o decimal, sin signo—, `data-no-mas-que` —las saturadas dentro de las grasas totales, los azúcares dentro de los carbohidratos, las dos `CheckConstraint` de `Producto`—, `data-solo-digitos` para las cantidades, y **un campo vacío no se pinta en rojo hasta que se toca**, aunque «Guardar» siga apagado.
+- **La ficha pinta los decimales sin localizar** (`3450`, `3.2`): Django localiza un `Decimal` al pintarlo —«3450,00»— y el formulario no acepta la coma de vuelta, así que guardar sin tocar el precio fallaba. Lo vigila una prueba que devuelve la ficha tal como llega.
+- **El admin pierde `ProductoAdmin`, `MermaAdmin` y la vista de historial de `TT-141`**; `MovimientoInventarioAdmin` queda sin alta, edición ni borrado. El proxy `Merma` sigue en el modelo: sus permisos no cambian y una migración no se deshace por quitar una pantalla.
+- **`UMBRAL_DE_EXISTENCIAS_BAJAS` se mueve a `inventario.selectors`**, de quien es el dato: lo usan el panel y esta pantalla, y dos umbrales acabarían avisando de cosas distintas.
+
+**Por qué no un «ajuste» con signo.** El libro ya impone que el ingreso sume y la merma reste (`movimiento_inventario_signo_segun_tipo`). Un tercer tipo con signo libre sería una disminución manual que no es merma, y `INV-8` —toda disminución manual lleva motivo— tendría que repetirse en otra restricción para no abrir un camino sin ella.

@@ -650,6 +650,7 @@ def registrar_venta(*, actor, lineas, estudiante=None, medio_pago=None):
             tipo=TipoDeMovimientoDeInventario.VENTA,
             cantidad=-lineas[producto.id],
             venta=venta,
+            registrado_por=actor,
         )
 
     if estudiante is not None:
@@ -907,6 +908,7 @@ def entregar(*, actor, pedido):
             tipo=TipoDeMovimientoDeInventario.VENTA,
             cantidad=-linea.cantidad,
             venta=bloqueado.venta,
+            registrado_por=actor,
         )
 
     # **Y aquí NO va el saldo.** Segundo criterio de `HU-25`.

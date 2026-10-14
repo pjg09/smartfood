@@ -303,8 +303,8 @@ siendo suyo: `estilos/admin.css` los viste con estas mismas composiciones —la 
 que es la tabla de referencia. Lo que no se puede conseguir con CSS sobre su marcado se queda
 como está: reescribir sus 89 pantallas es lo que `DT-2` decidió no hacer.
 
-Los consolidados antiguos —`admin/catalogo/producto/historial.html`— siguen escritos con las
-clases del admin y no hay ninguna prisa por reescribirlos.
+Los consolidados antiguos —los de los reportes de ventas y de movimientos de inventario—
+siguen escritos con las clases del admin y no hay ninguna prisa por reescribirlos.
 
 La forma es siempre la misma: **la cifra grande**, al lado **una frase que dice de dónde
 sale** —y que cambia con los filtros de la pantalla—, y debajo **tablas de desglose**.

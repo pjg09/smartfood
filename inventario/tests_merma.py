@@ -367,12 +367,9 @@ class SeValidaDentroDelBloqueoTest(TestCase):
 
 
 class LaInterfazAdministrativaTest(TestCase):
-    """`TT-139`. `INT-3` es el admin (`DT-2`), y el admin es una vista (`DT-15`)."""
+    """`TT-139`, y desde `DT-50` la modal de `/inventario/`, que es una vista (`DT-15`)."""
 
     def setUp(self):
-        # Por el camino real: `crear_cuenta` asigna el grupo del rol y los
-        # permisos van al grupo (`TT-15`). Poner `is_staff` a mano dejaría una
-        # cuenta que entra al admin sin ningún permiso.
         sincronizar_grupos_y_permisos()
         self.administracion = crear_cuenta(
             email="admin5@example.com",
@@ -386,90 +383,49 @@ class LaInterfazAdministrativaTest(TestCase):
             actor=self.administracion, producto=self.producto, cantidad=20
         )
         self.client.force_login(self.administracion)
+        self.url = reverse("movimiento-del-producto", args=[self.producto.pk])
 
-    def test_alcanza_el_listado_de_mermas(self):
-        respuesta = self.client.get(reverse("admin:inventario_merma_changelist"))
+    def mermas(self):
+        return MovimientoInventario.objects.filter(tipo=TipoDeMovimientoDeInventario.MERMA)
 
-        self.assertEqual(respuesta.status_code, 200)
-
-    def test_registra_una_merma_desde_el_formulario(self):
-        """De extremo a extremo: el admin delega en el servicio (`DT-15`)."""
+    def test_registra_una_merma_desde_la_modal(self):
+        """De extremo a extremo: la vista delega en el servicio (`DT-15`)."""
         respuesta = self.client.post(
-            reverse("admin:inventario_merma_add"),
-            {
-                "producto": str(self.producto.pk),
-                "cantidad": "3",
-                "motivo": "Se cayó la bandeja",
-            },
+            self.url, {"tipo": "merma", "cantidad": "3", "motivo": "Se cayó la bandeja"}
         )
 
-        self.assertEqual(respuesta.status_code, 302)
+        self.assertContains(respuesta, 'data-movimiento-registrado="merma"')
         self.assertEqual(existencias_de(self.producto), 17)
-
-        movimiento = MovimientoInventario.objects.get(
-            tipo=TipoDeMovimientoDeInventario.MERMA
-        )
+        movimiento = self.mermas().get()
         self.assertEqual(movimiento.cantidad, -3)
         self.assertEqual(movimiento.motivo, "Se cayó la bandeja")
+        self.assertEqual(movimiento.registrado_por, self.administracion)
 
-    def test_el_formulario_exige_el_motivo(self):
-        """Primer criterio de `HU-28`, en la capa de arriba.
-
-        Se afirma sobre el efecto —no se escribió nada— y no sobre el texto del
-        error, que cambia con la redacción de Django.
-        """
-        respuesta = self.client.post(
-            reverse("admin:inventario_merma_add"),
-            {"producto": str(self.producto.pk), "cantidad": "3", "motivo": ""},
-        )
+    def test_la_modal_exige_el_motivo(self):
+        """Primer criterio de `HU-28`, en la capa de arriba. Se afirma sobre el
+        efecto —no se escribió nada— y no sobre el texto del error."""
+        respuesta = self.client.post(self.url, {"tipo": "merma", "cantidad": "3", "motivo": ""})
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertFalse(
-            MovimientoInventario.objects.filter(
-                tipo=TipoDeMovimientoDeInventario.MERMA
-            ).exists()
-        )
+        self.assertFalse(self.mermas().exists())
         self.assertEqual(existencias_de(self.producto), 20)
 
-    def test_el_formulario_no_ofrece_elegir_el_tipo(self):
-        """La entrada se llama «merma» y solo asienta mermas.
-
-        Un selector de tipo aquí dejaría descontar existencias como venta sin
-        que hubiera venta, que es lo que `INV-3` no admite.
-        """
-        cuerpo = self.client.get(
-            reverse("admin:inventario_merma_add")
-        ).content.decode()
-
-        self.assertNotIn('name="tipo"', cuerpo)
-
-    def test_el_formulario_no_acepta_cantidades_negativas(self):
-        respuesta = self.client.post(
-            reverse("admin:inventario_merma_add"),
-            {"producto": str(self.producto.pk), "cantidad": "-3", "motivo": "Rotura"},
-        )
+    def test_la_modal_no_acepta_cantidades_con_signo(self):
+        """La merma ya resta: «-3» no puede querer decir otra cosa que un error."""
+        respuesta = self.client.post(self.url, {"tipo": "merma", "cantidad": "-3", "motivo": "Rotura"})
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(existencias_de(self.producto), 20)
 
-    def test_el_listado_de_mermas_no_enseña_los_ingresos(self):
-        """Un proxy comparte la tabla con su modelo base.
+    def test_mermar_mas_de_lo_que_hay_vuelve_junto_al_campo(self):
+        """La regla del servicio —no dejar existencias negativas— llega a la
+        modal como error de la cantidad, en `200`: HTMX no intercambia un `4xx`."""
+        respuesta = self.client.post(self.url, {"tipo": "merma", "cantidad": "25", "motivo": "Rotura"})
 
-        Sin el filtro de `get_queryset`, la entrada «Mermas» listaría el libro
-        entero y la cifra de cada fila sería la de un movimiento cualquiera.
-        """
-        registrar_merma(
-            actor=self.administracion,
-            producto=self.producto,
-            cantidad=3,
-            motivo="Caducadas",
-        )
-
-        respuesta = self.client.get(reverse("admin:inventario_merma_changelist"))
-        listadas = respuesta.context["cl"].queryset
-
-        self.assertEqual(listadas.count(), 1)
-        self.assertEqual(listadas.get().tipo, TipoDeMovimientoDeInventario.MERMA)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "data-error-del-servidor")
+        self.assertNotIn("HX-Trigger", respuesta)
+        self.assertFalse(self.mermas().exists())
 
     def test_una_merma_registrada_no_se_edita_ni_se_borra(self):
         """`INV-3`: un asiento no se reescribe.
@@ -485,7 +441,14 @@ class LaInterfazAdministrativaTest(TestCase):
 
         self.assertEqual(permisos, {"add_merma", "view_merma"})
 
-    def test_el_cajero_no_alcanza_las_mermas(self):
+    def test_el_admin_ya_no_tiene_entrada_de_mermas(self):
+        """`DEC-25`: la merma se registra en `/inventario/`, junto al producto."""
+        from django.urls import NoReverseMatch
+
+        with self.assertRaises(NoReverseMatch):
+            reverse("admin:inventario_merma_changelist")
+
+    def test_el_cajero_no_alcanza_la_modal(self):
         cajero = crear_cuenta(
             email="cajero2@example.com",
             rol=Rol.CAJERO,
@@ -495,6 +458,7 @@ class LaInterfazAdministrativaTest(TestCase):
         )
         self.client.force_login(cajero)
 
-        respuesta = self.client.get(reverse("admin:inventario_merma_changelist"))
+        respuesta = self.client.post(self.url, {"tipo": "merma", "cantidad": "3", "motivo": "Rotura"})
 
-        self.assertIn(respuesta.status_code, [302, 403])
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertFalse(self.mermas().exists())

@@ -37,7 +37,7 @@ def _comprobar_que_gestiona_el_inventario(actor, accion):
 
 
 @transaction.atomic
-def asentar(*, producto, tipo, cantidad, motivo="", venta=None):
+def asentar(*, producto, tipo, cantidad, registrado_por, motivo="", venta=None):
     """**El único sitio por el que se escribe en el libro** (`TT-67`, `INV-3`).
 
     Devuelve el `MovimientoInventario` creado.
@@ -68,7 +68,20 @@ def asentar(*, producto, tipo, cantidad, motivo="", venta=None):
     es el único camino** por el que el servicio de venta de `TT-80` podrá dejar
     esa referencia.
     ─────────────────────────────────────────────────────────────────────────
+
+    ── `registrado_por` (`HU-69`, `DT-50`) ─────────────────────────────────
+    Quién hizo el asiento: la administración en un ingreso o una merma, el
+    cajero en una venta o una entrega. **Sin valor por defecto**, como el motivo
+    de la merma: quien llama sin él no llega a escribir. La columna admite nulo
+    solo por lo escrito antes de existir, y aquí se cierra la puerta a que se
+    añada más.
+    ─────────────────────────────────────────────────────────────────────────
     """
+    if registrado_por is None:
+        raise ValidationError(
+            "Todo asiento del libro dice quién lo hizo: sin eso, la auditoría no "
+            "puede rastrearlo (HU-69)."
+        )
     if cantidad == 0:
         raise ValidationError("Un movimiento de cero no mueve nada.")
 
@@ -104,6 +117,7 @@ def asentar(*, producto, tipo, cantidad, motivo="", venta=None):
         cantidad=cantidad,
         motivo=motivo.strip(),
         venta=venta,
+        registrado_por=registrado_por,
     )
 
 
@@ -137,6 +151,7 @@ def ingresar_mercancia(*, actor, producto, cantidad, motivo=""):
         tipo=TipoDeMovimientoDeInventario.INGRESO,
         cantidad=cantidad,
         motivo=motivo,
+        registrado_por=actor,
     )
 
 
@@ -228,4 +243,5 @@ def registrar_merma(*, actor, producto, cantidad, motivo):
         tipo=TipoDeMovimientoDeInventario.MERMA,
         cantidad=-cantidad,
         motivo=motivo,
+        registrado_por=actor,
     )

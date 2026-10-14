@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-12; el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-14; el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`); recontada por script: 74 rutas propias y 5 del admin. Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,12 +43,12 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las sesenta y tres rutas
+## [S2] Las setenta y nueve rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **57 rutas propias** que resuelve Django fuera del
-admin, todas, y **6 del admin** que se citan porque las pide alguna historia: se recontaron
-por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna.
+los mismos colores desde `DT-23`. Son las **74 rutas propias** que resuelve Django fuera del
+admin, todas, y **5 del admin** que se citan porque las pide alguna historia: se recontaron
+por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna.
 
 | Ruta | Qué es | Quién | Tarea |
 |---|---|---|---|
@@ -115,13 +115,21 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/reservas/tablero/` | El tablero de esa pantalla, como fragmento: se repinta al cancelar | **Cajero y administración** | `HU-68` |
 | `/reservas/<pedido>/` | El detalle de un pedido en la modal; uno entregado o cancelado, solo la administración | **Cajero y administración** | `HU-68`, `DT-49` |
 | `/reservas/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Cajero y administración** | `HU-67`, `DT-49` |
+| `/inventario/` | El inventario: cifras, filtros y una fila por producto con *Ajustar*, *Historial*, editar y retirar. Sustituye a *Productos*, *Inventario* y *Mermas* del admin | **Solo administración** | `DEC-25`, `DT-50` |
+| `/inventario/cifras/` | Las cuatro cifras de esa pantalla, como fragmento: se repintan tras cada escritura | **Solo administración** | `DT-50` |
+| `/inventario/lista/` | La lista filtrada, como fragmento: la piden los filtros a cada cambio y las escrituras al terminar | **Solo administración** | `DT-50` |
+| `/inventario/productos/nuevo/` | Alta de un producto en la modal: imagen, nombre, precio, categoría, alérgenos e información nutricional | **Solo administración** | `HU-26`, `HU-59` |
+| `/inventario/productos/<id>/editar/` | La misma modal, con lo que el producto tiene; también lo saca o lo devuelve al catálogo | **Solo administración** | `HU-26`, `HU-59` |
+| `/inventario/productos/<id>/movimiento/` | Ingreso o merma, en positivo y con motivo obligatorio | **Solo administración** | `HU-27`, `HU-28` |
+| `/inventario/productos/<id>/historial/` | El libro del producto: cada movimiento con quién lo registró, y el total que suma | **Solo administración** | `HU-29`, `HU-69` |
+| `/inventario/productos/<id>/retirar/` | Confirmar y retirar del catálogo, sin borrar nada; `POST` retira | **Solo administración** | `HU-26` |
+| `/inventario/productos/<id>/devolver/` | `POST`. Devuelve al catálogo un producto retirado | **Solo administración** | `HU-26` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
-| `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
 | `/admin/panel/` | Panel de la cafetería: la jornada, existencias por agotarse y el mes (`DEC-16`) | Administración | `DEC-16` |
 | `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cinco clases de operación —también la cancelación de pedidos—, con quién hizo qué y cuándo | **Solo administración** | `TT-178`, `DT-48` |
-| `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— | **Solo administración** | `TT-69`, `TT-170` |
+| `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— y quién registró cada asiento. **De solo lectura**: se registra en `/inventario/` | **Solo administración** | `TT-69`, `DT-50`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
 
 **Comprobado ejecutando**, con cada rol identificado y con un anónimo:
@@ -153,6 +161,9 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/reservas/<pedido entregado>/` | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/reservas/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |
 | `/reservas/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/inventario/`, sus fragmentos y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/admin/inventario/movimientoinventario/` | 403 | **200** | 302 | 302 | 302 → acceso |
+| `/admin/inventario/movimientoinventario/add/` | 403 | 403 | 302 | 302 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/matricular/` | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -277,11 +288,13 @@ cada estudiante, desde el padrón (`DT-43`).
 Es la matriz `[S11]` en la capa de datos (`DT-11`), no botones escondidos. Diez lecturas que
 conviene no perder:
 
-- **Las existencias del listado de productos son un enlace** (`HU-29`, `TT-141`). Llevan a
-  `/admin/catalogo/producto/<id>/historial/`, que enseña la cifra y debajo los movimientos
-  que la suman, con una columna de existencias tras cada uno. Es una vista propia del admin
-  registrada en `get_urls()`: **no es una segunda excepción a `DT-27`**, que sigue siendo
-  solo el padrón.
+- **El inventario ya no está en el admin** (`DEC-25`, `DT-50`). Productos, ingresos, mermas
+  y el historial de cada producto viven en `/inventario/`, una pantalla propia sobre el
+  armazón de la aplicación, con una sola entrada en el menú. En el admin quedan las
+  categorías, los alérgenos y el **reporte de movimientos**, de solo lectura (`HU-36`). El
+  historial de un producto enseña la cifra, los movimientos que la suman y, a la vez, si la
+  suma de las líneas coincide con el total — las dos cifras salen por caminos distintos a
+  propósito (`HU-29`, `TST-4`).
 - **El reporte de ventas es el libro, con su consolidado encima** (`HU-35`, `TT-168`). El
   admin pone el listado, los filtros, la búsqueda y la navegación por fechas; lo que se añade
   es cuánto suma **lo que se está mirando**, porque se calcula sobre el mismo `QuerySet` que
@@ -326,14 +339,14 @@ conviene no perder:
   **Los movimientos de tipo venta no entran**: el cobro asienta la venta y su salida a la
   vez, así que incluirlos pondría cada venta dos veces. La **entrega** sí, porque mueve
   existencias en otro momento y la hace otra persona.
-  **Y el ingreso y la merma no dicen quién**: el libro de inventario no guarda el actor. La
-  pantalla lo declara con palabras en vez de dejar el hueco en blanco; está en el `ANEXO B`
-  de `./decisiones-de-alcance.md`.
-- **La merma tiene su propia entrada y es del mismo libro** (`HU-28`, `TT-139`). *Mermas* es
-  un proxy de `inventario.movimientoinventario`, no una tabla nueva: existe porque el motivo
-  es obligatorio en ella y opcional en el ingreso (`INV-8`), y un solo formulario tendría que
-  exigirlo únicamente a veces. Sus permisos son `add` y `view`; `change` y `delete` **no
-  existen**, así que un asiento no se reescribe (`INV-3`).
+  **El ingreso y la merma dicen quién desde `HU-69`**: el libro de inventario guarda quién
+  registró cada asiento. Los anteriores no tienen quién, y la pantalla lo declara con
+  palabras en vez de dejar el hueco en blanco.
+- **La merma y el ingreso son la misma modal y el mismo libro** (`HU-27`, `HU-28`,
+  `DT-50`). Se elige el tipo, se escriben las unidades **en positivo** y el motivo, que es
+  obligatorio en los dos. El tipo pone el signo: un «-3» escrito a mano sumaría existencias
+  que nadie ingresó. Un asiento no se edita ni se borra (`INV-3`); `change` y `delete` no
+  existen para el proxy `Merma`, que se conserva en el modelo.
 - **La cola de reservas no está en el admin, y es la segunda excepción declarada** (`HU-24`,
   `DT-34`). La comparten el cajero —que no tiene `is_staff`— y la administración —que recibe
   `403` en el punto de venta—, así que vive en `/reservas/`, sobre el armazón de la
@@ -761,13 +774,14 @@ El orden en que se enseña lo construido. Cada paso se comprobó de extremo a ex
     no se descuenta nada. Es el escenario crítico **`TST-2`** (`HU-19`, `INV-1`).
 18. **«Cobrar sin identificar a nadie»** y cobrar en efectivo: la venta genérica descuenta
     inventario y no toca ninguna billetera. `HU-53`, `HU-54`, `DEC-1`.
-19. **Como administración, registrar una merma** desde *Mermas*: se intenta **sin motivo** y
-    no entra. Lo que hay que decir es que el rechazo no es del formulario, **es de la base de
-    datos**: `TT-140` lo comprueba escribiendo por el ORM. `HU-28`, `INV-8`.
-20. **Pinchar la cifra de existencias** de ese producto en el catálogo: sale su historial con
-    una columna de existencias tras cada movimiento, y hay que seguirla hasta el total de
-    arriba. Es el escenario crítico **`TST-4`**, y con él los cuatro de `ENT-05` quedan
-    demostrados. `HU-29`, `INV-3`.
+19. **Como administración, registrar una merma** desde *Inventario* → *Ajustar* → *Merma*:
+    se intenta **sin motivo** y no entra. Lo que hay que decir es que el rechazo no es solo
+    del formulario, **es de la base de datos**: `TT-140` lo comprueba escribiendo por el ORM.
+    `HU-28`, `INV-8`.
+20. **Abrir el *Historial* de ese producto**: cada movimiento con su signo, su motivo y quién
+    lo registró, y el total arriba, que es exactamente la suma de las líneas. Es el escenario
+    crítico **`TST-4`**, y con él los cuatro de `ENT-05` quedan demostrados. `HU-29`,
+    `HU-69`, `INV-3`.
 21. **Como acudiente, reservar** desde la tarjeta *Reservas* de su estudiante. La pantalla
     es un punto de venta: filtros arriba, tarjetas con *Agregar* que pasa a «− n +», y el
     ticket al lado, que el servidor recalcula a cada pulsación. **No enseña existencias**:

@@ -11,8 +11,9 @@ mecanismo del reporte de ventas (`TT-168`).
 **Todas son unidades, ninguna es dinero.** El libro de inventario no sabe lo que
 costó nada; eso es el otro reporte.
 
-Sin Tailwind: el admin no lo carga (`DT-23`). Se usan sus clases y estilos en
-línea, como `admin/catalogo/producto/historial.html`.
+Escrito con las clases del admin y estilos en línea, de antes de que el admin
+cargara Tailwind (`DT-36`). No hay prisa por reescribirlo (`[S2.9]` del sistema
+visual).
 {% endcomment %}
 
 {% block result_list %}
@@ -72,8 +73,8 @@ línea, como `admin/catalogo/producto/historial.html`.
           {% comment %} `INV-8` puesto donde lo ve un humano. Una merma sin motivo **no
              puede existir**: lo impide una `CheckConstraint` (`DT-5`), no un `if`.
              Enseñar el recuento no es desconfianza — es lo mismo que hace el
-             historial de un producto al dejar seguir la columna de existencias
-             hasta el total: convierte la invariante en algo comprobable de un
+             historial de un producto en `/inventario/` al comparar la suma de sus
+             líneas con el total: convierte la invariante en algo comprobable de un
              vistazo. {% endcomment %}
           <p style="margin:0;max-width:40ch;align-self:center" data-mermas-con-motivo>
             {% if resumen.mermas_sin_motivo %}

@@ -43,6 +43,17 @@ from personas.views import (
     reasignacion_desde_el_padron,
     tarjeta_del_estudiante,
 )
+from inventario.views import (
+    cifras_del_inventario,
+    devolucion_al_catalogo,
+    edicion_del_producto,
+    historial_del_producto_en_la_modal,
+    inventario,
+    lista_del_inventario,
+    movimiento_del_producto,
+    producto_nuevo,
+    retiro_del_producto,
+)
 from reportes.views import (
     auditoria_de_la_operacion,
     consumo_del_estudiante,
@@ -106,6 +117,40 @@ urlpatterns = [
     # la cafetería también la consulta (`FUN-5`) y `INT-2` le responde `403`.
     # Una ruta compartida es lo que evita dos pantallas del mismo dato.
     path("reservas/", reservas, name="reservas"),
+    # `DEC-25`, `DT-50`. El inventario de la cafetería en una sola pantalla:
+    # productos, ingresos, mermas y el libro de cada uno. Sustituye a las tres
+    # pantallas del admin que tocaban lo mismo; el reporte de movimientos de
+    # `HU-36` sigue en el admin, de solo lectura.
+    path("inventario/", inventario, name="inventario"),
+    path("inventario/cifras/", cifras_del_inventario, name="cifras-del-inventario"),
+    path("inventario/lista/", lista_del_inventario, name="lista-del-inventario"),
+    path("inventario/productos/nuevo/", producto_nuevo, name="producto-nuevo"),
+    path(
+        "inventario/productos/<uuid:producto_id>/editar/",
+        edicion_del_producto,
+        name="edicion-del-producto",
+    ),
+    path(
+        "inventario/productos/<uuid:producto_id>/movimiento/",
+        movimiento_del_producto,
+        name="movimiento-del-producto",
+    ),
+    path(
+        "inventario/productos/<uuid:producto_id>/historial/",
+        historial_del_producto_en_la_modal,
+        name="historial-del-producto",
+    ),
+    path(
+        "inventario/productos/<uuid:producto_id>/retirar/",
+        retiro_del_producto,
+        name="retiro-del-producto",
+    ),
+    # Solo `POST`, sin confirmación: devolver al catálogo se deshace retirando.
+    path(
+        "inventario/productos/<uuid:producto_id>/devolver/",
+        devolucion_al_catalogo,
+        name="devolucion-al-catalogo",
+    ),
     # `HU-68`. El tablero de esa pantalla sin la página, para repintarlo cuando
     # la modal cancela un pedido (`DT-16`, `DT-40`).
     path("reservas/tablero/", tablero_de_reservas_fragmento, name="tablero-de-reservas"),

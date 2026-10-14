@@ -995,11 +995,11 @@ class Operacion:
     definen son `cuando`, `quien` y `accion`; lo demás acompaña.
 
     `quien` es `None` cuando el sistema **no lo registró**, no cuando no lo
-    sabemos. Hoy pasa con el ingreso de mercancía y la merma:
-    `MovimientoInventario` no tiene columna de actor —sus servicios reciben el
-    `actor`, lo comprueban y no lo guardan—. La pantalla lo dice con esas
-    palabras en vez de dejar el hueco en blanco, que se leería como un error de
-    la consulta. Está declarado en el `ANEXO B` de `./docs/decisiones-de-alcance.md`.
+    sabemos. Pasa solo con los ingresos y las mermas escritos antes de `HU-69`:
+    hasta entonces `MovimientoInventario` no tenía columna de actor, y lo ya
+    escrito no se rellena por inferencia. La pantalla lo dice con esas palabras
+    en vez de dejar el hueco en blanco, que se leería como un error de la
+    consulta.
 
     `modelo` y `objeto_id` no son adorno: son lo que permite **ir a mirar la
     operación** en su propio reporte. Un renglón de auditoría que no se puede
@@ -1253,12 +1253,12 @@ def _cancelaciones_de_la_auditoria(acotar, limite):
 
 
 def _movimientos_de_la_auditoria(acotar, limite):
-    """El ingreso de mercancía y la merma. **Sin quién, y se dice.**
+    """El ingreso de mercancía y la merma, con quién los registró (`HU-69`).
 
     Los dos son ajustes manuales y los dos pasan por un servicio que exige el
-    rol administrador, pero `MovimientoInventario` **no guarda el actor**: lo
-    recibe, lo comprueba y lo descarta. Así que estas dos líneas dicen qué y
-    cuándo, y en la columna de quién va el hueco declarado.
+    rol administrador. **Desde `HU-69` el libro guarda quién**; los escritos
+    antes no lo tienen, y en esos la columna de quién lleva el hueco declarado
+    en vez de un nombre inventado.
 
     Los movimientos de tipo venta no entran: los explica su venta o su entrega,
     que ya están arriba.
@@ -1272,7 +1272,7 @@ def _movimientos_de_la_auditoria(acotar, limite):
                 ]
             )
         )
-        .select_related("producto")
+        .select_related("producto", "registrado_por")
         .order_by("-creado_en")[:limite]
     )
 
@@ -1285,7 +1285,11 @@ def _movimientos_de_la_auditoria(acotar, limite):
             cuando=movimiento.creado_en,
             clase="inventario",
             accion="Registró una merma" if es_merma else "Ingresó mercancía",
-            quien=None,
+            quien=(
+                movimiento.registrado_por.nombre or movimiento.registrado_por.email
+                if movimiento.registrado_por
+                else None
+            ),
             detalle=detalle,
             importe=None,
             modelo="inventario.movimientoinventario",
@@ -1335,10 +1339,10 @@ def _cierres_de_la_auditoria(acotar, limite):
 class ResumenDeAuditoria:
     """Cuántas operaciones y de qué clase, más las que no dicen quién.
 
-    `sin_actor` **no debería ser cero**, al revés que las mermas sin motivo del
-    reporte de inventario: hoy es exactamente el número de ingresos y mermas del
-    periodo. Se cuenta y se enseña para que el hueco se lea como lo que es —algo
-    que el sistema no registra— y no como un fallo de la consulta.
+    `sin_actor` cuenta los ingresos y las mermas escritos antes de `HU-69`, que
+    no tienen quién. En un periodo posterior es cero. Se cuenta y se enseña para
+    que el hueco se lea como lo que es —algo que el sistema no registraba— y no
+    como un fallo de la consulta.
     """
 
     cuantas: int
@@ -1376,10 +1380,10 @@ def resumen_de_auditoria(operaciones):
 # ──────────────────────────────────────────────────────────────────────────────
 
 #: Por debajo de esto, un producto entra en el aviso de existencias del panel.
-#: **Es una ayuda de pantalla, no una regla del negocio**: nada se bloquea al
-#: cruzarlo y nadie lo configura. Vive aquí, junto a quien lo usa, para que
-#: cambiarlo sea una línea y no una búsqueda.
-UMBRAL_DE_EXISTENCIAS_BAJAS = 10
+#: Se declara en `inventario.selectors`, que es de quien es el dato, porque lo
+#: usan el panel y la pantalla de inventario (`DT-50`): dos umbrales acabarían
+#: avisando de cosas distintas.
+from inventario.selectors import UMBRAL_DE_EXISTENCIAS_BAJAS  # noqa: E402
 
 #: Cuántos productos y cuántas ventas caben en el panel sin volverse un listado.
 #: Quien quiera el listado entero tiene su reporte, que es donde están los

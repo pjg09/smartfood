@@ -65,26 +65,31 @@ class LasExistenciasNoSeGuardanTest(TestCase):
 
     def test_las_existencias_son_la_suma_de_los_movimientos(self):
         empanada = producto()
+        cajero = Usuario.objects.crear_usuario(
+            email="cajero@example.com", rol=Rol.CAJERO, nombre="Cajero"
+        )
 
-        asentar(producto=empanada, tipo=TipoDeMovimientoDeInventario.INGRESO, cantidad=30)
+        asentar(
+            producto=empanada,
+            tipo=TipoDeMovimientoDeInventario.INGRESO,
+            cantidad=30,
+            registrado_por=cajero,
+        )
         # Desde `TT-78` una salida por venta señala la venta que la origina
         # (`INV-3`). El cobro de verdad es `TT-80`; aquí se fabrica.
         asentar(
             producto=empanada,
             tipo=TipoDeMovimientoDeInventario.VENTA,
             cantidad=-4,
-            venta=Venta.objects.create(
-                cajero=Usuario.objects.crear_usuario(
-                    email="cajero@example.com", rol=Rol.CAJERO, nombre="Cajero"
-                ),
-                medio_pago=MedioDePago.EFECTIVO,
-            ),
+            venta=Venta.objects.create(cajero=cajero, medio_pago=MedioDePago.EFECTIVO),
+            registrado_por=cajero,
         )
         asentar(
             producto=empanada,
             tipo=TipoDeMovimientoDeInventario.MERMA,
             cantidad=-2,
             motivo="Se cayeron al suelo",
+            registrado_por=cajero,
         )
 
         self.assertEqual(existencias_de(empanada), 24)
@@ -239,41 +244,72 @@ class LaInterfazAdministrativaTest(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
 
-    def test_registra_un_ingreso_desde_el_formulario(self):
-        """De extremo a extremo: el admin delega en el servicio (`DT-15`)."""
-        respuesta = self.client.post(
-            reverse("admin:inventario_movimientoinventario_add"),
-            {"producto": str(self.producto.pk), "cantidad": "25", "motivo": "Pedido"},
+    def mover(self, **datos):
+        return self.client.post(
+            reverse("movimiento-del-producto", args=[self.producto.pk]), datos
         )
 
-        self.assertEqual(respuesta.status_code, 302)
+    def test_registra_un_ingreso_desde_la_modal(self):
+        """De extremo a extremo: la vista delega en el servicio (`DT-15`), que
+        además deja dicho quién lo registró (`HU-69`)."""
+        respuesta = self.mover(tipo="ingreso", cantidad="25", motivo="Pedido")
+
+        self.assertContains(respuesta, 'data-movimiento-registrado="ingreso"')
+        self.assertEqual(respuesta["HX-Trigger"], "inventario-cambiado")
         self.assertEqual(existencias_de(self.producto), 25)
         movimiento = MovimientoInventario.objects.get()
         self.assertEqual(movimiento.tipo, TipoDeMovimientoDeInventario.INGRESO)
+        self.assertEqual(movimiento.registrado_por, self.administracion)
 
-    def test_el_formulario_no_ofrece_elegir_el_tipo(self):
-        """Solo ingresos desde aquí.
-
-        La venta la asienta el punto de venta (`TT-80`) y la merma tiene su
-        propia entrada (`Merma`, `TT-139`). Ofrecer los tres tipos dejaría
+    def test_la_modal_sale_en_ingreso_y_solo_ofrece_ingreso_y_merma(self):
+        """La venta la asienta el punto de venta (`TT-80`): ofrecerla aquí dejaría
         descontar existencias a mano saltándose la venta, que es lo que `INV-3`
-        no admite.
-        """
+        no admite."""
         cuerpo = self.client.get(
-            reverse("admin:inventario_movimientoinventario_add")
+            reverse("movimiento-del-producto", args=[self.producto.pk])
         ).content.decode()
 
-        self.assertNotIn('name="tipo"', cuerpo)
+        self.assertRegex(cuerpo, r'value="ingreso"\s+data-tipo-de-movimiento="ingreso"\s+checked')
+        self.assertIn('value="merma"', cuerpo)
+        self.assertNotIn('value="venta"', cuerpo)
 
-    def test_el_listado_de_productos_muestra_las_existencias(self):
-        ingresar_mercancia(actor=self.administracion, producto=self.producto, cantidad=17)
+    def test_un_tipo_venta_escrito_a_mano_no_descuenta_nada(self):
+        respuesta = self.mover(tipo="venta", cantidad="3", motivo="Atajo")
 
-        cuerpo = self.client.get(
-            reverse("admin:catalogo_producto_changelist")
-        ).content.decode()
+        self.assertNotIn("HX-Trigger", respuesta)
+        self.assertFalse(MovimientoInventario.objects.exists())
 
-        self.assertIn("17", cuerpo)
-        self.assertIn("existencias", cuerpo.lower())
+    def test_el_ingreso_tambien_pide_motivo(self):
+        """`HU-29`: todo movimiento queda asentado con su motivo. La base solo lo
+        exige en la merma (`INV-8`); la pantalla, en los dos."""
+        respuesta = self.mover(tipo="ingreso", cantidad="10", motivo="   ")
+
+        self.assertContains(respuesta, "data-error-del-servidor")
+        self.assertFalse(MovimientoInventario.objects.exists())
+
+    def test_una_cantidad_con_signo_no_entra(self):
+        """El tipo decide el signo: «-3» en un ingreso es justo el error que
+        eso evita."""
+        for cantidad in ("-3", "0", "2.5", "tres"):
+            with self.subTest(cantidad=cantidad):
+                respuesta = self.mover(tipo="ingreso", cantidad=cantidad, motivo="Pedido")
+                self.assertContains(respuesta, "data-error-del-servidor")
+        self.assertFalse(MovimientoInventario.objects.exists())
+
+    def test_el_reporte_ya_no_registra_ingresos(self):
+        """`DT-50`: se registran en `/inventario/`, con el producto delante."""
+        respuesta = self.client.get(reverse("admin:inventario_movimientoinventario_add"))
+
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_la_lista_muestra_las_existencias(self):
+        ingresar_mercancia(
+            actor=self.administracion, producto=self.producto, cantidad=17, motivo="Pedido"
+        )
+
+        respuesta = self.client.get(reverse("lista-del-inventario"))
+
+        self.assertContains(respuesta, 'data-existencias="17"')
 
     def test_el_cajero_no_alcanza_el_inventario(self):
         cajero = crear_cuenta(
@@ -290,3 +326,33 @@ class LaInterfazAdministrativaTest(TestCase):
         )
 
         self.assertEqual(respuesta.status_code, 403)
+
+
+class ElLibroDiceQuienTest(TestCase):
+    """`HU-69`. Todo asiento nuevo dice quién lo hizo; lo exige `asentar`.
+
+    La columna admite nulo solo por lo escrito antes de existir: una
+    `CheckConstraint` no podría validarse sobre esas filas sin inventarles un
+    autor. Así que la puerta está en el único sitio por el que se escribe.
+    """
+
+    def test_sin_quien_no_se_asienta(self):
+        with self.assertRaises(ValidationError):
+            asentar(
+                producto=producto(),
+                tipo=TipoDeMovimientoDeInventario.INGRESO,
+                cantidad=5,
+                registrado_por=None,
+            )
+        self.assertFalse(MovimientoInventario.objects.exists())
+
+    def test_el_ingreso_lo_firma_quien_lo_registra(self):
+        administracion = Usuario.objects.crear_usuario(
+            email="admin-firma@example.com", rol=Rol.ADMINISTRADOR, nombre="Lucía"
+        )
+
+        movimiento = ingresar_mercancia(
+            actor=administracion, producto=producto(), cantidad=5, motivo="Pedido"
+        )
+
+        self.assertEqual(movimiento.registrado_por, administracion)

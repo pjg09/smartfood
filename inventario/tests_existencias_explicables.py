@@ -304,10 +304,8 @@ class LaPantallaEnsenaLaExplicacionTest(TestCase):
             motivo="Se cayó la bandeja",
         )
 
-    def url(self):
-        return reverse(
-            "admin:catalogo_producto_historial", args=[self.producto.pk]
-        )
+    def url(self, producto=None):
+        return reverse("historial-del-producto", args=[(producto or self.producto).pk])
 
     def test_la_cifra_que_se_muestra_es_la_del_historial(self):
         """**`TST-4` sobre lo mostrado**, que es lo que dice el criterio."""
@@ -319,24 +317,31 @@ class LaPantallaEnsenaLaExplicacionTest(TestCase):
             respuesta.context["existencias"], suma_en_python(self.producto)
         )
 
-    def test_el_ultimo_acumulado_termina_en_la_cifra_total(self):
-        """La columna que hace auditable el descuadre.
-
-        Se calcula en Python al pintar y el total sale de un `SUM` de la base.
-        Si divergieran, el último renglón no coincidiría — y esta prueba es la
-        que lo dice antes que nadie.
-        """
+    def test_las_lineas_suman_la_cifra_total_y_no_hay_aviso(self):
+        """Las dos cifras salen por caminos distintos a propósito: el `SUM` de la
+        base y la cuenta de las líneas que se enseñan. Si divergieran, la modal
+        lo diría — y esta prueba es la que lo dice antes que nadie."""
         respuesta = self.client.get(self.url())
-        corridas = respuesta.context["corridas"]
 
-        self.assertEqual(len(corridas), 3)
-        _, ultimo_acumulado = corridas[0]
-        self.assertEqual(ultimo_acumulado, respuesta.context["existencias"])
+        self.assertEqual(respuesta.context["suma"], respuesta.context["existencias"])
+        self.assertNotContains(respuesta, "data-historial-descuadrado")
+
+    def test_si_divergieran_la_modal_lo_diria(self):
+        """La contraprueba de la anterior: sin ella, un aviso que nunca se pinta
+        pasaría por una garantía."""
+        from django.template.loader import render_to_string
+
+        cuerpo = render_to_string(
+            "inventario/partials/historial.html",
+            {"producto": self.producto, "movimientos": [], "existencias": 32, "suma": 30},
+        )
+
+        self.assertIn("data-historial-descuadrado", cuerpo)
 
     def test_el_desglose_llega_del_mas_reciente_al_mas_antiguo(self):
         """Es el orden en que se lee un extracto."""
         respuesta = self.client.get(self.url())
-        tipos = [movimiento.tipo for movimiento, _ in respuesta.context["corridas"]]
+        tipos = [movimiento.tipo for movimiento in respuesta.context["movimientos"]]
 
         self.assertEqual(
             tipos,
@@ -347,46 +352,63 @@ class LaPantallaEnsenaLaExplicacionTest(TestCase):
             ],
         )
 
+    def test_cada_linea_dice_quien(self):
+        """`HU-69`: la merma y el ingreso, la administración; la venta, el cajero."""
+        respuesta = self.client.get(self.url())
+        quienes = {m.tipo: m.responsable for m in respuesta.context["movimientos"]}
+
+        self.assertEqual(quienes[TipoDeMovimientoDeInventario.MERMA], "Administración de la cafetería")
+        self.assertEqual(quienes[TipoDeMovimientoDeInventario.INGRESO], "Administración de la cafetería")
+        self.assertEqual(quienes[TipoDeMovimientoDeInventario.VENTA], self.cajero.nombre or self.cajero.email)
+
+    def test_una_entrega_anterior_a_hu_69_la_firma_quien_entrego_y_no_el_acudiente(self):
+        """Lo escrito antes de que el libro guardara quién no tiene
+        `registrado_por`. La entrega de un pedido lo saca de
+        `PedidoAnticipado.entregado_por`: el acudiente que reservó no movió nada
+        del inventario, y atribuírselo sería inventar un autor."""
+        from ventas.services import entregar, reservar
+
+        pedido = reservar(
+            actor=self.acudiente, estudiante=self.estudiante, lineas={self.producto.id: 1}
+        )
+        entregar(actor=self.cajero, pedido=pedido)
+        # Como estaba antes de `HU-69`: sin quién en el libro.
+        MovimientoInventario.objects.filter(venta=pedido.venta).update(registrado_por=None)
+
+        respuesta = self.client.get(self.url())
+        (entrega,) = [m for m in respuesta.context["movimientos"] if m.venta_id == pedido.venta_id]
+
+        self.assertEqual(entrega.responsable, self.cajero.nombre)
+
     def test_el_desglose_llega_entero_y_no_una_pagina(self):
         """`TST-4` compara contra el historial completo: una página no probaría
         nada, y un descuadre viejo se escondería en la segunda."""
         respuesta = self.client.get(self.url())
 
-        self.assertEqual(respuesta.context["cuantos"], 3)
         self.assertEqual(
-            len(respuesta.context["corridas"]),
+            len(respuesta.context["movimientos"]),
             historial_de(self.producto).count(),
         )
 
     def test_un_producto_sin_movimientos_dice_cero_y_no_un_hueco(self):
         vacio = producto("Arepa", "3000")
 
-        respuesta = self.client.get(
-            reverse("admin:catalogo_producto_historial", args=[vacio.pk])
-        )
+        respuesta = self.client.get(self.url(vacio))
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(respuesta.context["existencias"], 0)
-        self.assertEqual(respuesta.context["corridas"], [])
+        self.assertEqual(respuesta.context["movimientos"], [])
 
-    def test_la_cifra_del_listado_enlaza_a_su_explicacion(self):
-        """El gesto que pide `HU-29`: se pincha el número que no cuadra.
-
-        Se afirma sobre la URL y no sobre la copia: el texto del enlace cambia
-        con la redacción, la ruta no.
-        """
-        respuesta = self.client.get(
-            reverse("admin:catalogo_producto_changelist")
-        )
+    def test_la_fila_del_producto_abre_su_explicacion(self):
+        """El gesto que pide `HU-29`: desde la cifra, a su desglose. Se afirma
+        sobre la URL y no sobre la copia."""
+        respuesta = self.client.get(reverse("lista-del-inventario"))
 
         self.assertContains(respuesta, self.url())
 
     def test_un_producto_que_no_existe_da_404(self):
         respuesta = self.client.get(
-            reverse(
-                "admin:catalogo_producto_historial",
-                args=["01999999-9999-7999-8999-999999999999"],
-            )
+            reverse("historial-del-producto", args=["01999999-9999-7999-8999-999999999999"])
         )
 
         self.assertEqual(respuesta.status_code, 404)
@@ -404,9 +426,7 @@ class SoloLaAdministracionVeElHistorialTest(TestCase):
         self.producto = producto()
         administracion = usuario_con_rol(Rol.ADMINISTRADOR, "admin4@example.com")
         ingresar_mercancia(actor=administracion, producto=self.producto, cantidad=10)
-        self.url = reverse(
-            "admin:catalogo_producto_historial", args=[self.producto.pk]
-        )
+        self.url = reverse("historial-del-producto", args=[self.producto.pk])
 
     def test_un_anonimo_no_llega(self):
         respuesta = self.client.get(self.url)
@@ -439,7 +459,7 @@ class SoloLaAdministracionVeElHistorialTest(TestCase):
 
         respuesta = self.client.get(self.url)
 
-        self.assertIn(respuesta.status_code, [302, 403])
+        self.assertEqual(respuesta.status_code, 403)
 
     def test_el_acudiente_tampoco(self):
         acudiente, _ = acudiente_con_estudiante("3")
@@ -447,4 +467,4 @@ class SoloLaAdministracionVeElHistorialTest(TestCase):
 
         respuesta = self.client.get(self.url)
 
-        self.assertIn(respuesta.status_code, [302, 403])
+        self.assertEqual(respuesta.status_code, 403)

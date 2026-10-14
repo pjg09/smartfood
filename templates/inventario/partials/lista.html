@@ -1,0 +1,126 @@
+{% load dinero %}
+{% comment %} DT-50. La lista de productos de `/inventario/`.
+
+   Fragmento (`DT-16`): lo piden los filtros a cada cambio y se vuelve a pedir solo tras
+   cada escritura (`inventario-cambiado`), **con los filtros que haya**: `hx-include` los
+   trae del formulario de arriba.
+
+   Cada fila: la imagen, el nombre, una línea de datos —categoría, precio, calorías y
+   alérgenos declarados— y las existencias en una píldora. **La píldora lleva color de
+   estado, y aquí el estado existe**: agotado en `error`, pocas en `aviso` (`[S1]`,
+   regla 3). Las acciones son las cuatro que abren la modal; un retirado cambia
+   «retirar» por «devolver al catálogo», que no pide confirmación porque se deshace.
+{% endcomment %}
+<div id="lista-del-inventario"
+     hx-get="{% url 'lista-del-inventario' %}" hx-trigger="inventario-cambiado from:body"
+     hx-include="#filtros-del-inventario" hx-swap="outerHTML">
+  {% if productos %}
+    <ul class="flex flex-col gap-2">
+      {% for producto in productos %}
+        <li data-producto="{{ producto.pk }}"
+            class="flex flex-col gap-3 rounded-xl border border-borde bg-superficie p-3 shadow-sm
+                   escritorio:flex-row escritorio:items-center">
+          <div class="flex min-w-0 flex-1 items-center gap-3">
+            {% comment %} La miniatura se amplía en la modal del armazón (`[S2.13]`), la misma
+               de la reserva y de los productos bloqueados: va **dentro de un botón**
+               `data-ampliar-imagen`, y `interfaz.js` la abre también en las filas que
+               llegan después por HTMX. Sin imagen no hay nada que ampliar: queda la
+               inicial, que no es un botón. {% endcomment %}
+            {% if producto.tiene_imagen %}
+              <button type="button" data-ampliar-imagen="{{ producto.nombre }}"
+                      aria-label="Ampliar la imagen de {{ producto.nombre }}"
+                      class="shrink-0 cursor-zoom-in rounded-md">
+                <img src="{{ producto.url_de_la_imagen }}" alt="" loading="lazy"
+                     class="h-14 w-14 rounded-md object-cover">
+              </button>
+            {% else %}
+              <span aria-hidden="true"
+                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-superficie-hover
+                           font-display text-xl text-texto-suave">{{ producto.nombre|first|upper }}</span>
+            {% endif %}
+            <div class="flex min-w-0 flex-col gap-0.5">
+              <span class="flex flex-wrap items-center gap-2 text-base font-semibold text-texto">
+                {{ producto.nombre }}
+                {% if not producto.activo %}
+                  <span data-retirado class="rounded-full border border-borde px-2 py-0.5 text-xs font-medium text-texto-suave">retirado</span>
+                {% endif %}
+              </span>
+              <span class="text-sm text-texto-suave">
+                {{ producto.categoria.nombre }} · {{ producto.precio|dinero }}
+                {% if producto.energia_kcal is not None %} · {{ producto.energia_kcal }} kcal{% endif %}
+                ·
+                {% with alergenos=producto.alergenos.all %}
+                  {% if alergenos %}{{ alergenos|join:", " }}{% else %}sin alérgenos declarados{% endif %}
+                {% endwith %}
+              </span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 escritorio:shrink-0">
+            {% if producto.existencias <= 0 %}
+              <span data-existencias="{{ producto.existencias }}" title="Agotado"
+                    class="inline-flex h-9 min-w-11 items-center justify-center rounded-full bg-error-suave px-3
+                           font-semibold tabular-nums text-error-fuerte">{{ producto.existencias }}</span>
+            {% elif producto.existencias <= umbral %}
+              <span data-existencias="{{ producto.existencias }}" title="Quedan pocas"
+                    class="inline-flex h-9 min-w-11 items-center justify-center rounded-full bg-aviso-suave px-3
+                           font-semibold tabular-nums text-aviso-fuerte">{{ producto.existencias }}</span>
+            {% else %}
+              <span data-existencias="{{ producto.existencias }}"
+                    class="inline-flex h-9 min-w-11 items-center justify-center rounded-full bg-superficie-hover px-3
+                           font-semibold tabular-nums text-texto">{{ producto.existencias }}</span>
+            {% endif %}
+
+            <button type="button" data-mover-existencias
+                    hx-get="{% url 'movimiento-del-producto' producto.pk %}"
+                    hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                    class="inline-flex h-9 items-center rounded-md border border-borde bg-superficie px-3
+                           text-sm font-medium text-texto transition-colors hover:border-acento">
+              Ajustar
+            </button>
+            <button type="button" data-ver-historial
+                    hx-get="{% url 'historial-del-producto' producto.pk %}"
+                    hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                    class="inline-flex h-9 items-center px-2 text-sm font-semibold text-acento-fuerte hover:underline">
+              Historial
+            </button>
+            <button type="button" data-editar-producto aria-label="Editar {{ producto.nombre }}"
+                    title="Editar"
+                    hx-get="{% url 'edicion-del-producto' producto.pk %}"
+                    hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                    class="flex h-9 w-9 items-center justify-center rounded-md text-texto-suave
+                           transition-colors hover:bg-superficie-hover hover:text-texto">
+              <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+            </button>
+            {% if producto.activo %}
+              <button type="button" data-retirar-producto aria-label="Retirar {{ producto.nombre }} del catálogo"
+                      title="Retirar del catálogo"
+                      hx-get="{% url 'retiro-del-producto' producto.pk %}"
+                      hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                      class="flex h-9 w-9 items-center justify-center rounded-md text-texto-suave
+                             transition-colors hover:bg-error-suave hover:text-error-fuerte">
+                <svg class="h-4 w-4" aria-hidden="true"><use href="#i-retirar"></use></svg>
+              </button>
+            {% else %}
+              <button type="button" data-devolver-producto
+                      hx-post="{% url 'devolucion-al-catalogo' producto.pk %}" hx-swap="none"
+                      class="inline-flex h-9 items-center px-2 text-sm font-semibold text-acento-fuerte hover:underline">
+                Devolver al catálogo
+              </button>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="rounded-xl border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+      {% if filtros.nombre or filtros.categoria or filtros.precio_minimo is not None or filtros.precio_maximo is not None %}
+        Ningún producto cumple esos filtros.
+      {% elif filtros.retirados %}
+        No hay productos retirados del catálogo.
+      {% else %}
+        Todavía no hay productos. Crea el primero con «Nuevo producto».
+      {% endif %}
+    </p>
+  {% endif %}
+</div>

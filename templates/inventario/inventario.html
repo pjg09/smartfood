@@ -1,0 +1,132 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} DEC-25, DT-50. El inventario de la cafetería en una sola pantalla.
+
+   **Sustituye a tres pantallas del admin** —productos, ingresos y mermas— que tocaban
+   lo mismo desde tres entradas del menú. No añade alcance: dar de alta y editar es
+   `HU-26` y `HU-59`, el ingreso `HU-27`, la merma `HU-28` y el historial `HU-29`. El
+   reporte de movimientos con sus totales por periodo (`HU-36`) sigue en el admin, de
+   solo lectura, y se llega desde el enlace del encabezado.
+
+   Vive en el armazón de la aplicación y no dentro del admin por lo mismo que el padrón
+   (`DT-27`) y la cola de reservas (`DT-34`): es la pantalla que la administración abre
+   a diario —desde `DEC-24` el ingreso antes de entregar es parte del trabajo—, y sus
+   modales necesitan el sistema visual entero, que el admin no carga (`DT-36`).
+
+   Composición: encabezado con la acción principal, cuatro tarjetas de resumen
+   (`[S2.1]`, variante del panel: icono y sin enlace), la barra de filtros (`[S2.5]`) y
+   la lista. Cada fila lleva sus cuatro acciones; las cuatro abren la misma modal de
+   ficha (`[S2.10]`).
+{% endcomment %}
+
+{% block titulo %}Inventario | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Inventario</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Lo que se vende en la cafetería. Las existencias se mueven con ingresos y mermas,
+          nunca escribiéndolas a mano.
+          {% comment %} `HU-36`: el reporte con totales por periodo, en el admin. {% endcomment %}
+          <a href="{% url 'admin:inventario_movimientoinventario_changelist' %}"
+             data-reporte-de-movimientos
+             class="font-semibold whitespace-nowrap text-acento-fuerte hover:underline">Ver el reporte de movimientos</a>
+        </p>
+      </div>
+      <button type="button" data-nuevo-producto
+              hx-get="{% url 'producto-nuevo' %}"
+              hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+              class="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-primario px-5
+                     text-base font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-mas"></use></svg>
+        Nuevo producto
+      </button>
+    </header>
+
+    {% include "inventario/partials/cifras.html" %}
+
+    {% comment %} Los filtros **piden a cada cambio**, con espera al escribir. Es un
+       `<form>` de verdad con `method="get"`: sin JavaScript sigue filtrando al pulsar
+       Enter, porque la vista lee los filtros de la URL. «Limpiar» es un enlace a la
+       pantalla sin filtros, que es lo que limpiar significa. {% endcomment %}
+    <form id="filtros-del-inventario" method="get" action="{% url 'inventario' %}"
+          hx-get="{% url 'lista-del-inventario' %}"
+          hx-trigger="input changed delay:400ms, change"
+          hx-target="#lista-del-inventario" hx-swap="outerHTML"
+          class="flex flex-col gap-3 rounded-xl border border-borde bg-superficie p-4 shadow-sm
+                 escritorio:flex-row escritorio:items-end">
+      <div class="flex grow flex-col gap-1">
+        <label for="filtro-nombre" class="text-base font-medium text-texto">Nombre</label>
+        <input type="search" id="filtro-nombre" name="nombre" value="{{ filtros.nombre }}"
+               autocomplete="off" placeholder="Empanada, arepa…"
+               class="h-11 w-full rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                      placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none">
+      </div>
+      <div class="flex grow flex-col gap-1">
+        <label for="filtro-categoria" class="text-base font-medium text-texto">Categoría</label>
+        <select id="filtro-categoria" name="categoria"
+                class="h-11 w-full rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                       hover:border-acento focus:border-acento focus:outline-none">
+          <option value="">Todas</option>
+          {% for categoria in categorias %}
+            <option value="{{ categoria.pk }}" {% if filtros.categoria.pk == categoria.pk %}selected{% endif %}>{{ categoria.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3 escritorio:flex escritorio:grow">
+        <div class="flex flex-col gap-1 escritorio:grow">
+          <label for="filtro-precio-minimo" class="text-base font-medium text-texto">Precio mínimo</label>
+          <input type="number" id="filtro-precio-minimo" name="precio_minimo" min="0" step="50"
+                 value="{{ filtros.precio_minimo|default_if_none:'' }}" placeholder="0"
+                 class="h-11 w-full rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1 escritorio:grow">
+          <label for="filtro-precio-maximo" class="text-base font-medium text-texto">Precio máximo</label>
+          <input type="number" id="filtro-precio-maximo" name="precio_maximo" min="0" step="50"
+                 value="{{ filtros.precio_maximo|default_if_none:'' }}" placeholder="Sin tope"
+                 class="h-11 w-full rounded-md border border-borde bg-superficie px-3 text-base text-texto
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none">
+        </div>
+      </div>
+      <div class="flex items-center gap-4 escritorio:h-11 escritorio:shrink-0">
+        {% comment %} Los retirados se consultan aparte: no se venden, pero su historial
+           existe y se pueden mermar o devolver al catálogo. Interruptor y no pestaña,
+           como en el padrón: es un filtro que se suma, no otra pantalla. {% endcomment %}
+        <label for="filtro-retirados" class="inline-flex cursor-pointer items-center gap-2">
+          <input type="checkbox" id="filtro-retirados" name="retirados" value="1"
+                 {% if filtros.retirados %}checked{% endif %} class="peer sr-only">
+          <span aria-hidden="true"
+                class="relative h-6 w-11 shrink-0 rounded-full border border-borde bg-superficie-hover
+                       transition-colors peer-checked:border-primario peer-checked:bg-primario
+                       peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                       after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                       after:rounded-full after:bg-texto-suave after:transition-transform
+                       peer-checked:after:translate-x-5 peer-checked:after:bg-sobre-primario"></span>
+          <span class="text-base font-medium whitespace-nowrap text-texto">Ver retirados</span>
+        </label>
+        <a href="{% url 'inventario' %}"
+           class="inline-flex h-11 items-center gap-1.5 rounded-md border border-borde px-3 text-base
+                  text-texto-suave transition-colors hover:bg-superficie-hover">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+          Limpiar
+        </a>
+      </div>
+      <button type="submit" class="sr-only">Filtrar</button>
+    </form>
+
+    {% include "inventario/partials/lista.html" %}
+  </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`): nace vacía y la llenan «Nuevo producto» y
+     las acciones de cada fila. Va **fuera** de la lista, que se reemplaza tras cada
+     escritura: dentro, la modal se cerraría sola. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Producto"
+          class="m-auto w-[min(40rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

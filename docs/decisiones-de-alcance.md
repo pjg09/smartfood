@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`); 2026-10-14 (`DEC-25`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 24 (`DEC-1` … `DEC-24`) |
+| decisiones | 25 (`DEC-1` … `DEC-25`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.10 |
+| version | 1.11 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-24` |
+| S1 | Decisiones | `DEC-1` … `DEC-25` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -498,6 +498,26 @@ Y quitar esa comprobación deja a la vista el hueco que ya estaba: **una reserva
 
 **Consecuencia asumida.** **Se cobra sin garantía de que haya con qué entregar**: si la cafetería no puede, cancela y el saldo vuelve. Y como la entrega nunca se rechaza por existencias (`DT-35`), **entregar lo que se preparó sin registrar su ingreso deja el libro de inventario en negativo**: con esta decisión deja de ser un caso raro, y el ingreso de mercancía antes de entregar pasa a ser parte del trabajo de la cafetería. Es funcionalidad nueva con el backlog cerrado, y se registra como `HU-65`, `HU-66` y `HU-67` antes de construirla.
 
+### `[DEC-25]` El inventario de la cafetería en una sola pantalla, y el libro dice quién
+
+*No cierra ningún `VAC`: **resuelve un punto del `ANEXO B`**, «El libro de inventario no registra quién». Decisión posterior, tomada el 2026-10-14. **No añade alcance ni recorta `[S11]`**: crear, editar y retirar productos (`HU-26`, `HU-59`), el ingreso (`HU-27`), la merma (`HU-28`) y el historial (`HU-29`) ya existían. Como `DEC-17`, cambia por dónde se llega. **Lo que sí añade es una historia**, `HU-69`: guardar quién registra cada movimiento.*
+
+**El hecho que lo obliga.** La administración tenía tres entradas del menú —*Productos*, *Inventario* y *Mermas*— para trabajar sobre lo mismo: un producto y sus existencias. Registrar un ingreso obligaba a salir del producto, abrir otra pantalla y volver a elegirlo de una lista; la merma, otra pantalla más; y el historial de un producto estaba detrás de un enlace en una columna. Desde `DEC-24` el ingreso antes de entregar es parte del trabajo diario, y esa es la raya de `DEC-17`: una pantalla propia sustituye a las del admin cuando alguien las usa a diario.
+
+**Decidido:**
+
+- **`/inventario/` sustituye a las tres pantallas del admin.** Cuatro cifras arriba —productos a la venta, agotados, quedan pocas y el valor del inventario—, filtros por nombre, categoría y precio, y una fila por producto con cuatro acciones: **ajustar** —ingreso o merma—, **historial**, **editar** y **retirar del catálogo**. El alta y la edición son la misma modal, con los alérgenos, la información nutricional, la categoría y la imagen.
+- **Ingreso y merma se escriben en positivo y sin signo**: el tipo decide si suma o resta, que es como ya funcionaba el servicio (`HU-28`). **No hay un «ajuste» con signo**: la única disminución manual sigue siendo la merma, con su motivo (`INV-8`).
+- **El motivo es obligatorio también en el ingreso**, en la pantalla. `HU-29` pide que todo movimiento quede asentado con su motivo; la base solo lo exige en la merma, y eso no cambia.
+- **«Agotados» y no «se hacen en cocina».** El producto de referencia contaba lo que se produce en cocina, y aquí no existe: `HU-27` dice que un producto preparado entra «sin descomponerlo en insumos», y las recetas están fuera del alcance. Agotado es **cero o menos**, porque la entrega de un pedido puede dejar el libro en negativo (`DT-35`).
+- **Retirar no borra.** Un producto retirado deja de venderse y de ofrecerse, y se consulta, se merma y se devuelve al catálogo desde «Ver retirados».
+- **El reporte de movimientos se queda en el admin, de solo lectura** (`HU-36`): el libro entero con navegación por fechas y el consolidado del periodo, que es lo que el admin da hecho. Se llega desde la pantalla de inventario, no desde el menú.
+- **El libro de inventario guarda quién registró cada asiento** (`HU-69`): la administración en un ingreso o una merma, el cajero en una venta o una entrega. Lo escrito antes no se atribuye a nadie —no se rellena por inferencia— y las pantallas lo dicen.
+
+**Lo que NO se decide aquí.** Categorías y alérgenos siguen en el admin: son listas cortas que se tocan pocas veces al año. No se edita ni se borra un asiento (`INV-3`). Y el umbral de «quedan pocas» sigue siendo una ayuda de pantalla, no una regla configurable.
+
+**Consecuencia asumida.** Los ingresos y las mermas registrados antes del 2026-10-14 seguirán sin responsable para siempre. Es preferible a inventarles uno.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -546,6 +566,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-22` | **No añade alcance ni recorta `[S11]`.** Retira la edición de los datos de la institución en el admin, que nadie usaba; su nombre lo pone el seed (`HU-39`) |
 | `DEC-23` | Alta de un solo acudiente por la institución, sin la carga masiva. Amplía el mecanismo de `HU-01`; la fila de `[S11]` ya era suya |
 | `DEC-24` | Consulta y cancelación de pedidos anticipados con devolución a la billetera, por el acudiente, el cajero y la administración. Amplía `[S11]` con una fila nueva. La reserva deja de apartar existencias |
+| `DEC-25` | **No añade alcance ni recorta `[S11]`.** Sustituye las tres pantallas del inventario en el admin por `/inventario/`, y el libro de inventario guarda quién registra cada movimiento (`HU-69`) |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -575,6 +596,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (hueco detectado) Corte de acceso de un acudiente | **Decidido** | `DEC-20` | `HU-63` |
 | — (`ANEXO B`) Matricular a una familia nueva de una en una | **Decidido** | `DEC-23` | `HU-64` |
 | — (`ANEXO B`) Pedidos anticipados de un estudiante desactivado | **Decidido** | `DEC-24` | `HU-65`, `HU-66`, `HU-67` |
+| — (`ANEXO B`) El libro de inventario no registra quién | **Decidido** | `DEC-25` | `HU-69` |
 
 ---
 
@@ -589,7 +611,7 @@ Lo que estas decisiones **no** resuelven. Se registran en vez de completarse por
 - **Retención y borrado de fotografías.** `DEC-8` no decide cuánto tiempo se conserva la fotografía de un estudiante dado de baja (`DEC-7`), ni si el acudiente puede exigir su eliminación. En una implementación real la Ley 1581 de 2012 lo exigiría.
 - **Recuperación de contraseña olvidada.** `DEC-12` construye el acceso pero no el «¿olvidaste tu clave?». Ninguna historia lo pide y el mecanismo ya existe (`TT-18`), así que exponerlo es una decisión pendiente, no un olvido. **Resuelto el 2026-10-01 por `DEC-19`**, que lo registra como `HU-62`.
 - **Alcance del seed.** `DEC-3` lo menciona como carga inicial técnica. No se decidió si el seed forma parte de lo demostrable en `ENT-01` o es un paso de puesta en marcha fuera de la demo.
-- **El libro de inventario no registra quién.** `MovimientoInventario` guarda qué se movió, cuánto y cuándo, y su servicio **recibe el actor, lo comprueba y lo descarta**: no hay columna para él. Se destapó construyendo el reporte de auditoría (`HU-37`, `TT-177`), cuyo «para» es rastrear quién hizo qué: el cobro, la reserva, la entrega y el cuadre sí dicen quién, y el **ingreso de mercancía y la merma no pueden**. No se resuelve por inferencia —añadir la columna es una historia, y dejaría sin actor todo lo ya registrado—, así que **el reporte lo declara en pantalla** en vez de dejar el hueco en blanco, que se leería como un fallo de la consulta. Conviene recogerlo en `ENT-06` como limitación identificada.
+- **El libro de inventario no registra quién.** `MovimientoInventario` guarda qué se movió, cuánto y cuándo, y su servicio **recibe el actor, lo comprueba y lo descarta**: no hay columna para él. Se destapó construyendo el reporte de auditoría (`HU-37`, `TT-177`), cuyo «para» es rastrear quién hizo qué: el cobro, la reserva, la entrega y el cuadre sí dicen quién, y el **ingreso de mercancía y la merma no pueden**. No se resuelve por inferencia —añadir la columna es una historia, y dejaría sin actor todo lo ya registrado—, así que **el reporte lo declara en pantalla** en vez de dejar el hueco en blanco, que se leería como un fallo de la consulta. Conviene recogerlo en `ENT-06` como limitación identificada. **Resuelto el 2026-10-14 por `DEC-25`**, que lo registra como `HU-69`: el libro guarda quién desde entonces, y lo escrito antes sigue sin quién y se sigue declarando.
 - **Matricular a una familia nueva de una en una.** El alta individual del padrón (`HU-44`, `DT-40`) solo elige un acudiente **que ya existe**: crear uno es dar de alta una cuenta, y sobre el acudiente la institución solo consulta (`[S11]`, `DEC-17`); la única vía que crea cuentas de acudiente es la carga masiva (`HU-01`). Así que un estudiante cuya familia no está en el sistema solo entra subiendo un archivo, aunque sea de una fila. No se resuelve por inferencia —sería ampliar `[S11]`, con su `DEC`—, y conviene recogerlo en `ENT-06` como limitación identificada. **Resuelto el 2026-10-12 por `DEC-23`**, que lo registra como `HU-64`; esa decisión corrige también la lectura de `[S11]` de este punto.
 
 ---

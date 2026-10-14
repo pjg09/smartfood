@@ -298,6 +298,7 @@ class LosLibrosSenalanLaVentaQueLosOriginaTest(TestCase):
                 producto=producto(),
                 tipo=TipoDeMovimientoDeInventario.VENTA,
                 cantidad=-1,
+                registrado_por=self.venta.cajero,
             )
 
     def test_asentar_en_inventario_rechaza_la_venta_en_un_ingreso(self):
@@ -311,6 +312,7 @@ class LosLibrosSenalanLaVentaQueLosOriginaTest(TestCase):
                 tipo=TipoDeMovimientoDeInventario.INGRESO,
                 cantidad=10,
                 venta=self.venta,
+                registrado_por=self.venta.cajero,
             )
 
     def test_el_estudiante_que_no_opera_lo_es_antes_que_nada(self):

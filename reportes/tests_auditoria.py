@@ -31,6 +31,7 @@ from billetera.services import recargar
 from catalogo.models import Categoria, Producto
 from cuentas.models import Rol, Usuario
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
+from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 from inventario.services import ingresar_mercancia, registrar_merma
 from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
@@ -207,11 +208,9 @@ class QuienHizoQueTest(BaseDeLaAuditoria):
 
         self.assertEqual(self.una("cierre").quien, "Diego Ramírez")
 
-    def test_el_ingreso_y_la_merma_no_registran_quien_y_se_dice(self):
-        """**El hueco declarado.** `MovimientoInventario` recibe el `actor`, lo
-        comprueba y no lo guarda, así que estas dos operaciones no pueden decir
-        quién. `quien` es `None` —no una cadena vacía ni un «desconocido»— para
-        que la pantalla pueda decirlo con palabras."""
+    def test_el_ingreso_y_la_merma_dicen_quien_los_registro(self):
+        """`HU-69`. Desde que el libro guarda quién, estas dos operaciones lo
+        dicen como las demás."""
         registrar_merma(
             actor=self.administracion, producto=self.pan, cantidad=2, motivo="Rotura"
         )
@@ -221,17 +220,37 @@ class QuienHizoQueTest(BaseDeLaAuditoria):
         self.assertEqual(len(de_inventario), 2)  # el ingreso y la merma
         for operacion in de_inventario:
             with self.subTest(accion=operacion.accion):
-                self.assertIsNone(operacion.quien)
-                self.assertFalse(operacion.tiene_actor)
+                self.assertEqual(operacion.quien, "Administración")
+
+    def _movimiento_de_antes_de_hu_69(self):
+        """Un ingreso como los que se escribieron antes de que existiera la
+        columna: sin quién. Se crea a mano porque `asentar` ya no lo permite."""
+        return MovimientoInventario.objects.create(
+            producto=self.pan,
+            tipo=TipoDeMovimientoDeInventario.INGRESO,
+            cantidad=3,
+            motivo="Inventario inicial",
+        )
+
+    def test_lo_escrito_antes_no_tiene_quien_y_se_dice(self):
+        """**El hueco declarado.** `quien` es `None` —no una cadena vacía ni un
+        «desconocido»— para que la pantalla pueda decirlo con palabras."""
+        antiguo = self._movimiento_de_antes_de_hu_69()
+
+        (operacion,) = [o for o in self.operaciones() if o.objeto_id == antiguo.pk]
+
+        self.assertIsNone(operacion.quien)
+        self.assertFalse(operacion.tiene_actor)
 
     def test_el_resumen_cuenta_las_que_no_dicen_quien(self):
+        self._movimiento_de_antes_de_hu_69()
         registrar_venta(
             actor=self.cajero, lineas={self.pan.id: 1}, medio_pago=MedioDePago.EFECTIVO
         )
 
         resumen = resumen_de_auditoria(self.operaciones())
 
-        # Solo el ingreso del escenario: la venta sí dice quién.
+        # Solo el movimiento antiguo: el ingreso del escenario y la venta sí dicen quién.
         self.assertEqual(resumen.sin_actor, 1)
 
 
@@ -370,12 +389,27 @@ class LaPantallaDeAuditoriaTest(BaseDeLaAuditoria):
         self.assertContains(respuesta, "data-por-clase")
 
     def test_dice_cuantas_operaciones_no_registran_quien(self):
+        """Las anteriores a `HU-69`, que se crean a mano porque `asentar` ya no
+        deja escribir un asiento sin quién."""
+        MovimientoInventario.objects.create(
+            producto=self.pan, tipo=TipoDeMovimientoDeInventario.INGRESO, cantidad=3
+        )
         self.client.force_login(self.administracion)
 
         respuesta = self.client.get(self.url)
 
         self.assertContains(respuesta, "data-sin-actor")
         self.assertContains(respuesta, "data-sin-quien")
+
+    def test_sin_movimientos_antiguos_no_hay_hueco_que_declarar(self):
+        """La contraprueba: con todo registrado por el camino de hoy, el aviso
+        no se dibuja."""
+        self.client.force_login(self.administracion)
+
+        respuesta = self.client.get(self.url)
+
+        self.assertNotContains(respuesta, "data-sin-actor")
+        self.assertNotContains(respuesta, "data-sin-quien")
 
     def test_el_cajero_no_entra_aunque_registre_las_operaciones(self):
         cajero_con_admin = crear_cuenta(

@@ -1,0 +1,266 @@
+{% comment %} DT-50. La ficha del producto: la misma modal para darlo de alta y para
+   editarlo (`HU-26`, `HU-59`).
+
+   Fragmento (`DT-16`): `GET` y `POST` devuelven esto entero, con el resultado arriba.
+   Composición de la ficha del padrón (`[S2.10]`, `[S2.11]`): cabecera con la equis,
+   cuerpo con desplazamiento propio y pie con las acciones.
+
+   **La validación en el navegador es una comodidad, no la regla** (`DT-15`):
+   `interfaz.js` lee `data-validar`, `data-numero` y `data-no-mas-que`, y apaga
+   «Guardar» mientras quede algo en rojo. El servidor rechaza igual lo que esto deje
+   pasar, y la base, lo que el servidor no viera.
+
+   **Vacío no es cero** en la información nutricional: es «no declarado» (`TT-44`).
+{% endcomment %}
+<div id="ficha-del-producto" data-ficha-del-producto
+     data-estado="{% if creado %}creado{% elif guardado %}guardado{% elif producto %}edicion{% else %}alta{% endif %}"
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      {% if producto %}Editar {{ producto.nombre }}{% else %}Nuevo producto{% endif %}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  {% comment %} `multipart` por la imagen. Tras crear, la respuesta ya es la ficha de
+     edición del producto nuevo, así que el formulario apunta a su edición. {% endcomment %}
+  <form hx-post="{% if producto %}{% url 'edicion-del-producto' producto.pk %}{% else %}{% url 'producto-nuevo' %}{% endif %}"
+        hx-target="#ficha-del-producto" hx-swap="outerHTML"
+        hx-encoding="multipart/form-data"
+        hx-indicator="#guardando-el-producto"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-5 overflow-y-auto px-6 py-5">
+
+      {% if creado or guardado %}
+        <p role="status" data-producto-guardado
+           class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                  text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <span>
+            {% if creado %}Producto creado. Entra con cero unidades: regístralas con «Ajustar».{% else %}Cambios guardados.{% endif %}
+          </span>
+        </p>
+      {% endif %}
+
+      {% if formulario.non_field_errors %}
+        <div role="alert" class="rounded-md border border-error bg-error-suave px-3 py-2 text-base text-error-fuerte">
+          {% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      {% comment %} `HU-59`. La imagen, opcional: un producto sin imagen se vende igual. La
+         vista previa la pone el script al elegir el fichero (la pieza es la de la ficha
+         del estudiante). {% endcomment %}
+      <section class="flex flex-col gap-3 rounded-md border border-borde p-4">
+        <h3 class="text-base font-semibold text-texto">Imagen <span class="font-normal text-texto-suave">(opcional)</span></h3>
+        <div class="flex items-start gap-4">
+          <div class="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-superficie-hover">
+            <img data-foto-vista alt=""
+                 {% if producto.tiene_imagen %}src="{{ producto.url_de_la_imagen }}"{% else %}hidden{% endif %}
+                 class="h-full w-full object-cover">
+            <span data-foto-inicial aria-hidden="true" {% if producto.tiene_imagen %}hidden{% endif %}
+                  class="flex h-full w-full items-center justify-center text-texto-suave">
+              <svg class="h-8 w-8"><use href="#i-manzana"></use></svg>
+            </span>
+          </div>
+          <div class="flex min-w-0 flex-col gap-2" data-campo>
+            <label class="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border
+                          border-borde bg-superficie px-3 py-1.5 text-base font-medium text-texto
+                          transition-colors hover:border-primario hover:bg-superficie-hover
+                          has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-acento">
+              <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-cargar"></use></svg>
+              <span data-foto-nombre>{% if producto.tiene_imagen %}Cambiar imagen{% else %}Subir imagen{% endif %}</span>
+              <input type="file" name="{{ formulario.imagen.html_name }}" data-foto-entrada
+                     accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" class="sr-only">
+            </label>
+            <p class="text-sm text-texto-suave">
+              JPEG, PNG, WebP, GIF o BMP, hasta {{ tamano_maximo_mb }} MB. Se reduce a
+              {{ lado_maximo }} px de lado antes de guardarla.
+            </p>
+            {% if formulario.imagen.errors %}
+              <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ formulario.imagen.errors|join:" " }}</p>
+            {% endif %}
+            {% comment %} La imagen falló al procesarse **después** de guardar lo demás: no es
+               un error del formulario, que ya está guardado, sino un aviso de ese campo. {% endcomment %}
+            {% if error_de_imagen %}
+              <p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ error_de_imagen }}</p>
+            {% endif %}
+            {% if producto.tiene_imagen %}
+              <label class="inline-flex w-fit items-center gap-2 text-sm text-texto">
+                <input type="checkbox" name="{{ formulario.quitar_imagen.html_name }}"
+                       {% if formulario.quitar_imagen.value %}checked{% endif %}
+                       class="h-4 w-4 accent-primario">
+                Quitar la imagen actual
+              </label>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      {% with campo=formulario.nombre %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Nombre</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el nombre del producto."
+                 data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                        hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+        </div>
+      {% endwith %}
+
+      <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2">
+        {% with campo=formulario.precio %}
+          <div class="flex flex-col gap-1" data-campo>
+            <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Precio</label>
+            <div class="relative">
+              <span aria-hidden="true" class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base text-texto-suave">$</span>
+              <input type="text" inputmode="decimal" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                     value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                     data-validar data-numero="decimal"
+                     data-aviso-vacio="Escribe el precio."
+                     data-aviso-numero="Solo números, sin signo ni puntos de miles: 3500, o 3500.50."
+                     class="h-12 w-full rounded-md border bg-superficie pr-3 pl-7 text-base tabular-nums text-texto
+                            transition-colors hover:border-acento focus:border-acento focus:outline-none
+                            {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+            </div>
+            <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+            {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+          </div>
+        {% endwith %}
+
+        {% with campo=formulario.categoria %}
+          <div class="flex flex-col gap-1" data-campo>
+            <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Categoría</label>
+            <select name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                    data-validar data-aviso-vacio="Elige una categoría."
+                    class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                           hover:border-acento focus:border-acento focus:outline-none
+                           {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+              <option value="">Elige una categoría</option>
+              {% for valor, etiqueta in campo.field.choices %}
+                {% if valor %}
+                  <option value="{{ valor }}" {% if campo.value|stringformat:"s" == valor|stringformat:"s" %}selected{% endif %}>{{ etiqueta }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+            {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+          </div>
+        {% endwith %}
+      </div>
+
+      {% comment %} `INV-5`, `DT-7`. Lo que el producto **contiene**. El bloqueo lo configura
+         el acudiente sobre el alérgeno, no sobre este producto: uno que se agregue mañana
+         y declare lo mismo queda cubierto sin tocar nada. {% endcomment %}
+      <fieldset class="flex flex-col gap-2">
+        <legend class="text-base font-medium text-texto">Alérgenos que contiene</legend>
+        <p class="text-sm text-texto-suave">
+          No es una lista de bloqueos: el bloqueo lo pone cada acudiente sobre el alérgeno.
+        </p>
+        {% with marcados=formulario.alergenos_marcados %}
+          <div class="mt-1 flex flex-wrap gap-2" data-alergenos>
+            {% for valor, etiqueta in formulario.alergenos.field.choices %}
+              <label class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-borde
+                            bg-superficie px-3 py-1.5 text-sm text-texto transition-colors
+                            hover:border-acento has-[:checked]:border-primario has-[:checked]:bg-primario
+                            has-[:checked]:text-sobre-primario has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-acento">
+                <input type="checkbox" name="{{ formulario.alergenos.html_name }}" value="{{ valor }}"
+                       {% if valor|stringformat:"s" in marcados %}checked{% endif %} class="sr-only">
+                {{ etiqueta }}
+              </label>
+            {% empty %}
+              <p class="text-sm text-texto-suave">Todavía no hay alérgenos: se crean en «Alérgenos».</p>
+            {% endfor %}
+          </div>
+        {% endwith %}
+      </fieldset>
+
+      <section class="flex flex-col gap-3 rounded-md bg-superficie-hover p-4">
+        <div class="flex flex-col gap-0.5">
+          <h3 class="text-base font-semibold text-texto">Información nutricional</h3>
+          <p class="text-sm text-texto-suave">
+            Por porción vendible, no por 100 g. Todo es opcional: vacío es «no declarado», que
+            no es lo mismo que cero.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2">
+          {% for dato in nutricion %}
+            {% with campo=dato.campo %}
+              <div class="flex flex-col gap-1 {% if forloop.first %}tablet:col-span-2{% endif %}" data-campo>
+                <label for="{{ campo.id_for_label }}" class="text-sm font-medium text-texto">{{ campo.label }}</label>
+                <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                       value="{{ campo.value|default_if_none:'' }}" autocomplete="off"
+                       {% if dato.numero %}
+                         inputmode="{% if dato.numero == 'entero' %}numeric{% else %}decimal{% endif %}"
+                         data-validar data-numero="{{ dato.numero }}"
+                         data-aviso-numero="{% if dato.numero == 'entero' %}Solo números enteros, sin signo.{% else %}Solo números, sin signo: 12 o 12.5.{% endif %}"
+                         {% if dato.tope %}data-no-mas-que="{{ dato.tope }}" data-aviso-mayor="{{ dato.aviso_mayor }}"{% endif %}
+                       {% else %}
+                         placeholder="Paquete de 30 g, vaso de 200 ml…"
+                         data-validar data-maximo="{{ campo.field.max_length }}"
+                         data-aviso-largo="No puede pasar de {{ campo.field.max_length }} caracteres."
+                       {% endif %}
+                       class="h-11 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                              hover:border-acento focus:border-acento focus:outline-none
+                              {% if dato.numero %}tabular-nums{% endif %}
+                              {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+                <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+                {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+              </div>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      </section>
+
+      {% comment %} Solo al editar. Apagarlo es retirarlo del catálogo, igual que el icono de
+         la fila; encenderlo lo devuelve. En el alta un producto nace a la venta. {% endcomment %}
+      {% if producto %}
+        <label class="flex cursor-pointer items-start justify-between gap-4 rounded-md border border-borde p-4">
+          <span class="flex flex-col gap-0.5">
+            <span class="text-base font-semibold text-texto">En el catálogo</span>
+            <span class="text-sm text-texto-suave">
+              Apagado, deja de venderse y de ofrecerse al acudiente. No se borra nada.
+            </span>
+          </span>
+          <input type="checkbox" name="{{ formulario.activo.html_name }}" value="on"
+                 {% if formulario.activo.value %}checked{% endif %} class="peer sr-only">
+          <span aria-hidden="true"
+                class="relative mt-1 h-6 w-11 shrink-0 rounded-full border border-borde bg-superficie-hover
+                       transition-colors peer-checked:border-primario peer-checked:bg-primario
+                       peer-focus-visible:ring-2 peer-focus-visible:ring-acento
+                       after:absolute after:top-0.5 after:left-0.5 after:h-4.5 after:w-4.5
+                       after:rounded-full after:bg-texto-suave after:transition-transform
+                       peer-checked:after:translate-x-5 peer-checked:after:bg-sobre-primario"></span>
+        </label>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="guardando-el-producto" class="htmx-indicator mr-auto text-sm text-texto-suave">Guardando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if creado or guardado %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        {% if producto %}Guardar{% else %}Crear producto{% endif %}
+      </button>
+    </div>
+  </form>
+</div>

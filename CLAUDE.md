@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado: las 68 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
+**El producto está terminado: las 69 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
 **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
 Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
 (`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
@@ -27,7 +27,9 @@ pendiente se cancela con motivo y devolución a la billetera (`DEC-24`, `DT-47`,
 `HU-65` … `HU-67`).
 El 2026-10-14, la administración ve todos los pedidos con un filtro por estado y la
 cafetería cancela desde la modal del pedido (`DT-49`, `HU-68`, sin `DEC`: `[S11]` ya le daba
-los reportes de ventas).
+los reportes de ventas). El mismo día, productos, ingresos, mermas e historial dejaron el admin
+por una sola pantalla, `/inventario/`, y el libro de inventario empezó a guardar quién registra
+cada asiento (`DEC-25`, `DT-50`, `HU-69`).
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -63,7 +65,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las sesenta y tres trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las sesenta y cuatro trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -183,7 +185,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las sesenta y tres están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las sesenta y cuatro están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -331,10 +333,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.818 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
+La suite completa son **1.850 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.818, no corrió entera.
+menos de esas 1.850, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

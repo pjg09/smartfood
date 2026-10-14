@@ -855,7 +855,8 @@
     modal.addEventListener("change", function (evento) {
       var entrada = evento.target.closest("[data-foto-entrada]");
       if (!entrada || !entrada.files || !entrada.files[0]) return;
-      var ficha = entrada.closest("[data-ficha-del-estudiante]");
+      // La del estudiante (`DT-40`) y la del producto (`DT-50`) comparten la pieza.
+      var ficha = entrada.closest("[data-ficha-del-estudiante], [data-ficha-del-producto]");
       var vista = ficha.querySelector("[data-foto-vista]");
       var inicial = ficha.querySelector("[data-foto-inicial]");
       var nombre = ficha.querySelector("[data-foto-nombre]");
@@ -873,20 +874,41 @@
     // Django, y el servidor rechaza igual lo que esto deje pasar. Aquí solo se
     // dice antes lo que el servidor diría después, y se apaga «Guardar» mientras
     // haya algo que decir.
+    //
+    // Los números (`DT-50`): `data-numero="entero"` o `"decimal"` dicen la forma,
+    // **sin signo** —ni el precio ni una cantidad del inventario lo llevan—, y
+    // `data-no-mas-que` apunta a otro campo que este no puede superar: las
+    // saturadas dentro de las grasas totales, los azúcares dentro de los
+    // carbohidratos. Son las mismas reglas que el formulario y la base.
     function avisoDe(campo) {
       var valor = campo.value.trim();
       var minimo = parseInt(campo.getAttribute("data-minimo") || "0", 10);
       var maximo = parseInt(campo.getAttribute("data-maximo") || "0", 10);
-      if (!valor) return campo.getAttribute("data-aviso-vacio");
+      if (!valor) return campo.getAttribute("data-aviso-vacio") || "";
       if (minimo && valor.length < minimo) return campo.getAttribute("data-aviso-corto");
       if (maximo && valor.length > maximo) return campo.getAttribute("data-aviso-largo");
+      var numero = campo.getAttribute("data-numero");
+      if (numero === "entero" && !/^\d+$/.test(valor)) return campo.getAttribute("data-aviso-numero");
+      if (numero === "decimal" && !/^\d+(\.\d{1,2})?$/.test(valor)) return campo.getAttribute("data-aviso-numero");
+      var tope = campo.getAttribute("data-no-mas-que");
+      var otro = tope && campo.form && campo.form.querySelector(tope);
+      if (otro && /^\d+(\.\d{1,2})?$/.test(otro.value.trim()) &&
+          parseFloat(valor) > parseFloat(otro.value.trim())) {
+        return campo.getAttribute("data-aviso-mayor");
+      }
       return "";
     }
 
+    // **Un campo vacío que nadie ha tocado no se pinta en rojo** (`DT-50`): una
+    // ficha recién abierta llena de avisos riñe a quien todavía no ha escrito
+    // nada. Cuenta igual para apagar «Guardar»; lo que espera es el aviso, hasta
+    // que el campo se toca (`data-tocado`, lo pone el evento `input`).
     function validar(formulario) {
       var hayFallos = false;
       formulario.querySelectorAll("[data-validar]").forEach(function (campo) {
         var aviso = avisoDe(campo);
+        if (aviso) hayFallos = true;
+        if (!campo.value.trim() && !campo.hasAttribute("data-tocado")) aviso = "";
         var contenedor = campo.closest("[data-campo]");
         var hueco = contenedor && contenedor.querySelector("[data-aviso]");
         if (hueco) {
@@ -898,7 +920,6 @@
           campo.classList.toggle("border-borde", !aviso);
           campo.setAttribute("aria-invalid", aviso ? "true" : "false");
         }
-        if (aviso) hayFallos = true;
       });
       var guardar = formulario.querySelector("[data-guardar-ficha]");
       if (guardar) guardar.disabled = hayFallos;
@@ -909,8 +930,16 @@
     }
 
     modal.addEventListener("input", function (evento) {
+      // Una cantidad del inventario **solo admite dígitos** (`DT-50`): el tipo
+      // —ingreso o merma— decide el signo, y un «-» escrito a mano es justo el
+      // error que eso evita. Se quita al teclear, no se avisa después.
+      if (evento.target.matches("[data-solo-digitos]")) {
+        var limpio = evento.target.value.replace(/\D/g, "");
+        if (limpio !== evento.target.value) evento.target.value = limpio;
+      }
       var formulario = evento.target.closest("[data-formulario-validado]");
       if (!formulario) return;
+      if (evento.target.matches("[data-validar]")) evento.target.setAttribute("data-tocado", "");
       // El error que trajo el servidor se refería a lo que había antes de tocar
       // el campo: en cuanto cambia, deja de ser verdad.
       var contenedor = evento.target.closest("[data-campo]");

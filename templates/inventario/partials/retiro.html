@@ -1,0 +1,59 @@
+{% comment %} DT-50. Retirar un producto del catálogo, con confirmación (`HU-26`).
+
+   **No se borra nada**, y la modal lo dice antes de que se pulse: el producto deja de
+   venderse y de ofrecerse al acudiente, y sus ventas, su historial de existencias y
+   los bloqueos que le pusieron los acudientes se conservan (`INV-3`, `DT-8`). Se
+   devuelve al catálogo desde «Ver retirados» o desde su ficha.
+
+   El botón va en `error` porque es la acción que saca algo de la venta; el resto de la
+   modal no, porque nada ha fallado.
+{% endcomment %}
+<div id="retiro-del-producto" data-retiro-del-producto="{% if retirado %}hecho{% else %}pendiente{% endif %}"
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Retirar del catálogo</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 px-6 py-5">
+    {% if retirado %}
+      <p role="status" class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                              text-base text-exito-fuerte">
+        <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+        <span><strong class="font-semibold">{{ producto.nombre }}</strong> ya no se vende. Lo encuentras en «Ver retirados».</span>
+      </p>
+    {% else %}
+      <p class="text-base text-texto">
+        <strong class="font-semibold">{{ producto.nombre }}</strong> dejará de venderse y de aparecer
+        en el catálogo del acudiente y en la caja.
+      </p>
+      <p class="rounded-md bg-superficie-hover p-3 text-sm text-texto-suave">
+        No se borra nada: sus ventas siguen apareciendo en los reportes con el nombre que
+        tenía, su historial de existencias se conserva, y los bloqueos que le hayan puesto
+        los acudientes siguen ahí.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      {% if retirado %}Cerrar{% else %}Cancelar{% endif %}
+    </button>
+    {% if not retirado %}
+      <button type="button" data-confirmar-retiro
+              hx-post="{% url 'retiro-del-producto' producto.pk %}"
+              hx-target="#retiro-del-producto" hx-swap="outerHTML"
+              class="inline-flex h-11 items-center rounded-md bg-error px-5 text-base font-medium
+                     text-sobre-error transition-colors hover:bg-error-fuerte">
+        Retirar
+      </button>
+    {% endif %}
+  </div>
+</div>

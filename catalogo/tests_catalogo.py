@@ -176,7 +176,11 @@ class RetirarNoEsBorrarTest(BaseDeCatalogo):
             editar_producto(actor=self.actor, producto=producto, inventado="x")
 
 
-# --- `TT-45`. La vista de gestión -------------------------------------------
+# --- `TT-45`, `DT-50`. La vista de gestión ------------------------------------
+#
+# Desde `DEC-25` el producto se crea, se edita y se retira en `/inventario/`, en
+# una modal; el admin conserva las categorías y los alérgenos. Lo que estas
+# pruebas protegían por el admin lo protegen ahora por la pantalla nueva.
 
 
 class LaVistaDeGestionTest(BaseDeCatalogo):
@@ -184,47 +188,70 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
         super().setUp()
         self.client.force_login(self.actor)
 
-    def test_la_administracion_alcanza_las_tres_pantallas(self):
-        for ruta in [
-            "admin:catalogo_producto_changelist",
-            "admin:catalogo_categoria_changelist",
-            "admin:catalogo_alergeno_changelist",
+    def datos(self, **cambios):
+        return {
+            "nombre": "Pan de queso",
+            "precio": "2500",
+            "categoria": str(self.categoria.pk),
+            "alergenos": [str(self.lactosa.pk)],
+            "porcion": "unidad de 80 g",
+            "energia_kcal": "220",
+            **cambios,
+        }
+
+    def test_la_administracion_alcanza_la_pantalla_y_las_dos_del_admin(self):
+        for url in [
+            reverse("inventario"),
+            reverse("admin:catalogo_categoria_changelist"),
+            reverse("admin:catalogo_alergeno_changelist"),
         ]:
-            with self.subTest(ruta=ruta):
-                self.assertEqual(self.client.get(reverse(ruta)).status_code, 200)
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
 
-    def test_crea_un_producto_desde_el_admin_pasando_por_el_servicio(self):
-        respuesta = self.client.post(
-            reverse("admin:catalogo_producto_add"),
-            {
-                "nombre": "Pan de queso",
-                "precio": "2500",
-                "categoria": str(self.categoria.pk),
-                "activo": "on",
-                "alergenos_declarados": [str(self.lactosa.pk)],
-                "porcion": "unidad de 80 g",
-                "energia_kcal": "220",
-            },
-        )
-        self.assertEqual(respuesta.status_code, 302)
+    def test_el_producto_ya_no_esta_en_el_admin(self):
+        """`DEC-25`: dos sitios para crear lo mismo acabarían pidiendo cosas distintas."""
+        from django.urls import NoReverseMatch
 
+        with self.assertRaises(NoReverseMatch):
+            reverse("admin:catalogo_producto_changelist")
+
+    def test_crea_un_producto_pasando_por_el_servicio(self):
+        respuesta = self.client.post(reverse("producto-nuevo"), self.datos())
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'data-estado="creado"')
+        self.assertEqual(respuesta["HX-Trigger"], "inventario-cambiado")
         producto = Producto.objects.get(nombre="Pan de queso")
         self.assertEqual(producto.energia_kcal, 220)
         self.assertEqual([a.nombre for a in producto.alergenos.all()], ["Lactosa"])
 
-    def test_edita_los_alergenos_desde_el_admin(self):
+    def test_un_nombre_repetido_vuelve_con_su_error_y_no_crea_nada(self):
+        self.producto(nombre="Pan de queso")
+
+        respuesta = self.client.post(reverse("producto-nuevo"), self.datos(nombre="pan de QUESO"))
+
+        self.assertContains(respuesta, "data-error-del-servidor")
+        self.assertNotIn("HX-Trigger", respuesta)
+        self.assertEqual(Producto.objects.filter(nombre__iexact="pan de queso").count(), 1)
+
+    def test_las_saturadas_por_encima_de_las_totales_vuelven_con_su_error(self):
+        """La `CheckConstraint` es la garantía; esto es el mensaje, en vez de un 500."""
+        respuesta = self.client.post(
+            reverse("producto-nuevo"),
+            self.datos(grasas_totales_g="3", grasas_saturadas_g="5"),
+        )
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "data-error-del-servidor")
+        self.assertFalse(Producto.objects.filter(nombre="Pan de queso").exists())
+
+    def test_edita_los_alergenos(self):
         producto = self.producto(alergenos=[self.lactosa])
         mani = Alergeno.objects.create(nombre="Maní")
 
         self.client.post(
-            reverse("admin:catalogo_producto_change", args=[producto.pk]),
-            {
-                "nombre": producto.nombre,
-                "precio": "2500",
-                "categoria": str(self.categoria.pk),
-                "activo": "on",
-                "alergenos_declarados": [str(mani.pk)],
-            },
+            reverse("edicion-del-producto", args=[producto.pk]),
+            self.datos(nombre=producto.nombre, alergenos=[str(mani.pk)], activo="on"),
         )
 
         self.assertEqual({a.nombre for a in producto.alergenos.all()}, {"Maní"})
@@ -233,28 +260,23 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
         """El flanco de `INV-5` que está en la vista y no en el modelo.
 
         `declarar_alergenos` **reemplaza**, no acumula: recibe la lista completa
-        y deja el producto declarando exactamente eso. Si el formulario no
-        trajera marcados los que ya tiene, el navegador enviaría una selección
-        vacía al cambiar cualquier otro campo, y editar el nombre de un producto
-        le **borraría los alérgenos declarados**. `HU-11` dejaría de proteger a
-        un estudiante alérgico sin que nada fallara.
-
-        `TT-46` vigila que el modelo no materialice la lista; esto vigila que la
-        pantalla no la vacíe.
+        y deja el producto declarando exactamente eso. Si la ficha no trajera
+        marcados los que ya tiene, el navegador enviaría una selección vacía al
+        cambiar cualquier otro campo, y editar el nombre de un producto le
+        **borraría los alérgenos declarados**. `HU-11` dejaría de proteger a un
+        estudiante alérgico sin que nada fallara.
         """
         producto = self.producto(alergenos=[self.lactosa])
-        url = reverse("admin:catalogo_producto_change", args=[producto.pk])
+        url = reverse("edicion-del-producto", args=[producto.pk])
 
-        # Lo que el navegador ve marcado en el formulario.
+        # Lo que el navegador ve marcado en la ficha.
         cuerpo = self.client.get(url).content.decode()
-        bloque = re.search(
-            r'name="alergenos_declarados".*?</select>', cuerpo, flags=re.S
+        marcados = re.findall(
+            r'name="alergenos" value="([0-9a-f-]{36})"\s+checked', cuerpo
         )
-        self.assertIsNotNone(bloque, "el formulario no ofrece los alérgenos")
-        marcados = re.findall(r'<option value="([0-9a-f-]{36})" selected>', bloque.group(0))
         self.assertEqual(
             marcados, [str(self.lactosa.pk)],
-            "el formulario no trae marcados los alérgenos que el producto ya declara",
+            "la ficha no trae marcados los alérgenos que el producto ya declara",
         )
 
         # Y lo que el navegador devuelve al cambiar solo el nombre.
@@ -265,7 +287,7 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
                 "precio": "2500",
                 "categoria": str(self.categoria.pk),
                 "activo": "on",
-                "alergenos_declarados": marcados,
+                "alergenos": marcados,
             },
         )
 
@@ -276,26 +298,83 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
             "editar el nombre le borró los alérgenos declarados (INV-5)",
         )
 
+    def test_guardar_la_ficha_tal_como_llega_no_falla_ni_cambia_nada(self):
+        """Ida y vuelta: lo que la ficha pinta es lo que el formulario acepta.
+
+        Se vio en la captura y no en ninguna prueba: el precio salía como
+        «3450,00» —Django localiza un `Decimal` al pintarlo— y el formulario no
+        entiende la coma, así que **guardar sin tocar el precio fallaba**. Las
+        pruebas de arriba mandan sus propios datos y no podían verlo; esta manda
+        lo que manda el navegador.
+        """
+        from html.parser import HTMLParser
+
+        producto = self.producto(alergenos=[self.lactosa])
+        editar_producto(
+            actor=self.actor, producto=producto, precio=Decimal("3450.00"),
+            grasas_totales_g=Decimal("3.20"), grasas_saturadas_g=Decimal("1.50"),
+        )
+        url = reverse("edicion-del-producto", args=[producto.pk])
+
+        class LoQueEnviaElNavegador(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.datos, self._select, self._opcion = {}, None, None
+
+            def handle_starttag(self, etiqueta, atributos):
+                a = dict(atributos)
+                nombre = a.get("name")
+                if etiqueta == "input" and nombre and a.get("type") not in ("file",):
+                    if a.get("type") in ("checkbox", "radio"):
+                        if "checked" in a:
+                            self.datos.setdefault(nombre, []).append(a.get("value", "on"))
+                    else:
+                        self.datos[nombre] = a.get("value", "")
+                elif etiqueta == "select":
+                    self._select = nombre
+                elif etiqueta == "option" and self._select and "selected" in a:
+                    self.datos[self._select] = a.get("value", "")
+
+            def handle_endtag(self, etiqueta):
+                if etiqueta == "select":
+                    self._select = None
+
+        lector = LoQueEnviaElNavegador()
+        lector.feed(self.client.get(url).content.decode())
+
+        respuesta = self.client.post(url, lector.datos)
+
+        self.assertContains(respuesta, 'data-estado="guardado"')
+        producto.refresh_from_db()
+        self.assertEqual(producto.precio, Decimal("3450.00"))
+        self.assertEqual(producto.grasas_totales_g, Decimal("3.20"))
+        self.assertEqual(producto.grasas_saturadas_g, Decimal("1.50"))
+        self.assertEqual([a.nombre for a in producto.alergenos.all()], ["Lactosa"])
+        self.assertTrue(producto.activo)
+
     def test_el_alta_no_ofrece_quitar_una_imagen_que_no_existe(self):
         """`UX-1` del recorrido de `TT-35`, aplicado también aquí."""
-        cuerpo = self.client.get(reverse("admin:catalogo_producto_add")).content.decode()
+        cuerpo = self.client.get(reverse("producto-nuevo")).content.decode()
 
-        self.assertNotIn("Quitar la imagen actual", cuerpo)
-        self.assertNotIn("Imagen actual:", cuerpo)
+        self.assertNotIn('name="quitar_imagen"', cuerpo)
         self.assertIn('name="imagen"', cuerpo)
 
-    def test_la_ficha_si_los_ofrece(self):
+    def test_el_alta_no_ofrece_sacarlo_del_catalogo(self):
+        """Un producto nace a la venta; el interruptor es de la edición."""
+        cuerpo = self.client.get(reverse("producto-nuevo")).content.decode()
+
+        self.assertNotIn('name="activo"', cuerpo)
+
+    def test_la_edicion_si_ofrece_el_catalogo(self):
         producto = self.producto()
         cuerpo = self.client.get(
-            reverse("admin:catalogo_producto_change", args=[producto.pk])
+            reverse("edicion-del-producto", args=[producto.pk])
         ).content.decode()
 
-        self.assertIn("Quitar la imagen actual", cuerpo)
+        self.assertIn('name="activo"', cuerpo)
 
-    def test_no_ofrece_borrar_ninguno_de_los_tres(self):
-        producto = self.producto()
+    def test_no_ofrece_borrar_categorias_ni_alergenos(self):
         for ruta, argumentos in [
-            ("admin:catalogo_producto_delete", [producto.pk]),
             ("admin:catalogo_categoria_delete", [self.categoria.pk]),
             ("admin:catalogo_alergeno_delete", [self.lactosa.pk]),
         ]:
@@ -304,45 +383,64 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
                     self.client.get(reverse(ruta, args=argumentos)).status_code, 403
                 )
 
-    def test_la_accion_de_retirar_pasa_por_el_servicio(self):
+    def test_retirar_pasa_por_el_servicio_y_no_borra(self):
         producto = self.producto()
 
-        self.client.post(
-            reverse("admin:catalogo_producto_changelist"),
-            {"action": "accion_retirar", "_selected_action": [str(producto.pk)]},
-        )
+        respuesta = self.client.post(reverse("retiro-del-producto", args=[producto.pk]))
 
+        self.assertContains(respuesta, 'data-retiro-del-producto="hecho"')
+        self.assertEqual(respuesta["HX-Trigger"], "inventario-cambiado")
         producto.refresh_from_db()
         self.assertFalse(producto.activo)
+
+    def test_retirar_pide_confirmacion_antes(self):
+        """El `GET` enseña la confirmación y no toca nada."""
+        producto = self.producto()
+
+        respuesta = self.client.get(reverse("retiro-del-producto", args=[producto.pk]))
+
+        self.assertContains(respuesta, 'data-retiro-del-producto="pendiente"')
+        producto.refresh_from_db()
+        self.assertTrue(producto.activo)
+
+    def test_devolver_al_catalogo(self):
+        producto = self.producto()
+        retirar_del_catalogo(actor=self.actor, producto=producto)
+
+        respuesta = self.client.post(reverse("devolucion-al-catalogo", args=[producto.pk]))
+
+        self.assertEqual(respuesta.status_code, 204)
+        self.assertEqual(respuesta["HX-Trigger"], "inventario-cambiado")
+        producto.refresh_from_db()
+        self.assertTrue(producto.activo)
 
 
 class ElCatalogoEsSoloDeLaCafeteriaTest(BaseDeCatalogo):
     """`[S11]`. Ni el cajero ni la institución educativa lo gestionan."""
 
-    def test_ni_la_institucion_educativa_lo_ve(self):
-        """El catálogo es de quien lo vende. `USR-5` no aparece en esa fila."""
-        institucion = crear_cuenta(
-            email="institucion@example.com",
-            rol=Rol.INSTITUCION,
-            accede_a_administracion=True,
-            enviar_invitacion=False,
-        )
-        self.client.force_login(institucion)
+    def rutas(self):
+        producto = self.producto()
+        return [
+            ("get", reverse("inventario")),
+            ("get", reverse("producto-nuevo")),
+            ("post", reverse("producto-nuevo")),
+            ("get", reverse("edicion-del-producto", args=[producto.pk])),
+            ("post", reverse("retiro-del-producto", args=[producto.pk])),
+            ("post", reverse("devolucion-al-catalogo", args=[producto.pk])),
+        ]
 
-        self.assertEqual(
-            self.client.get(reverse("admin:catalogo_producto_changelist")).status_code,
-            403,
-        )
-
-    def test_ni_el_cajero(self):
-        cajero = crear_cuenta(
-            email="cajero@example.com",
-            rol=Rol.CAJERO,
-            accede_a_administracion=True,
-            enviar_invitacion=False,
-        )
-        self.client.force_login(cajero)
-
-        self.assertEqual(
-            self.client.get(reverse("admin:catalogo_producto_add")).status_code, 403
-        )
+    def test_ni_la_institucion_educativa_ni_el_cajero(self):
+        """El catálogo es de quien lo vende. `USR-5` y `USR-3` no aparecen en esa fila."""
+        rutas = self.rutas()
+        for rol, email in [
+            (Rol.INSTITUCION, "institucion@example.com"),
+            (Rol.CAJERO, "cajero@example.com"),
+        ]:
+            usuario = crear_cuenta(
+                email=email, rol=rol, accede_a_administracion=True, enviar_invitacion=False
+            )
+            self.client.force_login(usuario)
+            for metodo, url in rutas:
+                with self.subTest(rol=rol, url=url, metodo=metodo):
+                    self.assertEqual(getattr(self.client, metodo)(url).status_code, 403)
+        self.assertTrue(Producto.objects.get().activo)

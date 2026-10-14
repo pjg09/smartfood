@@ -1,0 +1,127 @@
+{% comment %} DT-50. Mover las existencias de un producto: ingreso o merma (`HU-27`, `HU-28`).
+
+   Fragmento (`DT-16`): `GET` y `POST` devuelven esto entero. Al registrar vuelve vacío,
+   con lo que se hizo arriba, por si hay otro que registrar.
+
+   **Las dos cantidades se escriben en positivo y solo con dígitos**: el tipo decide el
+   signo. `interfaz.js` quita al teclear lo que no sea un dígito (`data-solo-digitos`),
+   y el servidor lo rechaza igual. Un «-3» escrito a mano en una merma sumaría
+   existencias que nadie ingresó, y ese error no falla.
+
+   **El motivo es obligatorio en los dos**: en la merma lo impone la base (`INV-8`), y
+   en el ingreso lo pide `HU-29` —todo movimiento queda asentado con su motivo—.
+
+   El selector de tipo son dos radios con forma de botones: un control de verdad, que
+   se elige con el teclado. Las frases de ayuda cambian con él por CSS (`group-has-*`),
+   sin una línea de JavaScript.
+{% endcomment %}
+<div id="movimiento-del-producto" data-movimiento-del-producto class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Mover existencias de {{ producto.nombre }}</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% url 'movimiento-del-producto' producto.pk %}"
+        hx-target="#movimiento-del-producto" hx-swap="outerHTML"
+        hx-indicator="#registrando-el-movimiento"
+        data-formulario-validado
+        class="group flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+
+      {% if registrado %}
+        <p role="status" data-movimiento-registrado="{{ registrado.tipo }}"
+           class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                  text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <span>
+            {% if registrado.cantidad > 0 %}Ingreso de {{ registrado.cantidad }} registrado.{% else %}Merma de {{ registrado.cantidad|stringformat:"d"|slice:"1:" }} registrada.{% endif %}
+            Quedan <strong class="font-semibold" data-existencias-tras-el-movimiento>{{ existencias }}</strong>.
+          </span>
+        </p>
+      {% else %}
+        <p class="text-sm text-texto-suave">
+          Hay <strong class="font-semibold text-texto" data-existencias-actuales>{{ existencias }}</strong>
+          unidad{{ existencias|pluralize:"es" }} según el libro.
+        </p>
+      {% endif %}
+
+      <div role="radiogroup" aria-label="Tipo de movimiento" class="grid grid-cols-2 gap-2">
+        {% for valor, etiqueta in formulario.tipo.field.choices %}
+          <label class="flex h-11 cursor-pointer items-center justify-center rounded-md border border-borde
+                        bg-superficie text-base font-medium text-texto transition-colors hover:border-acento
+                        has-[:checked]:border-primario has-[:checked]:bg-primario has-[:checked]:text-sobre-primario
+                        has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-acento">
+            <input type="radio" name="{{ formulario.tipo.html_name }}" value="{{ valor }}"
+                   data-tipo-de-movimiento="{{ valor }}"
+                   {% if formulario.tipo.value == valor %}checked{% endif %} class="sr-only">
+            {{ etiqueta }}
+          </label>
+        {% endfor %}
+      </div>
+
+      {% with campo=formulario.cantidad %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Unidades</label>
+          <input type="text" inputmode="numeric" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{% if not registrado %}{{ campo.value|default_if_none:'' }}{% endif %}" autocomplete="off"
+                 data-solo-digitos data-validar data-numero="entero"
+                 data-aviso-vacio="Escribe cuántas unidades."
+                 data-aviso-numero="Solo números, sin signo."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base tabular-nums text-texto
+                        transition-colors hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+          <p class="text-sm text-texto-suave group-has-[[data-tipo-de-movimiento=merma]:checked]:hidden">
+            Cuántas llegaron o se prepararon, en positivo: el ingreso suma.
+          </p>
+          <p class="hidden text-sm text-texto-suave group-has-[[data-tipo-de-movimiento=merma]:checked]:block">
+            Cuántas se pierden, en positivo: la merma ya resta por sí sola.
+          </p>
+        </div>
+      {% endwith %}
+
+      {% with campo=formulario.motivo %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Motivo</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{% if not registrado %}{{ campo.value|default_if_none:'' }}{% endif %}" autocomplete="off"
+                 placeholder="Pedido semanal, se cayó una bandeja…"
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el motivo."
+                 data-aviso-largo="El motivo no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+          <p class="text-sm text-texto-suave">
+            Obligatorio: unas existencias que cambian sin explicación no se pueden auditar después.
+          </p>
+        </div>
+      {% endwith %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <span id="registrando-el-movimiento" class="htmx-indicator mr-auto text-sm text-texto-suave">Registrando…</span>
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if registrado %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Registrar
+      </button>
+    </div>
+  </form>
+</div>

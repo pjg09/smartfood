@@ -25,6 +25,8 @@ La clave primaria es UUIDv7 generado en la aplicación (`DT-17`).
 
 import uuid
 
+from django.conf import settings
+
 from django.db import models
 
 
@@ -114,6 +116,24 @@ class MovimientoInventario(models.Model):
         verbose_name="venta",
     )
     creado_en = models.DateTimeField("creado en", auto_now_add=True)
+    # `HU-69`, `DT-50`. Quién registró el asiento: la administración en un
+    # ingreso o una merma, el cajero en una salida por venta. **Nulo solo en lo
+    # escrito antes de que existiera la columna**: el servicio la recibía, la
+    # comprobaba y la descartaba (`ANEXO B` de `decisiones-de-alcance.md`), y
+    # no se rellena por inferencia. Lo nuevo la lleva siempre — lo exige
+    # `asentar`, porque una `CheckConstraint` no podría validarse sobre esas
+    # filas antiguas sin inventarles un autor.
+    #
+    # `PROTECT`: un usuario no se borra, se desactiva (`HU-42`); y si se
+    # borrara, el libro perdería quién hizo cada asiento.
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="movimientos_de_inventario_registrados",
+        verbose_name="registrado por",
+    )
 
     class Meta:
         verbose_name = "movimiento de inventario"
