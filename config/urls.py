@@ -12,7 +12,14 @@ from django.urls import path, reverse_lazy
 from django.views.generic import TemplateView
 
 from billetera.views import recarga
-from catalogo.views import imagen_del_producto
+from catalogo.views import (
+    categoria_nueva,
+    categorias,
+    edicion_de_categoria,
+    eliminacion_de_categoria,
+    imagen_del_producto,
+    tablero_de_categorias,
+)
 from config.salud import salud
 from cuentas.views import (
     RecuperacionDeContrasenaForm,
@@ -150,6 +157,21 @@ urlpatterns = [
         "inventario/productos/<uuid:producto_id>/devolver/",
         devolucion_al_catalogo,
         name="devolucion-al-catalogo",
+    ),
+    # `DEC-25`, `DT-51`. Las categorías del catálogo, fuera del admin por lo
+    # mismo que el inventario: sus modales necesitan el sistema visual entero.
+    path("categorias/", categorias, name="categorias"),
+    path("categorias/tablero/", tablero_de_categorias, name="tablero-de-categorias"),
+    path("categorias/nueva/", categoria_nueva, name="categoria-nueva"),
+    path(
+        "categorias/<uuid:categoria_id>/editar/",
+        edicion_de_categoria,
+        name="edicion-de-categoria",
+    ),
+    path(
+        "categorias/<uuid:categoria_id>/eliminar/",
+        eliminacion_de_categoria,
+        name="eliminacion-de-categoria",
     ),
     # `HU-68`. El tablero de esa pantalla sin la página, para repintarlo cuando
     # la modal cancela un pedido (`DT-16`, `DT-40`).

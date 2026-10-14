@@ -9,12 +9,19 @@ endpoint devuelve a veces una cosa y a veces la otra, se parte en dos.
 
 import re
 
+from django import forms
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.core.files.storage import storages
 from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import cache_control
-from django.views.decorators.http import require_safe
+from django.views.decorators.http import require_http_methods, require_safe
 
+from catalogo.models import Categoria
+from catalogo.selectors import categorias_del_catalogo
+from catalogo.services import crear_categoria, editar_categoria, eliminar_categoria
 from config.imagenes import TIPO_SALIDA
 
 # La forma exacta de las claves que produce la canalización: 32 dígitos
@@ -56,3 +63,153 @@ def imagen_del_producto(request, clave):
         raise Http404("No hay ninguna imagen con esa clave.")
 
     return FileResponse(almacenamiento.open(clave), content_type=TIPO_SALIDA)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LAS CATEGORÍAS (`DEC-25`, `DT-51`)
+#
+# Una pantalla propia, como `/inventario/`, y por lo mismo: sus modales
+# necesitan el sistema visual entero. Ninguna vista escribe: crear, editar y
+# eliminar son de `catalogo.services`. Cada escritura responde con la misma
+# modal y `HX-Trigger: categorias-cambiado`, y el tablero de detrás se vuelve a
+# pedir (`DT-16`, `DT-40`).
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class CategoriaForm(forms.Form):
+    """Nombre y descripción de una categoría. **El nombre es único sin
+    distinguir mayúsculas**: «bebidas» y «Bebidas» partirían las alertas de
+    `HU-31` en dos grupos que son el mismo."""
+
+    nombre = forms.CharField(label="Nombre", max_length=80)
+    descripcion = forms.CharField(label="Descripción", max_length=200, required=False)
+
+    def __init__(self, *args, categoria=None, **kwargs):
+        self.categoria = categoria
+        super().__init__(*args, **kwargs)
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data["nombre"].strip()
+        repetida = Categoria.objects.filter(nombre__iexact=nombre)
+        if self.categoria is not None:
+            repetida = repetida.exclude(pk=self.categoria.pk)
+        if repetida.exists():
+            raise ValidationError("Ya hay una categoría con ese nombre.")
+        return nombre
+
+
+def _avisar_a_las_categorias(respuesta):
+    respuesta["HX-Trigger"] = "categorias-cambiado"
+    return respuesta
+
+
+def _contexto_del_tablero(request):
+    categorias = categorias_del_catalogo(actor=request.user)
+    return {
+        "categorias": categorias,
+        "en_uso": sum(1 for c in categorias if c.cuantos),
+    }
+
+
+def _categoria(request, categoria_id):
+    """La categoría, **después** de comprobar el rol: un `404` no puede
+    contarle a otro rol qué existe."""
+    categorias_del_catalogo(actor=request.user)
+    return get_object_or_404(Categoria, pk=categoria_id)
+
+
+@login_required
+@require_http_methods(["GET"])
+def categorias(request):
+    """La pantalla: dos cifras y una fila por categoría."""
+    return render(request, "catalogo/categorias.html", _contexto_del_tablero(request))
+
+
+@login_required
+@require_http_methods(["GET"])
+def tablero_de_categorias(request):
+    """Las cifras y la lista, como fragmento: se repintan tras cada escritura."""
+    return render(request, "catalogo/partials/tablero-de-categorias.html", _contexto_del_tablero(request))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def categoria_nueva(request):
+    """Alta en la modal. Al crear vuelve vacía, con lo hecho arriba, lista para
+    otra; un error vuelve junto al campo, en `200`."""
+    categorias_del_catalogo(actor=request.user)
+
+    if request.method == "GET":
+        return render(request, "catalogo/partials/ficha-de-categoria.html", {"formulario": CategoriaForm()})
+
+    formulario = CategoriaForm(request.POST)
+    if not formulario.is_valid():
+        return render(request, "catalogo/partials/ficha-de-categoria.html", {"formulario": formulario})
+
+    creada = crear_categoria(actor=request.user, **formulario.cleaned_data)
+    return _avisar_a_las_categorias(render(
+        request, "catalogo/partials/ficha-de-categoria.html",
+        {"formulario": CategoriaForm(), "creada": creada},
+    ))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edicion_de_categoria(request, categoria_id):
+    """Renombrar o describir una categoría, en la misma modal que el alta."""
+    categoria = _categoria(request, categoria_id)
+
+    def ficha(formulario, **extra):
+        return render(request, "catalogo/partials/ficha-de-categoria.html", {
+            "formulario": formulario, "categoria": categoria, **extra,
+        })
+
+    if request.method == "GET":
+        return ficha(CategoriaForm(
+            initial={"nombre": categoria.nombre, "descripcion": categoria.descripcion},
+            categoria=categoria,
+        ))
+
+    formulario = CategoriaForm(request.POST, categoria=categoria)
+    if not formulario.is_valid():
+        return ficha(formulario)
+
+    editar_categoria(actor=request.user, categoria=categoria, **formulario.cleaned_data)
+    return _avisar_a_las_categorias(ficha(
+        CategoriaForm(
+            initial={"nombre": categoria.nombre, "descripcion": categoria.descripcion},
+            categoria=categoria,
+        ),
+        guardada=True,
+    ))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def eliminacion_de_categoria(request, categoria_id):
+    """Confirmar y eliminar una categoría **vacía** (`DT-51`).
+
+    Con productos, la modal dice cuántos y no ofrece el botón: un botón que la
+    base va a rechazar no se pinta (`[S4]` del sistema visual). Si alguien lo
+    fuerza, el servicio lo rechaza y la modal vuelve con su motivo.
+    """
+    categoria = _categoria(request, categoria_id)
+    cuantos = categoria.productos.count()
+
+    if request.method == "GET":
+        return render(request, "catalogo/partials/eliminacion-de-categoria.html", {
+            "categoria": categoria, "cuantos": cuantos,
+        })
+
+    nombre = categoria.nombre
+    try:
+        eliminar_categoria(actor=request.user, categoria=categoria)
+    except ValidationError as error:
+        return render(request, "catalogo/partials/eliminacion-de-categoria.html", {
+            "categoria": categoria, "cuantos": cuantos, "error": " ".join(error.messages),
+        })
+    return _avisar_a_las_categorias(render(
+        request, "catalogo/partials/eliminacion-de-categoria.html",
+        {"eliminada": nombre},
+    ))
+

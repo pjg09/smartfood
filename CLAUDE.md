@@ -29,7 +29,7 @@ El 2026-10-14, la administración ve todos los pedidos con un filtro por estado 
 cafetería cancela desde la modal del pedido (`DT-49`, `HU-68`, sin `DEC`: `[S11]` ya le daba
 los reportes de ventas). El mismo día, productos, ingresos, mermas e historial dejaron el admin
 por una sola pantalla, `/inventario/`, y el libro de inventario empezó a guardar quién registra
-cada asiento (`DEC-25`, `DT-50`, `HU-69`).
+cada asiento (`DEC-25`, `DT-50`, `HU-69`); las categorías, a `/categorias/` (`DT-51`).
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -136,10 +136,13 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con cinco pantallas propias fuera de él**: el padrón de la institución, que es la que
-secretaría abre a diario (`DT-27`), la cola de reservas pendientes, que comparten dos roles
-que no comparten interfaz (`DT-34`), —desde `DEC-17`— los acudientes y las restricciones, y
-el personal de la cafetería en `/usuarios/` (`DT-45`).
+**con siete pantallas propias fuera de él**: el padrón de la institución, que es la que
+secretaría abre a diario (`DT-27`), los pedidos anticipados, que comparten dos roles que no
+comparten interfaz (`DT-34`), —desde `DEC-17`— los acudientes y las restricciones, el
+personal de la cafetería en `/usuarios/` (`DT-45`), el inventario en `/inventario/`
+(`DEC-25`, `DT-50`) —productos, ingresos, mermas e historial— y las categorías en
+`/categorias/` (`DT-51`). Del inventario, en el admin
+solo queda el reporte de movimientos, de solo lectura.
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
 solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). `/usuarios/` es
 la excepción declarada: no es diaria, pero la del admin mezclaba al personal con todos los
@@ -333,10 +336,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.850 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
+La suite completa son **1.870 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.850, no corrió entera.
+menos de esas 1.870, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

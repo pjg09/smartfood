@@ -511,10 +511,11 @@ Y quitar esa comprobación deja a la vista el hueco que ya estaba: **una reserva
 - **El motivo es obligatorio también en el ingreso**, en la pantalla. `HU-29` pide que todo movimiento quede asentado con su motivo; la base solo lo exige en la merma, y eso no cambia.
 - **«Agotados» y no «se hacen en cocina».** El producto de referencia contaba lo que se produce en cocina, y aquí no existe: `HU-27` dice que un producto preparado entra «sin descomponerlo en insumos», y las recetas están fuera del alcance. Agotado es **cero o menos**, porque la entrega de un pedido puede dejar el libro en negativo (`DT-35`).
 - **Retirar no borra.** Un producto retirado deja de venderse y de ofrecerse, y se consulta, se merma y se devuelve al catálogo desde «Ver retirados».
+- **Las categorías también salen del admin**, a `/categorias/` (`DT-51`), con una descripción opcional. Se elimina **solo una categoría vacía** —contando los productos retirados—: con productos, la base lo impide y la pantalla no ofrece el botón. Los productos no se reasignan solos a otra categoría.
 - **El reporte de movimientos se queda en el admin, de solo lectura** (`HU-36`): el libro entero con navegación por fechas y el consolidado del periodo, que es lo que el admin da hecho. Se llega desde la pantalla de inventario, no desde el menú.
 - **El libro de inventario guarda quién registró cada asiento** (`HU-69`): la administración en un ingreso o una merma, el cajero en una venta o una entrega. Lo escrito antes no se atribuye a nadie —no se rellena por inferencia— y las pantallas lo dicen.
 
-**Lo que NO se decide aquí.** Categorías y alérgenos siguen en el admin: son listas cortas que se tocan pocas veces al año. No se edita ni se borra un asiento (`INV-3`). Y el umbral de «quedan pocas» sigue siendo una ayuda de pantalla, no una regla configurable.
+**Lo que NO se decide aquí.** Los alérgenos siguen en el admin: es una lista corta que se toca pocas veces al año, y borrar uno se llevaría el bloqueo de un estudiante alérgico (`HU-11`). No se edita ni se borra un asiento (`INV-3`). Y el umbral de «quedan pocas» sigue siendo una ayuda de pantalla, no una regla configurable.
 
 **Consecuencia asumida.** Los ingresos y las mermas registrados antes del 2026-10-14 seguirán sin responsable para siempre. Es preferible a inventarles uno.
 
@@ -566,7 +567,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-22` | **No añade alcance ni recorta `[S11]`.** Retira la edición de los datos de la institución en el admin, que nadie usaba; su nombre lo pone el seed (`HU-39`) |
 | `DEC-23` | Alta de un solo acudiente por la institución, sin la carga masiva. Amplía el mecanismo de `HU-01`; la fila de `[S11]` ya era suya |
 | `DEC-24` | Consulta y cancelación de pedidos anticipados con devolución a la billetera, por el acudiente, el cajero y la administración. Amplía `[S11]` con una fila nueva. La reserva deja de apartar existencias |
-| `DEC-25` | **No añade alcance ni recorta `[S11]`.** Sustituye las tres pantallas del inventario en el admin por `/inventario/`, y el libro de inventario guarda quién registra cada movimiento (`HU-69`) |
+| `DEC-25` | **No añade alcance ni recorta `[S11]`.** Sustituye las tres pantallas del inventario en el admin por `/inventario/`, y la de categorías por `/categorias/`, y el libro de inventario guarda quién registra cada movimiento (`HU-69`) |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

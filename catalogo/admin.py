@@ -1,11 +1,11 @@
 """`INT-3` es el admin de Django (`DT-2`): no lleva plantillas propias.
 
-`TT-45`. Aquí quedan **las categorías y los alérgenos**: listas cortas que se
-tocan pocas veces al año y que el admin resuelve bien.
+`TT-45`. Aquí quedan **los alérgenos**: una lista corta que se toca pocas
+veces al año y que el admin resuelve bien.
 
-**Los productos ya no están** (`DEC-25`, `DT-50`). Se crean, se editan y se
-retiran en `/inventario/`, junto a sus existencias y su libro: eran tres
-entradas del menú para tocar lo mismo. Las reglas no se movieron —siguen en
+**Los productos y las categorías ya no están** (`DEC-25`, `DT-50`, `DT-51`).
+Los productos se crean, se editan y se retiran en `/inventario/`, junto a sus
+existencias y su libro; las categorías, en `/categorias/`. Las reglas no se movieron —siguen en
 `catalogo.services`— y tampoco la que importa aquí: **el alérgeno se declara
 en el producto, no se copia**, y no existe en ninguna parte una lista de
 «productos bloqueados» que alguien pudiera llenar a mano (`INV-5`).
@@ -13,12 +13,12 @@ en el producto, no se copia**, y no existe en ninguna parte una lista de
 
 from django.contrib import admin
 
-from catalogo.models import Alergeno, Categoria
+from catalogo.models import Alergeno
 from cuentas.models import Rol
 
 
 class SoloLaAdministracionDeLaCafeteria:
-    """`[S11]` y tercer criterio de `HU-26`, en las dos pantallas.
+    """`[S11]` y tercer criterio de `HU-26`.
 
     No basta con el permiso de Django: se comprueba también el rol, igual que en
     `personas`. Un permiso se puede conceder por error; que la comprobación esté
@@ -41,22 +41,6 @@ class SoloLaAdministracionDeLaCafeteria:
         return self._es_la_administracion(request) and super().has_view_permission(
             request, obj
         )
-
-
-@admin.register(Categoria)
-class CategoriaAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
-    list_display = ["nombre", "cuantos_productos"]
-    search_fields = ["nombre"]
-    ordering = ["nombre"]
-
-    def has_delete_permission(self, request, obj=None):
-        """Borrar una categoría dejaría sus productos sin agrupación, y las
-        alertas de `HU-31` se calculan por categoría."""
-        return False
-
-    @admin.display(description="productos")
-    def cuantos_productos(self, obj):
-        return obj.productos.count()
 
 
 @admin.register(Alergeno)

@@ -1,0 +1,62 @@
+{% comment %} DT-51. Eliminar una categoría, con confirmación.
+
+   **Solo una vacía.** Con productos —también retirados— la modal dice cuántos y **no
+   pinta el botón**: la base lo rechazaría (`PROTECT`), y un botón que siempre falla no
+   se dibuja (`[S4]` del sistema visual). Los productos no se reasignan solos a otra
+   categoría, a propósito: a cuál van lo decide quien administra.
+{% endcomment %}
+<div id="eliminacion-de-categoria"
+     data-eliminacion-de-categoria="{% if eliminada %}hecha{% elif cuantos %}bloqueada{% else %}pendiente{% endif %}"
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Eliminar categoría</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-4 px-6 py-5">
+    {% if eliminada %}
+      <p role="status" class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                              text-base text-exito-fuerte">
+        <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+        <span>«{{ eliminada }}» eliminada.</span>
+      </p>
+    {% else %}
+      <p class="text-base text-texto">Se eliminará <strong class="font-semibold">{{ categoria.nombre }}</strong>.</p>
+      {% if error %}
+        <p role="alert" class="rounded-md border border-error bg-error-suave p-3 text-sm text-error-fuerte">{{ error }}</p>
+      {% elif cuantos %}
+        <p data-categoria-con-productos class="rounded-md bg-aviso-suave p-3 text-sm text-aviso-fuerte">
+          Tiene {{ cuantos }} producto{{ cuantos|pluralize }}, contando los retirados del catálogo:
+          hay que moverlos a otra categoría antes, desde «Inventario». No se reasignan solos, a
+          propósito.
+        </p>
+      {% else %}
+        <p class="rounded-md bg-superficie-hover p-3 text-sm text-texto-suave">
+          No tiene ningún producto, así que no se pierde nada. No se puede deshacer.
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      {% if eliminada or cuantos %}Cerrar{% else %}Cancelar{% endif %}
+    </button>
+    {% if not eliminada and not cuantos %}
+      <button type="button" data-confirmar-eliminacion
+              hx-post="{% url 'eliminacion-de-categoria' categoria.pk %}"
+              hx-target="#eliminacion-de-categoria" hx-swap="outerHTML"
+              class="inline-flex h-11 items-center rounded-md bg-error px-5 text-base font-medium
+                     text-sobre-error transition-colors hover:bg-error-fuerte">
+        Eliminar
+      </button>
+    {% endif %}
+  </div>
+</div>

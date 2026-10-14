@@ -32,6 +32,10 @@ class Categoria(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid7, editable=False)
     nombre = models.CharField("nombre", max_length=80, unique=True)
+    # `DT-51`. Opcional, para quien administra: qué entra en la categoría. No la
+    # ve el acudiente ni sale en ningún reporte. Vacía y no nula, por lo mismo
+    # que el motivo de un movimiento: una sola forma de decir «no hay».
+    descripcion = models.CharField("descripción", max_length=200, blank=True, default="")
 
     class Meta:
         verbose_name = "categoría"

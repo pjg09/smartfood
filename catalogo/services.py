@@ -9,7 +9,7 @@
 Funciones, no clases.
 """
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import storages
 from django.db import transaction
 
@@ -35,9 +35,48 @@ def _comprobar_que_gestiona_el_catalogo(actor, accion):
 
 
 @transaction.atomic
-def crear_categoria(*, actor, nombre):
+def crear_categoria(*, actor, nombre, descripcion=""):
     _comprobar_que_gestiona_el_catalogo(actor, "Gestionar categorías")
-    return Categoria.objects.create(nombre=nombre)
+    return Categoria.objects.create(nombre=nombre.strip(), descripcion=descripcion.strip())
+
+
+@transaction.atomic
+def editar_categoria(*, actor, categoria, nombre, descripcion=""):
+    """Renombra o describe una categoría (`DT-51`).
+
+    **Renombrar alcanza a lo ya vendido.** Los productos apuntan a la
+    categoría por identificador y la línea de venta no copia la categoría
+    (`DT-8` congela precio y nutrición, no la agrupación), así que las alertas
+    de frecuencia (`HU-31`) enseñarán el nombre nuevo también para lo que se
+    vendió antes. La pantalla lo dice antes de guardar.
+    """
+    _comprobar_que_gestiona_el_catalogo(actor, "Gestionar categorías")
+    categoria.nombre = nombre.strip()
+    categoria.descripcion = descripcion.strip()
+    categoria.save(update_fields=["nombre", "descripcion"])
+    return categoria
+
+
+@transaction.atomic
+def eliminar_categoria(*, actor, categoria):
+    """Borra una categoría **que no tiene ningún producto** (`DT-51`).
+
+    Con productos, no: los productos se quedarían sin agrupación, y las alertas
+    de `HU-31` se calculan por categoría. Cuentan también los retirados del
+    catálogo, que siguen existiendo y tienen historial. **No se reasignan
+    solos a otra**: elegir a cuál van es una decisión de quien administra.
+
+    El `if` da el mensaje; la garantía es el `PROTECT` de `Producto.categoria`,
+    que la base aplica aunque alguien se salte este servicio.
+    """
+    _comprobar_que_gestiona_el_catalogo(actor, "Gestionar categorías")
+    cuantos = categoria.productos.count()
+    if cuantos:
+        raise ValidationError(
+            f"«{categoria.nombre}» tiene {cuantos} producto{'s' if cuantos != 1 else ''}: "
+            "hay que moverlos a otra categoría antes de eliminarla."
+        )
+    categoria.delete()
 
 
 @transaction.atomic
@@ -206,7 +245,9 @@ __all__ = [
     "crear_producto",
     "declarar_alergenos",
     "devolver_al_catalogo",
+    "editar_categoria",
     "editar_producto",
+    "eliminar_categoria",
     "guardar_imagen",
     "quitar_imagen",
     "retirar_del_catalogo",

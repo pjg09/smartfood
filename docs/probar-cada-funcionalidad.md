@@ -156,6 +156,11 @@ signo, unas grasas saturadas por encima de las totales, unos azúcares por encim
 carbohidratos. El servidor lo rechaza igual si se fuerza, y la base, si el servidor no lo
 viera. Un producto nuevo entra con **cero unidades**: se ingresan con *Ajustar* (`[S12]`).
 
+**Las categorías se crean en Categorías** (`DT-51`): nombre y una descripción opcional. Se
+elimina solo una categoría **sin productos**, contando los retirados; con productos, la modal
+dice cuántos y no ofrece el botón. Renombrarla alcanza también a lo ya vendido en las alertas
+de frecuencia del acudiente, y la modal lo avisa.
+
 La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y

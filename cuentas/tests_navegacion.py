@@ -263,7 +263,8 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
 
         self.client.force_login(cuenta(Rol.ADMINISTRADOR))
         cafeteria = self.client.get("/admin/ventas/venta/").content.decode()
-        self.assertIn(resolver("admin:catalogo_categoria_changelist"), cafeteria)
+        self.assertIn(resolver("categorias"), cafeteria)
+        self.assertIn(resolver("admin:catalogo_alergeno_changelist"), cafeteria)
         self.assertIn(resolver("panel-de-la-cafeteria"), cafeteria)
         # `DEC-25`: el inventario es una pantalla propia y una sola entrada.
         self.assertIn(resolver("inventario"), cafeteria)

@@ -1,0 +1,83 @@
+{% comment %} DT-51. Las cifras y la lista de categorías, en un solo fragmento.
+
+   Se vuelve a pedir solo tras cada escritura (`categorias-cambiado`). Las dos cifras y
+   la lista cambian juntas —crear suma a las dos, eliminar resta—, así que van en el
+   mismo fragmento y no en dos.
+
+   **El recuento cuenta también los productos retirados**: siguen existiendo, y son los
+   que impiden eliminar la categoría. Una categoría que aquí saliera vacía y la base no
+   dejara borrar sería una contradicción a la vista.
+{% endcomment %}
+<div id="tablero-de-categorias" class="flex flex-col gap-6"
+     hx-get="{% url 'tablero-de-categorias' %}" hx-trigger="categorias-cambiado from:body"
+     hx-swap="outerHTML">
+
+  <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2">
+    <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+      <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-1 to-serie-1/40"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+          <svg class="h-5 w-5"><use href="#i-etiqueta"></use></svg>
+        </span>
+        <p class="mt-4 text-base font-medium text-texto-suave">Categorías</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="categorias">{{ categorias|length }}</p>
+        <p class="mt-2 text-sm text-texto-suave">Las que agrupan el catálogo</p>
+      </div>
+    </div>
+    <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+      <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-4 to-serie-4/40"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4">
+          <svg class="h-5 w-5"><use href="#i-cafeteria"></use></svg>
+        </span>
+        <p class="mt-4 text-base font-medium text-texto-suave">En uso</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="en-uso">{{ en_uso }}</p>
+        <p class="mt-2 text-sm text-texto-suave">
+          {% if en_uso == categorias|length %}Todas tienen productos{% else %}Con al menos un producto{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {% if categorias %}
+    <ul class="flex flex-col gap-2">
+      {% for categoria in categorias %}
+        <li data-categoria="{{ categoria.pk }}"
+            class="flex items-center gap-3 rounded-xl border border-borde bg-superficie p-3 shadow-sm">
+          <span aria-hidden="true" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+            <svg class="h-5 w-5"><use href="#i-etiqueta"></use></svg>
+          </span>
+          <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span class="text-base font-semibold text-texto">{{ categoria.nombre }}</span>
+            {% if categoria.descripcion %}
+              <span class="text-sm break-words text-texto-suave">{{ categoria.descripcion }}</span>
+            {% endif %}
+          </div>
+          <span data-cuantos-productos="{{ categoria.cuantos }}"
+                class="shrink-0 rounded-full border border-borde px-3 py-1 text-sm whitespace-nowrap text-texto-suave">
+            {{ categoria.cuantos }} producto{{ categoria.cuantos|pluralize }}
+          </span>
+          <button type="button" data-editar-categoria aria-label="Editar {{ categoria.nombre }}" title="Editar"
+                  hx-get="{% url 'edicion-de-categoria' categoria.pk %}"
+                  hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-texto-suave
+                         transition-colors hover:bg-superficie-hover hover:text-texto">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+          </button>
+          <button type="button" data-eliminar-categoria aria-label="Eliminar {{ categoria.nombre }}" title="Eliminar"
+                  hx-get="{% url 'eliminacion-de-categoria' categoria.pk %}"
+                  hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-texto-suave
+                         transition-colors hover:bg-error-suave hover:text-error-fuerte">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-papelera"></use></svg>
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="rounded-xl border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+      Todavía no hay categorías. Crea la primera con «Nueva categoría»: sin ella no se puede
+      dar de alta ningún producto.
+    </p>
+  {% endif %}
+</div>

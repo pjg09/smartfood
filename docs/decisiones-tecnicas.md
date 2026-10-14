@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` y `DT-50` el 2026-10-14 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49`, `DT-50` y `DT-51` el 2026-10-14 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 50 (`DT-1` … `DT-50`) |
+| decisiones | 51 (`DT-1` … `DT-51`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-50`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-51`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1072,3 +1072,16 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **`UMBRAL_DE_EXISTENCIAS_BAJAS` se mueve a `inventario.selectors`**, de quien es el dato: lo usan el panel y esta pantalla, y dos umbrales acabarían avisando de cosas distintas.
 
 **Por qué no un «ajuste» con signo.** El libro ya impone que el ingreso sume y la merma reste (`movimiento_inventario_signo_segun_tipo`). Un tercer tipo con signo libre sería una disminución manual que no es merma, y `INV-8` —toda disminución manual lleva motivo— tendría que repetirse en otra restricción para no abrir un camino sin ella.
+
+#### `[DT-51]` `/categorias/`: las categorías fuera del admin, y solo se elimina la vacía
+
+**Obliga:** `DEC-25`. Mismo camino que `DT-50`.
+
+**Decidido:**
+
+- **Una pantalla propia sobre `base-aplicacion.html`**, con dos cifras —cuántas hay y cuántas tienen productos— y una fila por categoría con su recuento, editar y eliminar. Alta y edición son la misma modal. Las vistas viven en `catalogo/views.py`; las escrituras, en `catalogo.services` (`crear_categoria`, `editar_categoria`, `eliminar_categoria`), y la lectura en `categorias_del_catalogo`, que exige el rol antes de leer. Tras escribir, `HX-Trigger: categorias-cambiado` repinta las cifras y la lista, que van en un solo fragmento porque cambian juntas.
+- **`Categoria.descripcion`**, opcional, vacía y no nula. Solo la ve quien administra.
+- **Se elimina solo una categoría vacía**, contando los productos retirados: siguen existiendo y tienen historial. La garantía es el `PROTECT` de `Producto.categoria`; el servicio da el mensaje, y la modal **no pinta el botón** cuando hay productos (`[S4]` del sistema visual). Los productos no se reasignan solos: a qué categoría van lo decide quien administra.
+- **El nombre es único sin distinguir mayúsculas** en el formulario: «bebidas» y «Bebidas» partirían en dos las alertas de `HU-31`.
+- **Renombrar alcanza a lo ya vendido, y la modal lo dice.** La línea de venta congela el precio y la nutrición (`DT-8`), no la categoría, y las alertas de frecuencia agrupan por la categoría de hoy. La referencia visual decía que las ventas registradas conservan el nombre; aquí no sería verdad.
+- **`CategoriaAdmin` sale del admin.** `AlergenoAdmin` se queda.

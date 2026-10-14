@@ -1,0 +1,47 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} DEC-25, DT-51. Las categorías del catálogo.
+
+   **Sustituye a la pantalla del admin**, como `/inventario/` a las suyas: las modales
+   de crear, editar y eliminar necesitan el sistema visual entero, que el admin no
+   carga (`DT-36`). Las reglas siguen en `catalogo.services`.
+
+   Composición: encabezado con la acción principal, dos tarjetas de resumen (`[S2.1]`,
+   variante del panel) y una fila por categoría, con su recuento de productos y sus dos
+   acciones. Todo lo que cambia tras una escritura vive en un solo fragmento.
+{% endcomment %}
+
+{% block titulo %}Categorías | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Categorías</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Los grupos en los que se ordena el catálogo de la cafetería. Las alertas de
+          frecuencia del acudiente se calculan por categoría.
+        </p>
+      </div>
+      <button type="button" data-nueva-categoria
+              hx-get="{% url 'categoria-nueva' %}"
+              hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+              class="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-primario px-5
+                     text-base font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-mas"></use></svg>
+        Nueva categoría
+      </button>
+    </header>
+
+    {% include "catalogo/partials/tablero-de-categorias.html" %}
+  </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`). Va fuera del tablero, que se reemplaza tras
+     cada escritura: dentro, se cerraría sola. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Categoría"
+          class="m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

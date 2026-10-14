@@ -1,0 +1,103 @@
+{% comment %} DT-51. Crear o editar una categoría, en la modal de ficha (`[S2.10]`).
+
+   Fragmento (`DT-16`): `GET` y `POST` devuelven esto entero, con el resultado arriba.
+   La validación en vivo es la de las otras fichas (`interfaz.js`, `data-validar`);
+   el servidor rechaza igual lo que pase.
+
+   **Al editar, la modal dice qué alcanza renombrar.** La línea de venta no copia la
+   categoría, así que las alertas de frecuencia del acudiente (`HU-31`) enseñan el
+   nombre nuevo también para lo que se vendió antes. Decirlo es lo honesto; la
+   referencia visual afirmaba lo contrario, y aquí no sería verdad.
+
+   Los ejemplos de los campos van **solo en el alta**: al editar una categoría sin
+   descripción, «Jugos, gaseosas y agua» se leía como la descripción que tiene.
+{% endcomment %}
+<div id="ficha-de-categoria" data-ficha-de-categoria
+     data-estado="{% if creada %}creada{% elif guardada %}guardada{% elif categoria %}edicion{% else %}alta{% endif %}"
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      {% if categoria %}Editar {{ categoria.nombre }}{% else %}Nueva categoría{% endif %}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% if categoria %}{% url 'edicion-de-categoria' categoria.pk %}{% else %}{% url 'categoria-nueva' %}{% endif %}"
+        hx-target="#ficha-de-categoria" hx-swap="outerHTML"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+      {% if creada or guardada %}
+        <p role="status" data-categoria-guardada
+           class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                  text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <span>{% if creada %}«{{ creada.nombre }}» creada. Puedes crear otra o cerrar.{% else %}Cambios guardados.{% endif %}</span>
+        </p>
+      {% endif %}
+
+      {% with campo=formulario.nombre %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Nombre</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off" {% if not categoria %}placeholder="Bebidas"{% endif %}
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el nombre de la categoría."
+                 data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+        </div>
+      {% endwith %}
+
+      {% with campo=formulario.descripcion %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">
+            Descripción <span class="font-normal text-texto-suave">(opcional)</span>
+          </label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off" {% if not categoria %}placeholder="Jugos, gaseosas y agua"{% endif %}
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-largo="La descripción no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+        </div>
+      {% endwith %}
+
+      {% if categoria %}
+        <p data-aviso-de-renombrar class="rounded-md bg-superficie-hover p-3 text-sm text-texto-suave">
+          Los productos apuntan a la categoría por identificador, así que siguen en ella aunque
+          cambie el nombre. <strong class="font-semibold text-texto">Ojo:</strong> las alertas de
+          frecuencia del acudiente agrupan por la categoría de hoy, así que lo ya vendido también
+          aparecerá con el nombre nuevo.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if creada or guardada %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>

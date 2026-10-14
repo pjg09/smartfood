@@ -140,7 +140,8 @@ MENU_POR_ROL = {
         Entrada("panel-de-la-cafeteria", "Panel", "i-grafica"),
         Entrada("reservas", "Reservas", "i-cafeteria"),
         Entrada("inventario", "Inventario", "i-inventario"),
-        _del_admin("catalogo_categoria", "Categorías", "i-etiqueta"),
+        # `DT-51`. Pantalla propia, como el inventario; los alérgenos siguen en el admin.
+        Entrada("categorias", "Categorías", "i-etiqueta"),
         _del_admin("catalogo_alergeno", "Alérgenos", "i-alerta"),
         _del_admin("ventas_venta", "Ventas", "i-recibo"),
         _del_admin("ventas_cierredecaja", "Cierres de caja", "i-efectivo"),

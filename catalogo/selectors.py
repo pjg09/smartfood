@@ -5,7 +5,11 @@ selectores no conocen `request`: reciben lo que necesitan como argumentos y
 devuelven objetos del ORM o datos, nunca respuestas HTTP.
 """
 
-from catalogo.models import Producto
+from django.core.exceptions import PermissionDenied
+from django.db.models import Count
+
+from catalogo.models import Categoria, Producto
+from cuentas.models import Rol
 
 
 def productos_con_alergeno(alergeno):
@@ -31,3 +35,30 @@ def productos_en_el_catalogo():
     ofrecen.
     """
     return Producto.objects.filter(activo=True).select_related("categoria")
+
+
+def categorias_del_catalogo(*, actor):
+    """Las categorías, de la A a la Z, cada una con `cuantos`: sus productos
+    (`DT-51`).
+
+    **Cuentan también los retirados del catálogo**: siguen existiendo y tienen
+    historial, y son los que impiden eliminar la categoría (`PROTECT`). Una
+    categoría que la pantalla diera por vacía y la base se negara a borrar
+    sería un botón que siempre falla.
+
+    Exige el rol antes de leer, como el resto de lo que gestiona la
+    administración de la cafetería (`[S11]`, `HU-26`).
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar las categorías exige identificarse.")
+    if actor.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied(
+            "Las categorías son de la administración de la cafetería ([S11], HU-26)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return list(
+        Categoria.objects.annotate(cuantos=Count("productos")).order_by("nombre")
+    )
+
