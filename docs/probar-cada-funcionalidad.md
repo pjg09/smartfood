@@ -193,16 +193,23 @@ las existencias.
 Como cajero o como administración: entrada **Reservas** del menú. También está en la columna
 de iconos del punto de venta, que es lo que el cajero tiene delante mientras cobra.
 
-Enseña lo pagado y no recogido, **de lo más antiguo a lo más reciente** — es una cola de
-trabajo, no un historial, y lo que importa es qué lleva más tiempo esperando. Un pedido
-entregado sale de la lista.
+**Como cajero** enseña lo pagado y no recogido, **de lo más antiguo a lo más reciente** — es
+una cola de trabajo, no un historial, y lo que importa es qué lleva más tiempo esperando. Un
+pedido entregado sale de la lista. Encima, **qué falta por entregar**: la suma de todos los
+pedidos por recoger, producto por producto.
+
+**Como administración** (`HU-68`) se ve además cuántos pedidos hay y cuánto se ha reservado
+—sin lo devuelto—, y la lista se filtra con **Todos**, **Por recoger**, **Entregados** y
+**Cancelados**. El filtro va en la URL (`?ver=cancelados`). Si el cajero escribe esa URL,
+recibe `403`.
 
 **La consultan los dos roles de la cafetería** (`HU-24`, `FUN-5`): quien prepara y quien
 entrega no tienen por qué ser la misma persona. La institución y el acudiente reciben `403`
 aunque escriban la URL.
 
 Para verla con datos, reserva desde un acudiente (`[S8]`) y entra con
-`cajero@example.com`. Cada pedido lleva su **Cancelar** (`[S20]`).
+`cajero@example.com`. **Pulsar la fila abre el detalle** en una modal, y desde ahí se cancela
+(`[S20]`).
 
 ## [S10] Entregar un pedido en la caja
 
@@ -427,8 +434,11 @@ dice cuándo, por qué y si lo canceló el acudiente o la cafetería.
 Con el estudiante desactivado o dado de baja, la pantalla no ofrece el catálogo, pero **los
 pedidos siguen**: el pendiente es justo el que hay que cancelar (`DEC-24`).
 
-**Como cajero o administración** (`HU-67`): en la cola de **Reservas** (`[S9]`), **Cancelar** en
-cada pedido abre una página de confirmación que dice cuánto vuelve y pide el motivo.
+**Como cajero o administración** (`HU-67`, `DT-49`): en **Reservas** (`[S9]`), pulsar un pedido
+por recoger abre su detalle en una modal con **Cancelar**: dice cuánto vuelve y pide el motivo.
+Al cancelar, la modal lo confirma y las cifras, lo que falta por entregar y la lista se
+actualizan solos. De un cancelado, la administración ve en la modal quién lo canceló —la
+persona y su rol, o «el acudiente»—, cuándo y por qué.
 
 Al cancelar, por cualquiera de los dos caminos:
 

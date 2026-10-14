@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` el 2026-10-14 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 48 (`DT-1` … `DT-48`) |
+| decisiones | 49 (`DT-1` … `DT-49`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-48`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-49`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1038,3 +1038,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **`PedidoAnticipado` sigue fuera del admin** (`DT-34`): la cola es la pantalla compartida, y cancelar desde ella es la escritura que esa pantalla gana.
 
 **Por qué el pedido y la venta no se borran.** La venta se cobró y la devolución se asentó: los dos movimientos tienen que poder explicarse (`INV-2`), y los dos apuntan a la venta con `PROTECT`.
+
+#### `[DT-49]` La cafetería consulta los pedidos en un tablero y cancela desde la modal
+
+**Obliga:** `HU-68`. **Corrige** a `DT-48` en un punto —la cafetería cancelaba desde una página de confirmación— y **amplía** `DT-34`, cuya pantalla compartida deja de ser solo la cola.
+
+**El hecho que lo obliga.** La administración necesita ver también lo entregado y lo cancelado, con quién canceló y por qué, y lo que falta por preparar sumado; y la cola enseñaba lo que lleva cada pedido fila a fila, que es lo que la suma de arriba hace innecesario.
+
+**Decidido:**
+
+- **`/reservas/` sigue siendo una sola pantalla para los dos roles** (`DT-34`), y cada uno ve una parte. La administración: tres tarjetas —pedidos, por recoger y lo reservado sin lo devuelto— y un filtro por estado (todos, por recoger, entregados, cancelados). El cajero: lo que está por recoger. **Los dos**: lo que falta por entregar, sumado producto por producto, que es lo que `HU-24` existe para responder.
+- **El filtro viaja en la URL** (`?ver=entregados`): las pestañas son enlaces, no peticiones de HTMX, así que el filtro sobrevive a recargar. Un filtro que no existe es un `404`, y uno que no le toca al rol, un `403`.
+- **La autorización vive en los selectores**, `pedidos_de_la_cafeteria`, `pedido_de_la_cafeteria` y `tablero_de_reservas`, que sustituyen a `reservas_pendientes`. El cajero no alcanza un pedido cerrado ni escribiendo su URL.
+- **El número de un pedido es el del acudiente**: cuenta entre los pedidos de su estudiante, como en `HU-65`. Numerar a todo el colegio seguido daría a la misma reserva dos números.
+- **La fila no lleva lo que lleva el pedido**: abre su detalle en la modal de ficha (`[S2.10]` de `./sistema-visual.md`), **la misma plantilla que la del acudiente**, que solo cambia lo que depende de quién mira —quién canceló, a dónde va el formulario—.
+- **La cafetería cancela desde esa modal**, como el acudiente: `POST /reservas/<pedido>/cancelar/` devuelve la modal —con el error o ya cancelada— y `HX-Trigger: pedidos-cambiado`, que repinta el tablero entero con su filtro (`DT-16`, `DT-40`). **La página de confirmación desaparece**; el `GET` de esa ruta responde `405`.
+
+**Por qué no basta con la página de confirmación.** Llevaba al personal fuera de la lista para cada pedido y lo devolvía con una redirección, y la confirmación que daba —el pedido y lo que se devuelve antes de pedir el motivo— ya la da la modal. Dos maneras de cancelar el mismo pedido según quién cancele acabarían diciendo cosas distintas.

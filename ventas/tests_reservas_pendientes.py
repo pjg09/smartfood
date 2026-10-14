@@ -32,7 +32,7 @@ from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
 from personas.services import dar_de_baja, desactivar
 from ventas.models import EstadoDelPedido, PedidoAnticipado
-from ventas.selectors import reservas_pendientes
+from ventas.selectors import pedidos_de_la_cafeteria
 from ventas.services import reservar
 
 
@@ -92,7 +92,7 @@ class LaColaEsDeLoQueEsperaTest(BaseCola):
     """`TT-147`. Qué entra en la cola y en qué orden."""
 
     def test_sin_reservas_la_cola_esta_vacia(self):
-        self.assertEqual(list(reservas_pendientes(actor=self.cajero)), [])
+        self.assertEqual(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger"), [])
 
     def test_estan_todas_las_pendientes_sean_de_quien_sean(self):
         """La cola es del colegio, no de un estudiante: el personal prepara
@@ -100,7 +100,7 @@ class LaColaEsDeLoQueEsperaTest(BaseCola):
         self.reserva_de("1001000001", "Ana Sofía")
         self.reserva_de("1001000002", "Bruno Díaz")
 
-        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 2)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")), 2)
 
     def test_lo_mas_antiguo_va_primero(self):
         """**Al revés que todos los historiales del proyecto.**
@@ -112,7 +112,7 @@ class LaColaEsDeLoQueEsperaTest(BaseCola):
         primera = self.reserva_de("1001000003", "Ana Sofía")
         segunda = self.reserva_de("1001000004", "Bruno Díaz")
 
-        cola = list(reservas_pendientes(actor=self.cajero))
+        cola = pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")
 
         self.assertEqual([p.pk for p in cola], [primera.pk, segunda.pk])
 
@@ -130,7 +130,7 @@ class LaColaEsDeLoQueEsperaTest(BaseCola):
             entregado_por=self.cajero,
         )
 
-        cola = list(reservas_pendientes(actor=self.cajero))
+        cola = pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")
 
         self.assertEqual([p.pk for p in cola], [pendiente.pk])
 
@@ -144,7 +144,7 @@ class LaColaEsDeLoQueEsperaTest(BaseCola):
         self.reserva_de("1001000007", "Ana Sofía", cuantas=2)
 
         with self.assertNumQueries(3):
-            for pedido in reservas_pendientes(actor=self.cajero):
+            for pedido in pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger"):
                 self.assertEqual(pedido.venta.estudiante.nombre, "Ana Sofía")
                 self.assertEqual(
                     [(l.cantidad, l.producto.nombre) for l in pedido.venta.lineas.all()],
@@ -162,7 +162,7 @@ class SoloElPersonalDeLaCafeteriaConsultaTest(BaseCola):
     def test_el_cajero_consulta(self):
         self.reserva_de("1001000010", "Ana Sofía")
 
-        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 1)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")), 1)
 
     def test_la_administracion_consulta(self):
         self.reserva_de("1001000011", "Ana Sofía")
@@ -170,7 +170,7 @@ class SoloElPersonalDeLaCafeteriaConsultaTest(BaseCola):
             email="admin@example.com", rol=Rol.ADMINISTRADOR, nombre="Administración"
         )
 
-        self.assertEqual(reservas_pendientes(actor=administracion).count(), 1)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=administracion, filtro="por-recoger")), 1)
 
     def test_la_institucion_no_consulta(self):
         """No es personal de la cafetería: `FUN-5` habla de quien prepara y
@@ -180,7 +180,7 @@ class SoloElPersonalDeLaCafeteriaConsultaTest(BaseCola):
         )
 
         with self.assertRaises(PermissionDenied):
-            reservas_pendientes(actor=institucion)
+            pedidos_de_la_cafeteria(actor=institucion, filtro="por-recoger")
 
     def test_el_acudiente_no_consulta_la_cola_del_colegio(self):
         """Las suyas las ve en su pantalla de reserva, filtradas por su hijo.
@@ -188,18 +188,18 @@ class SoloElPersonalDeLaCafeteriaConsultaTest(BaseCola):
         acudiente, _ = familia("1001000012", email="otro@example.com")
 
         with self.assertRaises(PermissionDenied):
-            reservas_pendientes(actor=acudiente)
+            pedidos_de_la_cafeteria(actor=acudiente, filtro="por-recoger")
 
     def test_un_anonimo_tampoco(self):
         with self.assertRaises(PermissionDenied):
-            reservas_pendientes(actor=None)
+            pedidos_de_la_cafeteria(actor=None, filtro="por-recoger")
 
     def test_una_cuenta_desactivada_tampoco(self):
         self.cajero.is_active = False
         self.cajero.save(update_fields=["is_active"])
 
         with self.assertRaises(PermissionDenied):
-            reservas_pendientes(actor=self.cajero)
+            pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")
 
 
 class LaPantallaDeLaColaTest(BaseCola):
@@ -343,7 +343,7 @@ class LaColaMarcaLoQueNoTieneSalidaTest(BaseCola):
         pedido = self.reserva_de("1001000030", "Ana Sofía")
         dar_de_baja(actor=self.institucion, estudiante=pedido.venta.estudiante)
 
-        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 1)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")), 1)
 
     def test_la_pantalla_lo_marca(self):
         pedido = self.reserva_de("1001000031", "Ana Sofía")
@@ -373,6 +373,6 @@ class LaColaMarcaLoQueNoTieneSalidaTest(BaseCola):
             self.reserva_de(f"100100004{i}", f"Estudiante {i}")
 
         with self.assertNumQueries(3):
-            for pedido in reservas_pendientes(actor=self.cajero):
+            for pedido in pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger"):
                 pedido.venta.estudiante.puede_operar
                 list(pedido.venta.lineas.all())

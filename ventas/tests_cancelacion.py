@@ -31,7 +31,7 @@ from personas.services import dar_de_baja, desactivar
 from reportes.selectors import auditoria, historial_de_consumo, ventas_registradas
 from restricciones.services import fijar_limite_diario
 from ventas.models import EstadoDelPedido, PedidoAnticipado
-from ventas.selectors import pedidos_de, reservas_pendientes
+from ventas.selectors import pedidos_de, pedidos_de_la_cafeteria
 from ventas.services import (
     PedidoCancelado,
     PedidoYaEntregado,
@@ -296,7 +296,7 @@ class LoCanceladoNoEsVentaNiConsumoTest(BaseDeCancelacion):
 
     def test_sale_de_la_cola_de_reservas(self):
         self.cancelar()
-        self.assertFalse(reservas_pendientes(actor=self.cajero).exists())
+        self.assertEqual(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger"), [])
 
     def test_la_auditoria_la_ensena_con_quien_y_por_que(self):
         self.cancelar(actor=self.cajero, motivo="No llegó el pan")
@@ -459,27 +459,53 @@ class CancelarDesdeLaModalDelAcudienteTest(BaseDeCancelacion):
         self.assertEqual(self.devoluciones().count(), 1)
 
 
-class CancelarDesdeLaColaTest(BaseDeCancelacion):
-    """`HU-67`."""
+class CancelarDesdeLaModalDeLaCafeteriaTest(BaseDeCancelacion):
+    """`HU-67`, `DT-49`. La cafetería cancela desde la modal, como el acudiente.
+
+    Antes era una página de confirmación que redirigía a la cola (`DT-48`).
+    """
 
     def setUp(self):
         super().setUp()
         self.url = reverse("cancelacion-por-la-cafeteria", args=[self.pedido.id])
+        self.detalle = reverse("pedido-en-la-cafeteria", args=[self.pedido.id])
 
-    def test_la_cola_enlaza_cancelar(self):
+    def test_la_fila_abre_el_detalle_y_el_detalle_ofrece_cancelar(self):
         self.client.force_login(self.cajero)
-        self.assertContains(self.client.get(reverse("reservas")), self.url)
 
-    def test_cajero_y_administracion_cancelan_y_vuelven_a_la_cola(self):
+        self.assertContains(self.client.get(reverse("reservas")), self.detalle)
+        respuesta = self.client.get(self.detalle)
+
+        self.assertNotContains(respuesta, "<html")
+        self.assertContains(respuesta, "data-formulario-de-cancelacion")
+        self.assertContains(respuesta, self.url)
+
+    def test_cajero_y_administracion_cancelan_y_avisan_al_tablero(self):
         for actor in (self.cajero, self.administracion):
             with self.subTest(rol=actor.rol), transaction.atomic():
                 self.client.force_login(actor)
                 respuesta = self.client.post(self.url, {"motivo": "No hay pan hoy"})
 
-                self.assertRedirects(respuesta, reverse("reservas"))
-                pedido = PedidoAnticipado.objects.get()
-                self.assertEqual(pedido.cancelado_por, actor)
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertNotContains(respuesta, "<html")
+                self.assertContains(respuesta, "data-pedido-recien-cancelado")
+                self.assertEqual(respuesta["HX-Trigger"], "pedidos-cambiado")
+                self.assertEqual(PedidoAnticipado.objects.get().cancelado_por, actor)
                 transaction.set_rollback(True)
+
+    def test_sin_motivo_vuelve_con_el_error_y_no_avisa(self):
+        self.client.force_login(self.cajero)
+
+        respuesta = self.client.post(self.url, {"motivo": "  "})
+
+        self.assertContains(respuesta, "data-cancelacion-rechazada")
+        self.assertNotIn("HX-Trigger", respuesta)
+        self.assertTrue(PedidoAnticipado.objects.get().esta_pendiente)
+
+    def test_cancelar_solo_por_post(self):
+        """Mueve dinero: un `GET` es una URL que el navegador puede repetir solo."""
+        self.client.force_login(self.cajero)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
 
     def test_el_acudiente_y_la_institucion_reciben_403(self):
         for actor in (self.acudiente, self.institucion):

@@ -9,12 +9,19 @@
 
    **Precio por unidad y calorías de entonces** (`DT-8`): salen de la línea, no del
    producto de hoy.
+
+   **La abren el acudiente y la cafetería** (`HU-68`, `DT-49`): `para_la_cafeteria`
+   cambia solo lo que depende de quién mira —el nombre del estudiante en la cabecera,
+   quién canceló, a dónde va el formulario y a quién avisa el motivo—. Dos modales del
+   mismo pedido acabarían enseñando cosas distintas.
 {% endcomment %}
 <div data-detalle-del-pedido="{{ pedido.estado }}" class="flex max-h-[90vh] flex-col">
 
   <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
     <div class="flex flex-col">
-      <h2 class="font-display text-lg text-texto">Pedido #{{ pedido.numero }}</h2>
+      <h2 class="font-display text-lg text-texto">
+        Pedido #{{ pedido.numero }}{% if para_la_cafeteria %} · {{ estudiante.nombre }}{% endif %}
+      </h2>
       <span class="text-sm text-texto-suave">
         Reservado el {{ pedido.creado_en|date:"j" }} de {{ pedido.creado_en|date:"F"|lower }}
         a las {{ pedido.creado_en|date:"H:i" }}
@@ -83,30 +90,50 @@
     </table>
 
     {% if pedido.esta_cancelado %}
-      {% comment %} Quién: «tú» si fue el propio acudiente, y si no la cafetería, que es a
-         quien preguntar. Ámbar y no rojo: no ha fallado nada. {% endcomment %}
+      {% comment %} Quién. Al acudiente: «tú» si fue él, y si no la cafetería, que es a
+         quien preguntar. A la cafetería: la persona y su rol si fue alguien de la casa
+         —es a quien preguntar por qué—, y «el acudiente» si fue la familia, cuyo nombre
+         no hace falta aquí. Ámbar y no rojo: no ha fallado nada. {% endcomment %}
       <div data-cancelacion class="flex flex-col gap-1 rounded-md bg-aviso-suave p-3">
         <p class="text-sm font-semibold text-aviso-fuerte">
           Cancelado el {{ pedido.cancelado_en|date:"j" }} de {{ pedido.cancelado_en|date:"F"|lower }},
           {{ pedido.cancelado_en|date:"H:i" }},
-          {% if pedido.cancelado_por_id == user.id %}por ti{% else %}por la cafetería{% endif %}.
+          {% if para_la_cafeteria %}
+            {% if pedido.cancelado_por.rol == "acudiente" %}por el acudiente{% else %}por {{ pedido.cancelado_por.nombre|default:pedido.cancelado_por.email }} ({{ pedido.cancelado_por.get_rol_display|lower }}){% endif %}.
+          {% else %}
+            {% if pedido.cancelado_por_id == user.id %}por ti{% else %}por la cafetería{% endif %}.
+          {% endif %}
         </p>
         <p class="text-sm text-aviso-fuerte">Motivo: «{{ pedido.motivo_de_cancelacion }}»</p>
         <p class="text-sm text-aviso-fuerte">{{ pedido.total|dinero:"COP" }} volvieron a su billetera.</p>
       </div>
     {% elif pedido.esta_pendiente %}
-      <form hx-post="{% url 'cancelacion-por-el-acudiente' estudiante.id pedido.id %}"
+      {% if para_la_cafeteria and not estudiante.puede_operar %}
+        {% comment %} `INVD-2`: la caja no se lo entregará. Cancelarlo es su salida. {% endcomment %}
+        <p data-no-puede-retirar class="rounded-md bg-aviso-suave p-3 text-sm text-aviso-fuerte">
+          <strong class="font-semibold">No puede retirarlo:</strong>
+          {% if estudiante.esta_de_baja %}se dio de baja del colegio{% else %}su tarjeta está desactivada{% endif %}.
+          No lo prepares; cancélalo y el importe vuelve a su billetera.
+        </p>
+      {% endif %}
+      <form hx-post="{% if para_la_cafeteria %}{% url 'cancelacion-por-la-cafeteria' pedido.id %}{% else %}{% url 'cancelacion-por-el-acudiente' estudiante.id pedido.id %}{% endif %}"
             hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
             data-formulario-de-cancelacion class="flex flex-col gap-3 border-t border-borde pt-4">
         {% csrf_token %}
         <h3 class="text-base font-semibold text-texto">Cancelar este pedido</h3>
         <p class="text-sm text-texto-suave">
-          Todavía no lo ha recogido. Si lo cancelas, {{ pedido.total|dinero:"COP" }} vuelven a la
-          billetera de {{ estudiante.nombre }} en el acto, para que compre otra cosa. No se
-          puede deshacer.
+          {% if para_la_cafeteria %}
+            Si no se va a poder preparar o entregar, cancélalo: {{ pedido.total|dinero:"COP" }}
+            vuelven a la billetera de {{ estudiante.nombre }} en el acto, también si no puede
+            operar. No se puede deshacer.
+          {% else %}
+            Todavía no lo ha recogido. Si lo cancelas, {{ pedido.total|dinero:"COP" }} vuelven a la
+            billetera de {{ estudiante.nombre }} en el acto, para que compre otra cosa. No se
+            puede deshacer.
+          {% endif %}
         </p>
         <label class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-texto">Motivo <span class="font-normal text-texto-suave">· obligatorio, lo verá la cafetería</span></span>
+          <span class="text-sm font-medium text-texto">Motivo <span class="font-normal text-texto-suave">· obligatorio, lo verá {% if para_la_cafeteria %}el acudiente{% else %}la cafetería{% endif %}</span></span>
           <textarea name="motivo" required maxlength="200" rows="2"
                     class="rounded-md border border-borde bg-superficie p-3 text-base text-texto
                            transition-colors hover:border-acento focus:border-acento focus:outline-none">{{ motivo }}</textarea>

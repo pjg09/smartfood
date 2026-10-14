@@ -1,0 +1,179 @@
+{% load dinero %}
+{% comment %} HU-68, HU-24. El tablero de los pedidos anticipados: cifras, lo que falta por
+   entregar y la lista filtrada.
+
+   Fragmento (`DT-16`): lo incluye `ventas/reservas-pendientes.html` y lo vuelve a pedir
+   cuando la modal cancela un pedido, con el mismo filtro. **Las pestañas son enlaces**,
+   no peticiones de HTMX: cambian la URL, así que el filtro sobrevive a recargar la
+   página y se puede enviar a otra persona.
+
+   Las tarjetas son las de `[S2.1]` en la variante del panel de la cafetería: icono
+   arriba, franja de su misma serie y sin enlace, porque no hay a dónde ir que no esté
+   ya en esta pantalla. Las clases de color van escritas enteras: armadas, Tailwind no
+   las compilaría.
+{% endcomment %}
+<div class="flex flex-col gap-6">
+
+  <div class="grid grid-cols-1 gap-4 tablet:grid-cols-3">
+    {% if es_administracion %}
+      <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-1 to-serie-1/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+            <svg class="h-5 w-5"><use href="#i-recibo"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Pedidos</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto">{{ tablero.pedidos }}</p>
+          <p class="mt-2 text-sm text-texto-suave">Todos los reservados, también los cancelados</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+      <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-4 to-serie-4/40"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4">
+          <svg class="h-5 w-5"><use href="#i-inventario"></use></svg>
+        </span>
+        <p class="mt-4 text-base font-medium text-texto-suave">Por recoger</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cuantas-reservas>{{ tablero.por_recoger }}</p>
+        <p class="mt-2 text-sm text-texto-suave">Hay que tenerlos listos en el mostrador</p>
+      </div>
+    </div>
+
+    {% if es_administracion %}
+      {% comment %} Sin lo cancelado: ese importe volvió a la billetera (`DEC-24`). {% endcomment %}
+      <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-3 to-serie-3/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-3/12 text-serie-3">
+            <svg class="h-5 w-5"><use href="#i-saldo"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Reservado</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto" data-total-reservado>{{ tablero.reservado|dinero:"COP" }}</p>
+          <p class="mt-2 text-sm text-texto-suave">Cobrado del saldo de las familias, sin lo devuelto</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% comment %} Lo que `HU-24` existe para responder: qué hay que tener preparado, sumado
+     producto por producto. **Solo si hay algo**: sin pedidos por recoger, el bloque no se
+     dibuja y la lista ya dice que no queda nada (`[S2.4]`). Medidor de `[S2.8]`, con el
+     ancho en estilo en línea porque sale de un dato; un color por fila, como en el panel:
+     en una suma de unidades no hay límite que pasarse y el naranja no avisa de nada. {% endcomment %}
+  {% if tablero.falta_por_entregar %}
+    <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm" data-falta-por-entregar>
+      <h2 class="font-display text-lg text-texto">Qué falta por entregar</h2>
+      <p class="mt-1 text-sm text-texto-suave">
+        Sumando todos los pedidos por recoger. Es lo que hay que tener preparado.
+      </p>
+      <ul class="mt-4 flex flex-col gap-4">
+        {% for fila in tablero.falta_por_entregar %}
+          <li>
+            <div class="flex items-baseline justify-between gap-3">
+              <span class="truncate text-base text-texto">{{ fila.nombre }}</span>
+              <span class="shrink-0 text-base font-semibold text-texto">{{ fila.unidades }} unid.</span>
+            </div>
+            <div class="mt-2 h-2 overflow-hidden rounded-full bg-superficie-hover">
+              <div class="h-full rounded-full {% cycle 'bg-serie-1' 'bg-serie-2' 'bg-serie-3' 'bg-serie-4' 'bg-serie-5' %}"
+                   style="width: {{ fila.porcentaje }}%"></div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <section class="flex flex-col gap-3" aria-labelledby="titulo-de-la-lista">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="titulo-de-la-lista" class="font-display text-lg text-texto">{{ titulo_de_la_lista }}</h2>
+      {% if pestanas %}
+        <nav aria-label="Filtrar por estado" class="flex flex-wrap gap-2">
+          {% for pestana in pestanas %}
+            <a href="{{ pestana.url }}" data-filtro-de-pedidos="{{ pestana.clave }}"
+               {% if pestana.clave == filtro %}aria-current="page"{% endif %}
+               class="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium transition-colors
+                      {% if pestana.clave == filtro %}border-primario bg-primario text-sobre-primario
+                      {% else %}border-borde bg-superficie text-texto hover:border-acento{% endif %}">
+              {{ pestana.rotulo }}
+            </a>
+          {% endfor %}
+        </nav>
+      {% endif %}
+    </div>
+
+    {% comment %} `INVD-2`. Un estudiante desactivado o de baja **no retira** su pedido, y
+       la caja lo rechazará. Se marca en vez de esconderlo: está pagado, y quitarlo de la
+       lista lo volvería invisible. **Su salida es cancelarlo** (`DEC-24`). Va en `aviso`
+       y no en `error`: no ha fallado nada. {% endcomment %}
+    {% if hay_sin_salida %}
+      <div role="note" data-avisos-sin-salida
+           class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+        <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+        <p class="text-sm text-aviso-fuerte">
+          <strong class="font-semibold">Hay pedidos marcados «No puede retirar».</strong>
+          Su tarjeta está desactivada o el estudiante se dio de baja, así que la caja no los
+          entrega. No los prepares: ábrelos y cancélalos con su motivo, y el importe volverá
+          a su billetera.
+        </p>
+      </div>
+    {% endif %}
+
+    {% if pedidos %}
+      {% comment %} **Una fila por pedido, y la fila entera abre su detalle**: `interfaz.js`
+         pulsa el botón del nombre, que es quien lo pide —una sola petición escrita, y el
+         teclado llega por el botón— (`DT-43`). Lo que lleva no va en la fila: está en la
+         modal, y lo que hay que preparar en total ya está arriba, sumado. {% endcomment %}
+      <ul class="flex flex-col gap-2">
+        {% for pedido in pedidos %}
+          <li data-reserva data-fila-consultable data-pedido="{{ pedido.estado }}"
+              class="flex cursor-pointer flex-col gap-3 rounded-md border border-borde bg-superficie p-4
+                     shadow-sm transition-colors hover:border-acento tablet:flex-row tablet:items-center">
+            <button type="button" data-consultar
+                    hx-get="{% url 'pedido-en-la-cafeteria' pedido.id %}"
+                    hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                    class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left">
+              <span class="flex flex-wrap items-center gap-2 text-base font-semibold text-texto">
+                {{ pedido.venta.estudiante.nombre }}
+                {% if pedido.esta_pendiente and not pedido.venta.estudiante.puede_operar %}
+                  <span data-no-puede-retirar
+                        class="rounded bg-aviso-suave px-2 py-0.5 text-sm font-medium text-aviso-fuerte">No puede retirar</span>
+                {% endif %}
+              </span>
+              <span class="text-sm text-texto-suave">
+                Pedido #{{ pedido.numero }} · {{ pedido.creado_en|date:"j" }} de
+                {{ pedido.creado_en|date:"M"|lower }} de {{ pedido.creado_en|date:"Y, H:i" }}
+              </span>
+            </button>
+
+            <div class="flex items-center gap-4">
+              {% comment %} Los mismos colores que en la lista del acudiente (`HU-65`):
+                 ninguno es un fallo. {% endcomment %}
+              {% if pedido.esta_pendiente %}
+                <span class="rounded-full bg-acento-suave px-3 py-1 text-sm font-medium whitespace-nowrap text-acento-fuerte">Por recoger</span>
+              {% elif pedido.esta_cancelado %}
+                <span class="rounded-full bg-superficie-hover px-3 py-1 text-sm font-medium whitespace-nowrap text-texto-suave">Cancelado</span>
+              {% else %}
+                <span class="rounded-full bg-exito-suave px-3 py-1 text-sm font-medium whitespace-nowrap text-exito-fuerte">Entregado</span>
+              {% endif %}
+              <span class="ml-auto font-display text-lg tabular-nums whitespace-nowrap text-acento-fuerte tablet:w-28 tablet:text-right">{{ pedido.total|dinero }}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="rounded-md border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+        {% if filtro == "por-recoger" %}
+          No hay ningún pedido por recoger. Los que paguen los acudientes aparecerán aquí.
+        {% elif filtro == "entregados" %}
+          Todavía no se ha entregado ningún pedido.
+        {% elif filtro == "cancelados" %}
+          No se ha cancelado ningún pedido.
+        {% else %}
+          Todavía no se ha reservado nada.
+        {% endif %}
+      </p>
+    {% endif %}
+  </section>
+</div>

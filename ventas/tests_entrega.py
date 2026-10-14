@@ -39,7 +39,7 @@ from personas.codigo import generar_codigo_de_tarjeta
 from personas.models import Acudiente, Estudiante
 from personas.services import dar_de_baja, desactivar
 from ventas.models import EstadoDelPedido, PedidoAnticipado
-from ventas.selectors import reservas_pendientes
+from ventas.selectors import pedidos_de_la_cafeteria
 from ventas.services import (
     EstudianteNoPuedeComprar,
     PedidoYaEntregado,
@@ -267,11 +267,11 @@ class LaEntregaNoSeRepiteTest(BaseEntrega):
     def test_un_pedido_entregado_sale_de_la_cola(self):
         """`HU-24` y `HU-25` se encuentran aquí: lo entregado deja de estar
         pendiente de preparar."""
-        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 1)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")), 1)
 
         entregar(actor=self.cajero, pedido=self.pedido)
 
-        self.assertEqual(reservas_pendientes(actor=self.cajero).count(), 0)
+        self.assertEqual(len(pedidos_de_la_cafeteria(actor=self.cajero, filtro="por-recoger")), 0)
 
     def test_se_mira_el_estado_dentro_del_bloqueo(self):
         """`DT-6`, el mismo patrón que el cobro.

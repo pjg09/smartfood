@@ -560,13 +560,16 @@ no venga de una historia.
 | — | `main` (`4e333da`) | Se empuja directo a `main`, sin ramas ni Pull Requests; se reescribe todo lo que exigía el flujo anterior. El primer commit integrado así | `DT-41` |
 | — | `main` | Las pantallas de la institución: fichas de solo lectura en el padrón y en acudientes, `/usuarios/` en lugar del admin con alta y edición en modal, fuera las pantallas de restricciones y de institución, y el alta de un solo acudiente. El buscador del admin filtra mientras se escribe | `DT-42` … `DT-46`, `DEC-21` … `DEC-23`, **`HU-64`** |
 | — | `main` | La reserva como encargo: deja de mirar existencias y se monta como un punto de venta —filtros, tarjetas con su ficha nutricional y ticket calculado por el servidor—, con los pedidos debajo. Un pedido pendiente se cancela con motivo, por el acudiente desde su modal o por la cafetería desde la cola, y el importe vuelve a la billetera. Además: el panel vuelve al estudiante con el que se trabajaba, las imágenes de producto llegan a restricciones y a la reserva, y las miniaturas se amplían en una modal | `DEC-24`, `DT-47`, `DT-48`, **`HU-65` … `HU-67`** |
+| — | `main` | Los pedidos anticipados de la cafetería: tarjetas, lo que falta por entregar y un filtro por estado para la administración; cada fila abre su detalle en la modal, desde donde se cancela | `DT-49`, **`HU-68`** |
 
-**Cuatro traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
-institución con `HU-64` y la reserva como encargo con `HU-65` … `HU-67`**, y son los únicos de
-la tabla que añaden una capacidad: recuperar la contraseña olvidada, cortar el acceso de un
-acudiente, darlo de alta sin archivo de carga, y ver y cancelar los pedidos anticipados con
-devolución. Cada una se registró con su decisión (`DEC-19`, `DEC-20`, `DEC-23`, `DEC-24`)
-antes de construirla y está `☑` en `[S4]` del backlog de historias, **pero ninguna tiene
+**Cinco traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
+institución con `HU-64`, la reserva como encargo con `HU-65` … `HU-67` y los pedidos de la
+cafetería con `HU-68`**, y son los únicos de la tabla que añaden una capacidad: recuperar la
+contraseña olvidada, cortar el acceso de un acudiente, darlo de alta sin archivo de carga, ver
+y cancelar los pedidos anticipados con devolución, y que la administración vea todos los
+pedidos. Cada una se registró antes de construirla —las cuatro primeras con su decisión
+(`DEC-19`, `DEC-20`, `DEC-23`, `DEC-24`); `HU-68` no la necesitó, porque `[S11]` ya le daba a
+la administración los reportes de ventas— y está `☑` en `[S4]` del backlog de historias, **pero ninguna tiene
 tareas `TT-nn`**: entraron con el sprint cerrado de trabajo y no se repartieron. `#365` devuelve además a `HU-03` el criterio que
 `DEC-9` recortó (`DEC-18`).
 

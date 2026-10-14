@@ -37,9 +37,12 @@ from ventas.selectors import (
     lineas_del_carrito,
     pedido_de,
     pedidos_de,
+    FILTROS_DE_PEDIDOS,
+    pedido_de_la_cafeteria,
+    pedidos_de_la_cafeteria,
     pedidos_pendientes_de,
-    reservas_pendientes,
     resumen_de_la_reserva,
+    tablero_de_reservas,
 )
 from ventas.models import PedidoAnticipado
 from ventas.services import (
@@ -589,93 +592,144 @@ def cancelacion_por_el_acudiente(request, estudiante_id, pedido_id):
     return respuesta
 
 
-def _cancelacion(request, *, pedido, volver_a, al_terminar):
-    """La confirmación de una cancelación desde la cola (`HU-67`, `DT-48`).
+def _pedido_en_la_cafeteria(request, pedido_id):
+    """El pedido para la modal de la cafetería, o un 404 (`HU-68`).
 
-    `GET` enseña el pedido, lo que se devolverá y el campo del motivo; `POST`
-    cancela y redirige. Quién puede lo decide el servicio (`DT-15`).
-
-    Un rechazo —sin motivo, o el pedido ya no está pendiente— vuelve en `200`
-    con el mensaje dentro: el estado de la petición y lo que hay que enseñar
-    son dos preguntas distintas.
+    Quién lo puede abrir lo decide el selector: el cajero solo uno por recoger.
     """
-    error = None
-    motivo = ""
-
-    if request.method == "POST":
-        motivo = request.POST.get("motivo", "")
-        try:
-            cancelado = cancelar_pedido(actor=request.user, pedido=pedido, motivo=motivo)
-        except ValidationError as rechazo:
-            error = " ".join(rechazo.messages)
-        else:
-            messages.success(
-                request,
-                f"Pedido cancelado: {dinero(total_de(cancelado.venta))} volvieron a la "
-                f"billetera de {cancelado.venta.estudiante.nombre}.",
-            )
-            return redirect(al_terminar)
-        pedido.refresh_from_db()
-
-    return render(
-        request,
-        "ventas/cancelar-pedido.html",
-        {
-            "pedido": pedido,
-            "estudiante": pedido.venta.estudiante,
-            "total": total_de(pedido.venta),
-            "motivo": motivo,
-            "error": error,
-            "volver_a": volver_a,
-        },
-    )
-
-
-def _pedido_para_cancelar(**filtro):
-    """El pedido con lo que la confirmación enseña, o un 404."""
-    pedido = (
-        PedidoAnticipado.objects.filter(**filtro)
-        .select_related("venta__estudiante", "cancelado_por")
-        .prefetch_related("venta__lineas__producto")
-        .first()
-    )
-    if pedido is None:
+    try:
+        return pedido_de_la_cafeteria(actor=request.user, pedido_id=pedido_id)
+    except PedidoAnticipado.DoesNotExist:
         raise Http404("Ese pedido no existe.")
-    return pedido
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
-def cancelacion_por_la_cafeteria(request, pedido_id):
-    """El cajero o la administración cancelan un pedido de la cola (`HU-67`).
+@require_http_methods(["GET"])
+def detalle_del_pedido_en_la_cafeteria(request, pedido_id):
+    """El detalle de un pedido en la modal de `/reservas/` (`HU-68`, `DT-49`).
 
-    El rol se comprueba aquí **y** en el servicio, como en el punto de venta:
-    aquí para responder `403` antes de enseñar un pedido ajeno, allí para que
-    la regla valga entre por donde entre (`DT-15`).
+    Fragmento (`DT-16`): **la misma plantilla que la modal del acudiente**, con
+    lo que cambia según quién mira —quién canceló, a dónde va el formulario—.
+    Dos modales del mismo pedido acabarían enseñando cosas distintas.
     """
-    if request.user.rol not in (Rol.CAJERO, Rol.ADMINISTRADOR):
-        raise PermissionDenied(
-            "Cancelar un pedido desde la cola es del personal de la cafetería "
-            "([S11], DEC-24)."
-        )
+    pedido = _pedido_en_la_cafeteria(request, pedido_id)
+    return render(
+        request,
+        "ventas/partials/detalle-del-pedido.html",
+        {"pedido": pedido, "estudiante": pedido.venta.estudiante, "para_la_cafeteria": True},
+    )
 
-    pedido = _pedido_para_cancelar(pk=pedido_id)
-    volver_a = reverse("reservas")
-    return _cancelacion(request, pedido=pedido, volver_a=volver_a, al_terminar=volver_a)
+
+@login_required
+@require_http_methods(["POST"])
+def cancelacion_por_la_cafeteria(request, pedido_id):
+    """El cajero o la administración cancelan un pedido desde la modal (`HU-67`).
+
+    **Devuelve la misma modal**, con el error o ya cancelada, como la del
+    acudiente (`DT-49`, que corrige a `DT-48` en esto). Si se canceló, la
+    respuesta lleva `HX-Trigger: pedidos-cambiado` y el tablero de detrás se
+    vuelve a pedir: cambian la lista, las cifras y lo que falta por entregar.
+
+    El rol se comprueba en el selector **y** en el servicio, como en el punto de
+    venta: el primero para responder `403` antes de enseñar un pedido ajeno, el
+    segundo para que la regla valga entre por donde entre (`DT-15`). Un rechazo
+    vuelve en `200` con su motivo dentro, porque HTMX no intercambia un `4xx`.
+    """
+    pedido = _pedido_en_la_cafeteria(request, pedido_id)
+
+    error = None
+    motivo = request.POST.get("motivo", "")
+    try:
+        cancelar_pedido(actor=request.user, pedido=pedido, motivo=motivo)
+    except ValidationError as rechazo:
+        error = " ".join(rechazo.messages)
+    # El estado nuevo —o el que otro dejó mientras la modal estaba abierta—.
+    # Las líneas y el número ya venían, y no cambian.
+    pedido.refresh_from_db()
+
+    respuesta = render(
+        request,
+        "ventas/partials/detalle-del-pedido.html",
+        {
+            "pedido": pedido,
+            "estudiante": pedido.venta.estudiante,
+            "para_la_cafeteria": True,
+            "error": error,
+            "motivo": motivo if error else "",
+            "recien_cancelado": error is None,
+        },
+    )
+    if error is None:
+        respuesta["HX-Trigger"] = "pedidos-cambiado"
+    return respuesta
+
+
+def _contexto_del_tablero(request):
+    """Lo que pintan la pantalla de pedidos y su tablero (`HU-68`, `HU-24`).
+
+    El filtro llega en `?ver=`. **Sin él, cada rol abre lo suyo**: la
+    administración, todos; el cajero, lo que está por recoger, que es lo único
+    que ve (`[S11]`). Un filtro que no existe es un 404, no la pestaña por
+    defecto: una URL mal escrita que enseña otra cosa es peor que un error.
+    Uno que existe pero no le toca al rol lo rechaza el selector con `403`.
+    """
+    es_administracion = request.user.rol == Rol.ADMINISTRADOR
+    filtro = request.GET.get("ver") or ("todos" if es_administracion else "por-recoger")
+    if filtro not in FILTROS_DE_PEDIDOS:
+        raise Http404("Ese filtro de pedidos no existe.")
+
+    pedidos = pedidos_de_la_cafeteria(actor=request.user, filtro=filtro)
+    tablero = tablero_de_reservas(actor=request.user)
+    pantalla = reverse("reservas")
+
+    return {
+        "pedidos": pedidos,
+        "tablero": tablero,
+        "filtro": filtro,
+        "es_administracion": es_administracion,
+        # Lo que está por recoger, se enseñe o no la pestaña.
+        "cuantas": tablero.por_recoger,
+        "pestanas": [
+            {"clave": clave, "rotulo": rotulo, "url": f"{pantalla}?ver={clave}"}
+            for clave, rotulo in (
+                ("todos", "Todos"),
+                ("por-recoger", "Por recoger"),
+                ("entregados", "Entregados"),
+                ("cancelados", "Cancelados"),
+            )
+        ]
+        if es_administracion
+        else [],
+        "titulo_de_la_lista": {
+            "todos": "Todos los pedidos",
+            "por-recoger": "Por recoger",
+            "entregados": "Entregados",
+            "cancelados": "Cancelados",
+        }[filtro],
+        "tablero_url": f"{reverse('tablero-de-reservas')}?ver={filtro}",
+        # `INVD-2`. Si alguno por recoger no se puede entregar, la pantalla lo
+        # explica una vez además de marcar la fila. Se calcula aquí para no
+        # recorrer la lista dos veces en la plantilla.
+        "hay_sin_salida": any(
+            p.esta_pendiente and not p.venta.estudiante.puede_operar for p in pedidos
+        ),
+    }
 
 
 @login_required
 @require_http_methods(["GET"])
 def reservas(request):
-    """La cola de reservas pendientes del personal de la cafetería (`TT-148`).
+    """La pantalla de pedidos anticipados de la cafetería (`TT-148`, `HU-68`).
 
-    `HU-24`, y su único criterio: **las reservas pendientes son consultables
-    desde la cafetería**. Para tenerlas preparadas antes de que lleguen los
-    estudiantes, que es el «para qué» de la historia.
+    `HU-24`: **las reservas pendientes son consultables desde la cafetería**,
+    para tenerlas preparadas antes de que lleguen los estudiantes. `HU-68`
+    añade, solo para la administración, el resto de los pedidos —entregados y
+    cancelados— con un filtro por estado, y arriba las cifras y la suma de lo
+    que falta por entregar.
 
-    **La autorización la hace el selector**, no un `if` de esta vista: es el
-    único camino por el que la cola llega a una pantalla, y así la regla se
-    aplica entre por donde entre (`DT-15`, `DT-11`).
+    **La autorización la hacen los selectores**, no un `if` de esta vista: son
+    el único camino por el que los pedidos llegan a una pantalla, y así la
+    regla se aplica entre por donde entre (`DT-15`, `DT-11`).
 
     ── POR QUÉ NO ESTÁ DENTRO DEL PUNTO DE VENTA ──────────────────────────
     `INT-2` es una pantalla de tres columnas sin scroll, dimensionada para cobrar
@@ -687,21 +741,20 @@ def reservas(request):
     delante, y eso llega al identificar — es `HU-25`.
     ─────────────────────────────────────────────────────────────────────────
     """
-    pendientes = reservas_pendientes(actor=request.user)
+    return render(request, "ventas/reservas-pendientes.html", _contexto_del_tablero(request))
 
+
+@login_required
+@require_http_methods(["GET"])
+def tablero_de_reservas_fragmento(request):
+    """El tablero de `/reservas/` sin la página: cifras, lo que falta y la lista.
+
+    Fragmento (`DT-16`). Lo vuelve a pedir la propia pantalla cuando la modal
+    cancela un pedido (`HX-Trigger: pedidos-cambiado`, `DT-40`), con el mismo
+    filtro que se estaba mirando.
+    """
     return render(
-        request,
-        "ventas/reservas-pendientes.html",
-        {
-            "pendientes": pendientes,
-            "cuantas": pendientes.count(),
-            # `INVD-2`. Si hay alguno que no se puede entregar, la pantalla lo
-            # explica una vez arriba además de marcar la fila. Se calcula aquí
-            # para no recorrer la lista dos veces en la plantilla.
-            "hay_sin_salida": any(
-                not p.venta.estudiante.puede_operar for p in pendientes
-            ),
-        },
+        request, "ventas/partials/tablero-de-reservas.html", _contexto_del_tablero(request)
     )
 
 

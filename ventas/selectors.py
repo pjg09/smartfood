@@ -441,47 +441,12 @@ def pedido_de(estudiante, pedido_id):
     return _completar_el_pedido(pedido, numero)
 
 
-def reservas_pendientes(*, actor):
-    """Las reservas pagadas que nadie ha recogido todavía (`TT-147`, `HU-24`).
+def _personal_de_la_cafeteria(actor):
+    """La puerta de las lecturas de pedidos de la cafetería (`HU-24`, `HU-68`).
 
-    Devuelve los `PedidoAnticipado` en estado `pendiente`, del más antiguo al más
-    reciente, con el estudiante y las líneas ya traídos.
-
-    ── EL ORDEN ES DEL MÁS ANTIGUO AL MÁS RECIENTE, Y ES AL REVÉS QUE TODO ─
-    Un historial se lee empezando por lo último, y por eso el de la billetera,
-    el del inventario y el de restricciones llegan así. **Esto no es un
-    historial: es una cola de trabajo.** Lo que el personal necesita saber es
-    qué lleva más tiempo esperando, no qué acaba de entrar.
-    ─────────────────────────────────────────────────────────────────────────
-
-    ── QUIÉN PUEDE, Y POR QUÉ SON DOS ROLES ───────────────────────────────
-    `HU-24` los nombra a los dos: `USR-3` y `USR-4`. `FUN-5` explica por qué —«el
-    personal de la cafetería consulta las reservas pendientes y registra su
-    entrega»—: quien prepara y quien entrega no tienen que ser la misma persona.
-
-    La autorización vive aquí y no en la vista, como en `informacion_de_cobro`:
-    este es el único camino por el que la cola de reservas llega a una pantalla,
-    y exige el rol aunque alguien escriba la URL a mano (`DT-11`, `INV-4`).
-
-    **El acudiente no entra por aquí.** Las suyas las ve en su pantalla de
-    reserva, filtradas por su estudiante (`pedidos_pendientes_de`). Esta función
-    devuelve las de todo el colegio, que no es asunto suyo.
-    ─────────────────────────────────────────────────────────────────────────
-
-    **No filtra por día.** Ninguna historia dice hasta cuándo vale una reserva, y
-    las reservas no caducan solas (`DEC-24`). Una de anteayer sin recoger
-    **sigue pendiente** hasta que se entrega o alguien la cancela; esconderla la
-    dejaría pagada y olvidada.
-
-    **Tampoco esconde los pedidos que hoy no se pueden entregar.** Un estudiante
-    desactivado o de baja no retira (`INVD-2`), y su pedido sigue aquí,
-    **marcado**, preguntándole al estudiante que viene en `select_related`. Su
-    salida es cancelarlo: el importe vuelve a la billetera aunque el estudiante
-    no opere, porque una devolución no es una recarga (`DEC-24`, `HU-67`).
+    El cajero y la administración, con la cuenta activa. Lo que cada uno ve
+    dentro lo decide quien llama: el cajero solo lo que está por recoger.
     """
-    from cuentas.models import Rol
-    from ventas.models import EstadoDelPedido, PedidoAnticipado
-
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied("Consultar las reservas exige identificarse.")
     if actor.rol not in (Rol.CAJERO, Rol.ADMINISTRADOR):
@@ -492,14 +457,198 @@ def reservas_pendientes(*, actor):
     if not actor.is_active:
         raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
 
-    return (
-        PedidoAnticipado.objects.filter(estado=EstadoDelPedido.PENDIENTE)
-        # `venta__estudiante` no es adorno: la pantalla pregunta a cada
-        # estudiante si puede retirar (`INVD-2`), y sin traerlo aquí serían
-        # tantas consultas como reservas.
-        .select_related("venta", "venta__estudiante")
+
+def _solo_la_administracion_ve_lo_cerrado(actor):
+    """Lo entregado y lo cancelado es un reporte de ventas (`HU-68`, `[S11]`).
+
+    `[S11]` le da a la administración «consultar reportes de ventas» y al cajero
+    no: él prepara y entrega lo que está **por recoger** (`HU-24`, `HU-25`).
+    Enseñarle el historial ampliaría la matriz sin una decisión que lo diga.
+    """
+    if actor.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied(
+            "Los pedidos entregados y cancelados los consulta la administración "
+            "de la cafetería ([S11], HU-68); el cajero ve lo que está por recoger "
+            "(HU-24)."
+        )
+
+
+# Los filtros de la pantalla de pedidos de la cafetería (`HU-68`), en el orden de
+# sus pestañas. La clave es lo que viaja en la URL —`?ver=entregados`— y el valor,
+# el estado que filtra; `None` es «todos».
+FILTROS_DE_PEDIDOS = {
+    "todos": None,
+    "por-recoger": "pendiente",
+    "entregados": "entregado",
+    "cancelados": "cancelado",
+}
+
+
+def _con_su_numero(consulta):
+    """Anota a cada pedido su número **entre los de su estudiante**.
+
+    Es el mismo «Pedido #3» que el acudiente ve en su pantalla (`HU-65`): si la
+    cafetería numerara a todo el colegio seguido, la misma reserva tendría dos
+    números y una llamada sobre «el pedido 3» no se entendería. Junto al nombre
+    del estudiante, el número no es ambiguo.
+
+    Es una subconsulta y no un `enumerate` en Python porque la lista llega
+    **filtrada**: contar sobre lo que se enseña renumeraría al cambiar de
+    pestaña.
+    """
+    from django.db.models import Count, OuterRef, Subquery
+
+    from ventas.models import PedidoAnticipado
+
+    anteriores = (
+        PedidoAnticipado.objects.filter(
+            venta__estudiante=OuterRef("venta__estudiante"),
+            creado_en__lte=OuterRef("creado_en"),
+        )
+        .order_by()
+        .values("venta__estudiante")
+        .annotate(cuantos=Count("pk"))
+        .values("cuantos")
+    )
+    return consulta.annotate(numero_del_estudiante=Subquery(anteriores))
+
+
+def pedidos_de_la_cafeteria(*, actor, filtro):
+    """Los pedidos de todo el colegio, filtrados por estado (`HU-68`, `HU-24`).
+
+    `filtro` es una clave de `FILTROS_DE_PEDIDOS`. **El cajero solo pide
+    `por-recoger`**; cualquier otro filtro es de la administración.
+
+    ── EL ORDEN DEPENDE DEL FILTRO, Y ES A PROPÓSITO ──────────────────────
+    Un historial se lee empezando por lo último, y por eso el de la billetera,
+    el del inventario y el de restricciones llegan así; aquí, «todos»,
+    «entregados» y «cancelados». **Lo que está por recoger no es un historial:
+    es una cola de trabajo**, y va del más antiguo al más reciente. Lo que el
+    personal necesita saber es qué lleva más tiempo esperando.
+    ─────────────────────────────────────────────────────────────────────────
+
+    ── QUIÉN PUEDE, Y POR QUÉ SON DOS ROLES ───────────────────────────────
+    `HU-24` los nombra a los dos: `USR-3` y `USR-4`. `FUN-5` explica por qué —«el
+    personal de la cafetería consulta las reservas pendientes y registra su
+    entrega»—: quien prepara y quien entrega no tienen que ser la misma persona.
+    La autorización vive aquí y no en la vista: es el único camino por el que
+    los pedidos llegan a la pantalla de la cafetería, y exige el rol aunque
+    alguien escriba la URL a mano (`DT-11`, `INV-4`).
+
+    **El acudiente no entra por aquí.** Los suyos los ve en su pantalla de
+    reserva, filtrados por su estudiante (`pedidos_de`).
+    ─────────────────────────────────────────────────────────────────────────
+
+    **No filtra por día.** Ninguna historia dice hasta cuándo vale una reserva, y
+    las reservas no caducan solas (`DEC-24`). Una de anteayer sin recoger
+    **sigue pendiente** hasta que se entrega o alguien la cancela.
+
+    **Tampoco esconde los pedidos que hoy no se pueden entregar.** Un estudiante
+    desactivado o de baja no retira (`INVD-2`), y su pedido sigue aquí para que
+    la pantalla lo marque; su salida es cancelarlo, porque una devolución no es
+    una recarga (`DEC-24`, `HU-67`).
+
+    Cada pedido llega con `numero`, `total` y `kcal` (`_completar_el_pedido`),
+    con las líneas, el estudiante y quién canceló ya traídos: la lista no hace
+    una consulta por fila.
+    """
+    from ventas.models import PedidoAnticipado
+
+    _personal_de_la_cafeteria(actor)
+    if filtro not in FILTROS_DE_PEDIDOS:
+        raise ValueError(f"No hay ningún filtro de pedidos llamado «{filtro}».")
+    if filtro != "por-recoger":
+        _solo_la_administracion_ve_lo_cerrado(actor)
+
+    consulta = _con_su_numero(
+        PedidoAnticipado.objects.select_related("venta__estudiante", "cancelado_por")
         .prefetch_related("venta__lineas__producto")
-        .order_by("creado_en")
+    )
+    if FILTROS_DE_PEDIDOS[filtro] is not None:
+        consulta = consulta.filter(estado=FILTROS_DE_PEDIDOS[filtro])
+    consulta = consulta.order_by("creado_en" if filtro == "por-recoger" else "-creado_en")
+
+    return [_completar_el_pedido(pedido, pedido.numero_del_estudiante) for pedido in consulta]
+
+
+def pedido_de_la_cafeteria(*, actor, pedido_id):
+    """Un pedido cualquiera, para la modal de la cafetería (`HU-68`, `HU-67`).
+
+    O `PedidoAnticipado.DoesNotExist`. **El cajero solo abre uno por recoger**:
+    el detalle de uno entregado o cancelado es el mismo historial que la lista
+    no le enseña, y no puede alcanzarse escribiendo la URL.
+    """
+    from ventas.models import PedidoAnticipado
+
+    _personal_de_la_cafeteria(actor)
+    pedido = (
+        _con_su_numero(PedidoAnticipado.objects.all())
+        .select_related("venta__estudiante", "cancelado_por", "entregado_por")
+        .prefetch_related("venta__lineas__producto")
+        .get(pk=pedido_id)
+    )
+    if not pedido.esta_pendiente:
+        _solo_la_administracion_ve_lo_cerrado(actor)
+    return _completar_el_pedido(pedido, pedido.numero_del_estudiante)
+
+
+@dataclass(frozen=True)
+class TableroDeReservas:
+    """Las cifras de arriba de la pantalla de pedidos (`HU-68`).
+
+    `pedidos` y `reservado` son `None` para el cajero: son historial —cuánto se
+    ha pedido y cobrado desde siempre— y ese es de la administración (`[S11]`).
+    """
+
+    por_recoger: int
+    falta_por_entregar: list
+    pedidos: int | None
+    reservado: Decimal | None
+
+
+def tablero_de_reservas(*, actor):
+    """Cuántos pedidos hay, cuántos esperan, cuánto se cobró y qué preparar.
+
+    **`falta_por_entregar` es lo que `HU-24` existe para responder**: la suma,
+    producto por producto, de lo que llevan los pedidos por recoger. Es lo que
+    hay que tener listo, sin ir sumando fila por fila. Del más pedido al menos,
+    con su `porcentaje` frente al primero para el medidor (`[S2.8]`).
+
+    **`reservado` no cuenta lo cancelado**: ese importe volvió a la billetera
+    (`DEC-24`), así que sumarlo diría que la cafetería cobró algo que devolvió.
+    """
+    from ventas.models import EstadoDelPedido, LineaVenta, PedidoAnticipado, Venta
+
+    _personal_de_la_cafeteria(actor)
+
+    filas = list(
+        LineaVenta.objects.filter(venta__pedido_anticipado__estado=EstadoDelPedido.PENDIENTE)
+        .values("producto", "producto__nombre")
+        .annotate(unidades=Sum("cantidad"))
+        .order_by("-unidades", "producto__nombre")
+    )
+    tope = filas[0]["unidades"] if filas else 0
+    falta_por_entregar = [
+        {
+            "nombre": fila["producto__nombre"],
+            "unidades": fila["unidades"],
+            "porcentaje": round(100 * fila["unidades"] / tope),
+        }
+        for fila in filas
+    ]
+    por_recoger = PedidoAnticipado.objects.filter(estado=EstadoDelPedido.PENDIENTE).count()
+
+    if actor.rol != Rol.ADMINISTRADOR:
+        return TableroDeReservas(por_recoger, falta_por_entregar, None, None)
+
+    reservado = Venta.objects.filter(
+        pedido_anticipado__estado__in=(EstadoDelPedido.PENDIENTE, EstadoDelPedido.ENTREGADO)
+    ).aggregate(total=Sum(IMPORTE_DE_LA_LINEA))["total"]
+    return TableroDeReservas(
+        por_recoger,
+        falta_por_entregar,
+        PedidoAnticipado.objects.count(),
+        reservado or Decimal("0.00"),
     )
 
 

@@ -67,11 +67,13 @@ from ventas.views import (
     entrega,
     identificacion,
     detalle_del_pedido,
+    detalle_del_pedido_en_la_cafeteria,
     detalle_del_producto,
     pedidos_del_estudiante,
     punto_de_venta,
     reserva,
     reservas,
+    tablero_de_reservas_fragmento,
     ticket_de_la_reserva,
 )
 
@@ -104,9 +106,18 @@ urlpatterns = [
     # la cafetería también la consulta (`FUN-5`) y `INT-2` le responde `403`.
     # Una ruta compartida es lo que evita dos pantallas del mismo dato.
     path("reservas/", reservas, name="reservas"),
-    # `HU-67`, `DEC-24`. Cancelar un pedido de la cola, con su motivo. Cuelga de
-    # la cola porque es desde donde lo ven los dos roles que pueden hacerlo. `GET`
-    # confirma y `POST` cancela: mueve dinero, y no se hace con un solo clic.
+    # `HU-68`. El tablero de esa pantalla sin la página, para repintarlo cuando
+    # la modal cancela un pedido (`DT-16`, `DT-40`).
+    path("reservas/tablero/", tablero_de_reservas_fragmento, name="tablero-de-reservas"),
+    # `HU-68`, `DT-49`. El detalle de un pedido en la modal de la cafetería.
+    path(
+        "reservas/<uuid:pedido_id>/",
+        detalle_del_pedido_en_la_cafeteria,
+        name="pedido-en-la-cafeteria",
+    ),
+    # `HU-67`, `DEC-24`. Cancelar un pedido, con su motivo, desde esa modal. Solo
+    # `POST`: mueve dinero, y la confirmación es la propia modal, que enseña el
+    # pedido y lo que se devuelve antes de pedir el motivo (`DT-49`).
     path(
         "reservas/<uuid:pedido_id>/cancelar/",
         cancelacion_por_la_cafeteria,

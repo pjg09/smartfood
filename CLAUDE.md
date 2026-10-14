@@ -13,7 +13,7 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **Estamos en el Sprint 5, el último**, semanas 14 y 15: reportes de consumo, cierre de caja y **el cierre del proyecto**. La **entrega final** (`EVA-5`, 30 % de la nota) es la semana 16.
 
-**El producto está terminado: las 67 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
+**El producto está terminado: las 68 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
 **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
 Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
 (`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
@@ -25,6 +25,9 @@ en lugar del admin, fuera restricciones e institución, y el alta de un acudient
 El 2026-10-13, la reserva pasó a ser un encargo que no mira existencias, y un pedido
 pendiente se cancela con motivo y devolución a la billetera (`DEC-24`, `DT-47`, `DT-48`,
 `HU-65` … `HU-67`).
+El 2026-10-14, la administración ve todos los pedidos con un filtro por estado y la
+cafetería cancela desde la modal del pedido (`DT-49`, `HU-68`, sin `DEC`: `[S11]` ya le daba
+los reportes de ventas).
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -328,10 +331,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.791 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
+La suite completa son **1.818 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.791, no corrió entera.
+menos de esas 1.818, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

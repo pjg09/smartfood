@@ -103,8 +103,11 @@ se cobró no lo reescribe una edición del catálogo de mañana.
 
 ## [S3] Consultar
 
-**La cafetería, la cola.** `reservas_pendientes` devuelve lo pagado y sin recoger, **del más
-antiguo al más reciente**.
+**La cafetería, la cola.** `pedidos_de_la_cafeteria` con el filtro `por-recoger` devuelve lo
+pagado y sin recoger, **del más antiguo al más reciente**. La administración ve además lo
+entregado y lo cancelado, del más reciente al más antiguo (`HU-68`, `DT-49`): eso es un reporte
+de ventas, y `[S11]` no se lo da al cajero. Encima de la lista, **lo que falta por entregar**,
+sumado producto por producto: es lo que hay que tener preparado.
 
 > **Al revés que todos los historiales del proyecto.** La billetera, el inventario y las
 > restricciones se leen empezando por lo último. Esto **no es un historial: es una cola de
@@ -190,7 +193,8 @@ restricción `pedido_estado_coherente`.
 
 `DEC-24`, `DT-48`. **Un solo servicio, `cancelar_pedido(actor, pedido, motivo)`, para los tres
 roles que pueden**: el acudiente sobre los pedidos de sus estudiantes (`HU-66`), y el cajero
-y la administración de la cafetería sobre cualquiera, desde la cola (`HU-67`). La institución
+y la administración de la cafetería sobre cualquiera, desde la modal del pedido en `/reservas/`
+(`HU-67`, `DT-49`). La institución
 no: tiene el padrón, no la cafetería.
 
 ### [S5.1] Hace exactamente dos cosas

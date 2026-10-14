@@ -111,8 +111,10 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/mis-estudiantes/<id>/pedidos/` | Fragmento HTMX: la lista de pedidos de la pantalla de reserva, que se repinta al cancelar | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/` | Fragmento HTMX: el detalle de un pedido en la modal, con su cancelación si está pendiente | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Solo su acudiente** | `HU-66` |
-| `/reservas/` | Cola de reservas pendientes, de la más antigua a la más reciente, con **Cancelar** en cada una | **Cajero y administración** | `TT-148`, `HU-67` |
-| `/reservas/<pedido>/cancelar/` | Confirmar la cancelación de un pedido de la cola, con motivo; `POST` devuelve el importe | **Cajero y administración** | `HU-67` |
+| `/reservas/` | Pedidos anticipados: cifras, lo que falta por entregar y la lista. **La administración** filtra por estado con `?ver=` —todos, por recoger, entregados, cancelados—; **el cajero** ve lo que está por recoger | **Cajero y administración** | `TT-148`, `HU-68` |
+| `/reservas/tablero/` | El tablero de esa pantalla, como fragmento: se repinta al cancelar | **Cajero y administración** | `HU-68` |
+| `/reservas/<pedido>/` | El detalle de un pedido en la modal; uno entregado o cancelado, solo la administración | **Cajero y administración** | `HU-68`, `DT-49` |
+| `/reservas/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Cajero y administración** | `HU-67`, `DT-49` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/catalogo/producto/<id>/historial/` | Las existencias de un producto y los movimientos que las explican | **Solo administración** | `TT-141` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
@@ -144,7 +146,12 @@ por script contra `get_resolver()` el 2026-10-03, sin que sobre ni falte ninguna
 | `/mis-estudiantes/<id>/pedidos/<pedido>/` | 403 | 403 | 403 | **200** | 302 → acceso |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | 403 | 403 | **200** | 302 → acceso |
-| `/reservas/<pedido>/cancelar/` | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/` | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/?ver=entregados` | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/reservas/tablero/` | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido por recoger>/` | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido entregado>/` | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/reservas/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |
 | `/reservas/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | **200** | **200** | 403 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
 | `/padron/<id>/reactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
