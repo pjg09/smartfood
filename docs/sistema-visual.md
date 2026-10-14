@@ -118,6 +118,14 @@ Y ahí **la franja sí puede ser `error`**: un saldo en cero significa que no se
 cobrar nada (`INV-1`). Es la excepción que confirma la regla 3 — el color de estado se gasta
 donde el estado existe, no como adorno.
 
+**En el panel de la cafetería la tarjeta va sin enlace y con un icono**
+(`templates/admin/reportes/panel.html`, `DEC-16`). Cuatro de las cinco llevaban a la misma
+lista de ventas, que la pantalla ya enlaza dos veces más abajo: cuatro veces el mismo destino
+no orienta a nadie. El hueco del enlace lo ocupa, arriba, el icono sobre un fondo de su misma
+serie; franja e icono comparten color, **y las clases van escritas enteras en
+`reportes/views.py`**, nunca armadas como `bg-{{ serie }}`: una clase armada no existe para
+Tailwind, y así llegaron a quedarse sin franja cuatro de las cinco.
+
 **El segundo sitio sin enlace es el resumen de gasto** (`TT-166`), y por el mismo motivo:
 no hay a dónde ir. Lo que explica esas tres cifras es el historial que está debajo, en la
 misma pantalla. La regla que queda: **el enlace va cuando lleva a algo que no está a la

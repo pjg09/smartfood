@@ -13,7 +13,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -211,7 +210,7 @@ def panel_de_la_cafeteria(request):
         "admin/reportes/panel.html",
         {
             **admin.site.each_context(request),
-            "title": "Panel de la cafetería",
+            "title": "Panel",
             "panel": panel,
             "umbral": UMBRAL_DE_EXISTENCIAS_BAJAS,
             "tarjetas": _tarjetas_de_la_jornada(panel),
@@ -223,40 +222,48 @@ def panel_de_la_cafeteria(request):
 def _tarjetas_de_la_jornada(panel):
     """Los cinco rótulos de la fila de arriba.
 
-    Se arman en la vista porque son **presentación**: rótulo, frase de apoyo y a
-    dónde lleva cada una. Las cifras vienen ya calculadas del selector; aquí no
-    se suma nada.
+    Se arman en la vista porque son **presentación**: rótulo, frase de apoyo,
+    icono y color de cada una. Las cifras vienen ya calculadas del selector;
+    aquí no se suma nada.
 
-    La franja usa `serie-*` y nunca un color de estado: es decoración, y el
-    rojo y el ámbar significan otra cosa en este producto.
+    **Las clases van escritas enteras**, nunca como `bg-{{ serie }}`: Tailwind
+    compila lo que encuentra escrito, y una clase armada en la plantilla no
+    existe. Así se quedaron sin franja cuatro de las cinco. Este fichero está en
+    las fuentes de `estilos/admin.css` para que las encuentre.
+
+    La franja y el icono usan `serie-*` y nunca un color de estado: es
+    decoración, y el rojo y el ámbar significan otra cosa en este producto.
+
+    **Sin enlace en cada tarjeta.** Cuatro de las cinco llevaban a la misma
+    lista de ventas, que ya enlazan dos bloques más abajo: cuatro veces el mismo
+    destino no es navegación, es ruido.
     """
     por_medio = dict((etiqueta, total) for etiqueta, _, total in panel.de_hoy.por_medio_de_pago)
-    ventas = reverse("admin:ventas_venta_changelist")
 
     return (
         {
             "rotulo": "En caja hoy",
-            "cifra": dinero(por_medio.get("Efectivo")),
+            "cifra": dinero(por_medio.get("Efectivo"), "COP"),
             "apoyo": "Cobrado en efectivo",
-            "serie": "serie-1",
-            "enlace": ventas,
-            "accion": "Ver ventas",
+            "icono": "i-efectivo",
+            "franja": "from-serie-1 to-serie-1/40",
+            "insignia": "bg-serie-1/12 text-serie-1",
         },
         {
             "rotulo": "Transferencias hoy",
-            "cifra": dinero(por_medio.get("Transferencia")),
+            "cifra": dinero(por_medio.get("Transferencia"), "COP"),
             "apoyo": "Cobrado en transferencia",
-            "serie": "serie-2",
-            "enlace": ventas,
-            "accion": "Ver ventas",
+            "icono": "i-transferencia",
+            "franja": "from-serie-2 to-serie-2/40",
+            "insignia": "bg-serie-2/12 text-serie-2",
         },
         {
             "rotulo": "Con billetera hoy",
-            "cifra": dinero(por_medio.get("Billetera")),
+            "cifra": dinero(por_medio.get("Billetera"), "COP"),
             "apoyo": "Descontado del saldo de las familias",
-            "serie": "serie-3",
-            "enlace": ventas,
-            "accion": "Ver ventas",
+            "icono": "i-saldo",
+            "franja": "from-serie-3 to-serie-3/40",
+            "insignia": "bg-serie-3/12 text-serie-3",
         },
         {
             "rotulo": "Ventas de hoy",
@@ -266,16 +273,16 @@ def _tarjetas_de_la_jornada(panel):
                 if panel.ticket_medio is not None
                 else "Todavía no se ha cobrado nada"
             ),
-            "serie": "serie-4",
-            "enlace": ventas,
-            "accion": "Ver ventas",
+            "icono": "i-recibo",
+            "franja": "from-serie-4 to-serie-4/40",
+            "insignia": "bg-serie-4/12 text-serie-4",
         },
         {
             "rotulo": "Recargado hoy",
-            "cifra": dinero(panel.recargado_hoy),
+            "cifra": dinero(panel.recargado_hoy, "COP"),
             "apoyo": "Lo que las familias añadieron a las billeteras",
-            "serie": "serie-5",
-            "enlace": None,
-            "accion": "",
+            "icono": "i-tendencia",
+            "franja": "from-serie-5 to-serie-5/40",
+            "insignia": "bg-serie-5/12 text-serie-5",
         },
     )

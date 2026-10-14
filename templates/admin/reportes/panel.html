@@ -18,29 +18,36 @@
    existencias sí usa `aviso`, porque ahí el estado existe.
 {% endcomment %}
 
+{% comment %} Sin migas: es la pantalla de aterrizaje del rol, y «Inicio › Panel» sobre
+   la primera pantalla que se abre no orienta a nadie. {% endcomment %}
+{% block breadcrumbs %}{% endblock %}
+
+{% comment %} El título lo sigue poniendo el admin desde `title`; lo que se añade es la
+   frase de debajo, pegada a él. Escrita en el contenido quedaba a 40 px, que
+   es el margen que el admin deja bajo su `<h1>`. {% endcomment %}
+{% block content_title %}
+  <h1 class="mb-1">{{ title }}</h1>
+  <p class="mb-6 text-base text-texto-suave">Cómo va la cafetería hoy, y qué conviene mirar.</p>
+{% endblock %}
+
 {% block content %}
 <div class="armazon-panel space-y-6 pb-10">
 
-  <p class="text-base text-texto-suave">
-    Cómo va la cafetería hoy, y qué conviene mirar.
-  </p>
-
-  {% comment %} La jornada. Cinco cifras que se leen de un vistazo; el detalle de cada
-     una está en su reporte. {% endcomment %}
+  {% comment %} La jornada. Cinco cifras que se leen de un vistazo, cada una con su
+     icono sobre el color de su franja. Las clases de color vienen enteras de la
+     vista: armadas aquí, Tailwind no las compilaría. {% endcomment %}
   <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2 escritorio:grid-cols-3 amplio:grid-cols-5">
     {% for tarjeta in tarjetas %}
       <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
-        <span aria-hidden="true" class="h-1 w-full bg-{{ tarjeta.serie }}"></span>
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r {{ tarjeta.franja }}"></span>
         <div class="flex flex-1 flex-col p-5">
-          <p class="text-sm font-medium text-texto-suave">{{ tarjeta.rotulo }}</p>
-          <p class="mt-2 font-display text-3xl text-texto">{{ tarjeta.cifra }}</p>
-          <p class="mt-1 text-sm text-texto-suave">{{ tarjeta.apoyo }}</p>
-          {% if tarjeta.enlace %}
-            <a href="{{ tarjeta.enlace }}"
-               class="mt-auto pt-4 text-sm font-medium text-acento-fuerte hover:underline">
-              {{ tarjeta.accion }} →
-            </a>
-          {% endif %}
+          <span aria-hidden="true"
+                class="flex h-11 w-11 items-center justify-center rounded-lg {{ tarjeta.insignia }}">
+            <svg class="h-5 w-5"><use href="#{{ tarjeta.icono }}"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">{{ tarjeta.rotulo }}</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto">{{ tarjeta.cifra }}</p>
+          <p class="mt-2 text-sm text-texto-suave">{{ tarjeta.apoyo }}</p>
         </div>
       </div>
     {% endfor %}
@@ -50,12 +57,12 @@
      vacío**: cuando no hay productos por debajo del umbral, este bloque no se
      dibuja. {% endcomment %}
   {% if panel.existencias_bajas %}
-    <div class="rounded-xl border border-aviso-fuerte/30 bg-aviso-suave p-5">
-      <h2 class="flex items-center gap-2 font-display text-lg text-texto">
-        <svg class="h-5 w-5 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+    <div class="rounded-xl border border-aviso-fuerte/50 bg-aviso-suave p-5">
+      <h2 class="flex items-center gap-2 font-display text-lg text-aviso-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-alerta"></use></svg>
         Quedan pocas unidades
       </h2>
-      <p class="mt-1 text-sm text-texto-suave">
+      <p class="mt-2 text-sm text-aviso-fuerte">
         Productos con {{ umbral }} unidades o menos. El umbral es una ayuda de esta
         pantalla, no una regla configurada.
       </p>
@@ -69,9 +76,7 @@
         {% endfor %}
       </ul>
       <a href="{% url 'admin:inventario_movimientoinventario_changelist' %}"
-         class="mt-4 inline-block text-sm font-medium text-acento-fuerte hover:underline">
-        Ir al inventario →
-      </a>
+         class="mt-4 inline-block text-sm font-semibold">Ir al inventario</a>
     </div>
   {% endif %}
 
@@ -80,28 +85,30 @@
     {% comment %} Lo más vendido, con un medidor por producto (`[S2.8]`). El ancho sale
        de un dato, así que va en un estilo en línea: es la excepción declarada
        del sistema visual, porque Tailwind no puede compilar una clase que no
-       está escrita. {% endcomment %}
-    <section class="rounded-xl border border-borde bg-superficie p-5">
+       está escrita.
+
+       **Un color por fila, y aquí sí puede ir el naranja.** `[S2.8]` lo evita
+       en la comparación nutricional porque allí una barra naranja se lee como
+       «te pasaste»; en un ranking de ventas no hay ningún límite que pasarse, y
+       el color solo separa una fila de la siguiente. {% endcomment %}
+    <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
       <div class="flex items-baseline justify-between gap-3">
         <h2 class="font-display text-lg text-texto">Lo más vendido en 30 días</h2>
-        <a href="{% url 'admin:ventas_venta_changelist' %}"
-           class="text-sm font-medium text-acento-fuerte hover:underline">Ver reportes →</a>
+        <a href="{% url 'admin:ventas_venta_changelist' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap">Ver reportes</a>
       </div>
 
       {% if mas_vendidos %}
-        <ul class="mt-4 space-y-4">
+        <ul class="mt-4 space-y-5">
           {% for fila in mas_vendidos %}
-            <li>
+            <li class="text-base">
               <div class="flex items-baseline justify-between gap-3">
                 <span class="truncate text-texto">{{ fila.nombre }}</span>
                 <span class="shrink-0 font-semibold text-texto">{{ fila.unidades }} unid.</span>
               </div>
-              <div class="mt-1 flex items-center gap-3">
-                <div class="h-2 flex-1 overflow-hidden rounded-full bg-superficie-hover">
-                  <div class="h-full rounded-full bg-serie-1"
-                       style="width: {{ fila.porcentaje }}%"></div>
-                </div>
-                <span class="shrink-0 text-sm text-texto-suave">{{ fila.importe|dinero }}</span>
+              <p class="mt-0.5 text-sm text-texto-suave">{{ fila.importe|dinero }}</p>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-superficie-hover">
+                <div class="h-full rounded-full {% cycle 'bg-serie-1' 'bg-serie-2' 'bg-serie-3' 'bg-serie-4' 'bg-serie-5' %}"
+                     style="width: {{ fila.porcentaje }}%"></div>
               </div>
             </li>
           {% endfor %}
@@ -117,22 +124,25 @@
        mira quien administra la cafetería, que no es responsable de los datos de
        los menores (`[S11]`, Ley 1581). Cuántos renglones y cuánto, que es lo
        que dice si la caja se mueve. {% endcomment %}
-    <section class="rounded-xl border border-borde bg-superficie p-5">
+    <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
       <div class="flex items-baseline justify-between gap-3">
         <h2 class="font-display text-lg text-texto">Últimas ventas</h2>
-        <a href="{% url 'admin:ventas_venta_changelist' %}"
-           class="text-sm font-medium text-acento-fuerte hover:underline">Ver todas →</a>
+        <a href="{% url 'admin:ventas_venta_changelist' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap">Ver todas</a>
       </div>
 
       {% if panel.ultimas_ventas %}
-        <ul class="mt-4 divide-y divide-borde">
+        <ul class="mt-2 divide-y divide-borde">
           {% for venta in panel.ultimas_ventas %}
-            <li class="flex items-baseline justify-between gap-3 py-2">
-              <span class="text-sm text-texto-suave">
-                {{ venta.renglones }} producto{{ venta.renglones|pluralize }}
-                · {{ venta.creado_en|date:"j \d\e F, H:i"|lower }}
-              </span>
-              <span class="shrink-0 font-semibold text-texto">{{ venta.total_cobrado|dinero }}</span>
+            <li class="flex items-start justify-between gap-3 py-3 text-base">
+              <div class="min-w-0">
+                <p class="text-texto">
+                  {{ venta.renglones }} producto{{ venta.renglones|pluralize }}
+                </p>
+                <p class="mt-0.5 text-sm text-texto-suave">
+                  {{ venta.creado_en|date:"j \d\e M \d\e Y, H:i"|lower }}
+                </p>
+              </div>
+              <span class="shrink-0 font-semibold text-acento-fuerte">{{ venta.total_cobrado|dinero }}</span>
             </li>
           {% endfor %}
         </ul>
@@ -144,7 +154,7 @@
 
   {% comment %} El mes, como cierre. Tres cifras sin enlace: lo que las explica es el
      reporte de ventas, que ya está enlazado arriba dos veces (`[S2.1]`). {% endcomment %}
-  <section class="rounded-xl border border-borde bg-superficie p-5">
+  <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
     <h2 class="font-display text-lg text-texto">Últimos 30 días</h2>
     <div class="mt-4 grid grid-cols-1 gap-4 tablet:grid-cols-3">
       <div class="rounded-lg bg-superficie-hover p-4">

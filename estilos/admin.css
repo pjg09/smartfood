@@ -37,10 +37,14 @@
  * sola vez en todo el proyecto. */
 @import "./tokens.css";
 
-/* Dónde buscar clases. El armazón que se pinta aquí sale de `templates/`, y las
- * entradas de la barra, de `cuentas/templatetags/interfaz.py`. */
+/* Dónde buscar clases. El armazón que se pinta aquí sale de `templates/`; las
+ * entradas de la barra, de `cuentas/templatetags/interfaz.py`, y los colores de
+ * las tarjetas del panel, de `reportes/views.py`. Una clase que solo existe en
+ * un fichero que no está aquí **no se compila y no da ningún error**: así se
+ * quedaron sin franja cuatro de las cinco tarjetas del panel. */
 @source "../templates";
 @source "../cuentas";
+@source "../reportes";
 
 /* ==========================================================================
  * EL CROMO DEL ADMIN, CONTRA LOS TOKENS
@@ -681,14 +685,38 @@ body #container header.armazon a {
   color: var(--color-texto-suave);
 }
 
-/* Solo los botones que NO tienen fondo propio. El de las tres rayas lleva el
- * degradado de marca en sus utilidades y aquí se lo estaríamos borrando. */
-#container .armazon form button {
-  background: none;
-  border-color: transparent;
-  box-shadow: none;
-  font-weight: inherit;
-  text-transform: none;
+/* **Las dos piezas del `preflight` que esta hoja no trae, acotadas al armazón.**
+ *
+ * Sin `border-box`, el ancho y el alto de una utilidad no incluyen el relleno:
+ * la navegación lateral —`h-full` con `py-6`— medía 48 px más que la barra que
+ * la contiene, y «Cerrar sesión» se salía por abajo, recortado.
+ *
+ * Sin el reset de botones, cada `<button>` conserva el borde de 2 px y el fondo
+ * gris del navegador: el botón de las tres rayas salía con un filo oscuro y
+ * cada botón del selector de tema, recuadrado dentro de su grupo.
+ *
+ * **`:where()` y no `.armazon button`.** Esta regla tiene que perder contra
+ * cualquier utilidad: con especificidad cero, `bg-superficie-hover` o
+ * `border-borde` la pisan sin depender del orden. La regla que había antes
+ * —`#container .armazon form button`, que pesaba (1,1,2)— pisaba en cambio las
+ * del botón de salir, que se quedaba sin su caja.
+ *
+ * **Fuera la modal de crear y editar**, que también lleva `.armazon`: lo que
+ * pinta dentro es un formulario del admin, escrito contra sus propias medidas,
+ * y cambiarle el `box-sizing` le movería los anchos de los campos. */
+:where(.armazon:not(dialog)),
+:where(.armazon:not(dialog)) *,
+:where(.armazon:not(dialog)) ::before,
+:where(.armazon:not(dialog)) ::after {
+  box-sizing: border-box;
+}
+
+:where(.armazon:not(dialog)) :where(button) {
+  border: 0 solid;
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
 }
 
 #container .armazon {
@@ -719,19 +747,40 @@ body #container header.armazon a {
  * filtros eso es justo lo que separa «cabe» de «hay que arrastrar». */
 #content { padding-left: 1.5rem; padding-right: 1.5rem; }
 
-/* Las listas del panel no son listas del admin: sin esto salen con la viñeta
- * cuadrada que él pone en `ul > li` y con su sangría. **El selector nombra al
- * `li`** porque el suyo también lo hace: con `.armazon-panel ul` la regla se
- * aplicaba al `ul` y la viñeta seguía, que la pinta el hijo. */
-.armazon-panel ul,
-.armazon-panel ol {
+/* Los márgenes y las listas del admin, fuera del panel: sin esto las listas
+ * salen con la viñeta cuadrada que él pone en `ul > li`, y cada `p` y cada `h2`
+ * con el margen inferior que él les da, que ninguna utilidad `mt-*` quita.
+ *
+ * **Con el peso justo para empatar con el admin, y no más.** El admin escribe
+ * `p`, `h2`, `ul` y `ul > li` a pelo; con `:where(.armazon-panel)` delante
+ * estas reglas pesan lo mismo y ganan por venir después, y cualquier utilidad
+ * —`py-3`, `mt-2`— les sigue ganando a ellas. Escritas como `.armazon-panel ul
+ * > li` pesaban más que `py-2` y las filas de las últimas ventas salían pegadas
+ * sin que nada fallara. **El selector nombra al `li`** porque el del admin
+ * también lo hace: la viñeta la pinta el hijo. */
+:where(.armazon-panel) p,
+:where(.armazon-panel) h2,
+:where(.armazon-panel) ul,
+:where(.armazon-panel) ol {
   margin: 0;
   padding: 0;
-  list-style: none;
 }
 
-.armazon-panel ul > li,
-.armazon-panel ol > li {
+:where(.armazon-panel) ul > li,
+:where(.armazon-panel) ol > li {
   list-style-type: none;
   padding: 0;
+}
+
+/* Los enlaces del panel, en el acento y sin subrayar hasta pasar por encima.
+ * Lleva el mismo selector largo que los del armazón, por la misma razón: el
+ * subrayado del admin pesa (1,1,2) y su color, (0,1,1), así que ni
+ * `text-acento-fuerte` ni `no-underline` llegan a aplicarse. */
+body #container .armazon-panel a {
+  color: var(--color-acento-fuerte);
+  text-decoration: none;
+}
+
+body #container .armazon-panel a:hover {
+  text-decoration: underline;
 }

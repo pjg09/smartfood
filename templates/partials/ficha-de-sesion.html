@@ -16,17 +16,25 @@
 {% endcomment %}
 {% if user.is_authenticated %}
   {% comment %} El tope crece con la pantalla: a 768 px la barra ya lleva el logotipo y
-     lo que traiga la pantalla, y un nombre largo sin tope se lo come todo. {% endcomment %}
-  <span class="hidden max-w-56 shrink-0 items-center gap-2 rounded-md border border-borde
-               bg-superficie-hover px-3 py-1.5 tablet:inline-flex escritorio:max-w-80">
-    <svg class="h-4 w-4 text-acento-fuerte" aria-hidden="true"><use href="#i-colegio"></use></svg>
+     lo que traiga la pantalla, y un nombre largo sin tope se lo come todo. En
+     `amplio` sobra sitio, y con 320 px «Administrador de la cafetería» dejaba
+     el nombre en cuatro letras.
+
+     **`max-tablet:hidden` y no `hidden` + `tablet:inline-flex`**, aquí y en el
+     rol de abajo. Este fragmento también se pinta en la barra del admin, y el
+     admin trae `.hidden { display: none !important }`: ese `!important` gana a
+     cualquier utilidad y la ficha no salía nunca, sin ningún error. Es la
+     misma trampa que la barra lateral de `admin/base_site.html`. {% endcomment %}
+  <span class="inline-flex max-w-56 shrink-0 items-center gap-2 rounded-md border border-borde
+               bg-superficie-hover px-3 py-1.5 max-tablet:hidden escritorio:max-w-80 amplio:max-w-md">
+    <svg class="h-4 w-4 shrink-0 text-acento-fuerte" aria-hidden="true"><use href="#i-colegio"></use></svg>
     {% comment %} `min-w-0` y `truncate` juntos: sin el primero, un nombre largo se niega a
        encoger, la caja se sale de la cabecera y `overflow-hidden` la corta sin
        ningún aviso. {% endcomment %}
     <span class="min-w-0 truncate text-sm font-semibold text-texto">
       {{ user.nombre|default:user.email }}
     </span>
-    <span class="hidden shrink-0 text-sm whitespace-nowrap text-texto-suave escritorio:inline">
+    <span class="shrink-0 text-sm whitespace-nowrap text-texto-suave max-escritorio:hidden">
       {{ user.get_rol_display }}
     </span>
   </span>
