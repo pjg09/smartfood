@@ -1,0 +1,35 @@
+{% load dinero %}
+{% comment %} DT-54. Las ventas de un día, en la modal de ficha (`[S2.10]`). Fragmento (`DT-16`).
+
+   Con `medio`, solo las de ese medio: es donde aterriza el cierre de caja, que enseña
+   **las mismas ventas en efectivo** que sumó su esperado (`INVD-5`). Sin las reservas
+   canceladas, como el resto del reporte.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-ventas-del-dia="{{ dia|date:'Y-m-d' }}"{% if medio %} data-medio="{{ medio }}"{% endif %}>
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      Ventas{% if medio %} en {{ medio|lower }}{% endif %} del {{ dia|date:"j \d\e M \d\e Y"|lower }}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-3 overflow-y-auto px-6 py-5">
+    {% if ventas %}
+      <p class="text-base text-texto-suave">
+        {{ ventas|length }} venta{{ ventas|length|pluralize }} ·
+        <strong class="font-semibold text-texto" data-total-del-dia>{{ total|dinero }}</strong>
+      </p>
+      {% for venta in ventas %}
+        {% include "reportes/partials/venta-en-la-modal.html" %}
+      {% endfor %}
+    {% else %}
+      <p class="text-base text-texto-suave" data-sin-ventas>
+        Ninguna venta{% if medio %} en {{ medio|lower }}{% endif %} ese día.
+      </p>
+    {% endif %}
+  </div>
+</div>

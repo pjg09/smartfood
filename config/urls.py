@@ -68,7 +68,12 @@ from inventario.views import (
 from reportes.views import (
     auditoria_de_la_operacion,
     consumo_del_estudiante,
+    ficha_de_venta,
+    ficha_de_ventas_del_dia,
     panel_de_la_cafeteria,
+    venta,
+    ventas,
+    ventas_de_un_dia,
 )
 from restricciones.views import (
     alergenos_bloqueados,
@@ -127,6 +132,14 @@ urlpatterns = [
     # El panel de la cafetería (`DEC-16`), donde aterriza `USR-4` al entrar.
     # Fuera del admin desde `DT-53`: es la pantalla más diaria del rol.
     path("cafeteria/", panel_de_la_cafeteria, name="panel-de-la-cafeteria"),
+    # `HU-35`, `DT-54`. El reporte de ventas, fuera del admin. Cada modal tiene
+    # dos rutas (`DT-16`): la página con la modal abierta —donde aterrizan el
+    # cierre de caja y la auditoría— y el fragmento que la rellena.
+    path("ventas/", ventas, name="ventas-de-la-cafeteria"),
+    path("ventas/dia/<str:fecha>/", ventas_de_un_dia, name="ventas-del-dia"),
+    path("ventas/dia/<str:fecha>/ficha/", ficha_de_ventas_del_dia, name="ventas-del-dia-ficha"),
+    path("ventas/venta/<uuid:venta_id>/", venta, name="venta-de-la-cafeteria"),
+    path("ventas/venta/<uuid:venta_id>/ficha/", ficha_de_venta, name="venta-ficha"),
     # `DEC-25`, `DT-50`. El inventario de la cafetería en una sola pantalla:
     # productos, ingresos, mermas y el libro de cada uno. Sustituye a las tres
     # pantallas del admin que tocaban lo mismo; el reporte de movimientos de

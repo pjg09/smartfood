@@ -224,7 +224,8 @@ pero solo muerden dentro del admin.
   del listado deja de abrirse: el admin responde que «no existe» y redirige al índice. Se
   quitaron las reservas canceladas del reporte de ventas (`DEC-24`) y el enlace de la
   auditoría a esa venta murió sin que nada fallara. Si el listado se filtra y la ficha no,
-  `get_object` busca en el `QuerySet` entero (`VentaAdmin`, `DT-48`).
+  `get_object` busca en el `QuerySet` entero. Le pasó al reporte de ventas mientras vivió en
+  el admin (`DT-48`); fuera de él, la modal de una venta la busca sin ese filtro (`DT-54`).
 
 - **Dentro del admin no hay reset de Tailwind, y se nota en los botones.** `estilos/admin.css`
   no trae `preflight` (`DT-36`): cada `<button>` conserva el borde de 2 px y el fondo gris del

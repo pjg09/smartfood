@@ -203,29 +203,29 @@ class ElEsperadoSeExplicaDesdeLasVentasTest(BaseDelReporteDeCierres):
         )
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, reverse("admin:ventas_venta_changelist"))
-        self.assertContains(respuesta, f"creado_en__day={self.hoy.day}")
-        self.assertContains(respuesta, f"medio_pago__exact={MedioDePago.EFECTIVO}")
-
-    def test_seguir_el_enlace_trae_las_ventas_que_suman_el_esperado(self):
-        """La comprobación de verdad: el destino existe, responde y su
-        consolidado coincide con el efectivo esperado del cierre."""
-        destino = reverse("admin:ventas_venta_changelist")
-
-        respuesta = self.client.get(
-            destino,
-            {
-                "medio_pago__exact": MedioDePago.EFECTIVO,
-                "creado_en__year": self.hoy.year,
-                "creado_en__month": self.hoy.month,
-                "creado_en__day": self.hoy.day,
-            },
+        self.assertContains(
+            respuesta,
+            f"{reverse('ventas-del-dia', args=[self.cierre.fecha.isoformat()])}"
+            f"?medio={MedioDePago.EFECTIVO}",
         )
 
+    def test_seguir_el_enlace_trae_las_ventas_que_suman_el_esperado(self):
+        """La comprobación de verdad: el destino existe, abre la modal de ese día
+        filtrada por efectivo, y lo que enseña suma el efectivo esperado
+        (`DT-54`)."""
+        dia = self.cierre.fecha.isoformat()
+        pagina = self.client.get(
+            reverse("ventas-del-dia", args=[dia]), {"medio": MedioDePago.EFECTIVO}
+        )
+        ficha = f"{reverse('ventas-del-dia-ficha', args=[dia])}?medio={MedioDePago.EFECTIVO}"
+        self.assertEqual(pagina.status_code, 200)
+        self.assertContains(pagina, f'hx-get="{ficha}"')
+
+        respuesta = self.client.get(ficha)
+
         self.assertEqual(respuesta.status_code, 200)
-        resumen = respuesta.context["resumen"]
-        self.assertEqual(resumen.cuantas, 2)
-        self.assertEqual(resumen.total, self.cierre.efectivo_esperado)
+        self.assertEqual(len(respuesta.context["ventas"]), 2)
+        self.assertEqual(respuesta.context["total"], self.cierre.efectivo_esperado)
 
 
 class LaPantallaNoEnseñaElCorreoDelCajeroTest(BaseDelReporteDeCierres):

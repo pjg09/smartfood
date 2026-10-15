@@ -83,7 +83,7 @@
       <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
         <div class="flex items-baseline justify-between gap-3">
           <h2 class="font-display text-lg text-texto">Lo más vendido en 30 días</h2>
-          <a href="{% url 'admin:ventas_venta_changelist' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap text-acento-fuerte hover:underline">Ver reportes</a>
+          <a href="{% url 'ventas-de-la-cafeteria' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap text-acento-fuerte hover:underline">Ver reportes</a>
         </div>
 
         {% if mas_vendidos %}
@@ -116,7 +116,7 @@
       <section class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
         <div class="flex items-baseline justify-between gap-3">
           <h2 class="font-display text-lg text-texto">Últimas ventas</h2>
-          <a href="{% url 'admin:ventas_venta_changelist' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap text-acento-fuerte hover:underline">Ver todas</a>
+          <a href="{% url 'ventas-de-la-cafeteria' %}" class="shrink-0 text-sm font-semibold whitespace-nowrap text-acento-fuerte hover:underline">Ver todas</a>
         </div>
 
         {% if panel.ultimas_ventas %}

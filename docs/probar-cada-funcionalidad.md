@@ -168,6 +168,14 @@ renombrar, la modal da las dos cifras y avisa de que el bloqueo sigue al alérge
 nuevo es el que verán el acudiente y el cajero, y el historial de restricciones conserva el
 de entonces.
 
+**Las ventas, en Ventas** (`DT-54`): el periodo arriba —7, 30 o 90 días, todo, o dos
+fechas—, cuatro cifras, ingresos por categoría, cómo se paga, los más vendidos y los
+ingresos por día. **Cada día abre su modal** con las ventas: cliente, medio, quién cobró,
+renglones e importe. Las categorías y los nombres son los de hoy; los importes, los de
+entonces. «Imprimir o guardar en PDF» saca la pantalla sin barra ni periodo. Desde un cierre
+de caja, «Ver las ventas en efectivo de esa jornada» abre esa modal filtrada por efectivo, y
+suma el esperado del cierre.
+
 La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y
@@ -466,7 +474,7 @@ Al cancelar, por cualquiera de los dos caminos:
 - el saldo sube exactamente lo que se cobró al reservar, aunque el producto haya cambiado de
   precio, y el historial de la billetera lo enseña como **Devolución**;
 - el pedido sale de la cola y el cupo del día se libera;
-- el reporte de ventas del admin deja de contarlo, y la auditoría enseña la cancelación con
+- el reporte de ventas deja de contarlo, y la auditoría enseña la cancelación con
   quién y por qué.
 
 **Se cancela aunque el estudiante esté desactivado o dado de baja**: una devolución no es una

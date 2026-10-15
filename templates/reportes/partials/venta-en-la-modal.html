@@ -1,0 +1,31 @@
+{% load dinero %}
+{% comment %} DT-54. Una venta dentro de una modal: quién, cómo pagó, qué se llevó y cuánto.
+
+   La comparten la modal del día y la de una sola venta. **El cliente por su nombre y nada
+   más** —ni documento ni código de tarjeta—, como en el listado que sustituye (`[S11]`,
+   Ley 1581). Los importes son los congelados de cada renglón (`DT-8`); el nombre del
+   producto, el de hoy.
+{% endcomment %}
+<article data-venta="{{ venta.pk }}" class="rounded-xl border border-borde p-4">
+  <div class="flex items-baseline justify-between gap-3">
+    <h3 class="min-w-0 truncate text-base font-semibold text-texto">
+      {% if venta.estudiante_id %}{{ venta.estudiante.nombre }}{% else %}Cliente genérico{% endif %}
+    </h3>
+    <span class="flex shrink-0 items-baseline gap-2">
+      <span class="text-sm text-texto-suave">{% if venta.origen == "reserva" %}Pedido anticipado · {% endif %}{{ venta.get_medio_pago_display }}</span>
+      <span class="font-semibold text-acento-fuerte" data-total-de-la-venta>{{ venta.total_cobrado|dinero }}</span>
+    </span>
+  </div>
+  <p class="mt-0.5 text-sm text-texto-suave">
+    {{ venta.creado_en|date:"H:i" }} ·
+    {% if venta.cajero_id %}cobró {{ venta.cajero.nombre|default:venta.cajero.email }}{% else %}lo pagó el acudiente al reservar{% endif %}
+  </p>
+  <ul class="mt-3 space-y-1">
+    {% for linea in venta.lineas.all %}
+      <li class="flex items-baseline justify-between gap-3 text-base text-texto-suave">
+        <span class="min-w-0 truncate">{{ linea.cantidad }} × {{ linea.producto.nombre }}</span>
+        <span class="shrink-0">{{ linea.importe|dinero }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</article>

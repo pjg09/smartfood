@@ -238,7 +238,7 @@ Se cobró y se devolvió, y el estudiante no recibió nada. La regla vive una ve
 | Lectura | Efecto |
 |---|---|
 | El cupo del día (`consumo_del_dia`) | **Libera** lo que consumió al pagarse (`HU-66`) |
-| El reporte de ventas del admin y su consolidado | No la cuenta; **su ficha sí se abre**, porque la auditoría enlaza con ella |
+| El reporte de ventas (`/ventas/`) | No la cuenta; **su modal sí se abre**, con quién canceló y por qué, porque la auditoría enlaza con ella |
 | El panel de la cafetería: últimas ventas y más vendidos | No la cuenta |
 | La frecuencia y los agregados nutricionales | No la cuenta |
 

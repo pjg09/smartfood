@@ -262,7 +262,7 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.assertNotIn("/admin/personas/institucion/", cuerpo)
 
         self.client.force_login(cuenta(Rol.ADMINISTRADOR))
-        cafeteria = self.client.get("/admin/ventas/venta/").content.decode()
+        cafeteria = self.client.get("/admin/ventas/cierredecaja/").content.decode()
         self.assertIn(resolver("categorias"), cafeteria)
         self.assertIn(resolver("alergenos"), cafeteria)
         self.assertIn(resolver("panel-de-la-cafeteria"), cafeteria)

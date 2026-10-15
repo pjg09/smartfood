@@ -112,8 +112,8 @@ leerlo, un cobro asentado después del cuadre movería la diferencia de un cierr
 descuadre de $2.000 que alguien explicó por escrito pasaría a ser otro, o a no existir, sin
 que nadie tocara nada. Un asiento no se reescribe (`INV-2`, `INV-3`), y esto lo es.
 
-`INVD-5` sigue en pie: la cifra **se explica** yendo al reporte de ventas del día filtrado
-por efectivo (`HU-35`). Lo que la invariante prohíbe es que salga de otro sitio, no que quede
+`INVD-5` sigue en pie: la cifra **se explica** con el enlace de cada cierre, que abre las
+ventas en efectivo de ese día en el reporte de ventas (`HU-35`, `DT-54`). Lo que la invariante prohíbe es que salga de otro sitio, no que quede
 escrita.
 
 **Y por la misma razón la diferencia no es columna.** Sale de tres columnas de la misma fila

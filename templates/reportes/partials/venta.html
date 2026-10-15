@@ -1,0 +1,33 @@
+{% load dinero %}
+{% comment %} DT-54. Una sola venta, en la modal de ficha. Fragmento (`DT-16`).
+
+   Es donde aterriza la auditoría, **también para un pedido cancelado** (`DT-48`): el
+   reporte no lo cuenta, pero se cobró de verdad y su devolución apunta aquí. Por eso la
+   modal dice que se canceló, quién, cuándo y por qué.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-una-venta="{{ venta.pk }}">
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      Venta del {{ venta.creado_en|date:"j \d\e M \d\e Y"|lower }}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-3 overflow-y-auto px-6 py-5">
+    {% with pedido=venta.pedido_anticipado %}
+      {% if pedido and pedido.estado == "cancelado" %}
+        <p role="status" data-pedido-cancelado
+           class="rounded-md border border-aviso-fuerte/50 bg-aviso-suave px-3 py-2 text-base text-aviso-fuerte">
+          Pedido cancelado el {{ pedido.cancelado_en|date:"j \d\e M \d\e Y, H:i"|lower }} por
+          {{ pedido.cancelado_por.nombre|default:pedido.cancelado_por.email }}: «{{ pedido.motivo_de_cancelacion }}». El
+          importe volvió a la billetera, y esta venta no cuenta en el reporte.
+        </p>
+      {% endif %}
+    {% endwith %}
+    {% include "reportes/partials/venta-en-la-modal.html" %}
+  </div>
+</div>

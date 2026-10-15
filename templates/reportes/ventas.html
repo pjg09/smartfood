@@ -1,0 +1,271 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} HU-35, DT-54. El reporte de ventas de la cafetería, fuera del admin.
+
+   **Todo sale de las ventas registradas** —sin las reservas canceladas— y de las líneas
+   congeladas (`DT-8`). Las categorías y los nombres son **los de hoy**: la línea congela
+   el precio, no la agrupación ni el nombre, y la pantalla lo dice. La referencia visual
+   afirmaba lo contrario.
+
+   El periodo va en la URL: los atajos son enlaces y las dos fechas, un formulario `GET`.
+   Cada día abre su modal (`[S2.10]`) con las ventas de ese día.
+
+   **Sin ranking de gasto por estudiante** (`DT-54`): `[S11]` le da a la cafetería los
+   reportes de ventas, no el consumo de cada menor.
+{% endcomment %}
+
+{% block titulo %}Ventas | SmartFood{% endblock %}
+
+{% block contenido %}
+  {% with r=reporte resumen=reporte.resumen %}
+  <div class="flex w-full flex-col gap-6" data-reporte-de-ventas>
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Ventas</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Qué se ha vendido en el periodo. Las categorías y los nombres son los que cada
+          producto tiene hoy: la venta congela el precio, no la agrupación.
+        </p>
+        <p class="hidden text-sm text-texto-suave print:block">
+          {% if r.desde and r.hasta %}Del {{ r.desde|date:"j \d\e M \d\e Y"|lower }} al {{ r.hasta|date:"j \d\e M \d\e Y"|lower }}{% elif r.desde %}Desde el {{ r.desde|date:"j \d\e M \d\e Y"|lower }}{% elif r.hasta %}Hasta el {{ r.hasta|date:"j \d\e M \d\e Y"|lower }}{% else %}Todas las ventas registradas{% endif %}
+        </p>
+      </div>
+      <button type="button" onclick="window.print()" data-imprimir-reporte
+              class="no-imprimir inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border
+                     border-borde bg-superficie px-4 text-base font-medium text-texto transition-colors
+                     hover:bg-superficie-hover">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+        Imprimir o guardar en PDF
+      </button>
+    </header>
+
+    {% comment %} El periodo. Los atajos son enlaces —el periodo vive en la URL— y el
+       atajo activo es el sólido. Las fechas se envían al cambiar; sin JavaScript, con
+       «Ver». {% endcomment %}
+    <nav aria-label="Periodo" class="no-imprimir flex flex-wrap items-center gap-2" data-periodo>
+      {% for clave, etiqueta, _ in atajos %}
+        <a href="?periodo={{ clave }}" data-atajo="{{ clave }}"
+           {% if atajo == clave %}aria-current="true"{% endif %}
+           class="inline-flex h-11 items-center rounded-md border px-4 text-base font-medium transition-colors
+                  {% if atajo == clave %}border-transparente bg-primario text-sobre-primario{% else %}border-borde bg-superficie text-texto hover:bg-superficie-hover{% endif %}">
+          {{ etiqueta }}
+        </a>
+      {% endfor %}
+      <form method="get" action="{% url 'ventas-de-la-cafeteria' %}" class="flex flex-wrap items-center gap-2"
+            data-periodo-personalizado>
+        <label for="desde" class="text-base text-texto-suave">Desde</label>
+        <input type="date" id="desde" name="desde" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and r.desde %}{{ r.desde|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border px-3 text-base text-texto transition-colors hover:border-acento
+                      focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento bg-superficie{% else %}border-borde bg-superficie{% endif %}">
+        <label for="hasta" class="text-base text-texto-suave">hasta</label>
+        <input type="date" id="hasta" name="hasta" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and r.hasta %}{{ r.hasta|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border px-3 text-base text-texto transition-colors hover:border-acento
+                      focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento bg-superficie{% else %}border-borde bg-superficie{% endif %}">
+        <noscript>
+          <button type="submit" class="h-11 rounded-md border border-borde px-4 text-base">Ver</button>
+        </noscript>
+      </form>
+    </nav>
+
+    {% if aviso %}
+      <p role="status" data-aviso-del-periodo
+         class="rounded-md border border-aviso-fuerte/50 bg-aviso-suave px-3 py-2 text-base text-aviso-fuerte">{{ aviso }}</p>
+    {% endif %}
+
+    {% comment %} Las cuatro cifras (`[S2.1]`, variante del panel: icono y sin enlace). {% endcomment %}
+    <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2 escritorio:grid-cols-4">
+      <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-1 to-serie-1/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+            <svg class="h-5 w-5"><use href="#i-saldo"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Ingresos</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="ingresos">{{ resumen.total|default_if_none:0|dinero:"COP" }}</p>
+          <p class="mt-2 text-sm text-texto-suave">
+            {% if r.media_por_dia is not None %}{{ r.media_por_dia|dinero }} de media en {% if r.dias_con_venta == 1 %}el único día{% else %}los {{ r.dias_con_venta }} días{% endif %} con venta{% else %}Ninguna venta en el periodo{% endif %}
+          </p>
+        </div>
+      </div>
+      <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-3 to-serie-3/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-3/12 text-serie-3">
+            <svg class="h-5 w-5"><use href="#i-recibo"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Ventas</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="ventas">{{ resumen.cuantas }}</p>
+          <p class="mt-2 text-sm text-texto-suave">
+            {% if r.ticket_medio is not None %}Ticket medio de {{ r.ticket_medio|dinero }}{% else %}Sin ticket medio que calcular{% endif %}
+          </p>
+        </div>
+      </div>
+      <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-4 to-serie-4/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4">
+            <svg class="h-5 w-5"><use href="#i-cafeteria"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Unidades</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="unidades">{{ resumen.unidades }}</p>
+          <p class="mt-2 text-sm text-texto-suave">Productos servidos</p>
+        </div>
+      </div>
+      <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+        <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-2 to-serie-2/40"></span>
+        <div class="flex flex-1 flex-col p-5">
+          <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-2/12 text-serie-2">
+            <svg class="h-5 w-5"><use href="#i-tendencia"></use></svg>
+          </span>
+          <p class="mt-4 text-base font-medium text-texto-suave">Productos distintos</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="productos-distintos">{{ r.productos_distintos }}</p>
+          <p class="mt-2 text-sm text-texto-suave">Incluye los retirados del catálogo</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 escritorio:grid-cols-2">
+
+      {% comment %} Por categoría, con un medidor por fila (`[S2.8]`) contra la que más
+         ingresó. **La categoría es la de hoy**: un producto que cambió de categoría
+         arrastra sus ventas pasadas. {% endcomment %}
+      <section class="bloque-impresion rounded-xl border border-borde bg-superficie p-5 shadow-sm" data-por-categoria>
+        <h2 class="font-display text-lg text-texto">Ingresos por categoría</h2>
+        <p class="mt-1 text-base text-texto-suave">
+          Por la categoría que cada producto tiene hoy: si un producto cambió de categoría, sus
+          ventas anteriores cuentan en la nueva.
+        </p>
+        {% if r.por_categoria %}
+          <ul class="mt-4 space-y-4">
+            {% for fila in r.por_categoria %}
+              <li class="text-base">
+                <div class="flex items-baseline justify-between gap-3">
+                  <span class="truncate text-texto">{{ fila.nombre }}</span>
+                  <span class="shrink-0 font-semibold text-texto">{{ fila.importe|dinero }}</span>
+                </div>
+                <p class="mt-0.5 text-sm text-texto-suave">{{ fila.unidades }} unidad{{ fila.unidades|pluralize:"es" }}</p>
+                <div class="mt-2 h-2 overflow-hidden rounded-full bg-superficie-hover">
+                  <div class="h-full rounded-full {% cycle 'bg-serie-1' 'bg-serie-2' 'bg-serie-3' 'bg-serie-4' 'bg-serie-5' %}"
+                       style="width: {{ fila.porcentaje }}%"></div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="mt-4 text-sm text-texto-suave">Ninguna venta en el periodo.</p>
+        {% endif %}
+      </section>
+
+      {% comment %} Los tres medios de `DEC-1`, completos aunque alguno esté en cero. El
+         pedido anticipado **no es un medio**: se paga con la billetera al reservar, y por
+         eso va dentro de ella. La referencia lo pintaba como un cuarto medio, y sumaba
+         dos veces. {% endcomment %}
+      <section class="bloque-impresion rounded-xl border border-borde bg-superficie p-5 shadow-sm" data-por-medio-de-pago>
+        <h2 class="font-display text-lg text-texto">Cómo se paga</h2>
+        <p class="mt-1 text-base text-texto-suave">
+          Los pedidos anticipados se pagan con la billetera al reservarse, y van dentro de ella.
+          De los tres medios, solo el efectivo entra en la caja.
+        </p>
+        <ul class="mt-4 space-y-4">
+          {% for fila in r.por_medio_de_pago %}
+            <li class="text-base">
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="text-texto">{{ fila.etiqueta }}</span>
+                <span class="shrink-0 font-semibold text-texto">{{ fila.total|dinero }}</span>
+              </div>
+              <p class="mt-0.5 text-sm text-texto-suave">
+                {{ fila.cuantas }} venta{{ fila.cuantas|pluralize }}{% if fila.etiqueta == "Billetera" and r.de_pedidos_anticipados %} · {{ r.de_pedidos_anticipados|dinero }} en pedidos anticipados{% endif %}
+              </p>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-superficie-hover">
+                <div class="h-full rounded-full {% cycle 'bg-serie-1' 'bg-serie-2' 'bg-serie-3' %}"
+                     style="width: {{ fila.porcentaje }}%"></div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <section class="bloque-impresion rounded-xl border border-borde bg-superficie p-5 shadow-sm" data-mas-vendidos>
+      <h2 class="font-display text-lg text-texto">Los más vendidos</h2>
+      <p class="mt-1 text-base text-texto-suave">
+        Por unidades servidas{% if r.hay_mas_productos %}, los diez primeros{% endif %}. Un producto
+        retirado del catálogo sigue apareciendo, con el nombre que tiene hoy.
+      </p>
+      {% if r.mas_vendidos %}
+        <ul class="mt-4 space-y-4">
+          {% for fila in r.mas_vendidos %}
+            <li class="text-base">
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="truncate text-texto">{{ fila.nombre }}</span>
+                <span class="shrink-0 font-semibold text-texto">{{ fila.unidades }} unid.</span>
+              </div>
+              <p class="mt-0.5 text-sm text-texto-suave">{{ fila.importe|dinero }}</p>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-superficie-hover">
+                <div class="h-full rounded-full {% cycle 'bg-serie-1' 'bg-serie-2' 'bg-serie-3' 'bg-serie-4' 'bg-serie-5' %}"
+                     style="width: {{ fila.porcentaje }}%"></div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mt-4 text-sm text-texto-suave">Ninguna venta en el periodo.</p>
+      {% endif %}
+    </section>
+
+    {% comment %} Un día por fila, del más reciente al más antiguo. **La fila entera abre la
+       modal del día**; el botón es quien pide, para que el teclado llegue. {% endcomment %}
+    <section class="bloque-impresion rounded-xl border border-borde bg-superficie p-5 shadow-sm" data-por-dia>
+      <h2 class="font-display text-lg text-texto">Ingresos por día</h2>
+      {% if r.por_dia %}
+        <ul class="mt-2 divide-y divide-borde">
+          {% for dia in r.por_dia %}
+            <li>
+              <button type="button" data-dia="{{ dia.dia|date:'Y-m-d' }}"
+                      hx-get="{% url 'ventas-del-dia-ficha' dia.dia|date:'Y-m-d' %}"
+                      hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                      class="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-3 text-left
+                             text-base transition-colors hover:bg-superficie-hover">
+                <span class="text-texto">{{ dia.dia|date:"j \d\e M \d\e Y"|lower }}</span>
+                <span class="flex shrink-0 items-baseline gap-3">
+                  <span class="text-sm text-texto-suave">{{ dia.cuantas }} venta{{ dia.cuantas|pluralize }}</span>
+                  <span class="font-semibold text-acento-fuerte">{{ dia.total|dinero }}</span>
+                </span>
+              </button>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mt-4 text-sm text-texto-suave">Ninguna venta en el periodo.</p>
+      {% endif %}
+    </section>
+
+    {% comment %} El mismo enlace que llevan los otros reportes (`TT-178`): quien ve algo raro
+       en un consolidado no tiene por qué saberse la URL. {% endcomment %}
+    <p class="no-imprimir text-base text-texto-suave" data-enlace-a-la-auditoria>
+      ¿Algo no cuadra?
+      <a href="{% url 'auditoria' %}" class="font-semibold text-acento-fuerte hover:underline">Ver la auditoría de la operación</a>,
+      con quién hizo qué y cuándo.
+    </p>
+  </div>
+  {% endwith %}
+
+  {% comment %} La modal de ficha (`[S2.10]`), fuera de lo que se repinta. Cuando se llega por
+     la ruta de un día o de una venta —el cierre de caja, la auditoría—, se pide sola al
+     cargar. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Ventas"
+          class="m-auto w-[min(34rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+  {% if abrir %}
+    <div hidden data-abrir-al-cargar hx-get="{{ abrir }}" hx-trigger="load"
+         hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"></div>
+  {% endif %}
+{% endblock %}

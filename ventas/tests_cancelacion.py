@@ -517,9 +517,9 @@ class CancelarDesdeLaModalDeLaCafeteriaTest(BaseDeCancelacion):
         self.assertTrue(PedidoAnticipado.objects.get().esta_pendiente)
 
 
-class LoCanceladoFueraDelListadoDeVentasTest(BaseDeCancelacion):
-    """El reporte de ventas del admin no cuenta lo cancelado, pero su ficha se
-    abre: la auditoría enlaza con ella (`VentaAdmin.get_object`)."""
+class LoCanceladoFueraDelReporteDeVentasTest(BaseDeCancelacion):
+    """El reporte de ventas no cuenta lo cancelado, pero su modal se abre: la
+    auditoría enlaza con ella (`DT-48`, `DT-54`)."""
 
     def setUp(self):
         super().setUp()
@@ -534,18 +534,28 @@ class LoCanceladoFueraDelListadoDeVentasTest(BaseDeCancelacion):
         self.client.force_login(self.cuenta_admin)
         self.cancelar(actor=self.cajero)
 
-    def test_no_sale_en_el_listado(self):
-        respuesta = self.client.get(reverse("admin:ventas_venta_changelist"))
+    def test_no_sale_en_el_reporte(self):
+        respuesta = self.client.get(reverse("ventas-de-la-cafeteria"), {"periodo": "todo"})
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertEqual(respuesta.context["cl"].result_count, 0)
+        self.assertEqual(respuesta.context["reporte"].resumen.cuantas, 0)
 
-    def test_su_ficha_se_abre(self):
+    def test_su_modal_se_abre_y_dice_que_se_cancelo(self):
+        respuesta = self.client.get(reverse("venta-ficha", args=[self.pedido.venta_id]))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "data-pedido-cancelado")
+        self.assertContains(respuesta, "Ya no lo va a recoger")
+
+    def test_la_pagina_de_la_venta_abre_su_modal(self):
         respuesta = self.client.get(
-            reverse("admin:ventas_venta_change", args=[self.pedido.venta_id])
+            reverse("venta-de-la-cafeteria", args=[self.pedido.venta_id])
         )
 
         self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(
+            respuesta, f'hx-get="{reverse("venta-ficha", args=[self.pedido.venta_id])}"'
+        )
 
 
 class LosPedidosDeUnEstudianteTest(BaseDeCancelacion):

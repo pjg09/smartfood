@@ -88,7 +88,7 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Catálogo con ticket | `templates/ventas/reserva.html` | Filtros arriba, tarjetas con «Agregar» que pasa a «− n +», y el ticket al lado; **las cantidades en el formulario, el dinero en el servidor** |
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 | Medidor de proporción | `templates/reportes/partials/recomendaciones.html` | Barra fina bajo la cifra; **se recorta la barra a 100, nunca el número**, y el color no significa nada |
-| Consolidado de reporte | `templates/admin/ventas/venta/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
+| Consolidado de reporte | `templates/admin/ventas/cierredecaja/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
 | Modal de ficha | `templates/personas/partials/ficha-del-estudiante.html` | Un `<dialog>` que recibe el fragmento; la respuesta es siempre la ficha y la tabla de detrás se entera por `HX-Trigger` |
 | Validación en vivo | `templates/personas/partials/ficha-campos.html` | Aviso rojo por campo y guardar deshabilitado mientras falte algo; **las longitudes vienen del formulario**, no de la plantilla |
 | Buscador para elegir | `templates/personas/partials/acudientes-para-matricular.html` | Busca a cada tecla, pocos resultados como botones, y lo elegido pasa a un campo oculto con «Cambiar» |

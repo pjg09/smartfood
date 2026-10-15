@@ -144,7 +144,7 @@ Sin `<h1>` propio: el admin ya pinta `title` del contexto como encabezado.
                 {% comment %} El enlace a la operación en su propio reporte. Un renglón de
                    auditoría que no se puede abrir obliga a buscar la fila a mano,
                    que es justo lo que no se hace cuando algo no cuadra. {% endcomment %}
-                <a href="{% url operacion.ruta_admin operacion.objeto_id %}">
+                <a href="{% url operacion.ruta operacion.objeto_id %}">
                   {{ operacion.accion }}
                 </a>
               </td>

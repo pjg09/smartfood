@@ -1022,20 +1022,22 @@ class Operacion:
         return self.quien is not None
 
     @property
-    def ruta_admin(self):
-        """El nombre de la ruta del admin donde se abre esta operación.
+    def ruta(self):
+        """El nombre de la ruta donde se abre esta operación.
 
         El nombre, no la URL: resolverla es cosa de la plantilla con `{% url %}`,
         que es lo que hace que renombrar una ruta no deje aquí un enlace roto y
         silencioso. Un selector no sabe de rutas (`DT-15`), y esto sigue sin
         saberlo — es una traducción del nombre del modelo, que sí es suyo.
 
-        **Todas las operaciones apuntan a un modelo registrado en el admin.** La
-        entrega es la excepción aparente: `PedidoAnticipado` no está registrado,
-        así que apunta a su venta, que es donde está lo que se entregó. Si algún
+        **Una venta se abre en el reporte de ventas** (`DT-54`), con su modal;
+        el resto, en su ficha del admin. La entrega y la cancelación apuntan a
+        su venta, que es donde está lo que se entregó o se devolvió. Si algún
         día se añade una clase que apunte a un modelo sin admin, esto reventará
         con `NoReverseMatch` al pintar — ruidoso, que es lo que se quiere.
         """
+        if self.modelo == "ventas.venta":
+            return "venta-de-la-cafeteria"
         return f"admin:{self.modelo.replace('.', '_')}_change"
 
 
@@ -1500,8 +1502,11 @@ def _existencias_bajas():
     return tuple(bajos[:CUANTOS_EN_EL_PANEL])
 
 
-def _mas_vendidos(desde, hasta):
+def _mas_vendidos(desde, hasta, cuantos=CUANTOS_EN_EL_PANEL):
     """Los productos con más unidades servidas en el periodo.
+
+    `desde` y `hasta` pueden ser `None`: el reporte de ventas tiene «todo»
+    (`DT-54`), y entonces el periodo no se acota por ese lado.
 
     Agrupa por `producto__nombre`: la línea congela el precio y lo nutricional
     (`DT-8`), pero **no el nombre**, así que un producto renombrado aparece aquí
@@ -1509,12 +1514,7 @@ def _mas_vendidos(desde, hasta):
     lo que hay en la vitrina—; el reporte de ventas es el que responde qué se
     cobró y a cuánto.
     """
-    lineas = sin_pedidos_cancelados(LineaVenta.objects.all()).filter(
-        venta__creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min)),
-        venta__creado_en__lt=timezone.make_aware(
-            datetime.combine(hasta + timedelta(days=1), time.min)
-        ),
-    )
+    lineas = _lineas_del_periodo(desde, hasta)
 
     # **Su propia expresión, y no `IMPORTE_DE_LA_LINEA`**: aquella recorre
     # `lineas__precio_unitario` porque se usa desde `Venta`, y aquí la consulta
@@ -1529,7 +1529,7 @@ def _mas_vendidos(desde, hasta):
         lineas.order_by()  # El `ordering` del Meta envenenaría el GROUP BY.
         .values("producto__nombre")
         .annotate(unidades=Sum("cantidad"), importe=Sum(importe))
-        .order_by("-unidades")[:CUANTOS_EN_EL_PANEL]
+        .order_by("-unidades", "producto__nombre")[:cuantos]
     )
 
     # La proporción de la barra sale de aquí y no de la plantilla: una plantilla
@@ -1546,3 +1546,184 @@ def _mas_vendidos(desde, hasta):
         }
         for fila in filas
     )
+
+
+def _lineas_del_periodo(desde, hasta):
+    """Los renglones vendidos entre dos fechas locales inclusivas, sin los de
+    pedidos cancelados (`DEC-24`). Cualquiera de las dos puede ser `None`."""
+    lineas = sin_pedidos_cancelados(LineaVenta.objects.all())
+    if desde is not None:
+        lineas = lineas.filter(
+            venta__creado_en__gte=timezone.make_aware(datetime.combine(desde, time.min))
+        )
+    if hasta is not None:
+        lineas = lineas.filter(
+            venta__creado_en__lt=timezone.make_aware(
+                datetime.combine(hasta + timedelta(days=1), time.min)
+            )
+        )
+    return lineas
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EL REPORTE DE VENTAS (`HU-35`, `DT-54`)
+#
+# Una pantalla propia en `/ventas/`, fuera del admin. Todo sale de
+# `ventas_registradas` —sin las reservas canceladas— y de las líneas congeladas
+# (`DT-8`): el reporte no guarda ni copia nada.
+# ──────────────────────────────────────────────────────────────────────────────
+
+#: Cuántos productos enseña «los más vendidos». Con «todo» el catálogo entero
+#: cabría, y deja de ser un ranking para volverse un listado.
+MAS_VENDIDOS_EN_EL_REPORTE = 10
+
+#: El importe de un renglón visto **desde la línea**, no desde la venta.
+IMPORTE_DEL_RENGLON = ExpressionWrapper(
+    F("precio_unitario") * F("cantidad"),
+    output_field=DecimalField(max_digits=12, decimal_places=2),
+)
+
+
+@dataclass(frozen=True)
+class ReporteDeVentas:
+    """Lo que la pantalla de ventas enseña de un periodo (`DT-54`).
+
+    `resumen` es el mismo `ResumenDeVentas` que usaba el listado del admin: el
+    total, el recuento y los desgloses no se calculan dos veces.
+    """
+
+    desde: object
+    hasta: object
+    resumen: ResumenDeVentas
+    dias_con_venta: int
+    media_por_dia: object
+    ticket_medio: object
+    productos_distintos: int
+    por_categoria: tuple
+    por_medio_de_pago: tuple
+    de_pedidos_anticipados: Decimal
+    mas_vendidos: tuple
+    hay_mas_productos: bool
+    por_dia: tuple
+
+
+def _redondeado(cifra):
+    return cifra.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
+def _con_porcentaje(filas, clave):
+    """Añade `porcentaje` a cada fila, medido contra la mayor (`[S2.8]`): la
+    barra compara cada fila con la que más tiene, no con el total."""
+    mayor = max((fila[clave] for fila in filas), default=0)
+    return tuple(
+        {**fila, "porcentaje": round(fila[clave] * 100 / mayor) if mayor else 0}
+        for fila in filas
+    )
+
+
+def reporte_de_ventas(*, actor, desde=None, hasta=None):
+    """El reporte de ventas de un periodo, para la pantalla de `/ventas/`.
+
+    **Las categorías y los nombres son los de hoy.** La línea congela el precio
+    y lo nutricional (`DT-8`), no la agrupación ni el nombre: un producto que
+    cambió de categoría arrastra sus ventas pasadas a la nueva. La pantalla lo
+    dice; la referencia visual afirmaba lo contrario (`DT-54`).
+
+    **Los medios de pago son tres** (`DEC-1`). El pedido anticipado es un
+    origen y se paga con la billetera, así que va dentro de ella; aparte se
+    dice cuánto de la billetera vino de pedidos.
+    """
+    ventas = ventas_registradas(actor=actor, desde=desde, hasta=hasta)
+    resumen = resumen_de_ventas(ventas)
+    lineas = _lineas_del_periodo(desde, hasta)
+
+    dias = list(
+        ventas.order_by()
+        .annotate(dia=TruncDate("creado_en", tzinfo=timezone.get_current_timezone()))
+        .values("dia")
+        .annotate(cuantas=Count("pk", distinct=True), total=Sum(IMPORTE_DE_LA_LINEA))
+        .order_by("-dia")
+    )
+
+    por_categoria = _con_porcentaje(
+        [
+            {"nombre": fila["producto__categoria__nombre"], "unidades": fila["unidades"],
+             "importe": fila["importe"]}
+            for fila in lineas.order_by()
+            .values("producto__categoria__nombre")
+            .annotate(unidades=Sum("cantidad"), importe=Sum(IMPORTE_DEL_RENGLON))
+            .order_by("-importe", "producto__categoria__nombre")
+        ],
+        "importe",
+    )
+
+    por_medio = _con_porcentaje(
+        [
+            {"etiqueta": etiqueta, "cuantas": cuantas, "total": total}
+            for etiqueta, cuantas, total in resumen.por_medio_de_pago
+        ],
+        "total",
+    )
+    de_pedidos = (
+        ventas.filter(origen=OrigenDeLaVenta.RESERVA).aggregate(total=Sum(IMPORTE_DE_LA_LINEA))[
+            "total"
+        ]
+        or Decimal("0.00")
+    )
+
+    mas_vendidos = _mas_vendidos(desde, hasta, cuantos=MAS_VENDIDOS_EN_EL_REPORTE + 1)
+
+    return ReporteDeVentas(
+        desde=desde,
+        hasta=hasta,
+        resumen=resumen,
+        dias_con_venta=len(dias),
+        media_por_dia=_redondeado(resumen.total / len(dias)) if dias else None,
+        ticket_medio=(
+            _redondeado(resumen.total / resumen.cuantas) if resumen.cuantas else None
+        ),
+        productos_distintos=lineas.order_by().values("producto").distinct().count(),
+        por_categoria=por_categoria,
+        por_medio_de_pago=por_medio,
+        de_pedidos_anticipados=de_pedidos,
+        mas_vendidos=mas_vendidos[:MAS_VENDIDOS_EN_EL_REPORTE],
+        hay_mas_productos=len(mas_vendidos) > MAS_VENDIDOS_EN_EL_REPORTE,
+        por_dia=tuple(dias),
+    )
+
+
+def _ventas_con_detalle(consulta):
+    """Ventas con lo que su modal enseña ya traído: cliente, cajero, renglones
+    con su producto y el pedido, si lo hay. Sin esto, una consulta por venta y
+    otra por renglón."""
+    return (
+        consulta.select_related("estudiante", "cajero", "pedido_anticipado__cancelado_por")
+        .prefetch_related("lineas__producto")
+        .annotate(total_cobrado=Sum(IMPORTE_DE_LA_LINEA))
+    )
+
+
+def ventas_del_dia(*, actor, fecha, medio=None):
+    """Las ventas de un día, para su modal (`DT-54`), de la más reciente a la
+    más antigua.
+
+    `medio` acota a un medio de pago: es lo que usa el cierre de caja para
+    enseñar **las mismas ventas en efectivo** que sumó su esperado (`INVD-5`).
+    Sin las reservas canceladas, como el resto del reporte.
+    """
+    ventas = ventas_registradas(actor=actor, desde=fecha, hasta=fecha)
+    if medio is not None:
+        ventas = ventas.filter(medio_pago=medio)
+    return list(_ventas_con_detalle(ventas.order_by("-creado_en")))
+
+
+def venta_de_la_cafeteria(*, actor, venta_id):
+    """Una venta, para su modal. **También la de un pedido cancelado**: el
+    reporte no la cuenta, pero la auditoría enlaza con ella, porque se cobró de
+    verdad y su devolución apunta aquí (`DT-48`).
+
+    Exige el rol antes de buscar: un `None` no le cuenta a otro rol qué existe.
+    """
+    _solo_la_administracion(actor)
+    return _ventas_con_detalle(Venta.objects.filter(pk=venta_id)).first()
+

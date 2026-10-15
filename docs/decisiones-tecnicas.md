@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` el 2026-10-15 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 53 (`DT-1` … `DT-53`) |
+| decisiones | 54 (`DT-1` … `DT-54`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-53`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-54`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1113,4 +1113,25 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Los enlaces a los reportes siguen yendo al admin**: los reportes de la cafetería viven allí por decisión (`TT-168`, `TT-176`).
 - **La auditoría no sale con él.** Es un reporte, no el aterrizaje, y se queda dentro del admin como los otros tres.
 - **Las clases de las tarjetas siguen escritas enteras en `reportes/views.py`**, y por eso `reportes` entra en los `@source` de la hoja de la aplicación. El reset `:where(.armazon-panel)` sale de `estilos/admin.css`: no queda nada que lo use.
+
+#### `[DT-54]` El reporte de ventas sale del admin, a `/ventas/`
+
+**Obliga:** `HU-35`, sin ampliarla. **Corrige** el criterio de `TT-168` de que los reportes de la cafetería viven dentro del admin, **solo para el de ventas**: movimientos de inventario (`TT-170`), cierres de caja (`TT-176`) y auditoría (`TT-178`) se quedan.
+
+**El hecho que lo obliga.** El listado del admin responde «qué ventas hay» y encima pone un total; lo que la administración pregunta es otra cosa —cuánto se vendió, de qué, cómo se pagó y qué días—, y eso son barras, tarjetas de resumen y una modal, composiciones que el admin no carga (`DT-36`). Es el motivo de `DT-51`, no la raya de `DEC-17`: el reporte no se abre a diario.
+
+**Decidido:**
+
+- **Una pantalla sobre `base-aplicacion.html`**, con el periodo arriba —siete, treinta o noventa días, todo, o dos fechas— y, del periodo, cuatro cifras (ingresos, ventas, unidades y productos distintos), los ingresos por categoría, cómo se paga, los más vendidos y los ingresos por día. **Cada día abre su modal** con las ventas de ese día: cliente, medio, quién cobró, renglones e importe. El periodo va en la URL: se puede volver a él y compartirlo.
+- **Todo sale de `ventas_registradas`**, sin las reservas canceladas (`DEC-24`), y de las líneas congeladas (`DT-8`). Lo nuevo vive en `reportes.selectors.reporte_de_ventas`.
+- **Las categorías y los nombres son los de hoy, y la pantalla lo dice.** La línea de venta congela precio y nutrición, no el nombre ni la categoría (`DT-8`, `DT-51`). La referencia visual afirmaba lo contrario; aquí no sería verdad.
+- **Los medios de pago son tres** (`DEC-1`). El pedido anticipado es un origen, no un medio: se paga con la billetera al reservar, y la pantalla dice cuánto de la billetera vino de pedidos.
+- **Sin ranking de gasto por estudiante.** `[S11]` le da a la cafetería los reportes de ventas e inventario; el consumo por estudiante es del acudiente, y los datos de los menores, de la institución (Ley 1581). El nombre del cliente se sigue viendo venta a venta, en la modal, como en el listado que sustituye.
+- **`VentaAdmin` sale del admin**, y con él lo que colgaba de su listado:
+  - el cierre de caja enlaza a `/ventas/dia/<fecha>/?medio=efectivo`, que abre la modal del día con las ventas en efectivo, las mismas que sumó el esperado (`INVD-5`);
+  - la auditoría enlaza a `/ventas/venta/<id>/`, que abre la modal de esa venta **también si su pedido se canceló**, con quién lo canceló y por qué (`DT-48`);
+  - el panel enlaza a `/ventas/`.
+- **Una ruta de página y una de fragmento por modal** (`DT-16`): `/ventas/dia/<fecha>/` y `/ventas/venta/<id>/` son la pantalla con la modal ya abierta; sus `…/ficha/` son el fragmento.
+- **Se pierde la búsqueda por nombre del estudiante y por correo de quien cobró**, que el listado del admin daba. Se acepta: el reporte es de la operación, no de personas.
+- **Imprimir** es el del navegador, con la hoja de impresión que ya existe: sin barra, sin periodo y sin botones.
 

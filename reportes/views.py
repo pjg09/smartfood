@@ -5,7 +5,7 @@ lógica de negocio** (`DT-15`): quién puede ver el consumo de un estudiante lo
 decide `reportes.selectors`, y esta vista solo traduce su respuesta.
 """
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django import forms
 from django.contrib import admin
@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -28,9 +29,14 @@ from reportes.selectors import (
     alertas_de_frecuencia,
     auditoria,
     historial_de_consumo,
+    reporte_de_ventas,
     resumen_de_auditoria,
     resumen_de_gasto,
+    venta_de_la_cafeteria,
+    ventas_del_dia,
+    ventas_registradas,
 )
+from ventas.models import MedioDePago
 
 
 @login_required
@@ -276,3 +282,136 @@ def _tarjetas_de_la_jornada(panel):
             "insignia": "bg-serie-5/12 text-serie-5",
         },
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EL REPORTE DE VENTAS (`HU-35`, `DT-54`)
+#
+# Una pantalla propia, fuera del admin. **El periodo va en la URL**: los atajos
+# son enlaces y las dos fechas, un formulario `GET`, así que se puede volver a
+# un periodo y compartirlo. Cada modal tiene dos rutas (`DT-16`): la página con
+# la modal ya abierta —a la que enlazan el cierre de caja y la auditoría— y el
+# fragmento que la rellena.
+# ──────────────────────────────────────────────────────────────────────────────
+
+#: Los atajos del periodo, en el orden en que se pintan. `None` es «todo».
+ATAJOS_DEL_PERIODO = (("7", "Últimos 7 días", 7), ("30", "Últimos 30 días", 30),
+                      ("90", "Últimos 90 días", 90), ("todo", "Todo", None))
+ATAJO_POR_DEFECTO = "30"
+
+
+def _fecha(texto):
+    try:
+        return date.fromisoformat(texto) if texto else None
+    except ValueError:
+        return None
+
+
+def periodo_pedido(parametros, hoy):
+    """`(desde, hasta, atajo, aviso)` a partir de la URL.
+
+    Dos fechas mandan sobre el atajo; una sola deja el otro extremo abierto. Una
+    fecha que no se entiende se ignora. **Si llegan al revés, se intercambian y
+    se dice**: devolver un periodo vacío se leería como «no hubo ventas».
+    """
+    desde, hasta = _fecha(parametros.get("desde")), _fecha(parametros.get("hasta"))
+    if desde or hasta:
+        aviso = ""
+        if desde and hasta and desde > hasta:
+            desde, hasta = hasta, desde
+            aviso = "Las fechas estaban al revés: se muestra del más antiguo al más reciente."
+        return desde, hasta, None, aviso
+
+    atajo = parametros.get("periodo")
+    dias = {clave: n for clave, _, n in ATAJOS_DEL_PERIODO}
+    if atajo not in dias:
+        atajo = ATAJO_POR_DEFECTO
+    if dias[atajo] is None:
+        return None, None, atajo, ""
+    return hoy - timedelta(days=dias[atajo] - 1), hoy, atajo, ""
+
+
+def _medio(texto):
+    return texto if texto in MedioDePago.values else None
+
+
+def _pantalla_de_ventas(request, *, desde, hasta, atajo, aviso="", abrir=None):
+    return render(request, "reportes/ventas.html", {
+        "reporte": reporte_de_ventas(actor=request.user, desde=desde, hasta=hasta),
+        "atajos": ATAJOS_DEL_PERIODO,
+        "atajo": atajo,
+        "personalizado": atajo is None,
+        "aviso": aviso,
+        "abrir": abrir,
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def ventas(request):
+    """El reporte de ventas de un periodo (`HU-35`, `DT-54`)."""
+    desde, hasta, atajo, aviso = periodo_pedido(request.GET, timezone.localdate())
+    return _pantalla_de_ventas(request, desde=desde, hasta=hasta, atajo=atajo, aviso=aviso)
+
+
+@login_required
+@require_http_methods(["GET"])
+def ventas_de_un_dia(request, fecha):
+    """La pantalla acotada a ese día, con su modal abierta. Es donde aterriza
+    «Ver las ventas en efectivo de esa jornada» del cierre de caja (`INVD-5`)."""
+    # El rol antes que el `404`: una fecha mal escrita no le dice nada a otro rol.
+    ventas_registradas(actor=request.user)
+    dia = _fecha(fecha)
+    if dia is None:
+        raise Http404("Esa no es una fecha.")
+    medio = _medio(request.GET.get("medio"))
+    ficha = reverse("ventas-del-dia-ficha", args=[dia.isoformat()])
+    if medio:
+        ficha += f"?medio={medio}"
+    return _pantalla_de_ventas(request, desde=dia, hasta=dia, atajo=None, abrir=ficha)
+
+
+@login_required
+@require_http_methods(["GET"])
+def ficha_de_ventas_del_dia(request, fecha):
+    """Las ventas de un día, en la modal: fragmento (`DT-16`)."""
+    ventas_registradas(actor=request.user)
+    dia = _fecha(fecha)
+    if dia is None:
+        raise Http404("Esa no es una fecha.")
+    medio = _medio(request.GET.get("medio"))
+    del_dia = ventas_del_dia(actor=request.user, fecha=dia, medio=medio)
+    return render(request, "reportes/partials/ventas-del-dia.html", {
+        "dia": dia,
+        "medio": MedioDePago(medio).label if medio else None,
+        "ventas": del_dia,
+        # Las ventas ya vienen con su total anotado: sumarlas aquí no es lógica
+        # de negocio, es el pie de lo que la modal enseña.
+        "total": sum(v.total_cobrado for v in del_dia),
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def venta(request, venta_id):
+    """La pantalla acotada al día de esa venta, con su modal abierta. Es donde
+    aterriza la auditoría (`DT-48`), también para un pedido cancelado."""
+    encontrada = venta_de_la_cafeteria(actor=request.user, venta_id=venta_id)
+    if encontrada is None:
+        raise Http404("No hay ninguna venta con ese identificador.")
+    dia = timezone.localdate(encontrada.creado_en)
+    return _pantalla_de_ventas(
+        request, desde=dia, hasta=dia, atajo=None,
+        abrir=reverse("venta-ficha", args=[venta_id]),
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def ficha_de_venta(request, venta_id):
+    """Una venta, en la modal: fragmento (`DT-16`)."""
+    encontrada = venta_de_la_cafeteria(actor=request.user, venta_id=venta_id)
+    if encontrada is None:
+        raise Http404("No hay ninguna venta con ese identificador.")
+    return render(request, "reportes/partials/venta.html", {"venta": encontrada})
+

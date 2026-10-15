@@ -286,7 +286,7 @@ class TodasLasOperacionesSeAbrenTest(BaseDeLaAuditoria):
         for operacion in operaciones:
             with self.subTest(clase=operacion.clase, accion=operacion.accion):
                 self.assertTrue(
-                    reverse(operacion.ruta_admin, args=[operacion.objeto_id])
+                    reverse(operacion.ruta, args=[operacion.objeto_id])
                 )
 
     def test_la_entrega_apunta_a_su_venta_porque_el_pedido_no_tiene_admin(self):
@@ -456,7 +456,7 @@ class LaPantallaDeAuditoriaTest(BaseDeLaAuditoria):
         )
 
         for listado in (
-            "admin:ventas_venta_changelist",
+            "ventas-de-la-cafeteria",
             "admin:inventario_movimientoinventario_changelist",
             "admin:ventas_cierredecaja_changelist",
         ):

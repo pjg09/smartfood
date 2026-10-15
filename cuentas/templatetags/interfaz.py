@@ -143,7 +143,8 @@ MENU_POR_ROL = {
         # `DT-51`, `DT-52`. Pantallas propias, como el inventario.
         Entrada("categorias", "Categorías", "i-etiqueta"),
         Entrada("alergenos", "Alérgenos", "i-alerta"),
-        _del_admin("ventas_venta", "Ventas", "i-recibo"),
+        # `DT-54`. El reporte de ventas, fuera del admin.
+        Entrada("ventas-de-la-cafeteria", "Ventas", "i-recibo"),
         _del_admin("ventas_cierredecaja", "Cierres de caja", "i-efectivo"),
         Entrada("restricciones-de-estudiantes", "Restricciones", "i-escudo"),
         Entrada("auditoria", "Auditoría", "i-documento"),
