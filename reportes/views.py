@@ -189,28 +189,18 @@ def panel_de_la_cafeteria(request):
     qué conviene mirar», que es otra pregunta y se hace todos los días. Por eso
     no tiene filtros: cada bloque enlaza al reporte que sí los tiene.
 
-    Vive en el admin por lo mismo que la auditoría (`TT-178`): quien la consulta
-    ya trabaja ahí, y sacarla fuera sería la tercera excepción a `DT-2` sin
-    ninguna razón que la sostenga.
+    **Vive en el armazón de la aplicación, no en el del admin** (`DT-53`): es la
+    pantalla más diaria del rol, y todo lo que la administración escribe ya vive
+    fuera. Los reportes a los que enlaza sí siguen en el admin.
 
-    **Se autoriza dos veces y las dos hacen falta.** `is_staff` decide si el
-    armazón del admin tiene sentido para quien llama; el selector decide si
-    puede ver el dato. Un cajero tiene lo segundo en contra aunque tuviera lo
-    primero.
+    El rol lo exige el selector, antes de leer nada (`[S11]`).
     """
-    if not request.user.is_staff:
-        raise PermissionDenied(
-            "El panel de la cafetería vive en la administración (INT-3)."
-        )
-
     panel = selectores_del_panel(actor=request.user)
 
     return render(
         request,
-        "admin/reportes/panel.html",
+        "reportes/panel-de-la-cafeteria.html",
         {
-            **admin.site.each_context(request),
-            "title": "Panel",
             "panel": panel,
             "umbral": UMBRAL_DE_EXISTENCIAS_BAJAS,
             "tarjetas": _tarjetas_de_la_jornada(panel),
@@ -229,7 +219,7 @@ def _tarjetas_de_la_jornada(panel):
     **Las clases van escritas enteras**, nunca como `bg-{{ serie }}`: Tailwind
     compila lo que encuentra escrito, y una clase armada en la plantilla no
     existe. Así se quedaron sin franja cuatro de las cinco. Este fichero está en
-    las fuentes de `estilos/admin.css` para que las encuentre.
+    las fuentes de `estilos/fuente.css` para que las encuentre.
 
     La franja y el icono usan `serie-*` y nunca un color de estado: es
     decoración, y el rojo y el ámbar significan otra cosa en este producto.

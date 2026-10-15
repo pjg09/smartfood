@@ -119,7 +119,7 @@ cobrar nada (`INV-1`). Es la excepción que confirma la regla 3 — el color de 
 donde el estado existe, no como adorno.
 
 **En el panel de la cafetería la tarjeta va sin enlace y con un icono**
-(`templates/admin/reportes/panel.html`, `DEC-16`). Cuatro de las cinco llevaban a la misma
+(`templates/reportes/panel-de-la-cafeteria.html`, `DEC-16`, `DT-53`). Cuatro de las cinco llevaban a la misma
 lista de ventas, que la pantalla ya enlaza dos veces más abajo: cuatro veces el mismo destino
 no orienta a nadie. El hueco del enlace lo ocupa, arriba, el icono sobre un fondo de su misma
 serie; franja e icono comparten color, **y las clases van escritas enteras en

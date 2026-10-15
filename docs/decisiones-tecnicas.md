@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` el 2026-10-15 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 52 (`DT-1` … `DT-52`) |
+| decisiones | 53 (`DT-1` … `DT-53`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-52`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-53`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1098,3 +1098,19 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El aviso de renombrar lleva las dos cifras** del alérgeno que se edita, y dice que la protección sigue al alérgeno y no al nombre. Corregir la escritura es renombrar; cambiar de sustancia es crear otro.
 - **`UniqueConstraint(Lower("nombre"))`** en `Alergeno`, además del `unique` que ya tenía. En la categoría bastó el formulario (`DT-51`) porque el fallo partía un reporte; aquí partiría un bloqueo, y la invariante que la base puede imponer la impone la base (`DT-15`). El formulario da el mensaje antes de llegar a ella.
 - **`AlergenoAdmin` sale del admin**, y con él la aplicación `catalogo` del índice del admin. El permiso `catalogo.alergeno` se conserva, como los de producto y categoría.
+
+#### `[DT-53]` El panel de la cafetería sale del admin, a `/cafeteria/`
+
+**Obliga:** la raya de `DEC-17` —una pantalla propia sustituye a una del admin cuando alguien la usa a diario— y `DEC-26`. El panel es la pantalla donde aterriza `USR-4` cada vez que entra (`DEC-16`): la más diaria del rol.
+
+**El hecho que lo obliga.** El panel se montó dentro del armazón del admin con un motivo: «quien la consulta ya trabaja ahí». Con `DT-50` … `DT-52` deja de ser cierto: todo lo que la administración escribe —inventario, categorías, alérgenos— y la cola de reservas viven fuera, y en el admin solo le quedan los reportes. Sentado en el admin, el panel pagaba el armazón ajeno: el título lo ponía el admin, más fino y más pequeño que el de las pantallas propias; el contenido arrancaba 8 px más a la derecha; las listas y los enlaces necesitaban un reset acotado (`:where(.armazon-panel)`) para que el admin no les pusiera viñetas, márgenes y subrayado, y cada cambio de estilo pasaba por la segunda hoja (`DT-36`).
+
+**Decidido:**
+
+- **`/cafeteria/` sobre `base-aplicacion.html`**, con el encabezado de las pantallas propias. El nombre de la ruta no cambia (`panel-de-la-cafeteria`), así que el reparto de `cuentas.views.panel` y la barra lateral no se tocan. `/admin/panel/` deja de existir: el admin responde su `404`.
+- **Lo que enseña no cambia**: las cinco cifras de la jornada, el aviso de existencias, lo más vendido, las últimas ventas y el mes, del mismo selector (`reportes.selectors.panel_de_la_cafeteria`).
+- **Se autoriza una vez, en el selector.** La comprobación de `is_staff` existía porque el armazón del admin no tiene sentido para quien no entra en él; fuera del admin sobra. El rol lo sigue exigiendo el selector (`[S11]`), y el anónimo va al acceso.
+- **Los enlaces a los reportes siguen yendo al admin**: los reportes de la cafetería viven allí por decisión (`TT-168`, `TT-176`).
+- **La auditoría no sale con él.** Es un reporte, no el aterrizaje, y se queda dentro del admin como los otros tres.
+- **Las clases de las tarjetas siguen escritas enteras en `reportes/views.py`**, y por eso `reportes` entra en los `@source` de la hoja de la aplicación. El reset `:where(.armazon-panel)` sale de `estilos/admin.css`: no queda nada que lo use.
+

@@ -235,9 +235,11 @@ pero solo muerden dentro del admin.
   fuera porque dentro pinta formularios de Django.
 - **Las reglas del admin escritas a pelo les ganan a las utilidades.** `a:link` pesa (0,1,1) y
   gana a `text-acento-fuerte`; `p` y `ul > li` dejan sus márgenes y su viñeta. Corregirlo con
-  `.armazon-panel ul > li` es peor: pesa más que `py-2` y las filas salen pegadas. Lo que
-  funciona es **empatar** —`:where(.armazon-panel) ul > li`, que pesa lo mismo que la regla del
-  admin y gana por venir después— y dejar que las utilidades ganen a las dos.
+  `.contenedor ul > li` es peor: pesa más que `py-2` y las filas salen pegadas. Lo que
+  funciona es **empatar** —`:where(.contenedor) ul > li`, que pesa lo mismo que la regla del
+  admin y gana por venir después— y dejar que las utilidades ganen a las dos. Le pasó al
+  panel de la cafetería mientras vivió en el admin; **una pantalla con composiciones propias
+  va sobre `base-aplicacion.html`** y no paga esto (`DT-53`).
 - **Lo que `base.html` hace antes de pintar no le llega al admin**, que cuelga de
   `admin/base.html` y no de `base.html`. El tema elegido no se aplicaba: el selector marcaba
   «claro» y la pantalla salía en oscuro. El script vive en `partials/tema-inicial.html` y lo

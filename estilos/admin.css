@@ -38,10 +38,10 @@
 @import "./tokens.css";
 
 /* Dónde buscar clases. El armazón que se pinta aquí sale de `templates/`; las
- * entradas de la barra, de `cuentas/templatetags/interfaz.py`, y los colores de
- * las tarjetas del panel, de `reportes/views.py`. Una clase que solo existe en
- * un fichero que no está aquí **no se compila y no da ningún error**: así se
- * quedaron sin franja cuatro de las cinco tarjetas del panel. */
+ * entradas de la barra, de `cuentas/templatetags/interfaz.py`, y lo que pintan
+ * los reportes, de `reportes/`. Una clase que solo existe en un fichero que no
+ * está aquí **no se compila y no da ningún error**: así se quedaron sin franja
+ * cuatro de las cinco tarjetas del panel cuando vivía en el admin. */
 @source "../templates";
 @source "../cuentas";
 @source "../reportes";
@@ -746,41 +746,3 @@ body #container header.armazon a {
  * delante son 80 px que le faltan a la tabla, y en un listado con panel de
  * filtros eso es justo lo que separa «cabe» de «hay que arrastrar». */
 #content { padding-left: 1.5rem; padding-right: 1.5rem; }
-
-/* Los márgenes y las listas del admin, fuera del panel: sin esto las listas
- * salen con la viñeta cuadrada que él pone en `ul > li`, y cada `p` y cada `h2`
- * con el margen inferior que él les da, que ninguna utilidad `mt-*` quita.
- *
- * **Con el peso justo para empatar con el admin, y no más.** El admin escribe
- * `p`, `h2`, `ul` y `ul > li` a pelo; con `:where(.armazon-panel)` delante
- * estas reglas pesan lo mismo y ganan por venir después, y cualquier utilidad
- * —`py-3`, `mt-2`— les sigue ganando a ellas. Escritas como `.armazon-panel ul
- * > li` pesaban más que `py-2` y las filas de las últimas ventas salían pegadas
- * sin que nada fallara. **El selector nombra al `li`** porque el del admin
- * también lo hace: la viñeta la pinta el hijo. */
-:where(.armazon-panel) p,
-:where(.armazon-panel) h2,
-:where(.armazon-panel) ul,
-:where(.armazon-panel) ol {
-  margin: 0;
-  padding: 0;
-}
-
-:where(.armazon-panel) ul > li,
-:where(.armazon-panel) ol > li {
-  list-style-type: none;
-  padding: 0;
-}
-
-/* Los enlaces del panel, en el acento y sin subrayar hasta pasar por encima.
- * Lleva el mismo selector largo que los del armazón, por la misma razón: el
- * subrayado del admin pesa (1,1,2) y su color, (0,1,1), así que ni
- * `text-acento-fuerte` ni `no-underline` llegan a aplicarse. */
-body #container .armazon-panel a {
-  color: var(--color-acento-fuerte);
-  text-decoration: none;
-}
-
-body #container .armazon-panel a:hover {
-  text-decoration: underline;
-}

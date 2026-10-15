@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from catalogo.models import Categoria, Producto
@@ -220,28 +221,49 @@ class ElAvisoDeExistenciasTest(TestCase):
 
 
 class LaPantallaDelPanelTest(TestCase):
+    """`DT-53`: el panel vive en el armazón de la aplicación, fuera del admin."""
+
     def setUp(self):
         self.actor = cuenta(Rol.ADMINISTRADOR, staff=True)
         self.client.force_login(self.actor)
 
-    def test_se_sirve_dentro_del_armazon_del_admin(self):
-        respuesta = self.client.get("/admin/panel/")
+    def test_se_sirve_en_el_armazon_de_la_aplicacion(self):
+        respuesta = self.client.get("/cafeteria/")
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertTemplateUsed(respuesta, "admin/reportes/panel.html")
-        self.assertTemplateUsed(respuesta, "admin/base_site.html")
+        self.assertTemplateUsed(respuesta, "reportes/panel-de-la-cafeteria.html")
+        self.assertTemplateUsed(respuesta, "base-aplicacion.html")
+        self.assertTemplateNotUsed(respuesta, "admin/base_site.html")
 
-    def test_la_ruta_no_se_la_queda_el_admin(self):
-        """`/admin/panel/` va **antes** de `admin.site.urls` en `config/urls.py`.
+    def test_ya_no_esta_en_el_admin(self):
+        """El nombre de la ruta se conserva —el reparto y la barra lo usan—; la
+        URL del admin deja de existir y el admin responde su propio 404."""
+        self.assertEqual(reverse("panel-de-la-cafeteria"), "/cafeteria/")
+        self.assertEqual(self.client.get("/admin/panel/").status_code, 404)
 
-        Django resuelve en orden: puesta después, el admin respondería su propio
-        404 y la pantalla no existiría — sin que nada en el código lo indicara.
-        """
-        from django.urls import resolve
+    def test_no_depende_del_acceso_al_admin(self):
+        """El rol lo exige el selector; `is_staff` era cosa del armazón del admin."""
+        self.client.force_login(
+            crear_cuenta(
+                email="admin-sin-staff-panel@example.com",
+                rol=Rol.ADMINISTRADOR,
+                accede_a_administracion=False,
+                enviar_invitacion=False,
+            )
+        )
 
-        self.assertEqual(resolve("/admin/panel/").view_name, "panel-de-la-cafeteria")
+        self.assertEqual(self.client.get("/cafeteria/").status_code, 200)
 
-    def test_un_cajero_no_alcanza_la_pantalla(self):
-        self.client.force_login(cuenta(Rol.CAJERO))
+    def test_ningun_otro_rol_alcanza_la_pantalla(self):
+        for rol in (Rol.CAJERO, Rol.INSTITUCION, Rol.ACUDIENTE):
+            with self.subTest(rol=rol):
+                self.client.force_login(cuenta(rol))
+                self.assertEqual(self.client.get("/cafeteria/").status_code, 403)
 
-        self.assertEqual(self.client.get("/admin/panel/").status_code, 403)
+    def test_sin_sesion_lleva_al_acceso(self):
+        self.client.logout()
+
+        respuesta = self.client.get("/cafeteria/")
+
+        self.assertEqual(respuesta.status_code, 302)
+        self.assertTrue(respuesta["Location"].startswith("/login/"))

@@ -114,12 +114,8 @@ urlpatterns = [
     # No cuelga de un modelo porque no tiene uno: cruza ventas, pedidos,
     # movimientos de inventario y cierres. Un `ModelAdmin` pinta el listado de
     # una tabla, y este reporte es el de cuatro. Vive **dentro** del admin —su
-    # armazón, sus estilos, su barra—, así que **no es una tercera excepción a
-    # `DT-2`**: las dos que hay son pantallas propias fuera de él.
-    # El panel de la cafetería (`DEC-16`), por el mismo camino y por el mismo
-    # motivo: **antes** de `admin.site.urls`, o el admin se queda la URL y
-    # responde su propio 404. Es la pantalla donde aterriza `USR-4` al entrar.
-    path("admin/panel/", panel_de_la_cafeteria, name="panel-de-la-cafeteria"),
+    # armazón, sus estilos, su barra—, como los otros tres reportes de la
+    # cafetería.
     path("admin/auditoria/", auditoria_de_la_operacion, name="auditoria"),
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
@@ -128,6 +124,9 @@ urlpatterns = [
     # la cafetería también la consulta (`FUN-5`) y `INT-2` le responde `403`.
     # Una ruta compartida es lo que evita dos pantallas del mismo dato.
     path("reservas/", reservas, name="reservas"),
+    # El panel de la cafetería (`DEC-16`), donde aterriza `USR-4` al entrar.
+    # Fuera del admin desde `DT-53`: es la pantalla más diaria del rol.
+    path("cafeteria/", panel_de_la_cafeteria, name="panel-de-la-cafeteria"),
     # `DEC-25`, `DT-50`. El inventario de la cafetería en una sola pantalla:
     # productos, ingresos, mermas y el libro de cada uno. Sustituye a las tres
     # pantallas del admin que tocaban lo mismo; el reporte de movimientos de

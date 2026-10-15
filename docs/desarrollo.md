@@ -162,7 +162,7 @@ sembraste con otra, la buena es esa.
 | Rol | Cuenta | Por dónde entra | Dónde aterriza |
 |---|---|---|---|
 | Institución (`USR-5`) | `institucion@example.com` | `/login/` **o** `/admin/` | `/padron/` |
-| Administración de la cafetería (`USR-4`) | `administracion@example.com` | `/login/` **o** `/admin/` | `/admin/panel/` |
+| Administración de la cafetería (`USR-4`) | `administracion@example.com` | `/login/` **o** `/admin/` | `/cafeteria/` |
 | Cajero (`USR-3`) | `cajero@example.com` | **solo `/login/`** | `/punto-de-venta/` |
 | Acudiente (`USR-2`) | `nombre.apellido<n>@example.com` | **solo `/login/`** | `/mis-estudiantes/` |
 

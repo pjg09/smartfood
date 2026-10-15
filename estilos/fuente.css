@@ -44,6 +44,9 @@
 @source "../billetera";
 @source "../inventario";
 @source "../ventas";
+/* Las clases de las tarjetas del panel de la cafetería se escriben enteras en
+ * `reportes/views.py` (`DT-53`): sin esta línea, no se compilan. */
+@source "../reportes";
 
 
 /* ==========================================================================

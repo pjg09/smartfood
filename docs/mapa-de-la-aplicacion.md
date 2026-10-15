@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-14; el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`); recontada por script: 83 rutas propias y 5 del admin, y el admin, con siete modelos registrados. Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-14; el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`); recontada por script: 84 rutas propias y 4 del admin, y el admin, con siete modelos registrados. El 2026-10-15, el panel de la cafetería sale del admin a `/cafeteria/` (`DT-53`). Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -46,8 +46,8 @@ acudiente ficticio.
 ## [S2] Las ochenta y ocho rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **83 rutas propias** que resuelve Django fuera del
-admin, todas, y **5 del admin** que se citan porque las pide alguna historia: se recontaron
+los mismos colores desde `DT-23`. Son las **84 rutas propias** que resuelve Django fuera del
+admin, todas, y **4 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna.
 
 | Ruta | Qué es | Quién | Tarea |
@@ -133,10 +133,10 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/alergenos/tablero/` | Las cifras y la lista de esa pantalla, como fragmento: se repintan tras cada escritura | **Solo administración** | `DT-52` |
 | `/alergenos/nuevo/` | Alta en la modal: el nombre, único sin distinguir mayúsculas | **Solo administración** | `HU-26`, `DT-52` |
 | `/alergenos/<id>/editar/` | La misma modal, con cuántos productos lo declaran y cuántos estudiantes lo tienen bloqueado: el nombre nuevo les llega a todos | **Solo administración** | `DEC-26`, `DT-52` |
+| `/cafeteria/` | Panel de la cafetería, donde aterriza la administración: la jornada, existencias por agotarse, lo más vendido, las últimas ventas y el mes | **Solo administración** | `DEC-16`, `DT-53` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
-| `/admin/panel/` | Panel de la cafetería: la jornada, existencias por agotarse y el mes (`DEC-16`) | Administración | `DEC-16` |
 | `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cinco clases de operación —también la cancelación de pedidos—, con quién hizo qué y cuándo | **Solo administración** | `TT-178`, `DT-48` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— y quién registró cada asiento. **De solo lectura**: se registra en `/inventario/` | **Solo administración** | `TT-69`, `DT-50`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
@@ -173,6 +173,7 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/inventario/`, sus fragmentos y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/categorias/`, su fragmento y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/alergenos/`, su fragmento y su modal | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/cafeteria/` | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/` | 403 | **200** | 302 | 302 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/add/` | 403 | 403 | 302 | 302 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -223,11 +224,11 @@ como navegación, y la tabla es la que fija `cuentas/tests_navegacion.py`.
 | Rol | Aterriza en |
 |---|---|
 | Institución (`USR-5`) | `/padron/` |
-| Administración de la cafetería (`USR-4`) | `/admin/panel/` |
+| Administración de la cafetería (`USR-4`) | `/cafeteria/` |
 | Cajero (`USR-3`) | `/punto-de-venta/` |
 | Acudiente (`USR-2`) | `/mis-estudiantes/` |
 
-**Y `/admin/` son 54 pantallas**, no una: siete modelos registrados por seis o siete URLs
+**Y `/admin/` son 53 pantallas**, no una: siete modelos registrados por seis o siete URLs
 cada uno —listado, añadir, editar, borrar, historial— y las del propio admin. Esta tabla no las enumera porque las
 genera Django a partir de los modelos; lo que cada rol alcanza de ellas está en `[S3]`.
 
@@ -241,7 +242,7 @@ qué pasa al imprimirla.
 |---|---|---|
 | `base-publica.html` | Cabecera flotante que se opaca al bajar, y pie | `/` |
 | `base-acceso.html` | Dos columnas: panel de marca y formulario | `/login/`, `/invitacion/…`, `/invitacion/lista/`, `/recuperar/…` |
-| `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37`, `/reservas/`, `/punto-de-venta/cierre/` |
+| `base-aplicacion.html` | Barra superior flotante, barra lateral oscura y cajón de móvil | `/mis-estudiantes/`, `/carga/`, la tarjeta de `TT-37`, `/reservas/`, `/punto-de-venta/cierre/`, `/cafeteria/`, `/inventario/`, `/categorias/`, `/alergenos/` |
 | `base-punto-de-venta.html` | Pantalla completa, sin diálogos, con foco permanente y una **columna de iconos que no se despliega** | `/punto-de-venta/` |
 | `admin/base_site.html` | `INT-3` con los colores de la marca, sin tocar sus plantillas | todo `/admin/` |
 

@@ -29,7 +29,7 @@ CLAVE = "clave-de-prueba-2026"
 # cambia el reparto sin cambiarla, esta prueba lo dice.
 ATERRIZAJES = [
     (Rol.INSTITUCION, "/padron/"),
-    (Rol.ADMINISTRADOR, "/admin/panel/"),
+    (Rol.ADMINISTRADOR, "/cafeteria/"),
     (Rol.CAJERO, "/punto-de-venta/"),
     (Rol.ACUDIENTE, "/mis-estudiantes/"),
 ]
