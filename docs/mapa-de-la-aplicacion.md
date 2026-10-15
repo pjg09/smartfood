@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-14; el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, y las categorías en `/categorias/` (`DT-51`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`); recontada por script: 79 rutas propias y 5 del admin. Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-14; el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`); recontada por script: 83 rutas propias y 5 del admin, y el admin, con siete modelos registrados. Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,10 +43,10 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las ochenta y cuatro rutas
+## [S2] Las ochenta y ocho rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **79 rutas propias** que resuelve Django fuera del
+los mismos colores desde `DT-23`. Son las **83 rutas propias** que resuelve Django fuera del
 admin, todas, y **5 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna.
 
@@ -129,6 +129,10 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/categorias/nueva/` | Alta en la modal: nombre y descripción opcional | **Solo administración** | `HU-26`, `DT-51` |
 | `/categorias/<id>/editar/` | La misma modal, con lo que la categoría tiene y el aviso de que renombrar alcanza a lo vendido | **Solo administración** | `DT-51` |
 | `/categorias/<id>/eliminar/` | Confirmar y eliminar; solo una categoría sin productos, retirados incluidos | **Solo administración** | `DT-51` |
+| `/alergenos/` | Los alérgenos: cuántos hay, cuántos declara algún producto y una fila por alérgeno con sus productos, sus bloqueos y editar. **Sin eliminar** | **Solo administración** | `DEC-26`, `DT-52` |
+| `/alergenos/tablero/` | Las cifras y la lista de esa pantalla, como fragmento: se repintan tras cada escritura | **Solo administración** | `DT-52` |
+| `/alergenos/nuevo/` | Alta en la modal: el nombre, único sin distinguir mayúsculas | **Solo administración** | `HU-26`, `DT-52` |
+| `/alergenos/<id>/editar/` | La misma modal, con cuántos productos lo declaran y cuántos estudiantes lo tienen bloqueado: el nombre nuevo les llega a todos | **Solo administración** | `DEC-26`, `DT-52` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
 | `/admin/ventas/venta/` | Reporte de ventas: el libro filtrable con el consolidado del periodo que se mira | **Solo administración** | `TT-168` |
 | `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
@@ -168,6 +172,7 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/reservas/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | **200** | **200** | 403 | 302 → acceso |
 | `/inventario/`, sus fragmentos y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/categorias/`, su fragmento y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/alergenos/`, su fragmento y su modal | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/` | 403 | **200** | 302 | 302 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/add/` | 403 | 403 | 302 | 302 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -222,8 +227,8 @@ como navegación, y la tabla es la que fija `cuentas/tests_navegacion.py`.
 | Cajero (`USR-3`) | `/punto-de-venta/` |
 | Acudiente (`USR-2`) | `/mis-estudiantes/` |
 
-**Y `/admin/` son 89 pantallas**, no una: trece modelos registrados por seis o siete URLs
-cada uno —listado, añadir, editar, borrar, historial—. Esta tabla no las enumera porque las
+**Y `/admin/` son 54 pantallas**, no una: siete modelos registrados por seis o siete URLs
+cada uno —listado, añadir, editar, borrar, historial— y las del propio admin. Esta tabla no las enumera porque las
 genera Django a partir de los modelos; lo que cada rol alcanza de ellas está en `[S3]`.
 
 ### [S2.1] De qué armazón cuelga cada pantalla
@@ -273,11 +278,9 @@ coincidir porque dejaría media pantalla en cada tema.
 | `personas.acudiente` | **200** (solo consulta) | 403 | 302 | 302 |
 | `personas.institucion` | 404 (`DEC-22`: sin registro en el admin) | 404 | 302 | 302 |
 | `cuentas.usuario` | **200** (fuera del menú, `DT-45`) | 403 | 302 | 302 |
-| `catalogo.producto` | 403 | **200** | 302 | 302 |
-| `catalogo.categoria` | 403 | **200** | 302 | 302 |
-| `catalogo.alergeno` | 403 | **200** | 302 | 302 |
+| `catalogo.producto`, `catalogo.categoria`, `catalogo.alergeno` | 404 (sin registro en el admin: `DT-50`, `DT-51`, `DT-52`) | 404 | 302 | 302 |
 | `inventario.movimientoinventario` | 403 | **200** | 302 | 302 |
-| `inventario.merma` | 403 | **200** | 302 | 302 |
+| `inventario.merma` | 404 (sin registro: `DT-50`) | 404 | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | 403 (`DEC-21`) | **200** (solo consulta) | 302 | 302 |
 | `ventas.venta` | 403 | **200** (solo consulta) | 302 | 302 |
 | `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
@@ -297,8 +300,8 @@ conviene no perder:
 - **El inventario ya no está en el admin** (`DEC-25`, `DT-50`). Productos, ingresos, mermas
   y el historial de cada producto viven en `/inventario/`, una pantalla propia sobre el
   armazón de la aplicación, con una sola entrada en el menú. Las categorías, en
-  `/categorias/` (`DT-51`). En el admin quedan los alérgenos y el **reporte de
-  movimientos**, de solo lectura (`HU-36`). El
+  `/categorias/` (`DT-51`), y los alérgenos, en `/alergenos/` (`DT-52`). En el admin solo
+  queda el **reporte de movimientos**, de solo lectura (`HU-36`). El
   historial de un producto enseña la cifra, los movimientos que la suman y, a la vez, si la
   suma de las líneas coincide con el total — las dos cifras salen por caminos distintos a
   propósito (`HU-29`, `TST-4`).

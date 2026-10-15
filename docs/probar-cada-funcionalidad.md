@@ -161,6 +161,13 @@ elimina solo una categoría **sin productos**, contando los retirados; con produ
 dice cuántos y no ofrece el botón. Renombrarla alcanza también a lo ya vendido en las alertas
 de frecuencia del acudiente, y la modal lo avisa.
 
+**Los alérgenos, en Alérgenos** (`DEC-26`, `DT-52`): cada fila dice cuántos productos lo
+declaran y cuántos estudiantes lo tienen bloqueado. Se crean y se renombran, **y no se
+eliminan**, ni los que nadie usa: no hay botón. «maní» no entra si ya existe «Maní». Al
+renombrar, la modal da las dos cifras y avisa de que el bloqueo sigue al alérgeno: el nombre
+nuevo es el que verán el acudiente y el cajero, y el historial de restricciones conserva el
+de entonces.
+
 La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y

@@ -199,11 +199,11 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
             **cambios,
         }
 
-    def test_la_administracion_alcanza_las_dos_pantallas_y_la_del_admin(self):
+    def test_la_administracion_alcanza_las_tres_pantallas(self):
         for url in [
             reverse("inventario"),
             reverse("categorias"),
-            reverse("admin:catalogo_alergeno_changelist"),
+            reverse("alergenos"),
         ]:
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 200)
@@ -372,17 +372,6 @@ class LaVistaDeGestionTest(BaseDeCatalogo):
         ).content.decode()
 
         self.assertIn('name="activo"', cuerpo)
-
-    def test_no_ofrece_borrar_alergenos(self):
-        """Borrarlo se llevaría las declaraciones y con ellas el bloqueo de un
-        estudiante alérgico (`HU-11`). Las categorías vacías sí se eliminan, en
-        `/categorias/` (`DT-51`)."""
-        self.assertEqual(
-            self.client.get(
-                reverse("admin:catalogo_alergeno_delete", args=[self.lactosa.pk])
-            ).status_code,
-            403,
-        )
 
     def test_retirar_pasa_por_el_servicio_y_no_borra(self):
         producto = self.producto()

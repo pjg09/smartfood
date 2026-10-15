@@ -1,0 +1,48 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} DEC-26, DT-52. Los alérgenos del catálogo.
+
+   **Sustituye a la pantalla del admin**, con la composición de `/categorias/`: encabezado
+   con la acción principal, dos tarjetas de resumen (`[S2.1]`, variante del panel) y una
+   fila por alérgeno con sus dos recuentos. Todo lo que cambia tras una escritura vive en
+   un solo fragmento.
+
+   **Una sola acción por fila, editar.** Un alérgeno no se elimina, ni vacío (`DEC-26`):
+   no hay botón, ni ruta, ni servicio.
+{% endcomment %}
+
+{% block titulo %}Alérgenos | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6">
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Alérgenos</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Las condiciones que declara cada producto y que el acudiente puede bloquear. El
+          bloqueo alcanza a todo producto que declare el alérgeno, también a los que se
+          creen después.
+        </p>
+      </div>
+      <button type="button" data-nuevo-alergeno
+              hx-get="{% url 'alergeno-nuevo' %}"
+              hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+              class="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-primario px-5
+                     text-base font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-mas"></use></svg>
+        Nuevo alérgeno
+      </button>
+    </header>
+
+    {% include "catalogo/partials/tablero-de-alergenos.html" %}
+  </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`). Va fuera del tablero, que se reemplaza tras
+     cada escritura: dentro, se cerraría sola. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Alérgeno"
+          class="m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

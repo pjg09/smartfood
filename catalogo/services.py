@@ -82,7 +82,28 @@ def eliminar_categoria(*, actor, categoria):
 @transaction.atomic
 def crear_alergeno(*, actor, nombre):
     _comprobar_que_gestiona_el_catalogo(actor, "Gestionar alérgenos")
-    return Alergeno.objects.create(nombre=nombre)
+    return Alergeno.objects.create(nombre=nombre.strip())
+
+
+@transaction.atomic
+def editar_alergeno(*, actor, alergeno, nombre):
+    """Renombra un alérgeno (`DEC-26`, `DT-52`).
+
+    **El bloqueo sigue al alérgeno, no al nombre.** Las declaraciones de los
+    productos y los bloqueos de los estudiantes apuntan por identificador, así
+    que siguen siendo los mismos: el nombre nuevo es el que verán el acudiente
+    en sus restricciones y el cajero en el rechazo. El historial de
+    restricciones conserva el de entonces (`DT-8`). La pantalla lo dice antes
+    de guardar.
+
+    **No hay un `eliminar_alergeno`, y no es un olvido** (`DEC-26`). Con
+    declaraciones o bloqueos, la base lo impediría (`PROTECT`); vacío, tampoco
+    se borra: un alérgeno mal creado se renombra.
+    """
+    _comprobar_que_gestiona_el_catalogo(actor, "Gestionar alérgenos")
+    alergeno.nombre = nombre.strip()
+    alergeno.save(update_fields=["nombre"])
+    return alergeno
 
 
 @transaction.atomic
@@ -245,6 +266,7 @@ __all__ = [
     "crear_producto",
     "declarar_alergenos",
     "devolver_al_catalogo",
+    "editar_alergeno",
     "editar_categoria",
     "editar_producto",
     "eliminar_categoria",

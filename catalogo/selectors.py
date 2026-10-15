@@ -8,7 +8,7 @@ devuelven objetos del ORM o datos, nunca respuestas HTTP.
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 
-from catalogo.models import Categoria, Producto
+from catalogo.models import Alergeno, Categoria, Producto
 from cuentas.models import Rol
 
 
@@ -62,3 +62,31 @@ def categorias_del_catalogo(*, actor):
         Categoria.objects.annotate(cuantos=Count("productos")).order_by("nombre")
     )
 
+
+def alergenos_del_catalogo(*, actor):
+    """Los alérgenos, de la A a la Z, cada uno con `cuantos_productos` —los que
+    lo declaran— y `cuantos_estudiantes` —los que lo tienen bloqueado— (`DT-52`).
+
+    **Cuentan también los productos retirados y los estudiantes de baja**: sus
+    filas siguen existiendo y el `PROTECT` las sostiene. Se cuentan por las
+    relaciones inversas, así que `catalogo` no importa `restricciones`.
+    `distinct` porque son dos `JOIN` en la misma consulta: sin él, cada cifra
+    saldría multiplicada por la otra.
+
+    Exige el rol antes de leer, como las categorías (`[S11]`, `HU-26`).
+    """
+    if actor is None or not actor.is_authenticated:
+        raise PermissionDenied("Consultar los alérgenos exige identificarse.")
+    if actor.rol != Rol.ADMINISTRADOR:
+        raise PermissionDenied(
+            "Los alérgenos son de la administración de la cafetería ([S11], HU-26)."
+        )
+    if not actor.is_active:
+        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+
+    return list(
+        Alergeno.objects.annotate(
+            cuantos_productos=Count("declaraciones", distinct=True),
+            cuantos_estudiantes=Count("bloqueos", distinct=True),
+        ).order_by("nombre")
+    )

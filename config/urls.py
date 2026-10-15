@@ -13,11 +13,15 @@ from django.views.generic import TemplateView
 
 from billetera.views import recarga
 from catalogo.views import (
+    alergeno_nuevo,
+    alergenos,
     categoria_nueva,
     categorias,
+    edicion_de_alergeno,
     edicion_de_categoria,
     eliminacion_de_categoria,
     imagen_del_producto,
+    tablero_de_alergenos,
     tablero_de_categorias,
 )
 from config.salud import salud
@@ -172,6 +176,16 @@ urlpatterns = [
         "categorias/<uuid:categoria_id>/eliminar/",
         eliminacion_de_categoria,
         name="eliminacion-de-categoria",
+    ),
+    # `DEC-26`, `DT-52`. Los alérgenos, con la composición de las categorías y
+    # **sin ruta de eliminar**: un alérgeno no se borra, ni vacío.
+    path("alergenos/", alergenos, name="alergenos"),
+    path("alergenos/tablero/", tablero_de_alergenos, name="tablero-de-alergenos"),
+    path("alergenos/nuevo/", alergeno_nuevo, name="alergeno-nuevo"),
+    path(
+        "alergenos/<uuid:alergeno_id>/editar/",
+        edicion_de_alergeno,
+        name="edicion-de-alergeno",
     ),
     # `HU-68`. El tablero de esa pantalla sin la página, para repintarlo cuando
     # la modal cancela un pedido (`DT-16`, `DT-40`).

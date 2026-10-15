@@ -20,6 +20,7 @@ import uuid
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from django.urls import reverse
 
 
@@ -63,6 +64,14 @@ class Alergeno(models.Model):
         verbose_name = "alérgeno"
         verbose_name_plural = "alérgenos"
         ordering = ["nombre"]
+        constraints = [
+            # `DT-52`. «Maní» y «maní» serían dos condiciones: el acudiente
+            # bloquearía una y el producto declararía la otra, y la venta
+            # pasaría. El `unique` del campo distingue mayúsculas; esto no.
+            models.UniqueConstraint(
+                Lower("nombre"), name="alergeno_nombre_unico_sin_mayusculas"
+            ),
+        ]
 
     def __str__(self):
         return self.nombre

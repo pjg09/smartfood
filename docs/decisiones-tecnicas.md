@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49`, `DT-50` y `DT-51` el 2026-10-14 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 51 (`DT-1` … `DT-51`) |
+| decisiones | 52 (`DT-1` … `DT-52`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-51`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-52`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1085,3 +1085,16 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El nombre es único sin distinguir mayúsculas** en el formulario: «bebidas» y «Bebidas» partirían en dos las alertas de `HU-31`.
 - **Renombrar alcanza a lo ya vendido, y la modal lo dice.** La línea de venta congela el precio y la nutrición (`DT-8`), no la categoría, y las alertas de frecuencia agrupan por la categoría de hoy. La referencia visual decía que las ventas registradas conservan el nombre; aquí no sería verdad.
 - **`CategoriaAdmin` sale del admin.** `AlergenoAdmin` se queda.
+
+#### `[DT-52]` `/alergenos/`: los alérgenos fuera del admin, sin eliminar
+
+**Obliga:** `DEC-26`. **Corrige a `DT-51`** en su último punto: `AlergenoAdmin` tampoco se queda.
+
+**Decidido:**
+
+- **La composición de `/categorias/`, tal cual**: encabezado con «Nuevo alérgeno», dos cifras —cuántos hay y cuántos declara algún producto— y una fila por alérgeno con dos recuentos —productos que lo declaran y estudiantes que lo tienen bloqueado— y **una sola acción, editar**. Alta y edición son la misma modal. Las vistas viven en `catalogo/views.py`; las escrituras, en `catalogo.services` (`crear_alergeno`, `editar_alergeno`), y la lectura en `alergenos_del_catalogo`, que exige el rol antes de leer. Tras escribir, `HX-Trigger: alergenos-cambiado` repinta las cifras y la lista.
+- **No hay botón, ruta ni servicio de eliminar.** No es un botón escondido: la acción no existe. Un hueco no se pinta como botón deshabilitado (`[S4]` del sistema visual).
+- **Los recuentos cuentan también los productos retirados y los estudiantes de baja**: las filas siguen existiendo y el `PROTECT` las sostiene. Se cuentan por las relaciones inversas (`declaraciones`, `bloqueos`), así que `catalogo` no importa `restricciones`.
+- **El aviso de renombrar lleva las dos cifras** del alérgeno que se edita, y dice que la protección sigue al alérgeno y no al nombre. Corregir la escritura es renombrar; cambiar de sustancia es crear otro.
+- **`UniqueConstraint(Lower("nombre"))`** en `Alergeno`, además del `unique` que ya tenía. En la categoría bastó el formulario (`DT-51`) porque el fallo partía un reporte; aquí partiría un bloqueo, y la invariante que la base puede imponer la impone la base (`DT-15`). El formulario da el mensaje antes de llegar a ella.
+- **`AlergenoAdmin` sale del admin**, y con él la aplicación `catalogo` del índice del admin. El permiso `catalogo.alergeno` se conserva, como los de producto y categoría.

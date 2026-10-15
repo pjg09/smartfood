@@ -19,9 +19,15 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_http_methods, require_safe
 
-from catalogo.models import Categoria
-from catalogo.selectors import categorias_del_catalogo
-from catalogo.services import crear_categoria, editar_categoria, eliminar_categoria
+from catalogo.models import Alergeno, Categoria
+from catalogo.selectors import alergenos_del_catalogo, categorias_del_catalogo
+from catalogo.services import (
+    crear_alergeno,
+    crear_categoria,
+    editar_alergeno,
+    editar_categoria,
+    eliminar_categoria,
+)
 from config.imagenes import TIPO_SALIDA
 
 # La forma exacta de las claves que produce la canalización: 32 dígitos
@@ -213,3 +219,118 @@ def eliminacion_de_categoria(request, categoria_id):
         {"eliminada": nombre},
     ))
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LOS ALÉRGENOS (`DEC-26`, `DT-52`)
+#
+# La composición de las categorías, con una diferencia que es toda la decisión:
+# **no hay eliminar**. Ni ruta, ni modal, ni servicio. Crear y renombrar son de
+# `catalogo.services`; cada escritura responde con la misma modal y
+# `HX-Trigger: alergenos-cambiado`, y el tablero de detrás se vuelve a pedir.
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+class AlergenoForm(forms.Form):
+    """El nombre de un alérgeno. **Único sin distinguir mayúsculas**: lo impone
+    la base (`DT-52`); aquí se comprueba antes para dar el mensaje junto al
+    campo en vez de un `500`."""
+
+    nombre = forms.CharField(label="Nombre", max_length=80)
+
+    def __init__(self, *args, alergeno=None, **kwargs):
+        self.alergeno = alergeno
+        super().__init__(*args, **kwargs)
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data["nombre"].strip()
+        repetido = Alergeno.objects.filter(nombre__iexact=nombre)
+        if self.alergeno is not None:
+            repetido = repetido.exclude(pk=self.alergeno.pk)
+        if repetido.exists():
+            raise ValidationError("Ya hay un alérgeno con ese nombre.")
+        return nombre
+
+
+def _avisar_a_los_alergenos(respuesta):
+    respuesta["HX-Trigger"] = "alergenos-cambiado"
+    return respuesta
+
+
+def _contexto_de_los_alergenos(request):
+    alergenos = alergenos_del_catalogo(actor=request.user)
+    return {
+        "alergenos": alergenos,
+        "declarados": sum(1 for a in alergenos if a.cuantos_productos),
+    }
+
+
+def _alergeno(request, alergeno_id):
+    """El alérgeno con sus dos recuentos, **después** de comprobar el rol: un
+    `404` no puede contarle a otro rol qué existe."""
+    for alergeno in alergenos_del_catalogo(actor=request.user):
+        if alergeno.pk == alergeno_id:
+            return alergeno
+    raise Http404("No hay ningún alérgeno con ese identificador.")
+
+
+@login_required
+@require_http_methods(["GET"])
+def alergenos(request):
+    """La pantalla: dos cifras y una fila por alérgeno."""
+    return render(request, "catalogo/alergenos.html", _contexto_de_los_alergenos(request))
+
+
+@login_required
+@require_http_methods(["GET"])
+def tablero_de_alergenos(request):
+    """Las cifras y la lista, como fragmento: se repintan tras cada escritura."""
+    return render(
+        request, "catalogo/partials/tablero-de-alergenos.html", _contexto_de_los_alergenos(request)
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def alergeno_nuevo(request):
+    """Alta en la modal. Al crear vuelve vacía, con lo hecho arriba, lista para
+    otro; un error vuelve junto al campo, en `200`."""
+    alergenos_del_catalogo(actor=request.user)
+
+    if request.method == "GET":
+        return render(request, "catalogo/partials/ficha-de-alergeno.html", {"formulario": AlergenoForm()})
+
+    formulario = AlergenoForm(request.POST)
+    if not formulario.is_valid():
+        return render(request, "catalogo/partials/ficha-de-alergeno.html", {"formulario": formulario})
+
+    creado = crear_alergeno(actor=request.user, **formulario.cleaned_data)
+    return _avisar_a_los_alergenos(render(
+        request, "catalogo/partials/ficha-de-alergeno.html",
+        {"formulario": AlergenoForm(), "creado": creado},
+    ))
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edicion_de_alergeno(request, alergeno_id):
+    """Renombrar un alérgeno, en la misma modal que el alta, con el aviso de a
+    cuántos productos y estudiantes alcanza el nombre nuevo (`DEC-26`)."""
+    alergeno = _alergeno(request, alergeno_id)
+
+    def ficha(formulario, **extra):
+        return render(request, "catalogo/partials/ficha-de-alergeno.html", {
+            "formulario": formulario, "alergeno": alergeno, **extra,
+        })
+
+    if request.method == "GET":
+        return ficha(AlergenoForm(initial={"nombre": alergeno.nombre}, alergeno=alergeno))
+
+    formulario = AlergenoForm(request.POST, alergeno=alergeno)
+    if not formulario.is_valid():
+        return ficha(formulario)
+
+    editar_alergeno(actor=request.user, alergeno=alergeno, **formulario.cleaned_data)
+    return _avisar_a_los_alergenos(ficha(
+        AlergenoForm(initial={"nombre": alergeno.nombre}, alergeno=alergeno),
+        guardado=True,
+    ))

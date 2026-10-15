@@ -1,0 +1,81 @@
+{% comment %} DT-52. Las cifras y la lista de alérgenos, en un solo fragmento.
+
+   Se vuelve a pedir solo tras cada escritura (`alergenos-cambiado`). Las cifras y la
+   lista cambian juntas —crear suma a las dos—, así que van en el mismo fragmento.
+
+   **Los recuentos cuentan también los productos retirados y los estudiantes de baja**:
+   sus filas siguen existiendo, y el nombre nuevo de un alérgeno les llega igual.
+
+   Sin botón de eliminar, y no deshabilitado: la acción no existe (`DEC-26`).
+{% endcomment %}
+<div id="tablero-de-alergenos" class="flex flex-col gap-6"
+     hx-get="{% url 'tablero-de-alergenos' %}" hx-trigger="alergenos-cambiado from:body"
+     hx-swap="outerHTML">
+
+  <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2">
+    <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+      <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-1 to-serie-1/40"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+          <svg class="h-5 w-5"><use href="#i-alerta"></use></svg>
+        </span>
+        <p class="mt-4 text-base font-medium text-texto-suave">Alérgenos</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="alergenos">{{ alergenos|length }}</p>
+        <p class="mt-2 text-sm text-texto-suave">Los que puede declarar un producto</p>
+      </div>
+    </div>
+    <div class="flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+      <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-4 to-serie-4/40"></span>
+      <div class="flex flex-1 flex-col p-5">
+        <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4">
+          <svg class="h-5 w-5"><use href="#i-cafeteria"></use></svg>
+        </span>
+        <p class="mt-4 text-base font-medium text-texto-suave">Declarados</p>
+        <p class="mt-2 font-display text-2xl font-semibold text-texto" data-cifra="declarados">{{ declarados }}</p>
+        <p class="mt-2 text-sm text-texto-suave">
+          {% if declarados == alergenos|length %}Todos están en algún producto{% else %}En al menos un producto{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {% if alergenos %}
+    <ul class="flex flex-col gap-2">
+      {% for alergeno in alergenos %}
+        <li data-alergeno="{{ alergeno.pk }}"
+            class="flex items-center gap-3 rounded-xl border border-borde bg-superficie p-3 shadow-sm">
+          <span aria-hidden="true" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+            <svg class="h-5 w-5"><use href="#i-alerta"></use></svg>
+          </span>
+          {% comment %} Dos recuentos no caben al lado del nombre en un teléfono: bajan debajo
+             de él y vuelven a su lado desde `tablet:`. {% endcomment %}
+          <div class="flex min-w-0 flex-1 flex-col gap-1.5 tablet:flex-row tablet:items-center tablet:gap-3">
+          <span class="min-w-0 flex-1 text-base font-semibold break-words text-texto">{{ alergeno.nombre }}</span>
+          <div class="flex flex-wrap gap-2">
+          <span data-cuantos-productos="{{ alergeno.cuantos_productos }}" title="Productos que lo declaran"
+                class="shrink-0 rounded-full border border-borde px-3 py-1 text-sm whitespace-nowrap text-texto-suave">
+            {{ alergeno.cuantos_productos }} producto{{ alergeno.cuantos_productos|pluralize }}
+          </span>
+          <span data-cuantos-estudiantes="{{ alergeno.cuantos_estudiantes }}" title="Estudiantes que lo tienen bloqueado"
+                class="shrink-0 rounded-full border border-borde px-3 py-1 text-sm whitespace-nowrap text-texto-suave">
+            {{ alergeno.cuantos_estudiantes }} bloqueo{{ alergeno.cuantos_estudiantes|pluralize }}
+          </span>
+          </div>
+          </div>
+          <button type="button" data-editar-alergeno aria-label="Editar {{ alergeno.nombre }}" title="Editar"
+                  hx-get="{% url 'edicion-de-alergeno' alergeno.pk %}"
+                  hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-texto-suave
+                         transition-colors hover:bg-superficie-hover hover:text-texto">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-editar"></use></svg>
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="rounded-xl border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+      Todavía no hay alérgenos. Crea el primero con «Nuevo alérgeno»: sin él, ningún producto
+      puede declararlo y ningún acudiente puede bloquearlo.
+    </p>
+  {% endif %}
+</div>

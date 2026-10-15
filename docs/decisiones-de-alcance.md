@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`); 2026-10-14 (`DEC-25`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`); 2026-10-14 (`DEC-25`, `DEC-26`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 25 (`DEC-1` … `DEC-25`) |
+| decisiones | 26 (`DEC-1` … `DEC-26`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.11 |
+| version | 1.12 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-25` |
+| S1 | Decisiones | `DEC-1` … `DEC-26` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -519,6 +519,23 @@ Y quitar esa comprobación deja a la vista el hueco que ya estaba: **una reserva
 
 **Consecuencia asumida.** Los ingresos y las mermas registrados antes del 2026-10-14 seguirán sin responsable para siempre. Es preferible a inventarles uno.
 
+### `[DEC-26]` Los alérgenos también salen del admin, y siguen sin poder borrarse
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-14. **No añade alcance ni recorta `[S11]`**: crear un alérgeno y ponerle nombre ya eran de la administración (`HU-26`). **Corrige a `DEC-25`** en un punto: su «Lo que NO se decide aquí» dejaba los alérgenos en el admin.*
+
+**El hecho que lo obliga.** Con `/inventario/` y `/categorias/` (`DT-50`, `DT-51`), la sección del catálogo quedó partida: dos entradas del menú abren pantallas con el sistema visual, y la tercera, justo debajo, abre el admin. **No es la raya de `DEC-17`** —los alérgenos se tocan pocas veces al año y nadie los abre a diario—, y no se finge que lo sea: es coherencia de una sección cuyas otras dos pantallas ya salieron, por la misma razón que sacó a las categorías, que tampoco eran diarias.
+
+**Decidido:**
+
+- **`/alergenos/` sustituye a la pantalla del admin**, con la composición de `/categorias/` (`DT-52`): cifras arriba, una fila por alérgeno y una modal para crear y editar.
+- **Un alérgeno no se elimina, ni vacío.** Lo que decía el admin se mantiene: la pantalla no tiene esa acción y no existe un servicio que borre. Un alérgeno mal creado se renombra.
+- **Renombrar se permite, y la modal dice a quién alcanza**: cuántos productos lo declaran y cuántos estudiantes lo tienen bloqueado. El bloqueo sigue al alérgeno y no al nombre (`INV-5`), así que el nombre nuevo es el que verán el acudiente y el cajero; el historial de restricciones conserva el de entonces (`DT-8`).
+- **El nombre es único sin distinguir mayúsculas, y lo impone la base.** «Maní» y «maní» serían dos condiciones: el acudiente bloquearía una y el producto declararía la otra, y la venta pasaría.
+
+**Lo que NO se decide aquí.** El alérgeno no gana descripción. No se cambia qué alérgenos trae el seed ni se toca cómo se bloquea (`HU-11`).
+
+**Consecuencia asumida.** Una pantalla más que mantener y probar para una lista de ocho filas. Se acepta a cambio de que la administración no salga del sistema visual para nada de lo que escribe.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -568,6 +585,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-23` | Alta de un solo acudiente por la institución, sin la carga masiva. Amplía el mecanismo de `HU-01`; la fila de `[S11]` ya era suya |
 | `DEC-24` | Consulta y cancelación de pedidos anticipados con devolución a la billetera, por el acudiente, el cajero y la administración. Amplía `[S11]` con una fila nueva. La reserva deja de apartar existencias |
 | `DEC-25` | **No añade alcance ni recorta `[S11]`.** Sustituye las tres pantallas del inventario en el admin por `/inventario/`, y la de categorías por `/categorias/`, y el libro de inventario guarda quién registra cada movimiento (`HU-69`) |
+| `DEC-26` | **No añade alcance ni recorta `[S11]`.** Sustituye la pantalla de alérgenos del admin por `/alergenos/`; un alérgeno sigue sin poder eliminarse |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 

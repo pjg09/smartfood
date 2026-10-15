@@ -1,68 +1,13 @@
 """`INT-3` es el admin de Django (`DT-2`): no lleva plantillas propias.
 
-`TT-45`. Aquí quedan **los alérgenos**: una lista corta que se toca pocas
-veces al año y que el admin resuelve bien.
+`TT-45`. **El catálogo ya no tiene ninguna pantalla aquí** (`DEC-25`,
+`DEC-26`, `DT-50`, `DT-51`, `DT-52`). Los productos se crean, se editan y se
+retiran en `/inventario/`, junto a sus existencias y su libro; las categorías,
+en `/categorias/`, y los alérgenos, en `/alergenos/`. Las reglas no se
+movieron —siguen en `catalogo.services`— y tampoco la que importa: **el
+alérgeno se declara en el producto, no se copia**, y no existe en ninguna parte
+una lista de «productos bloqueados» que alguien pudiera llenar a mano (`INV-5`).
 
-**Los productos y las categorías ya no están** (`DEC-25`, `DT-50`, `DT-51`).
-Los productos se crean, se editan y se retiran en `/inventario/`, junto a sus
-existencias y su libro; las categorías, en `/categorias/`. Las reglas no se movieron —siguen en
-`catalogo.services`— y tampoco la que importa aquí: **el alérgeno se declara
-en el producto, no se copia**, y no existe en ninguna parte una lista de
-«productos bloqueados» que alguien pudiera llenar a mano (`INV-5`).
+El fichero se queda para que quien busque el admin del catálogo encuentre aquí
+dónde está.
 """
-
-from django.contrib import admin
-
-from catalogo.models import Alergeno
-from cuentas.models import Rol
-
-
-class SoloLaAdministracionDeLaCafeteria:
-    """`[S11]` y tercer criterio de `HU-26`.
-
-    No basta con el permiso de Django: se comprueba también el rol, igual que en
-    `personas`. Un permiso se puede conceder por error; que la comprobación esté
-    en dos sitios es deliberado.
-    """
-
-    def _es_la_administracion(self, request):
-        usuario = request.user
-        return usuario.is_authenticated and usuario.rol == Rol.ADMINISTRADOR
-
-    def has_add_permission(self, request):
-        return self._es_la_administracion(request) and super().has_add_permission(request)
-
-    def has_change_permission(self, request, obj=None):
-        return self._es_la_administracion(request) and super().has_change_permission(
-            request, obj
-        )
-
-    def has_view_permission(self, request, obj=None):
-        return self._es_la_administracion(request) and super().has_view_permission(
-            request, obj
-        )
-
-
-@admin.register(Alergeno)
-class AlergenoAdmin(SoloLaAdministracionDeLaCafeteria, admin.ModelAdmin):
-    """El alérgeno es una condición. Aquí solo se le pone nombre.
-
-    **No hay ni puede haber una pantalla donde se listen «los productos
-    bloqueados» de un alérgeno.** Los productos que lo declaran son el resultado
-    de una consulta —se muestran como cuenta, no como lista editable— y quien
-    declara es el producto. Al revés sería una lista materializada, que es lo
-    que `INV-5` prohíbe.
-    """
-
-    list_display = ["nombre", "cuantos_productos_lo_declaran"]
-    search_fields = ["nombre"]
-    ordering = ["nombre"]
-
-    def has_delete_permission(self, request, obj=None):
-        """Borrar un alérgeno borraría las declaraciones que lo mencionan, y con
-        ellas el bloqueo que protege a un estudiante alérgico (`HU-11`)."""
-        return False
-
-    @admin.display(description="productos que lo declaran")
-    def cuantos_productos_lo_declaran(self, obj):
-        return obj.declaraciones.count()

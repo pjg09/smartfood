@@ -1,0 +1,90 @@
+{% comment %} DT-52. Crear o renombrar un alérgeno, en la modal de ficha (`[S2.10]`).
+
+   Fragmento (`DT-16`): `GET` y `POST` devuelven esto entero, con el resultado arriba.
+   La validación en vivo es la de las otras fichas (`interfaz.js`, `data-validar`);
+   el servidor rechaza igual lo que pase, y la base, el nombre repetido.
+
+   **Al editar, la modal dice a quién alcanza el nombre nuevo** (`DEC-26`): cuántos
+   productos lo declaran y cuántos estudiantes lo tienen bloqueado. El bloqueo sigue al
+   alérgeno, no al nombre, así que renombrar «Maní» a otra cosa cambia lo que lee el
+   acudiente sin cambiar lo que protege. Eso hay que decirlo antes de guardar.
+
+   El ejemplo del campo va **solo en el alta**: al editar se leería como el valor.
+{% endcomment %}
+<div id="ficha-de-alergeno" data-ficha-de-alergeno
+     data-estado="{% if creado %}creado{% elif guardado %}guardado{% elif alergeno %}edicion{% else %}alta{% endif %}"
+     class="flex max-h-[90vh] flex-col">
+
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      {% if alergeno %}Editar {{ alergeno.nombre }}{% else %}Nuevo alérgeno{% endif %}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <form hx-post="{% if alergeno %}{% url 'edicion-de-alergeno' alergeno.pk %}{% else %}{% url 'alergeno-nuevo' %}{% endif %}"
+        hx-target="#ficha-de-alergeno" hx-swap="outerHTML"
+        data-formulario-validado
+        class="flex min-h-0 flex-col">
+    {% csrf_token %}
+
+    <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+      {% if creado or guardado %}
+        <p role="status" data-alergeno-guardado
+           class="flex items-start gap-2 rounded-md border border-exito bg-exito-suave px-3 py-2
+                  text-base text-exito-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          <span>{% if creado %}«{{ creado.nombre }}» creado. Puedes crear otro o cerrar.{% else %}Cambios guardados.{% endif %}</span>
+        </p>
+      {% endif %}
+
+      {% with campo=formulario.nombre %}
+        <div class="flex flex-col gap-1" data-campo>
+          <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">Nombre</label>
+          <input type="text" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+                 value="{{ campo.value|default_if_none:'' }}" autocomplete="off" {% if not alergeno %}placeholder="Sésamo"{% endif %}
+                 data-validar data-maximo="{{ campo.field.max_length }}"
+                 data-aviso-vacio="Escribe el nombre del alérgeno."
+                 data-aviso-largo="El nombre no puede pasar de {{ campo.field.max_length }} caracteres."
+                 class="h-12 w-full rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                        placeholder:text-texto-suave hover:border-acento focus:border-acento focus:outline-none
+                        {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+          <p data-aviso hidden class="text-sm font-medium text-error-fuerte"></p>
+          {% if campo.errors %}<p data-error-del-servidor class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>{% endif %}
+        </div>
+      {% endwith %}
+
+      {% if alergeno %}
+        <p data-aviso-de-renombrar class="rounded-md bg-superficie-hover p-3 text-sm text-texto-suave">
+          <span data-aviso-productos="{{ alergeno.cuantos_productos }}">{% if alergeno.cuantos_productos %}Lo declara{{ alergeno.cuantos_productos|pluralize:"n" }}
+          <strong class="font-semibold text-texto">{{ alergeno.cuantos_productos }} producto{{ alergeno.cuantos_productos|pluralize }}</strong>{% else %}Ningún producto lo declara{% endif %}</span>
+          <span data-aviso-estudiantes="{{ alergeno.cuantos_estudiantes }}">{% if alergeno.cuantos_estudiantes %}y lo tiene{{ alergeno.cuantos_estudiantes|pluralize:"n" }} bloqueado
+          <strong class="font-semibold text-texto">{{ alergeno.cuantos_estudiantes }} estudiante{{ alergeno.cuantos_estudiantes|pluralize }}</strong>{% else %}y ningún estudiante lo tiene bloqueado{% endif %}</span>.
+          El bloqueo sigue al alérgeno, no al nombre: el nombre nuevo es el que verán el
+          acudiente en sus restricciones y el cajero al rechazar una venta. El historial de
+          restricciones conserva el de entonces.
+          <strong class="font-semibold text-texto">Corrige la escritura;</strong> si lo que
+          cambia es la sustancia, crea un alérgeno nuevo.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+        {% if creado or guardado %}Cerrar{% else %}Cancelar{% endif %}
+      </button>
+      <button type="submit" data-guardar-ficha
+              class="inline-flex h-11 items-center rounded-md bg-primario px-5 text-base
+                     font-medium text-sobre-primario transition-colors hover:bg-primario-fuerte
+                     disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
