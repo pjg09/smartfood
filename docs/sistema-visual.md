@@ -8,11 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| actualizado | 2026-10-13; `[S2.13]`, la imagen ampliable, que estrenan la foto del panel del acudiente y las imágenes de productos bloqueados. Antes, la ficha del padrón trajo `[S2.10]` a `[S2.12]` y el Sprint 5, `[S2.8]` y `[S2.9]` |
+| actualizado | 2026-10-17; el reporte con periodo y la tarjeta de producto en caja, en la tabla (`DT-54`, `DT-57`). Antes, el 2026-10-13, `[S2.13]`, la imagen ampliable, que estrenan la foto del panel del acudiente y las imágenes de productos bloqueados. Antes, la ficha del padrón trajo `[S2.10]` a `[S2.12]` y el Sprint 5, `[S2.8]` y `[S2.9]` |
 | cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental y los reportes añadieron |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.4 |
+| version | 1.5 |
 
 ### [S0.1] Qué responde este documento
 
@@ -62,7 +62,7 @@ propósito. Gastar los de estado en decoración les quita fuerza donde hacen fal
 
 ## [S2] Las composiciones
 
-Dieciséis, y catorce tienen sección propia porque llevan una decisión o una trampa que hay que
+Dieciocho, y catorce tienen sección propia porque llevan una decisión o una trampa que hay que
 conocer antes de copiarlas.
 
 **Tres las usa una sola pantalla por ahora**, y se fijan igual. La **barra de filtros**,
@@ -93,6 +93,8 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Validación en vivo | `templates/personas/partials/ficha-campos.html` | Aviso rojo por campo y guardar deshabilitado mientras falte algo; **las longitudes vienen del formulario**, no de la plantilla |
 | Buscador para elegir | `templates/personas/partials/acudientes-para-matricular.html` | Busca a cada tecla, pocos resultados como botones, y lo elegido pasa a un campo oculto con «Cambiar» |
 | Imagen ampliable | `templates/restricciones/partials/lista-de-productos.html` | La miniatura va **dentro de un botón** `data-ampliar-imagen`; la modal es **una sola, la del armazón** |
+| Reporte con periodo | `templates/reportes/ventas.html` | Atajos y dos fechas **en la URL**, cuatro tarjetas de resumen, bloques con medidor y **una modal por fila**; las cifras, del mismo conjunto que la lista. La siguen `/cierres/` y `/auditoria/` (`DT-54` … `DT-56`) |
+| Tarjeta de producto en caja | `templates/ventas/partials/tarjeta-del-catalogo.html` | Foto, precio, calorías y existencias; «Añadir» que pasa a «− n +». **Las cantidades viven en la sesión**, no en el formulario: cada gesto devuelve el ticket y, fuera de banda, la tarjeta (`DT-57`) |
 
 ### [S2.1] Tarjeta de resumen
 

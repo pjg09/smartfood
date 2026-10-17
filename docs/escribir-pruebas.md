@@ -8,9 +8,9 @@
 | titulo | Dónde va una prueba, cómo se ejecuta y los patrones que ya costaron una ronda |
 | tipo_documento | **Documento operativo.** Convención de trabajo; no es el plan de pruebas de `ENT-05` |
 | documentos_fuente | `../CLAUDE.md`, de donde sale; `./definicion-de-terminado.md` (`DoD-5`); `./trampas-del-stack.md` (`[S4]`); `./decisiones-tecnicas.md` (`DT-37`) |
-| actualizado | 2026-10-01 |
+| actualizado | 2026-10-17 |
 | idioma | es-CO |
-| version | 1.2 |
+| version | 1.3 |
 
 **Léelo antes de escribir o tocar una prueba.** Recoge dónde va, cómo se ejecuta y
 **ocho patrones** que el proyecto aprendió a fuerza de pruebas que pasaban sin probar nada,
@@ -264,6 +264,27 @@ Tres cosas que costaron una ronda:
   sabe hasta dónde llegó — ni si llegó a pulsar algo que escribe.
 - **Una imagen `loading="lazy"` sale en blanco** en la captura, y más con `set_content`: no es
   que no cargue. Se espera `naturalWidth > 0` antes de concluir nada.
+
+**Cuando hay que recorrer el flujo y no solo mirarlo** —el teclado, el foco, lo que se pide
+y en qué orden—, la variante es la contraria: la pantalla es la real, con sesión iniciada en
+el stack, y **solo se intercepta el `POST` que escribe**, sirviéndole la respuesta generada
+antes en una transacción deshecha. Todo lo que no escribe —añadir al carrito, abrir la
+confirmación, calcular la devuelta— va al servidor de verdad. Así se probó el cobro del
+punto de venta (`DT-57`), contando además cuántas veces se llamó al cobro para comprobar
+que Enter en el campo no lo disparaba:
+
+```python
+llamadas_al_cobro = []
+
+def interceptar_el_cobro(ruta, peticion):
+    llamadas_al_cobro.append(peticion.post_data)
+    ruta.fulfill(status=200, content_type="text/html; charset=utf-8", body=respuesta_del_cobro)
+
+pagina.route("**/punto-de-venta/cobrar/", interceptar_el_cobro)
+```
+
+Lo que el recorrido sí escribe es estado de sesión —el carrito—, no un asiento: se vacía al
+terminar.
 
 ---
 

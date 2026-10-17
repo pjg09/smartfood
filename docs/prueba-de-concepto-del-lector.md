@@ -9,9 +9,9 @@
 | documentos_fuente | `./backlog-historias-de-usuario.md` (`HU-15`, `HU-45`); `./decisiones-tecnicas.md` (`DT-22`, `DT-9`); `./smartfood.md` (`ENT-02`, `ALC-OUT-05`) |
 | tipo_documento | Guion de prueba. **Es el insumo de `ENT-02`**, no un artefacto de Scrum |
 | tarea | `TT-72` (`PR-07`), responsable Alejandro |
-| estado | ☑ **Ejecutada** el 2026-09-11, con impresora, tarjetas de papel y lector USB |
+| estado | ☑ **Ejecutada** el 2026-09-11, con impresora, tarjetas de papel y lector USB. **El paso 9 se añadió el 2026-10-17** con el cobro en dos modales (`DT-57`) y está por ejecutar |
 | idioma | es-CO |
-| version | 1.1 |
+| version | 1.2 |
 
 ### [S0.1] Por qué existe este documento
 
@@ -60,8 +60,8 @@ Los tres primeros son de `DT-22`; los dos últimos, de configuración del aparat
 
 ## [S3] El guion
 
-1. **Imprimir cinco tarjetas.** Como institución, en el admin: *Estudiantes* →
-   **Imprimir tarjeta** de cinco estudiantes distintos. En el diálogo del navegador,
+1. **Imprimir cinco tarjetas.** Como institución, en el padrón: pulsa la fila de un
+   estudiante y, en su ficha, **Imprimir tarjeta**; así con cinco distintos. En el diálogo del navegador,
    **escala 100 %** y sin «ajustar a la página»: es lo que la propia pantalla avisa, y
    es el fallo más probable de toda la prueba.
 2. **Comprobar el ancho impreso.** El símbolo mide 69 mm con las zonas mudas. Medirlo
@@ -81,6 +81,13 @@ Los tres primeros son de `DT-22`; los dos últimos, de configuración del aparat
    nadie.
 8. **Probar el reverso del caso**: teclear un código a mano y pulsar Enter. Es lo que
    se hace cuando una tarjeta está gastada, y tiene que funcionar igual.
+9. **Pasar una tarjeta con la confirmación del cobro abierta** (`DT-57`). Es lo único que
+   solo se comprueba con el aparato: el lector termina cada código con Enter. Sin
+   estudiante, en **efectivo**: monta una venta, pulsa **Cobrar** y pasa una tarjeta; el
+   código tiene que quedar en «Dinero recibido» y **la venta no debe cobrarse** —Enter ahí
+   solo lleva el foco a «Cobrar»—. Después, identifica a un estudiante, monta una venta y
+   repite con la confirmación de **billetera** abierta: ahí el foco nace en «Cobrar», y el
+   Enter del lector **cobra**. Es el riesgo que `DT-57` declara y acepta; se anota tal cual.
 
 ---
 

@@ -15,25 +15,10 @@ Equipo de 4, de los cuales **2 desarrollan**. Cinco sprints de dos semanas, sema
 
 **El producto está terminado: las 69 historias, `☑`.** Lo que falta del sprint (`PR-10` … `PR-13`)
 **no toca el código**: plan de pruebas, arquitectura, artefactos de gestión, informe final y cierre.
-Fuera del backlog, y registrado **antes** de construirse, entraron el rediseño de la navegación
-(`DEC-16`, `DEC-17`, `DT-36`), el correo local con la recuperación de contraseña (`DEC-18`,
-`DEC-19`, `HU-62`) y la ficha del estudiante en una modal del padrón, que sustituyó al admin de
-estudiantes (`DT-40`, con `DEC-20` y `HU-63`: la institución corta el acceso de un acudiente).
-El 2026-10-12 entraron las pantallas de la institución: fichas de solo lectura, `/usuarios/`
-en lugar del admin, fuera restricciones e institución, y el alta de un acudiente
-(`DT-42` … `DT-46`, `DEC-21` … `DEC-23`, `HU-64`).
-El 2026-10-13, la reserva pasó a ser un encargo que no mira existencias, y un pedido
-pendiente se cancela con motivo y devolución a la billetera (`DEC-24`, `DT-47`, `DT-48`,
-`HU-65` … `HU-67`).
-El 2026-10-14, la administración ve todos los pedidos con un filtro por estado y la
-cafetería cancela desde la modal del pedido (`DT-49`, `HU-68`, sin `DEC`: `[S11]` ya le daba
-los reportes de ventas). El mismo día, productos, ingresos, mermas e historial dejaron el admin
-por una sola pantalla, `/inventario/`, y el libro de inventario empezó a guardar quién registra
-cada asiento (`DEC-25`, `DT-50`, `HU-69`); las categorías, a `/categorias/` (`DT-51`), y los
-alérgenos, a `/alergenos/`, que siguen sin poder eliminarse (`DEC-26`, `DT-52`). El 2026-10-15,
-el panel de la cafetería salió del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a
-`/ventas/` (`DT-54`). El 2026-10-17, el de cierres de caja, a `/cierres/` (`DT-55`), y la auditoría, a
-`/auditoria/` (`DT-56`).
+Fuera del backlog, y registrado **antes** de construirse, entró mucho más: la navegación, el
+correo local, las pantallas de la institución, la reserva como encargo, todas las pantallas de
+la cafetería fuera del admin y el cobro en dos modales. La lista, con su `DEC` o `DT`, está en
+`[S7]` de `docs/plan-de-pull-requests-sprint-5.md`.
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -70,7 +55,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/campos-nutricionales.md` | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | `docs/recorrido-de-administracion-de-estudiantes.md` | Recorrido UX de la vista de estudiantes y qué cambió por él (`TT-35`) |
 | `docs/prueba-de-concepto-del-lector.md` | Guion de `TT-72`: tarjetas impresas y lector físico (`ENT-02`) |
-| `docs/trampas-del-stack.md` | **Las setenta y tres trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
+| `docs/trampas-del-stack.md` | **Las setenta y cinco trampas que ya costaron una ronda**, por dónde muerden. Lo primero que mirar cuando algo «no se ve» o da una cifra rara |
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
@@ -141,28 +126,25 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con doce pantallas propias fuera de él**: el padrón de la institución, que es la que
-secretaría abre a diario (`DT-27`), los pedidos anticipados, que comparten dos roles que no
-comparten interfaz (`DT-34`), —desde `DEC-17`— los acudientes y las restricciones, el
-personal de la cafetería en `/usuarios/` (`DT-45`), el inventario en `/inventario/`
-(`DEC-25`, `DT-50`) —productos, ingresos, mermas e historial—, las categorías en
-`/categorias/` (`DT-51`), los alérgenos en `/alergenos/` (`DT-52`), el panel de la
-cafetería en `/cafeteria/` (`DT-53`), el reporte de ventas en `/ventas/` (`DT-54`), el de
-cierres de caja en `/cierres/` (`DT-55`) y la auditoría en `/auditoria/` (`DT-56`). Del catálogo y el inventario, en el admin solo
-queda el reporte de movimientos, de solo lectura.
+**con doce pantallas propias fuera de él**, listadas en `[S2]` de `docs/mapa-de-la-aplicacion.md`.
+Para la cafetería, en el admin solo quedan el reporte de movimientos y las restricciones, de
+solo lectura.
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
-solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). Hay tres
-excepciones declaradas que no son diarias: `/usuarios/`, porque la del admin mezclaba al
-personal con todos los acudientes; `/categorias/`, porque sus modales necesitan el sistema
-visual que el admin no carga (`DT-51`), y `/alergenos/`, para que la sección del catálogo
-no quede partida entre las dos interfaces (`DEC-26`). **La institución ya no tiene ninguna entrada del
-admin en su menú** (`DEC-22`).
+solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). **Esa raya ya no es
+la única razón**: `/usuarios/`, `/categorias/`, `/alergenos/`, `/ventas/`, `/cierres/` y
+`/auditoria/` salieron sin ser diarias, porque sus composiciones —modales, barras, tarjetas—
+no caben en el admin (`DT-51`, `DEC-26`, `DT-54` … `DT-56`). Una pantalla nueva sale del admin
+con su `DT` y la razón escrita. **La institución ya no tiene ninguna entrada del admin en su
+menú** (`DEC-22`).
 
 **Si tras escribir hay que refrescar otra zona**, la respuesta lleva `HX-Trigger: <evento>` y esa
 zona escucha `<evento> from:body`: el endpoint sigue devolviendo un solo fragmento (`DT-40`, la
 ficha y la tabla del padrón). **Una confirmación que depende del formulario** —preguntar solo si
 se apagó un interruptor— no cabe en `hx-confirm`, que es fijo: va en el evento `htmx:confirm`
 con `evento.detail.issueRequest(true)`.
+**Una modal a la que se enlaza desde otra pantalla tiene dos rutas** (`DT-16`): la página,
+que se abre con la modal ya pedida por un `<div hx-get="…/ficha/" hx-trigger="load">`, y el
+fragmento `…/ficha/`. Así enlazan el cierre de caja y la auditoría (`DT-54` … `DT-56`).
 
 **Una pantalla dentro del admin no tiene el reset de Tailwind**: los botones conservan
 el borde del navegador, `box-sizing` es `content-box`, y `a:link`, `p` y `ul > li` del
@@ -176,7 +158,9 @@ sobre el mismo `QuerySet` que pinta la tabla. **Los de ventas y cierres y la aud
 son pantallas propias** —`/ventas/` (`DT-54`), `/cierres/` (`DT-55`) y `/auditoria/`
 (`DT-56`)—, y sostienen la misma regla a mano: las cifras de arriba se calculan sobre el
 conjunto que pinta la lista. **Dentro del admin ya no queda ninguna ruta propia**: ni la
-auditoría ni el panel de la cafetería (`DT-53`).
+auditoría ni el panel de la cafetería (`DT-53`). **Un reporte que se imprime** lleva
+`no-imprimir` en el periodo, los filtros y los botones, `bloque-impresion` en cada bloque y
+`hidden print:block` en la frase del periodo (`DT-54`).
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -191,7 +175,7 @@ que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las p
 `partials/tema-inicial.html`, y lo incluyen `base.html` **y** `admin/base_site.html`:
 el admin no cuelga de `base.html`, y lo que solo esté allí no le llega.
 
-**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **dieciséis**
+**Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **dieciocho**
 composiciones existen —catorce con sección propia— y de qué plantilla se copia cada una. Tres que
 se olvidan: la acción de una tarjeta de resumen es un **enlace** de acento abajo, no un botón
 sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y qué historia lo trae—;
@@ -203,7 +187,7 @@ descartes están razonados en `[S4]` de `decisiones-tecnicas.md`.
 
 ### Las cinco trampas que se tropiezan a diario
 
-**Las setenta y tres están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
+**Las setenta y cinco están en `docs/trampas-del-stack.md`**, agrupadas por dónde muerden:
 plantillas y estilos, el admin, el ORM, pruebas y capturas, y contenedores. Casi todas **fallan en
 silencio** —no dan error y lo que sale es plausible—, así que cuando algo «no se ve», «sale
 raro» o «da una cifra rara», ese documento es el primer sitio donde mirar.
@@ -328,7 +312,7 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.957 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
+La suite completa son **1.957 pruebas** y **tarda unos siete minutos, y más de diez con la máquina cargada**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
 menos de esas 1.957, no corrió entera.
@@ -338,6 +322,9 @@ falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no 
 servicio»— pasa sola el día que deja de proteger. La contraprueba sale barata por script: cada
 mutación, un reemplazo de ancla única; se corren las pruebas de la app, se cuenta cuántas caen y se
 restaura el fichero. Una mutación que no tumba ninguna es una regla sin guardián.
+**El script de mutaciones enseña la línea `Ran`**: si una mutación rompe la importación, no
+hay `FAIL` que contar y «0 caídas» parece una regla sin guardián. Y una que cae por un
+`NameError` tampoco prueba nada: repítela con una mutación que se pueda ejecutar.
 **Una mutación que no tumba nada puede ser una mutación que no cambia nada**: confirma
 que altera el comportamiento antes de concluir que falta una prueba. **Y una ficha de
 edición se prueba de ida y vuelta**: se devuelve tal cual lo que pinta
@@ -352,6 +339,10 @@ las que quedan, corre la suite con `mock.patch("django.utils.timezone.now", …)
 **El rol se comprueba antes que el `404`**: una vista que busca un objeto por su id
 llama primero al selector que exige el rol y después a `get_object_or_404`. Al revés, el
 `404` le cuenta a otro rol qué existe.
+
+**Un `name=` repetido en `config/urls.py` no da ningún error**: `reverse` elige el patrón
+por los argumentos y funciona por casualidad. Antes de nombrar una ruta,
+`grep -n 'name="<nombre>"' config/urls.py`.
 
 **Para probar rutas que escriben, sin tocar la base de trabajo**: `Client(HTTP_HOST="localhost")`
 —sin él, `DisallowedHost`— dentro de
@@ -379,23 +370,23 @@ se descubre, y ocho patrones que ya costaron una ronda: el correo diferido con
 `on_commit`, la cuenta del admin por el camino real, las pruebas de ausencia sobre bytecode,
 la fecha inyectada, el fragmento y no la página, `data-*` y no la copia, `InMemoryStorage`
 y la ficha de ida y vuelta. También cómo comprobar un flujo con `django.test.Client`.
+**Antes de crear un `tests_<tema>.py`, comprueba que no exista** (`ls`): crear el fichero
+lo sobrescribe sin avisar. Pasó con `catalogo/tests_alergenos.py`, la prueba de `INV-5`.
 
 **Para mirar una pantalla de verdad**: Playwright contra el stack levantado (`[S3.1]` de
 `docs/desarrollo.md`), con `color_scheme` explícito —Chrome sin interfaz sale siempre en
 oscuro—. La receta de `file://` (`[S5.2]`) queda para cuando no hay stack.
-**Hazlo siempre que toques una pantalla.** Mirarlas encontró quince defectos en los Sprints 4
-y 5 —dos de ellos cifras equivocadas con el total de al lado correcto— y **ninguno rompía
+**Hazlo siempre que toques una pantalla.** Mirarlas encontró veintidós defectos en los
+Sprints 4 y 5 —dos de ellos cifras equivocadas con el total de al lado correcto— y **ninguno rompía
 una prueba**.
 **Mirar una pantalla que escribe, sin escribir**: genera las respuestas con `django.test.Client`
 en una transacción deshecha y sírvelas a Playwright —`page.set_content` tras un `goto` al origen,
 y `page.route` para los fragmentos—; la receta está en `[S4.1]` de `docs/escribir-pruebas.md`.
 Pulsar «Bloquear» en el navegador dejó dos asientos de auditoría en la base de trabajo.
-Playwright desde un agente: `wait_for_load_state("load")`, no `"networkidle"`, que se cuelga;
-`python -u` y sin `| tail`, o si se corta no queda salida; una imagen `loading="lazy"` sale en
-blanco en la captura: espera `naturalWidth > 0` antes de concluir que no carga.
-`page.route` llama al manejador con `(ruta, petición)`: una `lambda` con argumentos por
-defecto recibe la petición en el segundo; usa una función que cierre sobre el caso. El
-`404` de `/favicon.ico` es de siempre y no dice nada de la pantalla.
+**Para recorrer un flujo que escribe** —teclado, foco—, se intercepta solo el `POST` que
+escribe. Las dos recetas y lo que cuelga a Playwright desde un agente están en `[S4.1]` de
+`docs/escribir-pruebas.md`; lo que miente al medir —una fila estrujada que no desborda, la
+impresión a medio animar, `page.route`, el favicon—, en `[S4]` de `docs/trampas-del-stack.md`.
 
 ## Definición de Terminado
 
@@ -517,7 +508,8 @@ escribirse y se descubrió dos PR después. Cuenta, no confíes.
 
 **Las ediciones de documentación van por script, con `assert texto.count(ancla) == 1`** antes de
 cada reemplazo: si el ancla no está, o está dos veces, el script se para en vez de dejar el
-cambio a medias.
+cambio a medias. **Si el script se para a la mitad, lo de antes ya está escrito**: retómalo
+desde el ancla que falló. Relanzarlo entero choca con sus propios reemplazos hechos.
 
 **Al insertar una fila en una tabla numerada, renumera emparejando por el identificador
 (`HU-nn`), nunca por el número.** Un reemplazo del número encuentra primero tu propia fila

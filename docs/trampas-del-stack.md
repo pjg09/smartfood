@@ -10,7 +10,7 @@
 | documentos_fuente | La sección «Trampas de este stack» de `../CLAUDE.md`, de donde sale |
 | responsable | Pedro (desarrollo) |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 **Una trampa entra aquí si costó una ronda de diagnóstico.** Casi todas fallan en
 silencio: no dan error y lo que sale es plausible. Lo que revienta con un mensaje claro no
@@ -364,6 +364,15 @@ Cómo mirar sin que lo que se mira engañe.
 - **Una mutación que no tumba ninguna prueba puede no haber cambiado nada.** `actor if False
   else actor` sigue siendo `actor`: la contraprueba «pasó» y parecía que faltaba una prueba. Antes
   de concluirlo, confirma que la mutación altera el comportamiento.
+- **`scrollWidth > innerWidth` no ve una fila estrujada.** En `/alergenos/`, a 375 px, dos
+  recuentos al lado del nombre lo dejaban sin ancho y salía **letra a letra, en vertical**, sin
+  que nada se saliera de la página: la comprobación de desbordamiento dijo «ok» y la captura
+  enseñó el defecto (`DT-52`). Se mira la captura, no solo la cifra.
+- **Tras `emulate_media("print")`, la medida sale a medio camino.** El `main` del armazón
+  tiene `transition-all`, así que cambiar a impresión con la página ya pintada anima el margen
+  de la barra lateral: medido en el acto, el reporte de ventas salía con 311 px en blanco a la
+  izquierda, y esperando un segundo, con cero. El PDF real sale bien. Espera antes de medir
+  (`DT-54`).
 
 ---
 
