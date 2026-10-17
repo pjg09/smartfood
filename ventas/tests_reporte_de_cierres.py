@@ -318,10 +318,10 @@ class SoloLaAdministracionTest(BaseDelReporteDeCierres):
         )
 
     def test_la_ruta_no_comparte_nombre_con_el_cuadre_del_cajero(self):
-        """`cierre-de-caja` es `/punto-de-venta/cierre/`, donde el cajero cuadra.
+        """`cierre-de-caja` es `/cierre-de-caja/`, donde el cajero cuadra (`DT-59`).
         Con el mismo nombre, Django elegía el patrón por los argumentos y
         funcionaba por casualidad."""
-        self.assertEqual(reverse("cierre-de-caja"), "/punto-de-venta/cierre/")
+        self.assertEqual(reverse("cierre-de-caja"), "/cierre-de-caja/")
         self.assertEqual(
             reverse("cierre-de-la-cafeteria", args=[self.cierre.pk]), f"/cierres/{self.cierre.pk}/"
         )

@@ -141,7 +141,7 @@ urlpatterns = [
     path("ventas/venta/<uuid:venta_id>/", venta, name="venta-de-la-cafeteria"),
     path("ventas/venta/<uuid:venta_id>/ficha/", ficha_de_venta, name="venta-ficha"),
     # `HU-56`, `DT-55`. El reporte de cierres de caja, fuera del admin. El cajero
-    # cuadra en `/punto-de-venta/cierre/`; aquí solo se consulta.
+    # cuadra en `/cierre-de-caja/` (`DT-59`); aquí solo se consulta.
     path("cierres/", cierres, name="cierres-de-caja"),
     path("cierres/<uuid:cierre_id>/", cierre, name="cierre-de-la-cafeteria"),
     path("cierres/<uuid:cierre_id>/ficha/", ficha_de_cierre, name="cierre-de-caja-ficha"),
@@ -628,15 +628,15 @@ urlpatterns = [
     # de la cola de `HU-24`: consultar lo que hay que preparar y entregárselo al
     # estudiante que llega son dos momentos distintos.
     path("punto-de-venta/entregar/", entrega, name="entrega"),
-    # `TT-173`, `HU-55`, `DEC-6`. El cierre de caja de la jornada. **Cuelga del
-    # punto de venta** porque es lo último que hace el cajero en su turno, y la
-    # historia lo sitúa ahí; pero **no usa el armazón del punto de venta**, que
-    # es una rejilla de tres zonas pensada para cobrar con una fila delante.
+    # `TT-173`, `HU-55`, `DEC-6`. El cierre de caja de la jornada. **No cuelga
+    # del punto de venta** (`DT-59`): es otra pantalla del cajero, en el armazón
+    # de la aplicación, y no usa la rejilla de tres zonas pensada para cobrar
+    # con una fila delante.
     #
     # Una sola ruta, no dos: la pantalla se envía entera y responde entera. No
     # hay fragmento HTMX que separar (`DT-16`) — y como escribe, termina en una
     # redirección para que recargar el navegador no intente cuadrar dos veces.
-    path("punto-de-venta/cierre/", cierre_de_caja, name="cierre-de-caja"),
+    path("cierre-de-caja/", cierre_de_caja, name="cierre-de-caja"),
     # El reparto por rol (`DEC-16`). Es el destino del acceso, y también al
     # que va a parar quien abre `/` con la sesión abierta: la portada es una
     # sola y no cambia con quién mire.

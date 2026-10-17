@@ -387,7 +387,7 @@ class SoloElCajeroCuadraLaCajaTest(TestCase):
 
 
 class LaPantallaDelCierreTest(TestCase):
-    """`TT-173`. Lo que se puede hacer desde `/punto-de-venta/cierre/`."""
+    """`TT-173`. Lo que se puede hacer desde `/cierre-de-caja/` (`DT-59`)."""
 
     def setUp(self):
         self.cajero = cajero()
@@ -447,6 +447,24 @@ class LaPantallaDelCierreTest(TestCase):
         # `200` y no `302`: la pantalla vuelve con el motivo del rechazo dentro.
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(CierreDeCaja.objects.exists())
+
+    def test_el_rechazo_se_lee_como_una_frase(self):
+        """`DT-59`. El `str` de un `ValidationError` es una lista de Python: la
+        pantalla enseñaba «['La caja no cuadra…']», con corchetes y comillas."""
+        venta(
+            medio=MedioDePago.EFECTIVO,
+            importe=10000,
+            cuando=a_las_diez(self.hoy),
+            el_cajero=self.cajero,
+        )
+        self.client.force_login(self.cajero)
+
+        respuesta = self.client.post(
+            self.url, {"base": "20000", "efectivo_contado": "28000", "motivo": ""}
+        )
+
+        [error] = respuesta.context["form"].non_field_errors()
+        self.assertTrue(error.startswith("La caja no cuadra"), error)
 
     def test_una_jornada_cerrada_no_vuelve_a_ofrecer_el_formulario(self):
         """Se afirma sobre un `data-*` propio y no sobre la copia ni sobre

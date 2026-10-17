@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-58` el 2026-10-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 58 (`DT-1` … `DT-58`) |
+| decisiones | 59 (`DT-1` … `DT-59`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-58`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-59`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1203,3 +1203,17 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 **Lo que cuesta, dicho antes de construirlo.** Dos interfaces para cancelar el mismo pedido según quién lo haga, que es lo que `DT-49` evitaba; el servicio y el motivo son uno solo. Y dos caminos de entrega con distinta fricción: aquí hay un gesto más que en la caja, aceptado porque aquí no hay tarjeta.
 
 **Lo que la referencia traía y no entra**: el cargo por servicio sobre el pedido, que aquí no existe, y la pantalla de cocina.
+
+#### `[DT-59]` El cierre de caja sale de `/punto-de-venta/` a `/cierre-de-caja/`, con el sistema visual
+
+**Obliga:** `HU-55`, sin ampliarla: ninguno de sus criterios sitúa el cuadre en el punto de venta. **Corrige** a `TT-173` en la ruta, y a `DT-55` en la línea que dice dónde cuadra el cajero. **Es una decisión del dueño del producto**, como `DT-57` y `DT-58`.
+
+**El hecho que lo obliga.** El cierre ya vivía en el armazón de la aplicación, pero colgaba de `/punto-de-venta/` y llevaba arriba «← Punto de venta»: una miga hacia una pantalla de la que no viene necesariamente —el cajero llega desde su menú— y que ninguna otra pantalla del armazón lleva. Y era anterior a `DT-25`: tarjetas sin franja ni icono, la cifra esperada suelta y los campos con las flechas del navegador.
+
+**Decidido:**
+
+- **La ruta es `/cierre-de-caja/`**, con el mismo nombre, `cierre-de-caja`: los menús y las pruebas lo resuelven por nombre y no cambian. `/punto-de-venta/cierre/` deja de existir; no se redirige, porque sin despliegue (`DEC-15`) no hay enlaces guardados que proteger.
+- **El encabezado es el de pantalla** (`[S2]` de `./sistema-visual.md`): título y frase, sin miga.
+- **Sin cerrar**, el efectivo esperado es una **tarjeta de resumen** en la variante del panel de la cafetería —franja e icono de la misma serie, sin enlace— con la frase que dice de cuántas ventas sale (`INVD-5`); el formulario, una tarjeta con su cabecera, los dos importes lado a lado desde `tablet` y sin las flechas del campo numérico.
+- **Ya cerrada**, cuatro tarjetas de resumen —esperado, base, contado y diferencia— y debajo el resultado, el motivo si lo hubo y quién lo cuadró. La franja de la diferencia es una serie, **no `aviso`**: el estado lo dice la pastilla, como en `/cierres/` (`[S2.1]`).
+- **Lo que no cambia**: el formulario, el servicio, la redirección tras cuadrar y que el esperado no se pueda escribir (`INVD-5`).

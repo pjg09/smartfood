@@ -175,7 +175,7 @@ las ventas.
 
 | Acción | Quién | Dónde |
 |---|---|---|
-| **Cuadrar la caja** (`HU-55`) | **Solo el cajero** (`USR-3`) | `/punto-de-venta/cierre/` |
+| **Cuadrar la caja** (`HU-55`) | **Solo el cajero** (`USR-3`) | `/cierre-de-caja/` (`DT-59`) |
 | **Consultar los cierres** (`HU-56`) | **Solo la administración** (`USR-4`) | `/cierres/` (`DT-55`) |
 
 Son dos filas distintas y dos pantallas distintas, como `[S11]` separa registrar ventas de

@@ -1,0 +1,29 @@
+{% load l10n %}
+{% comment %} DT-59. Un importe del cierre de caja: rótulo, «$» delante, sin las flechas del
+   campo numérico y con su error o su ayuda debajo. Lo incluye `ventas/cierre-de-caja.html`
+   dos veces, en el orden en que se cuenta: primero el cajón entero, después la base.
+   **`|unlocalize` en el valor**: en `es-CO` Django escribiría «8000,00» y el navegador
+   dejaría el campo vacío sin ningún error. {% endcomment %}
+<div class="flex flex-col gap-1">
+  <label for="{{ campo.id_for_label }}" class="text-base font-medium text-texto">{{ campo.label }}</label>
+  <div class="relative">
+    <span aria-hidden="true"
+          class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2
+                 font-display text-lg text-texto-suave">$</span>
+    <input type="number" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+           step="0.01" min="0" inputmode="decimal" required
+           {% if enfocar %}autofocus{% endif %}
+           value="{{ campo.value|default_if_none:''|unlocalize }}"
+           class="h-12 w-full rounded-md border bg-superficie pr-3 pl-8 font-display
+                  text-lg tabular-nums text-texto transition-colors [appearance:textfield]
+                  hover:border-acento focus:border-acento focus:outline-none
+                  [&::-webkit-inner-spin-button]:appearance-none
+                  [&::-webkit-outer-spin-button]:appearance-none
+                  {% if campo.errors %}border-error{% else %}border-borde{% endif %}">
+  </div>
+  {% if campo.errors %}
+    <p class="text-sm font-medium text-error-fuerte">{{ campo.errors|join:" " }}</p>
+  {% else %}
+    <p class="text-sm text-texto-suave">{{ campo.help_text }}</p>
+  {% endif %}
+</div>

@@ -182,7 +182,7 @@ debajo, los filtros por resultado, cajero y motivo, y el orden por mayor descuad
 encontrar el peor día. La diferencia de cada fila lleva su color: ámbar si sobró, rojo si
 faltó. La fila abre la modal del cierre, desde la que se llega a las ventas en efectivo de
 esa jornada. Recién sembrado no hay ninguno: los registra el cajero en
-`/punto-de-venta/cierre/`.
+`/cierre-de-caja/`.
 
 **La auditoría, en Auditoría** (`DT-56`): los últimos siete días por defecto, una cifra por
 clase de operación —ventas, entregas, pedidos cancelados, movimientos de inventario y

@@ -1198,8 +1198,10 @@ def cierre_de_caja(request):
         except CierreRechazado as error:
             # El motivo que falta no es culpa de un campo concreto —depende de
             # las tres cifras a la vez—, así que se cuelga del formulario y no
-            # de `motivo`. Igual que en la recarga.
-            formulario.add_error(None, str(error))
+            # de `motivo`. Igual que en la recarga. **`messages`, no `str()`**:
+            # el `str` de un `ValidationError` es la lista de Python, con sus
+            # corchetes y sus comillas, y eso es lo que llegaba a la pantalla.
+            formulario.add_error(None, " ".join(error.messages))
         else:
             messages.success(
                 request,
