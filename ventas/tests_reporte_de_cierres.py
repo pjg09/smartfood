@@ -241,7 +241,7 @@ class ElEsperadoSeExplicaDesdeLasVentasTest(BaseDelReporteDeCierres):
         self.assertEqual(respuesta.context["total"], self.cierre.efectivo_esperado)
 
     def test_la_pagina_del_cierre_abre_su_modal_y_acota_la_jornada(self):
-        respuesta = self.client.get(reverse("cierre-de-caja", args=[self.cierre.pk]))
+        respuesta = self.client.get(reverse("cierre-de-la-cafeteria", args=[self.cierre.pk]))
 
         self.assertEqual(respuesta.context["reporte"].desde, self.cierre.fecha)
         self.assertEqual(respuesta.context["reporte"].hasta, self.cierre.fecha)
@@ -281,7 +281,7 @@ class SoloLaAdministracionTest(BaseDelReporteDeCierres):
         self.cierre = self.cerrar()
         self.rutas = [
             reverse(PANTALLA),
-            reverse("cierre-de-caja", args=[self.cierre.pk]),
+            reverse("cierre-de-la-cafeteria", args=[self.cierre.pk]),
             reverse("cierre-de-caja-ficha", args=[self.cierre.pk]),
         ]
 
@@ -315,6 +315,15 @@ class SoloLaAdministracionTest(BaseDelReporteDeCierres):
 
         self.assertEqual(
             self.client.get(reverse("cierre-de-caja-ficha", args=[inexistente])).status_code, 404
+        )
+
+    def test_la_ruta_no_comparte_nombre_con_el_cuadre_del_cajero(self):
+        """`cierre-de-caja` es `/punto-de-venta/cierre/`, donde el cajero cuadra.
+        Con el mismo nombre, Django elegía el patrón por los argumentos y
+        funcionaba por casualidad."""
+        self.assertEqual(reverse("cierre-de-caja"), "/punto-de-venta/cierre/")
+        self.assertEqual(
+            reverse("cierre-de-la-cafeteria", args=[self.cierre.pk]), f"/cierres/{self.cierre.pk}/"
         )
 
     def test_el_listado_del_admin_ya_no_existe(self):

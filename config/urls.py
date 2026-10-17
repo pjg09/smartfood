@@ -135,7 +135,7 @@ urlpatterns = [
     # `HU-56`, `DT-55`. El reporte de cierres de caja, fuera del admin. El cajero
     # cuadra en `/punto-de-venta/cierre/`; aquí solo se consulta.
     path("cierres/", cierres, name="cierres-de-caja"),
-    path("cierres/<uuid:cierre_id>/", cierre, name="cierre-de-caja"),
+    path("cierres/<uuid:cierre_id>/", cierre, name="cierre-de-la-cafeteria"),
     path("cierres/<uuid:cierre_id>/ficha/", ficha_de_cierre, name="cierre-de-caja-ficha"),
     # `TT-178`, `HU-37`, `ALC-IN-22`, `DT-56`. El reporte de auditoría, fuera
     # del admin. No tiene modelo: cruza ventas, pedidos, movimientos de

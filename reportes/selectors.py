@@ -1039,7 +1039,7 @@ class Operacion:
         if self.modelo == "ventas.venta":
             return "venta-de-la-cafeteria"
         if self.modelo == "ventas.cierredecaja":
-            return "cierre-de-caja"
+            return "cierre-de-la-cafeteria"
         return f"admin:{self.modelo.replace('.', '_')}_change"
 
     @property
