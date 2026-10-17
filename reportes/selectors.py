@@ -1030,14 +1030,16 @@ class Operacion:
         silencioso. Un selector no sabe de rutas (`DT-15`), y esto sigue sin
         saberlo — es una traducción del nombre del modelo, que sí es suyo.
 
-        **Una venta se abre en el reporte de ventas** (`DT-54`), con su modal;
-        el resto, en su ficha del admin. La entrega y la cancelación apuntan a
+        **Una venta y un cierre se abren en su reporte** (`DT-54`, `DT-55`),
+        con su modal; un movimiento de inventario, en su ficha del admin. La entrega y la cancelación apuntan a
         su venta, que es donde está lo que se entregó o se devolvió. Si algún
         día se añade una clase que apunte a un modelo sin admin, esto reventará
         con `NoReverseMatch` al pintar — ruidoso, que es lo que se quiere.
         """
         if self.modelo == "ventas.venta":
             return "venta-de-la-cafeteria"
+        if self.modelo == "ventas.cierredecaja":
+            return "cierre-de-caja"
         return f"admin:{self.modelo.replace('.', '_')}_change"
 
 
@@ -1727,3 +1729,112 @@ def venta_de_la_cafeteria(*, actor, venta_id):
     _solo_la_administracion(actor)
     return _ventas_con_detalle(Venta.objects.filter(pk=venta_id)).first()
 
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EL REPORTE DE CIERRES DE CAJA (`HU-56`, `DT-55`)
+#
+# Una pantalla propia en `/cierres/`, fuera del admin. Los filtros que tenía el
+# admin —resultado, cajero, motivo— y su orden por diferencia viven aquí, y el
+# consolidado se calcula **sobre el mismo `QuerySet` que pinta la tabla**.
+# ──────────────────────────────────────────────────────────────────────────────
+
+#: Las tres formas en que acaba una jornada, en el orden en que se ofrecen.
+RESULTADOS_DEL_CUADRE = (
+    ("cuadra", "Sin diferencia"),
+    ("sobrante", "Con sobrante"),
+    ("faltante", "Con faltante"),
+)
+
+#: Cómo se puede ordenar la tabla. El segundo es el que encuentra el peor día.
+ORDENES_DE_LOS_CIERRES = (("fecha", "Más recientes"), ("descuadre", "Mayor descuadre"))
+
+_ESPERADO_MAS_BASE = F("base") + F("efectivo_esperado")
+
+
+@dataclass(frozen=True)
+class ReporteDeCierres:
+    """Lo que la pantalla de cierres enseña (`DT-55`).
+
+    `resumen` y `cierres` hablan **del mismo conjunto**: el periodo y los tres
+    filtros aplicados. `cajeros` no se filtra —son los que cuadraron alguna vez—
+    para que el desplegable no se vacíe al elegir uno.
+    """
+
+    desde: object
+    hasta: object
+    resumen: ResumenDeCierres
+    cierres: tuple
+    cajeros: tuple
+
+
+def _por_resultado(cierres, resultado):
+    """Cuadró, sobró o faltó. **No es una columna**: es el signo de
+    `efectivo_contado − base − efectivo_esperado`, la resta de
+    `CierreDeCaja.diferencia` y de `DIFERENCIA_DEL_CIERRE`."""
+    if resultado == "cuadra":
+        return cierres.filter(efectivo_contado=_ESPERADO_MAS_BASE)
+    if resultado == "sobrante":
+        return cierres.filter(efectivo_contado__gt=_ESPERADO_MAS_BASE)
+    if resultado == "faltante":
+        return cierres.filter(efectivo_contado__lt=_ESPERADO_MAS_BASE)
+    return cierres
+
+
+def _con_su_descuadre(cierres):
+    """La diferencia y su valor absoluto, calculados por la base: es lo que
+    permite **ordenar por el mayor descuadre** sin traerse las filas."""
+    return cierres.annotate(
+        diferencia_calculada=DIFERENCIA_DEL_CIERRE,
+        descuadre=Case(
+            When(efectivo_contado__lt=_ESPERADO_MAS_BASE, then=-DIFERENCIA_DEL_CIERRE),
+            default=DIFERENCIA_DEL_CIERRE,
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        ),
+    )
+
+
+def reporte_de_cierres(*, actor, desde=None, hasta=None, resultado=None, cajero=None,
+                       busqueda="", orden="fecha"):
+    """El reporte de cierres de un periodo, filtrado (`HU-56`, `DT-55`).
+
+    `cajero` es un identificador; `busqueda` se busca en el motivo. **Ni el
+    correo del cajero**: es una credencial y no hace falta para leer un cuadre
+    (`TT-176`). Lo que no se reconozca —un resultado, un orden— se ignora.
+    """
+    cierres = cierres_registrados(actor=actor, desde=desde, hasta=hasta)
+    todos = cierres
+
+    cierres = _por_resultado(cierres, resultado)
+    if cajero:
+        cierres = cierres.filter(cajero_id=cajero)
+    if busqueda:
+        cierres = cierres.filter(motivo__icontains=busqueda)
+
+    cierres = _con_su_descuadre(cierres)
+    if orden == "descuadre":
+        cierres = cierres.order_by("-descuadre", "-fecha", "-creado_en")
+    else:
+        cierres = cierres.order_by("-fecha", "-creado_en")
+
+    cajeros = tuple(
+        todos.order_by("cajero__nombre").values_list("cajero_id", "cajero__nombre").distinct()
+    )
+
+    return ReporteDeCierres(
+        desde=desde,
+        hasta=hasta,
+        # **Sobre el mismo `QuerySet` que la tabla.** Calcularlo aparte daría un
+        # resumen de otro conjunto sin que nada fallara.
+        resumen=resumen_de_cierres(cierres),
+        cierres=tuple(cierres),
+        cajeros=cajeros,
+    )
+
+
+def cierre_de_la_cafeteria(*, actor, cierre_id):
+    """Un cierre, para su modal. Exige el rol antes de buscar: un `None` no le
+    cuenta a otro rol qué existe."""
+    return (
+        _con_su_descuadre(cierres_registrados(actor=actor).filter(pk=cierre_id)).first()
+    )

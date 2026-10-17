@@ -88,7 +88,7 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Catálogo con ticket | `templates/ventas/reserva.html` | Filtros arriba, tarjetas con «Agregar» que pasa a «− n +», y el ticket al lado; **las cantidades en el formulario, el dinero en el servidor** |
 | Historial de cambios | `templates/restricciones/partials/historial-de-restricciones.html` | Lo último primero, con quién y cuándo; **dentro del fragmento que se intercambia**, nunca al lado |
 | Medidor de proporción | `templates/reportes/partials/recomendaciones.html` | Barra fina bajo la cifra; **se recorta la barra a 100, nunca el número**, y el color no significa nada |
-| Consolidado de reporte | `templates/admin/ventas/cierredecaja/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
+| Consolidado de reporte | `templates/admin/inventario/movimientoinventario/change_list.html` | En el admin: cifra grande, la frase que dice de dónde sale, y tablas de desglose **completas** |
 | Modal de ficha | `templates/personas/partials/ficha-del-estudiante.html` | Un `<dialog>` que recibe el fragmento; la respuesta es siempre la ficha y la tabla de detrás se entera por `HX-Trigger` |
 | Validación en vivo | `templates/personas/partials/ficha-campos.html` | Aviso rojo por campo y guardar deshabilitado mientras falte algo; **las longitudes vienen del formulario**, no de la plantilla |
 | Buscador para elegir | `templates/personas/partials/acudientes-para-matricular.html` | Busca a cada tecla, pocos resultados como botones, y lo elegido pasa a un campo oculto con «Cambiar» |
@@ -316,7 +316,7 @@ Tres decisiones que se copian con ella:
   ausente se lee como si el medio no existiera.
 - **Sin datos no se pinta un cero**, se dice que el filtro no alcanzó nada. Un «$0» se lee
   como «se vendió cero», que es otra cosa.
-- **La cifra grande es la que no se compensa sola.** En el reporte de cierres conviven dos
+- **La cifra grande es la que no se compensa sola.** En el reporte de cierres (`/cierres/`, `DT-55`) conviven dos
   descuadres —la suma con signo y la suma de valores absolutos—, y arriba va la segunda: con
   la primera, un sobrante y un faltante iguales dan cero y un periodo con veinte descuadres
   se lee como uno que cuadró. La otra se dice al lado, nombrando la diferencia.

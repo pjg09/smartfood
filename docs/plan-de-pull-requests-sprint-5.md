@@ -564,6 +564,7 @@ no venga de una historia.
 | — | `main` | El inventario en una sola pantalla, `/inventario/`: productos, ingresos, mermas e historial, con modales para el alta, la edición, el movimiento y el retiro. El libro de inventario guarda quién registra cada asiento. Sustituye a tres pantallas del admin, `/categorias/` a la cuarta y `/alergenos/` a la quinta | `DEC-25`, `DEC-26`, `DT-50`, `DT-51`, `DT-52`, **`HU-69`** |
 | — | `main` | El panel de la cafetería sale del admin a `/cafeteria/`, sobre el armazón de la aplicación; enseña lo mismo y sus enlaces siguen llevando a los reportes del admin | `DT-53` |
 | — | `main` | El reporte de ventas sale del admin a `/ventas/`: periodo en la URL, cuatro cifras, ingresos por categoría, cómo se paga, los más vendidos e ingresos por día con una modal por día. El cierre de caja y la auditoría enlazan a sus modales | `DT-54` |
+| — | `main` | El reporte de cierres de caja sale del admin a `/cierres/`: periodo sobre la jornada, cuatro cifras con el descuadre total primero, filtros por resultado, cajero y motivo, orden por mayor descuadre y una modal por cierre con el enlace a sus ventas en efectivo | `DT-55` |
 
 **Seis traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
 institución con `HU-64`, la reserva como encargo con `HU-65` … `HU-67`, los pedidos de la

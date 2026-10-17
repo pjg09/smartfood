@@ -446,8 +446,9 @@ todas las máquinas del equipo tienen `gettext` y `collectstatic` no compila men
 
 `cuentas/tests_traducciones.py` comprueba que todas salen en español, que **ninguno de los
 dos parches ha crecido** —si alguien empieza a traducir por su cuenta lo que Django ya trae,
-se desincroniza a la primera versión— y que el reporte de cierres enseña «Filtrar por
-jornada» y «14 de septiembre», que es donde se vieron los dos defectos.
+se desincroniza a la primera versión— y que el reporte de movimientos de inventario —el único del admin con navegación por
+fechas— enseña «Filtrar por creado en» y el mes en minúscula, que son los dos defectos que
+se vieron.
 
 **Los dos parches están pensados para borrarse.** Cuando Django traduzca esas cadenas y
 deje de capitalizar los meses, los ficheros sobran. Por eso el `|lower` de las plantillas

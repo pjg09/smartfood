@@ -5,7 +5,9 @@ lógica de negocio** (`DT-15`): quién puede ver el consumo de un estudiante lo
 decide `reportes.selectors`, y esta vista solo traduce su respuesta.
 """
 
+import uuid
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
 from django import forms
 from django.contrib import admin
@@ -29,6 +31,10 @@ from reportes.selectors import (
     alertas_de_frecuencia,
     auditoria,
     historial_de_consumo,
+    ORDENES_DE_LOS_CIERRES,
+    RESULTADOS_DEL_CUADRE,
+    cierre_de_la_cafeteria,
+    reporte_de_cierres,
     reporte_de_ventas,
     resumen_de_auditoria,
     resumen_de_gasto,
@@ -415,3 +421,106 @@ def ficha_de_venta(request, venta_id):
         raise Http404("No hay ninguna venta con ese identificador.")
     return render(request, "reportes/partials/venta.html", {"venta": encontrada})
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# EL REPORTE DE CIERRES DE CAJA (`HU-56`, `DT-55`)
+#
+# El mismo periodo que las ventas, sobre la jornada cuadrada, y los filtros que
+# tenía el admin. **Todo va en la URL**: el periodo, el resultado, el cajero, la
+# búsqueda y el orden. Cada formulario lleva en campos ocultos lo que el otro
+# decide, para que cambiar una cosa no borre la otra.
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _filtros_de_cierres(parametros):
+    """Los filtros de la URL, con lo que no se reconozca descartado."""
+    resultado = parametros.get("resultado")
+    if resultado not in dict(RESULTADOS_DEL_CUADRE):
+        resultado = None
+    orden = parametros.get("orden")
+    if orden not in dict(ORDENES_DE_LOS_CIERRES):
+        orden = "fecha"
+    try:
+        cajero = uuid.UUID(parametros.get("cajero", ""))
+    except ValueError:
+        cajero = None
+    return {
+        "resultado": resultado,
+        "cajero": cajero,
+        "busqueda": parametros.get("q", "").strip(),
+        "orden": orden,
+    }
+
+
+def _pantalla_de_cierres(request, *, desde, hasta, atajo, aviso="", filtros=None, abrir=None):
+    filtros = filtros or _filtros_de_cierres({})
+    periodo = (
+        {"periodo": atajo} if atajo else
+        {k: v.isoformat() for k, v in (("desde", desde), ("hasta", hasta)) if v}
+    )
+    en_la_url = {
+        k: v for k, v in (
+            ("resultado", filtros["resultado"]),
+            ("cajero", filtros["cajero"] and str(filtros["cajero"])),
+            ("q", filtros["busqueda"]),
+            ("orden", filtros["orden"] if filtros["orden"] != "fecha" else None),
+        ) if v
+    }
+    return render(request, "reportes/cierres.html", {
+        "reporte": reporte_de_cierres(actor=request.user, desde=desde, hasta=hasta, **filtros),
+        "atajos": ATAJOS_DEL_PERIODO,
+        "atajo": atajo,
+        "personalizado": atajo is None,
+        "aviso": aviso,
+        "abrir": abrir,
+        "filtros": filtros,
+        "resultados": RESULTADOS_DEL_CUADRE,
+        "ordenes": ORDENES_DE_LOS_CIERRES,
+        # Lo que cada formulario reenvía en campos ocultos, y lo que los atajos
+        # añaden a su enlace.
+        "periodo_oculto": tuple(periodo.items()),
+        "filtros_ocultos": tuple(en_la_url.items()),
+        "filtros_en_la_url": urlencode(en_la_url),
+        "hay_filtros": bool(en_la_url.keys() - {"orden"}),
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def cierres(request):
+    """El reporte de cierres de caja de un periodo (`HU-56`, `DT-55`)."""
+    desde, hasta, atajo, aviso = periodo_pedido(request.GET, timezone.localdate())
+    return _pantalla_de_cierres(
+        request, desde=desde, hasta=hasta, atajo=atajo, aviso=aviso,
+        filtros=_filtros_de_cierres(request.GET),
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def cierre(request, cierre_id):
+    """La pantalla acotada a la jornada de ese cierre, con su modal abierta. Es
+    donde aterriza la auditoría."""
+    encontrado = cierre_de_la_cafeteria(actor=request.user, cierre_id=cierre_id)
+    if encontrado is None:
+        raise Http404("No hay ningún cierre con ese identificador.")
+    return _pantalla_de_cierres(
+        request, desde=encontrado.fecha, hasta=encontrado.fecha, atajo=None,
+        abrir=reverse("cierre-de-caja-ficha", args=[cierre_id]),
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def ficha_de_cierre(request, cierre_id):
+    """Un cierre, en la modal: fragmento (`DT-16`)."""
+    encontrado = cierre_de_la_cafeteria(actor=request.user, cierre_id=cierre_id)
+    if encontrado is None:
+        raise Http404("No hay ningún cierre con ese identificador.")
+    return render(request, "reportes/partials/cierre.html", {
+        "cierre": encontrado,
+        "ventas_en_efectivo": (
+            f"{reverse('ventas-del-dia', args=[encontrado.fecha.isoformat()])}"
+            f"?{urlencode({'medio': MedioDePago.EFECTIVO})}"
+        ),
+    })

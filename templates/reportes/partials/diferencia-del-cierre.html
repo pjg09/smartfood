@@ -1,0 +1,14 @@
+{% load dinero %}
+{% comment %} DT-55. La diferencia de un cierre con el color de su estado.
+
+   Aquí **el color significa algo** (`[S1]` del sistema visual): ámbar sobra, rojo falta,
+   verde cuadra. La cifra sale de `cierre.diferencia`, la propiedad del modelo; la
+   anotación de la consulta está para ordenar, no para que haya dos cifras.
+{% endcomment %}
+{% with d=cierre.diferencia %}
+  <span data-diferencia="{% if d > 0 %}sobrante{% elif d < 0 %}faltante{% else %}cuadra{% endif %}"
+        class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold whitespace-nowrap tabular-nums
+               {% if d > 0 %}bg-aviso-suave text-aviso-fuerte{% elif d < 0 %}bg-error-suave text-error-fuerte{% else %}bg-exito-suave text-exito-fuerte{% endif %}">
+    {% if d > 0 %}+{{ d|dinero }} sobrante{% elif d < 0 %}{{ d|dinero }} faltante{% else %}Sin diferencia{% endif %}
+  </span>
+{% endwith %}

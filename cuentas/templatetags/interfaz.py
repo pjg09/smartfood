@@ -145,7 +145,8 @@ MENU_POR_ROL = {
         Entrada("alergenos", "Alérgenos", "i-alerta"),
         # `DT-54`. El reporte de ventas, fuera del admin.
         Entrada("ventas-de-la-cafeteria", "Ventas", "i-recibo"),
-        _del_admin("ventas_cierredecaja", "Cierres de caja", "i-efectivo"),
+        # `DT-55`. El reporte de cierres, fuera del admin.
+        Entrada("cierres-de-caja", "Cierres de caja", "i-efectivo"),
         Entrada("restricciones-de-estudiantes", "Restricciones", "i-escudo"),
         Entrada("auditoria", "Auditoría", "i-documento"),
     ),

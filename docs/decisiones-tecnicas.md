@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` el 2026-10-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 54 (`DT-1` … `DT-54`) |
+| decisiones | 55 (`DT-1` … `DT-55`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-54`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-55`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1134,4 +1134,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Una ruta de página y una de fragmento por modal** (`DT-16`): `/ventas/dia/<fecha>/` y `/ventas/venta/<id>/` son la pantalla con la modal ya abierta; sus `…/ficha/` son el fragmento.
 - **Se pierde la búsqueda por nombre del estudiante y por correo de quien cobró**, que el listado del admin daba. Se acepta: el reporte es de la operación, no de personas.
 - **Imprimir** es el del navegador, con la hoja de impresión que ya existe: sin barra, sin periodo y sin botones.
+
+#### `[DT-55]` El reporte de cierres de caja sale del admin, a `/cierres/`
+
+**Obliga:** `HU-56`, sin ampliarla. **Corrige a `DT-54`** en un punto: allí el reporte de cierres se quedaba en el admin. El de movimientos de inventario (`TT-170`) y la auditoría (`TT-178`) siguen dentro.
+
+**El hecho que lo obliga.** Con el reporte de ventas fuera, el de cierres era la mitad de una pareja partida entre dos interfaces: su enlace «de dónde sale el esperado» ya llevaba de un armazón al otro. Y lo que `HU-56` pide —detectar un patrón de descuadres— se lee mejor con las composiciones del sistema visual que con las tablas en línea del admin.
+
+**Decidido:**
+
+- **Una pantalla sobre `base-aplicacion.html`**, con el periodo de `/ventas/` —siete, treinta o noventa días, todo, o dos fechas, **sobre la `fecha` de la jornada** y no sobre cuándo se registró—, los filtros que tenía el admin —resultado del cuadre, cajero y búsqueda en el motivo— y el orden por fecha o por **mayor descuadre**, que es como se encuentra el peor día. Todo va en la URL.
+- **Las cifras de arriba son las del conjunto filtrado**, como en el admin: `resumen_de_cierres` recibe el mismo `QuerySet` que pinta la tabla. **La primera es el descuadre total**, no la neta: la neta se compensa sola y diría «la caja cuadra» de un mes con veinte descuadres. Sin cierres no se pinta un cero: se dice que el periodo no alcanzó ninguna jornada.
+- **Tabla de datos** (`[S2.2]`): fichas por debajo de `tablet`, tabla desde ahí. La diferencia lleva el color de su estado —sobrante, faltante o sin diferencia—, porque ahí el estado existe. **La fila abre la modal del cierre**, con el enlace a las ventas en efectivo de esa jornada (`INVD-5`, `DT-54`).
+- **El cajero, por su nombre**, en la tabla, en el filtro y en la modal: el correo es una credencial (`TT-176`). La búsqueda ya no busca por correo.
+- **La invariante sigue a la vista**: cuántos cierres con diferencia no llevan motivo, que la base impide (`cierre_de_caja_diferencia_con_motivo`).
+- **`CierreDeCajaAdmin` sale del admin**, con sus dos filtros. La auditoría enlaza a `/cierres/<id>/`, que es la pantalla con la modal de ese cierre abierta; `/cierres/<id>/ficha/` es el fragmento (`DT-16`).
+- **El registro del cierre no se toca**: lo sigue haciendo el cajero en `/punto-de-venta/cierre/` (`HU-55`). Esta pantalla solo consulta, y sus rutas solo responden a `GET`.
 

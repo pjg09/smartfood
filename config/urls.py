@@ -67,7 +67,10 @@ from inventario.views import (
 )
 from reportes.views import (
     auditoria_de_la_operacion,
+    cierre,
+    cierres,
     consumo_del_estudiante,
+    ficha_de_cierre,
     ficha_de_venta,
     ficha_de_ventas_del_dia,
     panel_de_la_cafeteria,
@@ -140,6 +143,11 @@ urlpatterns = [
     path("ventas/dia/<str:fecha>/ficha/", ficha_de_ventas_del_dia, name="ventas-del-dia-ficha"),
     path("ventas/venta/<uuid:venta_id>/", venta, name="venta-de-la-cafeteria"),
     path("ventas/venta/<uuid:venta_id>/ficha/", ficha_de_venta, name="venta-ficha"),
+    # `HU-56`, `DT-55`. El reporte de cierres de caja, fuera del admin. El cajero
+    # cuadra en `/punto-de-venta/cierre/`; aquí solo se consulta.
+    path("cierres/", cierres, name="cierres-de-caja"),
+    path("cierres/<uuid:cierre_id>/", cierre, name="cierre-de-caja"),
+    path("cierres/<uuid:cierre_id>/ficha/", ficha_de_cierre, name="cierre-de-caja-ficha"),
     # `DEC-25`, `DT-50`. El inventario de la cafetería en una sola pantalla:
     # productos, ingresos, mermas y el libro de cada uno. Sustituye a las tres
     # pantallas del admin que tocaban lo mismo; el reporte de movimientos de

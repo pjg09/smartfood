@@ -1,0 +1,64 @@
+{% load dinero %}
+{% comment %} DT-55. Un cierre de caja, en la modal de ficha (`[S2.10]`). Fragmento (`DT-16`).
+
+   **El efectivo esperado se explica, no se cree** (`INVD-5`): el enlace abre las ventas en
+   efectivo de esa jornada, las mismas que sumó el cajero al cerrar (`DT-54`). El cajero,
+   por su nombre: el correo es una credencial (`TT-176`).
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-un-cierre="{{ cierre.pk }}">
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Cierre del {{ cierre.fecha|date:"j \d\e M \d\e Y"|lower }}</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+    <div class="flex items-start justify-between gap-3">
+      <p class="text-base text-texto-suave">
+        Lo cuadró <strong class="font-semibold text-texto">{{ cierre.cajero.nombre|default:"Sin nombre" }}</strong>,
+        el {{ cierre.creado_en|date:"j \d\e M \d\e Y \a \l\a\s H:i"|lower }}.
+      </p>
+      {% include "reportes/partials/diferencia-del-cierre.html" %}
+    </div>
+
+    <dl class="divide-y divide-borde overflow-hidden rounded-xl border border-borde">
+      <div class="flex items-baseline justify-between gap-3 px-4 py-3">
+        <dt class="text-base text-texto">Efectivo esperado</dt>
+        <dd class="font-semibold text-texto tabular-nums" data-esperado>{{ cierre.efectivo_esperado|dinero }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3 px-4 py-3">
+        <dt class="text-base text-texto">Base para cambio</dt>
+        <dd class="text-texto tabular-nums">{{ cierre.base|dinero }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3 px-4 py-3">
+        <dt class="text-base text-texto">Efectivo contado <span class="text-sm text-texto-suave">(con la base)</span></dt>
+        <dd class="text-texto tabular-nums">{{ cierre.efectivo_contado|dinero }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3 bg-superficie-hover px-4 py-3">
+        <dt class="text-base font-medium text-texto">Diferencia</dt>
+        <dd class="font-semibold text-texto tabular-nums" data-diferencia-del-cierre>{{ cierre.diferencia|dinero }}</dd>
+      </div>
+    </dl>
+
+    <div class="flex flex-col gap-1">
+      <p class="text-base font-medium text-texto">Motivo</p>
+      {% if cierre.motivo %}
+        <p class="text-base text-texto-suave" data-motivo>«{{ cierre.motivo }}»</p>
+      {% else %}
+        <p class="text-base text-texto-suave">Sin diferencia, no hace falta motivo.</p>
+      {% endif %}
+    </div>
+
+    <a href="{{ ventas_en_efectivo }}" data-ventas-de-la-jornada
+       class="inline-flex items-center gap-2 self-start text-base font-semibold text-acento-fuerte hover:underline">
+      Ver las ventas en efectivo de esa jornada
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-flecha"></use></svg>
+    </a>
+    <p class="text-sm text-texto-suave">
+      El esperado se calculó al cerrar, sumando esas ventas, y no se puede escribir a mano.
+    </p>
+  </div>
+</div>

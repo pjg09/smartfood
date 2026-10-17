@@ -458,7 +458,7 @@ class LaPantallaDeAuditoriaTest(BaseDeLaAuditoria):
         for listado in (
             "ventas-de-la-cafeteria",
             "admin:inventario_movimientoinventario_changelist",
-            "admin:ventas_cierredecaja_changelist",
+            "cierres-de-caja",
         ):
             with self.subTest(listado=listado):
                 respuesta = self.client.get(reverse(listado))

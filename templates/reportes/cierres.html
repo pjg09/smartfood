@@ -1,0 +1,354 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} HU-56, DT-55. El reporte de cierres de caja, fuera del admin.
+
+   **Las cifras de arriba son las del conjunto filtrado**: salen de `resumen_de_cierres`
+   sobre el mismo `QuerySet` que pinta la tabla. **La primera es el descuadre total**, no
+   la neta: un sobrante y un faltante iguales se cancelan y siguen siendo dos descuadres, y
+   lo que `HU-56` pide es detectar un patrón.
+
+   El periodo y los filtros van en la URL. Cada formulario lleva en campos ocultos lo que
+   decide el otro, para que cambiar una cosa no borre la otra.
+
+   Tabla de datos (`[S2.2]`): fichas por debajo de `tablet`, tabla desde ahí. La fila
+   entera abre la modal del cierre (`[S2.10]`).
+{% endcomment %}
+
+{% block titulo %}Cierres de caja | SmartFood{% endblock %}
+
+{% block contenido %}
+  {% with r=reporte resumen=reporte.resumen %}
+  <div class="flex w-full flex-col gap-6" data-reporte-de-cierres>
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Cierres de caja</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Cómo cuadró cada jornada. El efectivo esperado sale de las ventas en efectivo de ese
+          día, y cada cierre enlaza a ellas.
+        </p>
+        <p class="hidden text-sm text-texto-suave print:block">
+          {% if r.desde and r.hasta %}Jornadas del {{ r.desde|date:"j \d\e M \d\e Y"|lower }} al {{ r.hasta|date:"j \d\e M \d\e Y"|lower }}{% elif r.desde %}Jornadas desde el {{ r.desde|date:"j \d\e M \d\e Y"|lower }}{% elif r.hasta %}Jornadas hasta el {{ r.hasta|date:"j \d\e M \d\e Y"|lower }}{% else %}Todas las jornadas cuadradas{% endif %}
+        </p>
+      </div>
+      <button type="button" onclick="window.print()" data-imprimir-reporte
+              class="no-imprimir inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border
+                     border-borde bg-superficie px-4 text-base font-medium text-texto transition-colors
+                     hover:bg-superficie-hover">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+        Imprimir o guardar en PDF
+      </button>
+    </header>
+
+    {% comment %} El periodo, como en `/ventas/`, **sobre la jornada cuadrada** y no sobre
+       cuándo se registró. Los atajos son enlaces que conservan los filtros. {% endcomment %}
+    <nav aria-label="Periodo" class="no-imprimir flex flex-wrap items-center gap-2" data-periodo>
+      {% for clave, etiqueta, _ in atajos %}
+        <a href="?periodo={{ clave }}{% if filtros_en_la_url %}&amp;{{ filtros_en_la_url }}{% endif %}" data-atajo="{{ clave }}"
+           {% if atajo == clave %}aria-current="true"{% endif %}
+           class="inline-flex h-11 items-center rounded-md border px-4 text-base font-medium transition-colors
+                  {% if atajo == clave %}border-transparente bg-primario text-sobre-primario{% else %}border-borde bg-superficie text-texto hover:bg-superficie-hover{% endif %}">
+          {{ etiqueta }}
+        </a>
+      {% endfor %}
+      <form method="get" action="{% url 'cierres-de-caja' %}" class="flex flex-wrap items-center gap-2"
+            data-periodo-personalizado>
+        {% for nombre, valor in filtros_ocultos %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+        <label for="desde" class="text-base text-texto-suave">Desde</label>
+        <input type="date" id="desde" name="desde" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and r.desde %}{{ r.desde|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                      hover:border-acento focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento{% else %}border-borde{% endif %}">
+        <label for="hasta" class="text-base text-texto-suave">hasta</label>
+        <input type="date" id="hasta" name="hasta" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and r.hasta %}{{ r.hasta|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                      hover:border-acento focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento{% else %}border-borde{% endif %}">
+        <noscript>
+          <button type="submit" class="h-11 rounded-md border border-borde px-4 text-base">Ver</button>
+        </noscript>
+      </form>
+    </nav>
+
+    {% if aviso %}
+      <p role="status" data-aviso-del-periodo
+         class="rounded-md border border-aviso-fuerte/50 bg-aviso-suave px-3 py-2 text-base text-aviso-fuerte">{{ aviso }}</p>
+    {% endif %}
+
+    {% if resumen.hubo_cierres %}
+      {% comment %} Cuatro cifras (`[S2.1]`, variante del panel). La neta va segunda y con su
+         explicación: leída primero, invita a concluir que no pasó nada. {% endcomment %}
+      <div class="grid grid-cols-1 gap-4 tablet:grid-cols-2 escritorio:grid-cols-4">
+        <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+          <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-2 to-serie-2/40"></span>
+          <div class="flex flex-1 flex-col p-5">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-2/12 text-serie-2">
+              <svg class="h-5 w-5"><use href="#i-alerta"></use></svg>
+            </span>
+            <p class="mt-4 text-base font-medium text-texto-suave">Descuadre total</p>
+            <p class="mt-2 font-display text-2xl font-semibold text-texto" data-descuadre-total>{{ resumen.descuadre_total|dinero:"COP" }}</p>
+            <p class="mt-2 text-sm text-texto-suave">
+              En <span data-con-diferencia>{{ resumen.con_diferencia }}</span> de
+              <span data-cuantos-cierres>{{ resumen.cuantos }}</span> jornada{{ resumen.cuantos|pluralize }}, sin compensar sobrantes con faltantes
+            </p>
+          </div>
+        </div>
+        <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+          <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-1 to-serie-1/40"></span>
+          <div class="flex flex-1 flex-col p-5">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-1/12 text-serie-1">
+              <svg class="h-5 w-5"><use href="#i-grafica"></use></svg>
+            </span>
+            <p class="mt-4 text-base font-medium text-texto-suave">Diferencia neta</p>
+            <p class="mt-2 font-display text-2xl font-semibold text-texto" data-diferencia-neta>{{ resumen.diferencia_neta|dinero:"COP" }}</p>
+            <p class="mt-2 text-sm text-texto-suave">Sumando los signos: un sobrante y un faltante iguales se cancelan</p>
+          </div>
+        </div>
+        <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+          <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-3 to-serie-3/40"></span>
+          <div class="flex flex-1 flex-col p-5">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-3/12 text-serie-3">
+              <svg class="h-5 w-5"><use href="#i-calendario"></use></svg>
+            </span>
+            <p class="mt-4 text-base font-medium text-texto-suave">Jornadas</p>
+            <p class="mt-2 font-display text-2xl font-semibold text-texto">{{ resumen.cuantos }}</p>
+            <p class="mt-2 text-sm text-texto-suave">
+              <span data-cuadrados>{{ resumen.cuadrados }}</span> sin diferencia ·
+              <span data-sobrantes>{{ resumen.sobrantes }}</span> con sobrante ·
+              <span data-faltantes>{{ resumen.faltantes }}</span> con faltante
+            </p>
+          </div>
+        </div>
+        <div class="bloque-impresion flex flex-col overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+          <span aria-hidden="true" class="h-1 w-full bg-linear-to-r from-serie-4 to-serie-4/40"></span>
+          <div class="flex flex-1 flex-col p-5">
+            <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4">
+              <svg class="h-5 w-5"><use href="#i-efectivo"></use></svg>
+            </span>
+            <p class="mt-4 text-base font-medium text-texto-suave">Efectivo esperado</p>
+            <p class="mt-2 font-display text-2xl font-semibold text-texto" data-esperado>{{ resumen.esperado|dinero:"COP" }}</p>
+            <p class="mt-2 text-sm text-texto-suave">
+              Se contaron {{ resumen.contado|dinero }}, con {{ resumen.base|dinero }} de base para cambio
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} La barra de filtros (`[S2.5]`): resultado, cajero, motivo y orden. Se envía
+       al cambiar; el periodo viaja en campos ocultos. {% endcomment %}
+    <form method="get" action="{% url 'cierres-de-caja' %}" data-filtros-de-cierres
+          class="no-imprimir flex flex-col gap-3 rounded-xl border border-borde bg-superficie p-4 shadow-sm
+                 escritorio:flex-row escritorio:flex-wrap escritorio:items-end">
+      {% for nombre, valor in periodo_oculto %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+      {% comment %} Con ancho mínimo: sin él, al aparecer «Limpiar» el buscador se quedaba en
+         80 px y no se leía lo escrito. La barra salta de línea antes que estrecharlo. {% endcomment %}
+      <div class="flex min-w-0 flex-1 flex-col gap-1 escritorio:min-w-64">
+        <label for="q" class="text-base font-medium text-texto">Motivo</label>
+        <div class="relative">
+          <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-texto-suave" aria-hidden="true"><use href="#i-buscar"></use></svg>
+          <input type="search" id="q" name="q" value="{{ filtros.busqueda }}" placeholder="Buscar en el motivo"
+                 class="h-11 w-full rounded-md border border-borde bg-superficie pr-3 pl-9 text-base text-texto
+                        transition-colors placeholder:text-texto-suave hover:border-acento focus:border-acento
+                        focus:outline-none">
+        </div>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="resultado" class="text-base font-medium text-texto">Resultado</label>
+        <select id="resultado" name="resultado" onchange="this.form.requestSubmit()"
+                class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto transition-colors
+                       hover:border-acento focus:border-acento focus:outline-none">
+          <option value="">Todos</option>
+          {% for valor, etiqueta in resultados %}
+            <option value="{{ valor }}" {% if filtros.resultado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="cajero" class="text-base font-medium text-texto">Cajero</label>
+        <select id="cajero" name="cajero" onchange="this.form.requestSubmit()"
+                class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto transition-colors
+                       hover:border-acento focus:border-acento focus:outline-none">
+          <option value="">Todos</option>
+          {% for identificador, nombre in r.cajeros %}
+            <option value="{{ identificador }}" {% if filtros.cajero == identificador %}selected{% endif %}>{{ nombre|default:"Sin nombre" }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="orden" class="text-base font-medium text-texto">Orden</label>
+        <select id="orden" name="orden" onchange="this.form.requestSubmit()"
+                class="h-11 rounded-md border border-borde bg-superficie px-3 text-base text-texto transition-colors
+                       hover:border-acento focus:border-acento focus:outline-none">
+          {% for valor, etiqueta in ordenes %}
+            <option value="{{ valor }}" {% if filtros.orden == valor %}selected{% endif %}>{{ etiqueta }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="submit"
+                class="inline-flex h-11 items-center gap-2 rounded-md bg-primario px-4 text-base font-medium
+                       text-sobre-primario transition-colors hover:bg-primario-fuerte">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-buscar"></use></svg>
+          Buscar
+        </button>
+        {% if hay_filtros %}
+          <a href="?{% for nombre, valor in periodo_oculto %}{{ nombre }}={{ valor }}{% if not forloop.last %}&amp;{% endif %}{% endfor %}"
+             data-limpiar-filtros
+             class="inline-flex h-11 items-center gap-2 rounded-md border border-borde bg-superficie px-4 text-base
+                    font-medium text-texto transition-colors hover:bg-superficie-hover">
+            <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+            Limpiar
+          </a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if not r.cierres %}
+      {% comment %} **Sin cierres no se pinta un cero.** «$0 de descuadre» se lee como «todo
+         cuadró», y lo que pasa es que no se alcanzó ninguna jornada. {% endcomment %}
+      <div data-sin-cierres role="status"
+           class="flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed
+                  border-borde p-8 text-center">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave text-acento-fuerte">
+          <svg class="h-6 w-6" aria-hidden="true"><use href="#i-efectivo"></use></svg>
+        </span>
+        <p class="text-base font-medium text-texto">Ninguna jornada cuadrada en lo que estás mirando</p>
+        <p class="max-w-md text-sm text-texto-suave">
+          {% if hay_filtros %}Prueba quitando los filtros o con otro periodo.{% else %}Prueba con otro periodo. Los cierres los registra el cajero desde el punto de venta.{% endif %}
+        </p>
+      </div>
+    {% else %}
+      <p class="text-base text-texto-suave">
+        <strong class="font-semibold text-texto">{{ r.cierres|length }}</strong>
+        cierre{{ r.cierres|length|pluralize }}{% if filtros.orden == "descuadre" %}, del mayor descuadre al menor{% endif %}
+      </p>
+
+      <ul class="flex flex-col gap-3 tablet:hidden">
+        {% for cierre in r.cierres %}
+          <li data-fila-consultable data-cierre="{{ cierre.pk }}"
+              class="bloque-impresion cursor-pointer overflow-hidden rounded-md border border-borde bg-superficie">
+            <div class="flex items-start justify-between gap-3 px-4 py-3">
+              <div class="flex min-w-0 flex-col">
+                <button type="button" data-consultar
+                        hx-get="{% url 'cierre-de-caja-ficha' cierre.pk %}" hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                        class="text-left font-semibold text-texto hover:underline">
+                  {{ cierre.fecha|date:"j \d\e M \d\e Y"|lower }}
+                </button>
+                <span class="text-sm text-texto-suave">{{ cierre.cajero.nombre|default:"Sin nombre" }}</span>
+              </div>
+              {% include "reportes/partials/diferencia-del-cierre.html" %}
+            </div>
+            <div class="flex flex-col gap-1 border-t border-borde bg-superficie-hover px-4 py-3 text-sm">
+              <span class="text-texto">Esperado {{ cierre.efectivo_esperado|dinero }} · contado {{ cierre.efectivo_contado|dinero }} · base {{ cierre.base|dinero }}</span>
+              {% if cierre.motivo %}<span class="text-texto-suave">«{{ cierre.motivo }}»</span>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="bloque-impresion hidden overflow-hidden rounded-md border border-borde tablet:block">
+        <div class="overflow-x-auto">
+          <table class="tabla-datos tabla-md">
+            <thead>
+              <tr class="border-b border-borde bg-primario-suave">
+                <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-1" aria-hidden="true"><use href="#i-calendario"></use></svg>
+                    Jornada
+                  </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-right text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-4" aria-hidden="true"><use href="#i-efectivo"></use></svg>
+                    Esperado
+                  </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-right text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-3" aria-hidden="true"><use href="#i-saldo"></use></svg>
+                    Contado
+                  </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-right text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-2" aria-hidden="true"><use href="#i-alerta"></use></svg>
+                    Diferencia
+                  </span>
+                </th>
+                <th scope="col" class="px-4 py-3 text-sm font-semibold text-texto-suave">
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="h-4 w-4 text-serie-5" aria-hidden="true"><use href="#i-documento"></use></svg>
+                    Motivo
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cierre in r.cierres %}
+                <tr data-fila-consultable data-cierre="{{ cierre.pk }}"
+                    class="cursor-pointer border-b border-borde transition-colors last:border-b-0
+                           even:bg-superficie-hover hover:bg-primario-suave">
+                  <td class="px-4 py-3">
+                    <button type="button" data-consultar
+                            hx-get="{% url 'cierre-de-caja-ficha' cierre.pk %}" hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                            class="block text-left font-semibold whitespace-nowrap text-texto hover:underline">
+                      {{ cierre.fecha|date:"j \d\e M \d\e Y"|lower }}
+                    </button>
+                    <span class="block text-sm text-texto-suave">{{ cierre.cajero.nombre|default:"Sin nombre" }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right whitespace-nowrap text-texto tabular-nums">{{ cierre.efectivo_esperado|dinero }}</td>
+                  <td class="px-4 py-3 text-right whitespace-nowrap text-texto tabular-nums">
+                    {{ cierre.efectivo_contado|dinero }}
+                    <span class="block text-sm text-texto-suave">base {{ cierre.base|dinero }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right">{% include "reportes/partials/diferencia-del-cierre.html" %}</td>
+                  <td class="max-w-72 px-4 py-3 text-sm text-texto-suave">
+                    {% if cierre.motivo %}<span class="line-clamp-2">{{ cierre.motivo }}</span>{% else %}—{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% comment %} `INVD-5` puesto donde la administración puede verlo, como el recuento de
+       mermas sin motivo: un cierre descuadrado sin motivo **no puede existir** —lo impide
+       `cierre_de_caja_diferencia_con_motivo`—, y decirlo es lo que convierte la restricción
+       en algo comprobable desde la pantalla. {% endcomment %}
+    {% if resumen.hubo_cierres %}
+      <p class="text-base text-texto-suave" data-sin-motivo>
+        {% if resumen.sin_motivo %}
+          <strong class="font-semibold text-error-fuerte">{{ resumen.sin_motivo }} cierre{{ resumen.sin_motivo|pluralize }} con diferencia y sin motivo.</strong>
+          Eso no debería poder ocurrir: lo impide una restricción de la base de datos. Si lo
+          estás leyendo, algo escribió por fuera del sistema.
+        {% else %}
+          Todas las diferencias llevan su motivo, y no por cortesía: la base de datos no admite
+          una sin él.
+        {% endif %}
+      </p>
+    {% endif %}
+
+    <p class="no-imprimir text-base text-texto-suave" data-enlace-a-la-auditoria>
+      ¿Algo no cuadra?
+      <a href="{% url 'auditoria' %}" class="font-semibold text-acento-fuerte hover:underline">Ver la auditoría de la operación</a>,
+      con quién hizo qué y cuándo.
+    </p>
+  </div>
+  {% endwith %}
+
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Cierre de caja"
+          class="m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+  {% if abrir %}
+    <div hidden data-abrir-al-cargar hx-get="{{ abrir }}" hx-trigger="load"
+         hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"></div>
+  {% endif %}
+{% endblock %}

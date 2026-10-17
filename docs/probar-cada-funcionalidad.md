@@ -176,6 +176,14 @@ entonces. «Imprimir o guardar en PDF» saca la pantalla sin barra ni periodo. D
 de caja, «Ver las ventas en efectivo de esa jornada» abre esa modal filtrada por efectivo, y
 suma el esperado del cierre.
 
+**Los cierres, en Cierres de caja** (`DT-55`): el mismo periodo que las ventas, sobre la
+jornada cuadrada. Arriba, el **descuadre total** —lo que no se compensa— y la neta al lado;
+debajo, los filtros por resultado, cajero y motivo, y el orden por mayor descuadre para
+encontrar el peor día. La diferencia de cada fila lleva su color: ámbar si sobró, rojo si
+faltó. La fila abre la modal del cierre, desde la que se llega a las ventas en efectivo de
+esa jornada. Recién sembrado no hay ninguno: los registra el cajero en
+`/punto-de-venta/cierre/`.
+
 La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y

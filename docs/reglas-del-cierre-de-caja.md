@@ -176,7 +176,7 @@ las ventas.
 | Acción | Quién | Dónde |
 |---|---|---|
 | **Cuadrar la caja** (`HU-55`) | **Solo el cajero** (`USR-3`) | `/punto-de-venta/cierre/` |
-| **Consultar los cierres** (`HU-56`) | **Solo la administración** (`USR-4`) | `INT-3`, `/admin/ventas/cierredecaja/` |
+| **Consultar los cierres** (`HU-56`) | **Solo la administración** (`USR-4`) | `/cierres/` (`DT-55`) |
 
 Son dos filas distintas y dos pantallas distintas, como `[S11]` separa registrar ventas de
 consultar sus reportes. La autorización de la primera vive en
@@ -184,12 +184,12 @@ consultar sus reportes. La autorización de la primera vive en
 es el único camino por el que el recaudo en efectivo del día llega a una pantalla, y responde
 `PermissionDenied` aunque alguien escriba la URL (`DT-11`, `INV-4`).
 
-El reporte de cierres añade dos cosas que el listado no da solo, y las dos salen de `[S7]`:
+El reporte de cierres añade dos cosas a la lista de cuadres, y las dos salen de `[S7]`:
 
 - **Dos cifras de descuadre**, porque la suma con signo se compensa sola. `HU-56` pide
   detectar un **patrón**, y con la neta un periodo con veinte descuadres se lee como uno que
   cuadró.
-- **Un enlace por cierre a las ventas en efectivo de su jornada.** Es el tercer criterio de
+- **Un enlace por cierre, en su modal, a las ventas en efectivo de su jornada.** Es el tercer criterio de
   la historia hecho comprobable: `INVD-5` dice que el esperado «se explica» desde las ventas
   registradas, y una cifra que no se puede abrir no explica nada.
 

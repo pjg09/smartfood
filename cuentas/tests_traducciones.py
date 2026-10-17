@@ -26,21 +26,22 @@ Hay **dos problemas distintos** y por eso hay dos catálogos propios:
    suya cambia, la nuestra sigue sirviendo el marcado antiguo **en silencio**.
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import django
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import formats
+from django.utils import formats, timezone
 from django.utils.dates import MONTHS
 from django.utils.translation import gettext
 
 from cuentas.models import Rol, Usuario
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from personas.services import dar_de_alta_la_institucion
-from ventas.models import CierreDeCaja
+from catalogo.models import Categoria, Producto
+from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
 
 PLANTILLA_DE_DJANGO = (
     Path(django.__file__).parent
@@ -197,10 +198,10 @@ class ElAdminSeVeEnteroEnEspanolTest(TestCase):
 class LosReportesConNavegacionPorFechasSeVenEnEspanolTest(TestCase):
     """Contra la pantalla donde se vieron los dos defectos.
 
-    Los tres reportes de la cafetería son las únicas pantallas con
-    `date_hierarchy`, así que son las únicas que imprimían «Filter by» y las
-    únicas donde el mes capitalizado se leía en un enlace. Se comprueban sobre
-    el de cierres, que los tiene los dos —el rótulo y los enlaces de día—.
+    El reporte de movimientos de inventario es la única pantalla del admin con
+    `date_hierarchy` desde que ventas y cierres salieron (`DT-54`, `DT-55`), así
+    que es la única que podría imprimir «Filter by» o un mes capitalizado en un
+    enlace. Tiene los dos —el rótulo y los enlaces de día—.
     """
 
     def setUp(self):
@@ -216,21 +217,23 @@ class LosReportesConNavegacionPorFechasSeVenEnEspanolTest(TestCase):
         cajero = Usuario.objects.crear_usuario(
             email="cajero-traducciones@example.com", rol=Rol.CAJERO, nombre="Cajero"
         )
-        # Un cierre de una jornada conocida: sin filas, el admin no dibuja los
+        # Un movimiento de un día conocido: sin filas, el admin no dibuja los
         # enlaces de día y no habría mes que comprobar.
-        CierreDeCaja.objects.create(
-            fecha=date(2026, 9, 19),
-            cajero=cajero,
-            base=Decimal("50000"),
-            efectivo_esperado=Decimal("10000"),
-            efectivo_contado=Decimal("60000"),
+        categoria = Categoria.objects.create(nombre="Panadería")
+        pan = Producto.objects.create(nombre="Pan", precio=Decimal("2500"), categoria=categoria)
+        movimiento = MovimientoInventario.objects.create(
+            producto=pan, tipo=TipoDeMovimientoDeInventario.INGRESO, cantidad=10,
+            motivo="Ingreso de prueba", registrado_por=cajero,
+        )
+        MovimientoInventario.objects.filter(pk=movimiento.pk).update(
+            creado_en=timezone.make_aware(datetime(2026, 9, 19, 12, 0))
         )
         self.cuerpo = self.client.get(
-            reverse("admin:ventas_cierredecaja_changelist")
+            reverse("admin:inventario_movimientoinventario_changelist")
         ).content.decode()
 
     def test_el_rotulo_de_la_navegacion_por_fechas_esta_en_espanol(self):
-        self.assertIn("Filtrar por jornada", self.cuerpo)
+        self.assertIn("Filtrar por creado en", self.cuerpo)
         self.assertNotIn("Filter by", self.cuerpo)
 
     def test_los_enlaces_de_fecha_llevan_el_mes_en_minuscula(self):

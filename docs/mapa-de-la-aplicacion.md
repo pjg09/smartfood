@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-15; el panel de la cafetería sale del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a `/ventas/` (`DT-54`); recontada por script: 89 rutas propias y 3 del admin, y el admin, con seis modelos registrados. Antes, el 2026-10-14, el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`). Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-17; el reporte de cierres de caja sale del admin a `/cierres/` (`DT-55`); recontada por script: 92 rutas propias y 2 del admin, y el admin, con cinco modelos registrados. Antes, el 2026-10-15, el panel de la cafetería sale del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a `/ventas/` (`DT-54`); 89 rutas propias. Antes, el 2026-10-14, el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`). Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,11 +43,11 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las noventa y dos rutas
+## [S2] Las noventa y cuatro rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **89 rutas propias** que resuelve Django fuera del
-admin, todas, y **3 del admin** que se citan porque las pide alguna historia: se recontaron
+los mismos colores desde `DT-23`. Son las **92 rutas propias** que resuelve Django fuera del
+admin, todas, y **2 del admin** que se citan porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna.
 
 | Ruta | Qué es | Quién | Tarea |
@@ -139,8 +139,10 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/ventas/dia/<fecha>/ficha/` | Las ventas de ese día en la modal: cliente, medio, quién cobró, renglones e importe. Fragmento | **Solo administración** | `DT-54` |
 | `/ventas/venta/<id>/` | La pantalla con la modal de una venta abierta: es donde aterriza la auditoría, también para un pedido cancelado | **Solo administración** | `DT-48`, `DT-54` |
 | `/ventas/venta/<id>/ficha/` | Una venta en la modal, con quién canceló su pedido y por qué si se canceló. Fragmento | **Solo administración** | `DT-54` |
+| `/cierres/` | Reporte de cierres de caja del periodo, sobre la jornada cuadrada: descuadre total, neta, jornadas y esperado; filtros por resultado, cajero y motivo, y orden por mayor descuadre | **Solo administración** | `HU-56`, `DT-55` |
+| `/cierres/<id>/` | La misma pantalla acotada a la jornada de ese cierre, con su modal abierta: es donde aterriza la auditoría | **Solo administración** | `DT-55` |
+| `/cierres/<id>/ficha/` | Un cierre en la modal: quién lo cuadró, esperado, base, contado, diferencia, motivo y el enlace a las ventas en efectivo de esa jornada. Fragmento | **Solo administración** | `INVD-5`, `DT-55` |
 | `/catalogo/imagenes/<clave>` | Imagen de un producto, con caché de un mes | **Cualquiera** | `TT-53` |
-| `/admin/ventas/cierredecaja/` | Reporte de cierres de caja: el histórico de cuadres con su descuadre del periodo, y el enlace que explica cada esperado | **Solo administración** | `TT-176` |
 | `/admin/auditoria/` | Reporte de auditoría: una línea de tiempo con las cinco clases de operación —también la cancelación de pedidos—, con quién hizo qué y cuándo | **Solo administración** | `TT-178`, `DT-48` |
 | `/admin/inventario/movimientoinventario/` | Movimientos de inventario: el libro con su consolidado —entradas, salidas y neto del periodo— y quién registró cada asiento. **De solo lectura**: se registra en `/inventario/` | **Solo administración** | `TT-69`, `DT-50`, `TT-170` |
 | `/salud/` | Sonda de salud: responde 200 si la base de datos contesta, 503 si no | Cualquiera | `TT-04`, `DT-31` |
@@ -179,6 +181,7 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/alergenos/`, su fragmento y su modal | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/cafeteria/` | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/ventas/`, sus dos páginas y sus dos modales | 403 | **200** | 403 | 403 | 302 → acceso |
+| `/cierres/`, su página de un cierre y su modal | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/` | 403 | **200** | 302 | 302 | 302 → acceso |
 | `/admin/inventario/movimientoinventario/add/` | 403 | 403 | 302 | 302 | 302 → acceso |
 | `/padron/<id>/desactivar/` (`POST`) | **200** | 403 | 403 | 403 | 302 → acceso |
@@ -233,7 +236,7 @@ como navegación, y la tabla es la que fija `cuentas/tests_navegacion.py`.
 | Cajero (`USR-3`) | `/punto-de-venta/` |
 | Acudiente (`USR-2`) | `/mis-estudiantes/` |
 
-**Y `/admin/` son 47 pantallas**, no una: seis modelos registrados por seis o siete URLs
+**Y `/admin/` son 41 pantallas**, no una: cinco modelos registrados por seis o siete URLs
 cada uno —listado, añadir, editar, borrar, historial— y las del propio admin. Esta tabla no las enumera porque las
 genera Django a partir de los modelos; lo que cada rol alcanza de ellas está en `[S3]`.
 
@@ -289,7 +292,7 @@ coincidir porque dejaría media pantalla en cada tema.
 | `inventario.merma` | 404 (sin registro: `DT-50`) | 404 | 302 | 302 |
 | `restricciones.restriccionesdelestudiante` | 403 (`DEC-21`) | **200** (solo consulta) | 302 | 302 |
 | `ventas.venta` | 404 (sin registro: `DT-54`) | 404 | 302 | 302 |
-| `ventas.cierredecaja` | 403 | **200** (solo consulta) | 302 | 302 |
+| `ventas.cierredecaja` | 404 (sin registro: `DT-55`) | 404 | 302 | 302 |
 | `/admin/auditoria/` (sin modelo) | 403 | **200** (solo consulta) | 403 | 403 |
 | `auth.group` | **403** | 403 | 302 | 302 |
 
@@ -321,17 +324,18 @@ conviene no perder:
   el documento del estudiante ni su código de tarjeta**, ni en el listado ni en la ficha: la
   cafetería consulta su actividad comercial, no el padrón.
 - **El reporte de cierres de caja enseña dos cifras de descuadre, y esa es la historia**
-  (`HU-56`, `TT-176`). La suma con signo se compensa sola: un sobrante de $2.000 el lunes y
+  (`HU-56`, `DT-55`), y vive en `/cierres/`, fuera del admin. La suma con signo se compensa sola: un sobrante de $2.000 el lunes y
   un faltante de $2.000 el martes dan cero, y un mes con veinte descuadres se leería como un
   mes que cuadra. Arriba va el **descuadre total** —lo que no se compensa—, y la neta se dice
   al lado. Es lo que convierte el reporte en lo que `HU-56` pide: **detectar un patrón** en
   vez de enterarse suelto cada día.
-  **El tercer criterio no se cumple enseñando la cifra**: cada cierre enlaza al reporte de
-  ventas de esa jornada, ya filtrado por efectivo. Es lo que hace comprobable `INVD-5` en dos
+  **El tercer criterio no se cumple enseñando la cifra**: la modal de cada cierre enlaza a
+  las ventas de esa jornada, ya filtradas por efectivo. Es lo que hace comprobable `INVD-5` en dos
   clics, y hay una prueba que sigue el enlace y cuadra lo que trae contra el esperado.
   **El cajero no entra**, aunque sea quien escribe estas filas: cuadrar su caja es suyo
   (`HU-55`), leer el patrón de la cafetería es de quien administra el servicio. Y **nadie las
-  edita**: el esperado quedó congelado contra el dinero que se contó aquella tarde.
+  edita**: el esperado quedó congelado contra el dinero que se contó aquella tarde, y las
+  rutas del reporte solo responden a `GET`.
 - **El reporte de inventario es el mismo libro, con su consolidado encima** (`HU-36`,
   `TT-170`). No hay pantalla nueva: entradas, ventas y mermas ya estaban en un solo sitio
   desde `TT-69`, y lo que faltaba era acotar un periodo y decir cuánto suma lo que se mira —
@@ -865,8 +869,8 @@ inventario no guarda el actor. Está declarado en el `ANEXO B` de
 **El cierre de caja ya está, y su reporte también** (`HU-55`, `HU-56`, `TT-171` … `TT-176`):
 el cajero cuadra la jornada contra las ventas en efectivo registradas, con el esperado
 **calculado y nunca digitado** (`INVD-5`), las transferencias fuera del cuadre y motivo
-obligatorio si hay diferencia; y la administración consulta el histórico con el descuadre del
-periodo y el enlace que explica cada cifra esperada.
+obligatorio si hay diferencia; y la administración consulta el histórico en `/cierres/`
+(`DT-55`), con el descuadre del periodo y el enlace que explica cada cifra esperada.
 
 **El de movimientos de inventario ya está** (`HU-36`, `TT-169`, `TT-170`): el mismo libro del
 admin, ahora con navegación por fechas y el consolidado del periodo —entradas, salidas, neto
