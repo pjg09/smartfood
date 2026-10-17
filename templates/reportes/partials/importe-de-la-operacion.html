@@ -1,0 +1,2 @@
+{% load dinero %}{% comment %} DT-56. El importe de una operación, dicho según su clase: una cancelación
+   **devuelve**, y la diferencia de un cierre lleva su signo también cuando sobra. {% endcomment %}{% if operacion.clase == "cancelacion" %}<span class="text-sm font-normal text-texto-suave">devuelto </span>{% endif %}{% if operacion.clase == "cierre" and operacion.importe > 0 %}+{% endif %}{{ operacion.importe|dinero }}

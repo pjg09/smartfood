@@ -464,3 +464,87 @@ class LaPantallaDeAuditoriaTest(BaseDeLaAuditoria):
                 respuesta = self.client.get(reverse(listado))
                 self.assertContains(respuesta, "data-enlace-a-la-auditoria")
                 self.assertContains(respuesta, self.url)
+
+
+class LaPantallaFueraDelAdminTest(BaseDeLaAuditoria):
+    """`DT-56`. La auditoría en `/auditoria/`, con el sistema visual."""
+
+    def setUp(self):
+        super().setUp()
+        self.venta = registrar_venta(
+            actor=self.cajero, lineas={self.pan.id: 1}, medio_pago=MedioDePago.EFECTIVO
+        )
+        self.cierre = cerrar_caja(
+            actor=self.cajero, base=Decimal("0"), efectivo_contado=Decimal("2500")
+        )
+        self.client.force_login(self.administracion)
+        self.url = reverse("auditoria")
+
+    def test_esta_fuera_del_admin(self):
+        self.assertEqual(self.url, "/auditoria/")
+        self.assertTemplateUsed(self.client.get(self.url), "base-aplicacion.html")
+        self.assertEqual(self.client.get("/admin/auditoria/").status_code, 404)
+
+    def test_no_depende_del_acceso_al_admin(self):
+        """El rol lo exige el selector; `is_staff` era cosa del armazón del admin."""
+        self.client.force_login(crear_cuenta(
+            email="auditoria-sin-staff@example.com", rol=Rol.ADMINISTRADOR,
+            accede_a_administracion=False, enviar_invitacion=False,
+        ))
+
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_por_defecto_mira_siete_dias(self):
+        respuesta = self.client.get(self.url)
+
+        self.assertEqual(respuesta.context["atajo"], "7")
+        self.assertEqual(respuesta.context["desde"], timezone.localdate() - timedelta(days=6))
+
+    def test_la_clase_filtra_la_linea_y_no_las_cifras(self):
+        """Las cifras son la navegación: no se vacían al pulsar una."""
+        respuesta = self.client.get(self.url, {"clase": "cierre"})
+
+        self.assertEqual(self.clases_de(respuesta.context["operaciones"]), ["cierre"])
+        self.assertEqual(respuesta.context["resumen"].cuantas, 3)  # ingreso, venta y cierre
+
+    def test_el_filtro_va_al_selector_y_no_despues_del_tope(self):
+        """Con un tope de una, el cierre es la más reciente; la venta no cabría
+        si se filtrara la lista ya recortada."""
+        operaciones, _ = auditoria(actor=self.administracion, limite=1, clases={"venta"})
+
+        self.assertEqual(self.clases_de(operaciones), ["venta"])
+
+    def test_una_clase_desconocida_es_todas(self):
+        respuesta = self.client.get(self.url, {"clase": "recargas"})
+
+        self.assertIsNone(respuesta.context["clase"])
+        self.assertEqual(len(respuesta.context["operaciones"]), 3)
+
+    def test_los_atajos_y_las_fechas_conservan_la_clase(self):
+        respuesta = self.client.get(self.url, {"clase": "venta"})
+
+        self.assertContains(respuesta, 'href="?periodo=30&amp;clase=venta"')
+        self.assertContains(respuesta, '<input type="hidden" name="clase" value="venta">')
+
+    def test_la_venta_y_el_cierre_se_abren_en_la_modal_de_la_auditoria(self):
+        respuesta = self.client.get(self.url)
+
+        self.assertContains(respuesta, f'hx-get="{reverse("venta-ficha", args=[self.venta.pk])}"')
+        self.assertContains(respuesta, f'hx-get="{reverse("cierre-de-caja-ficha", args=[self.cierre.pk])}"')
+        self.assertContains(respuesta, "data-modal-ficha")
+
+    def test_un_ingreso_se_abre_en_su_ficha_del_admin(self):
+        movimiento = MovimientoInventario.objects.get(tipo=TipoDeMovimientoDeInventario.INGRESO)
+
+        self.assertContains(
+            self.client.get(self.url),
+            f'href="{reverse("admin:inventario_movimientoinventario_change", args=[movimiento.pk])}"',
+        )
+
+    def test_las_operaciones_se_agrupan_por_dia_local(self):
+        respuesta = self.client.get(self.url)
+
+        self.assertEqual([dia for dia, _ in respuesta.context["por_dia"]], [timezone.localdate()])
+
+    def test_solo_responde_a_get(self):
+        self.assertEqual(self.client.post(self.url).status_code, 405)

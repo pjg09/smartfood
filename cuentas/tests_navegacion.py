@@ -262,7 +262,9 @@ class ElAdminTraeElArmazonEnteroTest(TestCase):
         self.assertNotIn("/admin/personas/institucion/", cuerpo)
 
         self.client.force_login(cuenta(Rol.ADMINISTRADOR))
-        cafeteria = self.client.get("/admin/auditoria/").content.decode()
+        # Una pantalla del admin que no es el listado de movimientos: ese se
+        # enlaza a sí mismo y no dejaría comprobar que no está en la barra.
+        cafeteria = self.client.get("/admin/password_change/").content.decode()
         self.assertIn(resolver("categorias"), cafeteria)
         self.assertIn(resolver("alergenos"), cafeteria)
         self.assertIn(resolver("panel-de-la-cafeteria"), cafeteria)

@@ -9,8 +9,6 @@ import uuid
 from datetime import date, timedelta
 from urllib.parse import urlencode
 
-from django import forms
-from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
@@ -26,6 +24,7 @@ from reportes import reglas
 from reportes.selectors import UMBRAL_DE_EXISTENCIAS_BAJAS
 from reportes.selectors import panel_de_la_cafeteria as selectores_del_panel
 from reportes.selectors import (
+    CLASES_DE_OPERACION,
     OPERACIONES_MAXIMAS,
     agregados_nutricionales,
     alertas_de_frecuencia,
@@ -106,89 +105,83 @@ def consumo_del_estudiante(request, estudiante_id):
     )
 
 
-#: Cuántos días atrás mira el reporte de auditoría cuando nadie pide un periodo.
-#: Una semana: es lo que se revisa cuando algo no cuadró «esta semana», que es
-#: como se pregunta. Sin ventana por defecto, la primera visita se traería el
-#: libro entero para enseñar las quinientas últimas.
-DIAS_DE_AUDITORIA_POR_DEFECTO = 7
-
-
-class PeriodoDeAuditoriaForm(forms.Form):
-    """Las dos fechas del reporte, y nada más.
-
-    **Son fechas locales inclusivas**, como en los otros tres reportes. El
-    formulario no valida que `desde` sea anterior a `hasta`: si se invierten no
-    sale nada, la pantalla lo dice, y una regla más aquí sería una regla que el
-    selector no tiene.
-    """
-
-    desde = forms.DateField(
-        label="Desde", required=False, widget=forms.DateInput(attrs={"type": "date"})
-    )
-    hasta = forms.DateField(
-        label="Hasta", required=False, widget=forms.DateInput(attrs={"type": "date"})
-    )
+#: El atajo con el que abre la auditoría cuando nadie pide un periodo: una
+#: semana. Es lo que se revisa cuando algo no cuadró «esta semana», que es como
+#: se pregunta, y sin ventana la primera visita se traería el libro entero para
+#: enseñar las quinientas últimas. Los otros dos reportes abren en treinta.
+ATAJO_DE_LA_AUDITORIA = "7"
 
 
 @login_required
 @require_http_methods(["GET"])
 def auditoria_de_la_operacion(request):
-    """El reporte de auditoría (`TT-178`, `HU-37`, `ALC-IN-22`).
+    """El reporte de auditoría (`TT-178`, `HU-37`, `ALC-IN-22`, `DT-56`).
 
-    ── VIVE EN EL ADMIN, Y NO ES UNA TERCERA EXCEPCIÓN A `DT-2` ────────────
-    Las dos excepciones declaradas —el padrón (`DT-27`) y la cola de reservas
-    (`DT-34`)— son pantallas propias, con Tailwind y fuera del admin, porque las
-    abre a diario alguien que no es administrador. Esta no: usa el armazón del
-    admin, sus estilos y su barra, y quien la consulta ya vive ahí.
+    **Una pantalla propia**, como los reportes de ventas y de cierres a los que
+    enlaza: abrir una venta o un cierre desde la línea de tiempo ya no salta de
+    un armazón a otro, porque se abren en la modal de esta misma pantalla.
 
-    **Lo que sí es distinto de los otros tres reportes es que no hay modelo.**
-    Un `ModelAdmin` pinta el listado de *una* tabla, y la auditoría cruza
-    cuatro. Por eso es una vista con su ruta, registrada **antes** de
-    `admin.site.urls` en `config/urls.py`: así la URL queda `/admin/auditoria/`
-    —que es donde alguien la buscaría— en vez de colgar de un modelo con el que
-    no tiene que ver. Es el mismo camino que `TT-141` abrió para el historial de
-    existencias, con la diferencia de que aquel sí tenía modelo del que colgar.
-    ─────────────────────────────────────────────────────────────────────────
+    El periodo es el de los otros reportes, con siete días por defecto: una
+    auditoría se consulta acotada —«qué pasó el martes»—. **Las cifras por clase
+    son del periodo entero** y la línea de tiempo, de la clase elegida: las
+    cifras son la navegación, y no se vacían al pulsar una.
 
-    **Se autoriza dos veces y las dos hacen falta.** `is_staff` decide si el
-    armazón del admin tiene sentido para quien llama —sin él, Django lo mandaría
-    a su propia pantalla de acceso—, y el selector decide si puede ver el dato.
-    Un cajero tiene lo segundo en contra aunque tuviera lo primero.
+    El rol lo exige el selector, antes de leer nada.
     """
-    if not request.user.is_staff:
-        raise PermissionDenied(
-            "El reporte de auditoría vive en la administración (INT-3)."
-        )
-
-    formulario = PeriodoDeAuditoriaForm(request.GET or None)
-    formulario.is_valid()
-
-    hoy = timezone.localdate()
-    desde = formulario.cleaned_data.get("desde") if formulario.is_bound else None
-    hasta = formulario.cleaned_data.get("hasta") if formulario.is_bound else None
-    if desde is None and hasta is None:
-        desde = hoy - timedelta(days=DIAS_DE_AUDITORIA_POR_DEFECTO - 1)
-        hasta = hoy
-
-    operaciones, hubo_mas = auditoria(actor=request.user, desde=desde, hasta=hasta)
-
-    return render(
-        request,
-        "admin/reportes/auditoria.html",
-        {
-            # El contexto del admin: la barra, el selector de tema y las migas.
-            # Sin él la pantalla se pintaría desnuda dentro de su propio armazón.
-            **admin.site.each_context(request),
-            "title": "Reporte de auditoría",
-            "form": formulario,
-            "desde": desde,
-            "hasta": hasta,
-            "operaciones": operaciones,
-            "hubo_mas": hubo_mas,
-            "limite": OPERACIONES_MAXIMAS,
-            "resumen": resumen_de_auditoria(operaciones),
-        },
+    desde, hasta, atajo, aviso = periodo_pedido(
+        request.GET, timezone.localdate(), por_defecto=ATAJO_DE_LA_AUDITORIA
     )
+    clase = request.GET.get("clase")
+    if clase not in dict(CLASES_DE_OPERACION):
+        clase = None
+
+    todas, hubo_mas_en_todas = auditoria(actor=request.user, desde=desde, hasta=hasta)
+    if clase:
+        operaciones, hubo_mas = auditoria(
+            actor=request.user, desde=desde, hasta=hasta, clases={clase}
+        )
+    else:
+        operaciones, hubo_mas = todas, hubo_mas_en_todas
+
+    resumen = resumen_de_auditoria(todas)
+    periodo = (
+        {"periodo": atajo} if atajo else
+        {k: v.isoformat() for k, v in (("desde", desde), ("hasta", hasta)) if v}
+    )
+
+    return render(request, "reportes/auditoria.html", {
+        "desde": desde,
+        "hasta": hasta,
+        "atajos": ATAJOS_DEL_PERIODO,
+        "atajo": atajo,
+        "personalizado": atajo is None,
+        "aviso": aviso,
+        "clase": clase,
+        "etiqueta_de_la_clase": dict(CLASES_DE_OPERACION).get(clase),
+        "clases": tuple(
+            (valor, etiqueta, cuantas)
+            for (valor, etiqueta), (_, cuantas) in zip(CLASES_DE_OPERACION, resumen.por_clase)
+        ),
+        "resumen": resumen,
+        "operaciones": operaciones,
+        "por_dia": _por_dia(operaciones),
+        "hubo_mas": hubo_mas,
+        "cifras_recortadas": hubo_mas_en_todas,
+        "limite": OPERACIONES_MAXIMAS,
+        # Las cifras por clase enlazan conservando el periodo; las fechas se
+        # envían conservando la clase.
+        "periodo_en_la_url": urlencode(periodo),
+    })
+
+
+def _por_dia(operaciones):
+    """`((día, [operaciones]), …)`, del más reciente al más antiguo. Se agrupa
+    aquí y no en la plantilla: `{% regroup %}` agruparía por la fecha en UTC
+    si alguien le pasara el instante sin convertir."""
+    grupos = {}
+    for operacion in operaciones:
+        grupos.setdefault(timezone.localdate(operacion.cuando), []).append(operacion)
+    return tuple(grupos.items())
 
 
 @login_required
@@ -313,7 +306,7 @@ def _fecha(texto):
         return None
 
 
-def periodo_pedido(parametros, hoy):
+def periodo_pedido(parametros, hoy, por_defecto=ATAJO_POR_DEFECTO):
     """`(desde, hasta, atajo, aviso)` a partir de la URL.
 
     Dos fechas mandan sobre el atajo; una sola deja el otro extremo abierto. Una
@@ -331,7 +324,7 @@ def periodo_pedido(parametros, hoy):
     atajo = parametros.get("periodo")
     dias = {clave: n for clave, _, n in ATAJOS_DEL_PERIODO}
     if atajo not in dias:
-        atajo = ATAJO_POR_DEFECTO
+        atajo = por_defecto
     if dias[atajo] is None:
         return None, None, atajo, ""
     return hoy - timedelta(days=dias[atajo] - 1), hoy, atajo, ""

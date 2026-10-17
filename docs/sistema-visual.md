@@ -325,10 +325,11 @@ Tres decisiones que se copian con ella:
   fila. Se vio en la captura de `TT-176`, como antes en `LineaVentaInline`. **Y también en
   el texto**: una cifra metida en una frase con `f"esperado {x}"` sale igual de cruda al
   lado de una columna formateada (`TT-178`).
-- **Y una cuarta forma, cuando el reporte no tiene modelo** (`TT-178`): la misma cabeza
-  —cifra grande, frase que dice de dónde sale, tablas de desglose— sobre una vista propia
-  con su ruta, no sobre un `change_list`. Lo que cambia es que hay que pintar las migas a
-  mano, y ahí espera la trampa del `ANEXO A`.
+- **Fuera del admin, la cabeza es de tarjetas de resumen** (`[S2.1]`): los reportes de
+  ventas, de cierres y la auditoría (`DT-54` … `DT-56`) llevan arriba sus cifras con icono y
+  la frase que dice de dónde salen, el periodo en atajos y fechas, y cada fila abre su
+  modal. La regla del consolidado no cambia: las cifras son las del conjunto que pinta la
+  lista.
 - **Sin `<h1>` propio**: el admin ya pinta `title` del contexto como encabezado. Lo que sí
   se cambia es ese `title` desde `changelist_view`, porque el de fábrica —«Seleccione venta
   para ver»— describe lo que se hace con una tabla, no lo que es la pantalla.

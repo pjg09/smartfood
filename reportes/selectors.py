@@ -1042,6 +1042,16 @@ class Operacion:
             return "cierre-de-caja"
         return f"admin:{self.modelo.replace('.', '_')}_change"
 
+    @property
+    def ficha(self):
+        """La ruta del fragmento que abre esta operación **en una modal** (`DT-56`),
+        o `None` si no tiene: un movimiento de inventario se abre en su ficha
+        del admin."""
+        return {
+            "ventas.venta": "venta-ficha",
+            "ventas.cierredecaja": "cierre-de-caja-ficha",
+        }.get(self.modelo)
+
 
 #: Las cinco clases de operación, y el orden en que se declaran en la pantalla.
 #: No son las tres tablas: la entrega y la cancelación de un pedido son
@@ -1064,8 +1074,12 @@ CLASES_DE_OPERACION = (
 OPERACIONES_MAXIMAS = 500
 
 
-def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS):
+def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS, clases=None):
     """Las operaciones registradas del periodo, en una sola línea de tiempo.
+
+    `clases` acota a esas clases de `CLASES_DE_OPERACION` (`DT-56`). **Se
+    filtra aquí y no después**: con el tope, filtrar la lista ya recortada
+    dejaría fuera operaciones de la clase pedida sin decirlo.
 
     `TT-177`, `HU-37`, `ALC-IN-22`. Devuelve `(operaciones, hubo_mas)`: la lista
     ordenada de la más reciente a la más antigua, y si el tope dejó algo fuera.
@@ -1120,12 +1134,18 @@ def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS):
             consulta = consulta.filter(**{f"{campo}__lt": fin})
         return consulta
 
+    de_cada_clase = {
+        "venta": _ventas_de_la_auditoria,
+        "entrega": _entregas_de_la_auditoria,
+        "cancelacion": _cancelaciones_de_la_auditoria,
+        "inventario": _movimientos_de_la_auditoria,
+        "cierre": _cierres_de_la_auditoria,
+    }
     operaciones = [
-        *_ventas_de_la_auditoria(acotar, limite),
-        *_entregas_de_la_auditoria(acotar, limite),
-        *_cancelaciones_de_la_auditoria(acotar, limite),
-        *_movimientos_de_la_auditoria(acotar, limite),
-        *_cierres_de_la_auditoria(acotar, limite),
+        operacion
+        for clase, leer in de_cada_clase.items()
+        if clases is None or clase in clases
+        for operacion in leer(acotar, limite)
     ]
     operaciones.sort(key=lambda operacion: operacion.cuando, reverse=True)
 

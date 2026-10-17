@@ -1,0 +1,221 @@
+{% extends "base-aplicacion.html" %}
+{% load dinero %}
+
+{% comment %} TT-178, HU-37, ALC-IN-22, DT-56. El reporte de auditoría, fuera del admin.
+
+   **Una sola línea de tiempo con las cinco clases de operación**, de la más reciente a la
+   más antigua y agrupada por día. El «para» de la historia es rastrear **quién hizo qué**
+   cuando algo no cuadre, así que en cada fila va primero quién y después qué.
+
+   **Las cifras por clase son del periodo entero y filtran la línea de tiempo al
+   pulsarlas**: son la navegación, y no se vacían al elegir una. El filtro lo aplica el
+   selector, antes del tope.
+
+   Una venta o un cierre se abren en la modal de esta pantalla (`[S2.10]`), con los
+   fragmentos de sus reportes; un ingreso o una merma, en su ficha del admin.
+
+   **La columna de quién dice el hueco con palabras**: los ingresos y las mermas anteriores
+   a `HU-69` no registran actor, y dejarlo en blanco se leería como un fallo de la consulta
+   (`[S4]` del sistema visual).
+{% endcomment %}
+
+{% block titulo %}Auditoría | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="flex w-full flex-col gap-6" data-reporte-de-auditoria>
+
+    <header class="flex flex-col gap-3 tablet:flex-row tablet:items-start tablet:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Auditoría</h1>
+        <p class="text-base font-medium text-texto-suave">
+          Quién hizo qué y cuándo. Sale de los libros que ya existen —ventas, pedidos,
+          inventario y cierres—, no de un registro aparte que alguien tenga que mantener.
+        </p>
+        <p class="hidden text-sm text-texto-suave print:block">
+          {% if desde and hasta %}Del {{ desde|date:"j \d\e M \d\e Y"|lower }} al {{ hasta|date:"j \d\e M \d\e Y"|lower }}{% elif desde %}Desde el {{ desde|date:"j \d\e M \d\e Y"|lower }}{% elif hasta %}Hasta el {{ hasta|date:"j \d\e M \d\e Y"|lower }}{% else %}Todas las operaciones registradas{% endif %}{% if etiqueta_de_la_clase %} · {{ etiqueta_de_la_clase }}{% endif %}
+        </p>
+      </div>
+      <button type="button" onclick="window.print()" data-imprimir-reporte
+              class="no-imprimir inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border
+                     border-borde bg-superficie px-4 text-base font-medium text-texto transition-colors
+                     hover:bg-superficie-hover">
+        <svg class="h-4 w-4" aria-hidden="true"><use href="#i-imprimir"></use></svg>
+        Imprimir o guardar en PDF
+      </button>
+    </header>
+
+    {% comment %} El periodo, como en ventas y cierres, con siete días por defecto. Los atajos
+       conservan la clase elegida, y las fechas la llevan en un campo oculto. {% endcomment %}
+    <nav aria-label="Periodo" class="no-imprimir flex flex-wrap items-center gap-2" data-periodo>
+      {% for clave, etiqueta, _ in atajos %}
+        <a href="?periodo={{ clave }}{% if clase %}&amp;clase={{ clase }}{% endif %}" data-atajo="{{ clave }}"
+           {% if atajo == clave %}aria-current="true"{% endif %}
+           class="inline-flex h-11 items-center rounded-md border px-4 text-base font-medium transition-colors
+                  {% if atajo == clave %}border-transparente bg-primario text-sobre-primario{% else %}border-borde bg-superficie text-texto hover:bg-superficie-hover{% endif %}">
+          {{ etiqueta }}
+        </a>
+      {% endfor %}
+      <form method="get" action="{% url 'auditoria' %}" class="flex flex-wrap items-center gap-2"
+            data-periodo-personalizado>
+        {% if clase %}<input type="hidden" name="clase" value="{{ clase }}">{% endif %}
+        <label for="desde" class="text-base text-texto-suave">Desde</label>
+        <input type="date" id="desde" name="desde" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and desde %}{{ desde|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                      hover:border-acento focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento{% else %}border-borde{% endif %}">
+        <label for="hasta" class="text-base text-texto-suave">hasta</label>
+        <input type="date" id="hasta" name="hasta" onchange="this.form.requestSubmit()"
+               value="{% if personalizado and hasta %}{{ hasta|date:'Y-m-d' }}{% endif %}"
+               class="h-11 rounded-md border bg-superficie px-3 text-base text-texto transition-colors
+                      hover:border-acento focus:border-acento focus:outline-none
+                      {% if personalizado %}border-acento{% else %}border-borde{% endif %}">
+        <noscript>
+          <button type="submit" class="h-11 rounded-md border border-borde px-4 text-base">Ver</button>
+        </noscript>
+      </form>
+    </nav>
+
+    {% if aviso %}
+      <p role="status" data-aviso-del-periodo
+         class="rounded-md border border-aviso-fuerte/50 bg-aviso-suave px-3 py-2 text-base text-aviso-fuerte">{{ aviso }}</p>
+    {% endif %}
+
+    {% if resumen.hubo_operaciones %}
+      {% comment %} Una cifra por clase, y «Todas» delante. **Son enlaces**: pulsar una deja
+         la línea de tiempo en esa clase. La activa lleva el borde de acento y
+         `aria-current`. Una clase en cero se pinta igual —«ninguna entrega esta semana» es
+         un dato— pero no enlaza: no hay nada que ver. {% endcomment %}
+      <nav aria-label="Clases de operación" class="no-imprimir grid grid-cols-2 gap-3 tablet:grid-cols-3"
+           data-por-clase data-resumen-de-auditoria>
+        <a href="?{{ periodo_en_la_url }}" data-clase="todas" {% if not clase %}aria-current="true"{% endif %}
+           class="flex items-center gap-3 rounded-xl border bg-superficie p-4 shadow-sm transition-colors
+                  hover:border-acento {% if not clase %}border-acento ring-1 ring-acento{% else %}border-borde{% endif %}">
+          {% include "reportes/partials/icono-de-la-operacion.html" with clase="" %}
+          <span class="flex min-w-0 flex-col">
+            <span class="font-display text-xl font-semibold text-texto" data-cuantas-operaciones>{{ resumen.cuantas }}</span>
+            <span class="text-sm text-texto-suave">Todas</span>
+          </span>
+        </a>
+        {% for valor, etiqueta, cuantas in clases %}
+          {% if cuantas %}
+            <a href="?{{ periodo_en_la_url }}&amp;clase={{ valor }}" data-clase="{{ valor }}"
+               {% if clase == valor %}aria-current="true"{% endif %}
+               class="flex items-center gap-3 rounded-xl border bg-superficie p-4 shadow-sm transition-colors
+                      hover:border-acento {% if clase == valor %}border-acento ring-1 ring-acento{% else %}border-borde{% endif %}">
+          {% else %}
+            <div data-clase="{{ valor }}" class="flex items-center gap-3 rounded-xl border border-borde bg-superficie p-4 opacity-70">
+          {% endif %}
+              {% include "reportes/partials/icono-de-la-operacion.html" with clase=valor %}
+              <span class="flex min-w-0 flex-col">
+                <span class="font-display text-xl font-semibold text-texto">{{ cuantas }}</span>
+                <span class="text-sm text-texto-suave">{{ etiqueta }}</span>
+              </span>
+          {% if cuantas %}</a>{% else %}</div>{% endif %}
+        {% endfor %}
+      </nav>
+
+      {% if resumen.sin_actor %}
+        {% comment %} El hueco declarado, arriba y no escondido en una celda. No es un fallo:
+           hasta `HU-69` el libro de inventario no guardaba quién. {% endcomment %}
+        <p data-sin-actor class="flex items-start gap-2 rounded-md border border-borde bg-superficie-hover px-3 py-2 text-base text-texto">
+          <svg class="mt-0.5 h-4 w-4 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
+          <span>
+            <strong class="font-semibold">{{ resumen.sin_actor }}</strong>
+            operacion{{ resumen.sin_actor|pluralize:"es" }} sin actor registrado. No es un fallo
+            de este reporte: son ingresos o mermas anteriores a que el libro de inventario
+            guardara quién los registró, y no se les atribuye un autor a posteriori.
+          </span>
+        </p>
+      {% endif %}
+
+      {% if hubo_mas or cifras_recortadas %}
+        <p data-hubo-mas role="status"
+           class="flex items-start gap-2 rounded-md border border-aviso-fuerte/50 bg-aviso-suave px-3 py-2 text-base text-aviso-fuerte">
+          <svg class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+          <span>
+            El periodo tiene más de <strong class="font-semibold">{{ limite }}</strong> operaciones y
+            se enseñan las más recientes{% if cifras_recortadas %}; las cifras de arriba cuentan
+            solo esas{% endif %}. Acota las fechas para verlas todas: recortar sin decirlo sería lo
+            peor que puede hacer un reporte de auditoría.
+          </span>
+        </p>
+      {% endif %}
+
+      {% comment %} La línea de tiempo (`[S2.7]`): lo último primero, con quién y cuándo, y un
+         encabezado por día. {% endcomment %}
+      <div class="flex flex-col gap-4" data-linea-de-tiempo>
+        {% if not operaciones %}
+          <p class="rounded-xl border border-dashed border-borde p-8 text-center text-base text-texto-suave" data-sin-operaciones-de-la-clase>
+            Ninguna operación de «{{ etiqueta_de_la_clase }}» en el periodo.
+          </p>
+        {% endif %}
+        {% for dia, del_dia in por_dia %}
+          <section class="bloque-impresion overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm">
+            <h2 class="flex items-baseline justify-between gap-3 border-b border-borde bg-primario-suave px-4 py-3">
+              <span class="font-display text-base text-texto">{{ dia|date:"l j \d\e F \d\e Y"|capfirst }}</span>
+              <span class="text-sm text-texto-suave">{{ del_dia|length }} operaci{{ del_dia|length|pluralize:"ón,ones" }}</span>
+            </h2>
+            <ol class="divide-y divide-borde">
+              {% for operacion in del_dia %}
+                <li data-operacion="{{ operacion.clase }}"
+                    {% if operacion.ficha %}data-fila-consultable{% endif %}
+                    class="flex items-start gap-3 px-4 py-3 transition-colors {% if operacion.ficha %}cursor-pointer hover:bg-superficie-hover{% endif %}">
+                  {% include "reportes/partials/icono-de-la-operacion.html" with clase=operacion.clase tam="chico" %}
+                  <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <p class="text-base text-texto">
+                      <span class="text-sm text-texto-suave tabular-nums">{{ operacion.cuando|date:"H:i" }}</span>
+                      {% if operacion.tiene_actor %}
+                        <strong class="font-semibold">{{ operacion.quien }}</strong>
+                      {% else %}
+                        <span data-sin-quien class="italic text-texto-suave">no se registró quién</span>
+                      {% endif %}
+                      ·
+                      {% if operacion.ficha %}
+                        <button type="button" data-consultar
+                                hx-get="{% url operacion.ficha operacion.objeto_id %}"
+                                hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+                                class="text-left font-medium text-acento-fuerte hover:underline">{{ operacion.accion }}</button>
+                      {% else %}
+                        <a href="{% url operacion.ruta operacion.objeto_id %}"
+                           class="font-medium text-acento-fuerte hover:underline">{{ operacion.accion }}</a>
+                      {% endif %}
+                    </p>
+                    <p class="text-sm break-words text-texto-suave">{{ operacion.detalle }}</p>
+                    {% comment %} En el teléfono el importe va aquí, debajo: a la derecha
+                       estrechaba el texto hasta partirlo palabra a palabra. {% endcomment %}
+                    {% if operacion.importe is not None %}
+                      <span class="text-base font-semibold text-texto tabular-nums tablet:hidden">{% include "reportes/partials/importe-de-la-operacion.html" %}</span>
+                    {% endif %}
+                  </div>
+                  {% if operacion.importe is not None %}
+                    <span class="hidden shrink-0 text-base font-semibold whitespace-nowrap text-texto tabular-nums tablet:inline" data-importe>{% include "reportes/partials/importe-de-la-operacion.html" %}</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ol>
+          </section>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% comment %} **Sin operaciones no se pinta un cero.** «0 operaciones» y «no hubo
+         actividad» se parecen, pero en un reporte de auditoría lo que hay que decir es que
+         el periodo elegido no alcanzó nada. {% endcomment %}
+      <div data-sin-operaciones role="status"
+           class="flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed
+                  border-borde p-8 text-center">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-acento-suave text-acento-fuerte">
+          <svg class="h-6 w-6" aria-hidden="true"><use href="#i-documento"></use></svg>
+        </span>
+        <p class="text-base font-medium text-texto">Ninguna operación registrada en ese periodo</p>
+        <p class="max-w-md text-sm text-texto-suave">Prueba con otras fechas.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Operación"
+          class="m-auto w-[min(34rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

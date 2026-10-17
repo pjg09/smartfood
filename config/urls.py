@@ -114,17 +114,6 @@ admin.site.site_title = "SmartFood"
 admin.site.index_title = "Gestión de la cafetería"
 
 urlpatterns = [
-    # `TT-178`, `HU-37`, `ALC-IN-22`. El reporte de auditoría. **Va antes que
-    # `admin.site.urls`, y esa es toda la razón por la que existe esta línea
-    # aquí**: Django resuelve en orden, así que `/admin/auditoria/` la atiende
-    # nuestra vista y todo lo demás sigue siendo el admin.
-    #
-    # No cuelga de un modelo porque no tiene uno: cruza ventas, pedidos,
-    # movimientos de inventario y cierres. Un `ModelAdmin` pinta el listado de
-    # una tabla, y este reporte es el de cuatro. Vive **dentro** del admin —su
-    # armazón, sus estilos, su barra—, como los otros tres reportes de la
-    # cafetería.
-    path("admin/auditoria/", auditoria_de_la_operacion, name="auditoria"),
     path("admin/", admin.site.urls),
     path("salud/", salud, name="salud"),
     # Cola de reservas pendientes (`TT-148`, `HU-24`). **No cuelga del punto de
@@ -148,6 +137,10 @@ urlpatterns = [
     path("cierres/", cierres, name="cierres-de-caja"),
     path("cierres/<uuid:cierre_id>/", cierre, name="cierre-de-caja"),
     path("cierres/<uuid:cierre_id>/ficha/", ficha_de_cierre, name="cierre-de-caja-ficha"),
+    # `TT-178`, `HU-37`, `ALC-IN-22`, `DT-56`. El reporte de auditoría, fuera
+    # del admin. No tiene modelo: cruza ventas, pedidos, movimientos de
+    # inventario y cierres, y los mezcla al leerlos.
+    path("auditoria/", auditoria_de_la_operacion, name="auditoria"),
     # `DEC-25`, `DT-50`. El inventario de la cafetería en una sola pantalla:
     # productos, ingresos, mermas y el libro de cada uno. Sustituye a las tres
     # pantallas del admin que tocaban lo mismo; el reporte de movimientos de

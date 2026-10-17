@@ -32,7 +32,8 @@ por una sola pantalla, `/inventario/`, y el libro de inventario empezó a guarda
 cada asiento (`DEC-25`, `DT-50`, `HU-69`); las categorías, a `/categorias/` (`DT-51`), y los
 alérgenos, a `/alergenos/`, que siguen sin poder eliminarse (`DEC-26`, `DT-52`). El 2026-10-15,
 el panel de la cafetería salió del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a
-`/ventas/` (`DT-54`). El 2026-10-17, el de cierres de caja, a `/cierres/` (`DT-55`).
+`/ventas/` (`DT-54`). El 2026-10-17, el de cierres de caja, a `/cierres/` (`DT-55`), y la auditoría, a
+`/auditoria/` (`DT-56`).
 Una familia nueva entra por la carga masiva o, desde `DEC-23` y `HU-64`, de una en una en
 la pantalla de acudientes. **Si una tarea propone tocar el producto
 sin un `DEC-n` detrás, es señal de que está mal entendida.**
@@ -140,14 +141,14 @@ Tres reglas (`DT-15`):
 
 Frontend (`DT-16`): **una vista HTMX devuelve un fragmento, nunca una página.** Si un endpoint
 devuelve a veces una cosa y a veces otra, sepáralo en dos. El admin de Django cubre `INT-3`,
-**con once pantallas propias fuera de él**: el padrón de la institución, que es la que
+**con doce pantallas propias fuera de él**: el padrón de la institución, que es la que
 secretaría abre a diario (`DT-27`), los pedidos anticipados, que comparten dos roles que no
 comparten interfaz (`DT-34`), —desde `DEC-17`— los acudientes y las restricciones, el
 personal de la cafetería en `/usuarios/` (`DT-45`), el inventario en `/inventario/`
 (`DEC-25`, `DT-50`) —productos, ingresos, mermas e historial—, las categorías en
 `/categorias/` (`DT-51`), los alérgenos en `/alergenos/` (`DT-52`), el panel de la
-cafetería en `/cafeteria/` (`DT-53`), el reporte de ventas en `/ventas/` (`DT-54`) y el de
-cierres de caja en `/cierres/` (`DT-55`). Del catálogo y el inventario, en el admin solo
+cafetería en `/cafeteria/` (`DT-53`), el reporte de ventas en `/ventas/` (`DT-54`), el de
+cierres de caja en `/cierres/` (`DT-55`) y la auditoría en `/auditoria/` (`DT-56`). Del catálogo y el inventario, en el admin solo
 queda el reporte de movimientos, de solo lectura.
 **`DEC-17` puso la raya que antes faltaba**: una pantalla propia sustituye a una del admin
 solo cuando alguien la usa a diario; el resto se queda envuelto (`DT-36`). Hay tres
@@ -171,15 +172,11 @@ admin les ganan a las utilidades. El reset acotado vive en `estilos/admin.css`, 
 **Un solo reporte de la cafetería vive dentro del admin**: el de movimientos de
 inventario (`TT-170`), por el camino que abrió `TT-141`. El admin pone listado, filtros y
 fechas, y lo que se añade es el consolidado **del listado que se está mirando**, calculado
-sobre el mismo `QuerySet` que pinta la tabla. **Los de ventas y cierres son pantallas
-propias** —`/ventas/` (`DT-54`) y `/cierres/` (`DT-55`)—, y sostienen la misma regla a mano:
-las cifras de arriba se calculan sobre el conjunto que pinta la tabla.
-
-**La auditoría no tiene modelo, y por eso es la única con ruta propia dentro del admin**
-(`TT-178`): cruza cuatro tablas. Va registrada en `config/urls.py` **antes** de
-`admin.site.urls` —Django resuelve en orden— y usa el armazón del admin, así que no es una
-excepción a `DT-2`: las excepciones son las que viven *fuera* de él. **El panel de la
-cafetería**, donde aterriza `USR-4`, no está aquí: es una pantalla propia, `/cafeteria/` (`DT-53`).
+sobre el mismo `QuerySet` que pinta la tabla. **Los de ventas y cierres y la auditoría
+son pantallas propias** —`/ventas/` (`DT-54`), `/cierres/` (`DT-55`) y `/auditoria/`
+(`DT-56`)—, y sostienen la misma regla a mano: las cifras de arriba se calculan sobre el
+conjunto que pinta la lista. **Dentro del admin ya no queda ninguna ruta propia**: ni la
+auditoría ni el panel de la cafetería (`DT-53`).
 
 Diseño (`DT-23`, `DT-25`): el sistema visual —paleta, tipografía, armazones **y
 composiciones**— se adopta entero de un producto en producción del mismo dominio, no se
@@ -331,10 +328,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.921 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
+La suite completa son **1.932 pruebas** y **tarda entre tres y siete minutos**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.921, no corrió entera.
+menos de esas 1.932, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal

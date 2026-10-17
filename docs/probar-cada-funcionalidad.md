@@ -184,6 +184,13 @@ faltó. La fila abre la modal del cierre, desde la que se llega a las ventas en 
 esa jornada. Recién sembrado no hay ninguno: los registra el cajero en
 `/punto-de-venta/cierre/`.
 
+**La auditoría, en Auditoría** (`DT-56`): los últimos siete días por defecto, una cifra por
+clase de operación —ventas, entregas, pedidos cancelados, movimientos de inventario y
+cierres— que filtra la línea de tiempo al pulsarla, y la línea de tiempo por día, con quién
+hizo qué y cuándo. Una venta o un cierre se abren en la modal sin salir de la auditoría; un
+ingreso o una merma, en su ficha del admin. Los anteriores a `HU-69` dicen «no se registró
+quién».
+
 La **imagen** es opcional: sin ella el producto se vende igual (`HU-59`).
 
 Pasa por la misma canalización que la fotografía del estudiante —se re-codifica a WEBP y

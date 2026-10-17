@@ -1,0 +1,11 @@
+{% comment %} DT-56. El icono de una clase de operación, sobre el color de su serie.
+
+   **Decoración, no estado**: `serie-*` y nunca `error`, `aviso` ni `exito` (`[S1]` del
+   sistema visual). Las clases van escritas enteras, una rama por clase: armadas en la
+   plantilla, Tailwind no las compilaría. `tam` es `chico` en la línea de tiempo.
+{% endcomment %}
+<span aria-hidden="true"
+      class="flex shrink-0 items-center justify-center rounded-lg {% if tam == 'chico' %}h-9 w-9{% else %}h-11 w-11{% endif %}
+             {% if clase == 'venta' %}bg-serie-1/12 text-serie-1{% elif clase == 'entrega' %}bg-serie-3/12 text-serie-3{% elif clase == 'cancelacion' %}bg-serie-2/12 text-serie-2{% elif clase == 'inventario' %}bg-serie-4/12 text-serie-4{% elif clase == 'cierre' %}bg-serie-5/12 text-serie-5{% else %}bg-primario-suave text-primario{% endif %}">
+  <svg class="{% if tam == 'chico' %}h-4 w-4{% else %}h-5 w-5{% endif %}"><use href="#{% if clase == 'venta' %}i-recibo{% elif clase == 'entrega' %}i-cafeteria{% elif clase == 'cancelacion' %}i-retirar{% elif clase == 'inventario' %}i-inventario{% elif clase == 'cierre' %}i-efectivo{% else %}i-documento{% endif %}"></use></svg>
+</span>

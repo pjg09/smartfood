@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` el 2026-10-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` y `DT-56` el 2026-10-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 55 (`DT-1` … `DT-55`) |
+| decisiones | 56 (`DT-1` … `DT-56`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-55`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-56`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1150,4 +1150,19 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **La invariante sigue a la vista**: cuántos cierres con diferencia no llevan motivo, que la base impide (`cierre_de_caja_diferencia_con_motivo`).
 - **`CierreDeCajaAdmin` sale del admin**, con sus dos filtros. La auditoría enlaza a `/cierres/<id>/`, que es la pantalla con la modal de ese cierre abierta; `/cierres/<id>/ficha/` es el fragmento (`DT-16`).
 - **El registro del cierre no se toca**: lo sigue haciendo el cajero en `/punto-de-venta/cierre/` (`HU-55`). Esta pantalla solo consulta, y sus rutas solo responden a `GET`.
+
+#### `[DT-56]` La auditoría sale del admin, a `/auditoria/`
+
+**Obliga:** `HU-37`, sin ampliarla. **Corrige a `DT-55`** en un punto: allí la auditoría se quedaba en el admin. Ahí solo queda el reporte de movimientos de inventario (`TT-170`).
+
+**El hecho que lo obliga.** De los cuatro reportes de la cafetería, tres ya son pantallas propias y la auditoría enlaza a dos de ellos: abrir una venta o un cierre desde la línea de tiempo llevaba de un armazón al otro. La razón por la que vivía en el admin —«quien la consulta ya trabaja ahí»— dejó de ser cierta con `DT-50` … `DT-55`.
+
+**Decidido:**
+
+- **Una pantalla sobre `base-aplicacion.html`**, con el periodo de `/ventas/` y `/cierres/` —siete días por defecto, como hasta ahora—, una cifra por clase de operación que **filtra la línea de tiempo** al pulsarla, y la línea de tiempo agrupada por día: la hora, quién, qué, el detalle y el importe.
+- **El filtro por clase va al selector**, no a la plantilla: `auditoria` recibe las clases y solo consulta esas. Filtrar después del tope de `OPERACIONES_MAXIMAS` dejaría fuera operaciones de la clase pedida sin decirlo.
+- **Una venta o un cierre se abren en la modal de la propia auditoría**, con los fragmentos de `DT-54` y `DT-55`: quien rastrea no pierde la línea de tiempo. Un ingreso o una merma enlazan a su ficha del admin, que es donde sigue el libro de inventario.
+- **Lo que ya decía, lo sigue diciendo**: el hueco de quién en los movimientos anteriores a `HU-69`, y que el tope recortó.
+- **La ruta cambia y su nombre no**: `auditoria`. Los enlaces de los reportes y la barra no se tocan; `/admin/auditoria/` deja de existir y el admin responde su `404`. Sobra la comprobación de `is_staff`: el rol lo exige el selector.
+- **No entran ni las recargas ni las restricciones**, como hasta ahora: `[S11]` no le da a la cafetería el saldo de las familias ni la escritura de las restricciones (`INV-4`), y la auditoría no es una puerta lateral a ninguno de los dos.
 
