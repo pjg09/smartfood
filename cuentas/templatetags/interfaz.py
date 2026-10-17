@@ -100,6 +100,10 @@ PUNTO_DE_VENTA = Entrada("punto-de-venta", "Punto de venta", "i-escaner")
 # no en uno.
 RESERVAS = Entrada("reservas", "Reservas", "i-cafeteria")
 
+# `DT-58`. **La misma ruta, con el nombre de lo que el cajero hace allí**: para
+# él, `/reservas/` es la pantalla de entregar, no un reporte de reservas.
+ENTREGAS = Entrada("reservas", "Entregas", "i-cafeteria")
+
 # `HU-55`, `DEC-6`. El cuadre del efectivo de la jornada, que es **solo del
 # cajero**: la administración consulta los cierres (`HU-56`), no los hace. Por
 # eso esta entrada está en los dos sitios donde está el cajero y en ninguno más.
@@ -138,7 +142,7 @@ MENU_POR_ROL = {
     # movimientos (`HU-36`) se abre desde esa pantalla, no desde el menú.
     Rol.ADMINISTRADOR: (
         Entrada("panel-de-la-cafeteria", "Panel", "i-grafica"),
-        Entrada("reservas", "Reservas", "i-cafeteria"),
+        RESERVAS,
         Entrada("inventario", "Inventario", "i-inventario"),
         # `DT-51`, `DT-52`. Pantallas propias, como el inventario.
         Entrada("categorias", "Categorías", "i-etiqueta"),
@@ -155,11 +159,11 @@ MENU_POR_ROL = {
     # el admin le enseñaba un índice vacío. Un enlace a una pantalla sin nada
     # dentro es peor que no tenerlo — invita a buscar allí lo que está en su
     # propia caja.
-    Rol.CAJERO: (PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA),
+    Rol.CAJERO: (PUNTO_DE_VENTA, ENTREGAS, CIERRE_DE_CAJA),
 }
 
 # La barra del punto de venta. **Es una lista aparte**, y tiene tres entradas:
-# la caja, la cola de reservas (`HU-24`) y el cierre de la jornada (`HU-55`). La
+# la caja, las entregas (`HU-24`, `DT-58`) y el cierre de la jornada (`HU-55`). La
 # cocina sigue sin existir y no se dibujan huecos por adelantado.
 #
 # Va separada de `MENU_POR_ROL[Rol.CAJERO]` porque son dos sitios distintos: en
@@ -167,7 +171,7 @@ MENU_POR_ROL = {
 # en el punto de venta necesita justo lo contrario — `INT-2` pide atender toda
 # la demanda del descanso en veinte minutos, y un menú ahí solo son sitios a los
 # que llegar por error con cola delante.
-MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA, RESERVAS, CIERRE_DE_CAJA)
+MENU_DEL_PUNTO_DE_VENTA = (PUNTO_DE_VENTA, ENTREGAS, CIERRE_DE_CAJA)
 
 
 @register.simple_tag

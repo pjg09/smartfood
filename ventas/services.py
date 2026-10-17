@@ -820,8 +820,9 @@ def entregar(*, actor, pedido):
 
     Los dos criterios de la historia:
 
-    1. **La entrega se registra en el punto de venta.** La pantalla es `TT-150`;
-       el rol lo exige aquí, porque `[S11]` da el punto de venta a `USR-3`.
+    1. **La entrega se registra en el punto de venta.** La pantalla es `TT-150`,
+       y la otra puerta, el panel de «Entregas» (`DT-58`); el rol lo exige aquí,
+       porque `[S11]` da el punto de venta a `USR-3`.
     2. **El pedido ya pagado no vuelve a descontar saldo.** Mira el cuerpo de
        esta función: **no hay ninguna llamada a `asentar_en_la_billetera`**. Es
        una ausencia, y `TT-151` es lo único que la vigila.

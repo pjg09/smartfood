@@ -1,0 +1,76 @@
+{% extends "base-aplicacion.html" %}
+
+{% comment %} DT-58. «Entregas»: la vista del cajero de `/reservas/`.
+
+   **Se usa en mitad del descanso**, y por eso no lleva cifras: un buscador, la cola de
+   lo que está por recoger y, al lado, el pedido elegido con sus dos salidas —entregarlo
+   o cancelarlo—. La administración ve otra pantalla en la misma ruta
+   (`ventas/reservas-pendientes.html`), con sus cifras y su historial (`HU-68`).
+
+   **El buscador es quien pide la cola**: a cada tecla, al pulsar Enter —que es lo que
+   envía el lector al final de una tarjeta— y cuando una entrega o una cancelación
+   avisan con `pedidos-cambiado`. Así la cola repintada conserva lo que hay escrito.
+{% endcomment %}
+
+{% block titulo %}Entregas | SmartFood{% endblock %}
+
+{% block contenido %}
+  <div class="mx-auto flex w-full max-w-6xl flex-col gap-6" data-entregas>
+
+    <header class="flex flex-col gap-1">
+      <h1 class="font-display text-2xl text-texto escritorio:text-3xl">Entregas</h1>
+      <p class="text-base font-medium text-texto-suave">
+        Pedidos anticipados por recoger. Ya están pagados: entregarlos no cobra nada.
+      </p>
+    </header>
+
+    {% comment %} **El panel es más estrecho por debajo de `amplio`**: a 1024 × 600, que es la
+       pantalla de la caja (`INT-2`), con 24rem a la lista le quedaban 272 px y cada fila se
+       partía en tres líneas. Se vio en la captura. {% endcomment %}
+    <div class="grid gap-6 escritorio:grid-cols-[minmax(0,1fr)_20rem] escritorio:items-start
+                amplio:grid-cols-[minmax(0,1fr)_24rem]">
+
+      <div class="flex flex-col gap-4">
+        <form role="search" action="{% url 'reservas' %}"
+              hx-get="{% url 'cola-de-entregas' %}"
+              hx-trigger="submit, input changed delay:300ms from:#busqueda-de-entregas, pedidos-cambiado from:body"
+              hx-target="#cola-de-entregas" hx-swap="innerHTML"
+              class="flex gap-2">
+          <label for="busqueda-de-entregas" class="sr-only">Buscar un pedido</label>
+          <input type="search" id="busqueda-de-entregas" name="q" value="{{ busqueda }}"
+                 data-buscador-de-entregas autocomplete="off" autofocus
+                 placeholder="Nombre, documento o tarjeta"
+                 class="h-12 min-w-0 grow rounded-md border border-borde bg-superficie px-3
+                        text-base text-texto transition-colors placeholder:text-texto-suave
+                        hover:border-acento focus:border-acento focus:outline-none">
+          <button type="submit" aria-label="Buscar"
+                  class="flex h-12 w-14 shrink-0 items-center justify-center rounded-md bg-primario
+                         text-sobre-primario transition-colors hover:bg-primario-fuerte">
+            <svg class="h-5 w-5" aria-hidden="true"><use href="#i-buscar"></use></svg>
+          </button>
+        </form>
+
+        <div id="cola-de-entregas">
+          {% include "ventas/partials/cola-de-entregas.html" %}
+        </div>
+      </div>
+
+      {% comment %} El panel nace vacío y lo llena la fila que se pulse. `aria-live` para que
+         quien llega por lector de pantalla oiga el pedido elegido y, después, si se
+         entregó. {% endcomment %}
+      <aside id="panel-de-la-entrega" aria-label="Pedido elegido" aria-live="polite"
+             class="escritorio:sticky escritorio:top-28">
+        {% include "ventas/partials/panel-de-la-entrega.html" with pedido=None %}
+      </aside>
+    </div>
+  </div>
+
+  {% comment %} La modal de ficha (`[S2.10]`): la llenan «Marcar como entregado» y
+     «Cancelar», y `interfaz.js` la abre al recibir el fragmento y la cierra cuando el
+     formulario de dentro recibe el panel. {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Confirmación"
+          class="m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
+{% endblock %}

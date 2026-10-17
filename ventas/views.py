@@ -46,7 +46,7 @@ from ventas.selectors import (
     resumen_de_la_reserva,
     tablero_de_reservas,
 )
-from ventas.models import MedioDePago, PedidoAnticipado
+from ventas.models import EstadoDelPedido, MedioDePago, PedidoAnticipado
 from ventas.services import (
     CierreRechazado,
     VentaRechazada,
@@ -826,11 +826,18 @@ def reservas(request):
     en 1024 × 600 con una fila delante. Una lista que crece con el día no cabe
     ahí sin quitarle sitio a lo que se pulsa en cada venta.
 
-    Y no hace falta que esté: se consulta **antes** del descanso, no durante.
-    Durante, lo que el cajero necesita es el pedido del estudiante que tiene
-    delante, y eso llega al identificar — es `HU-25`.
+    Y no hace falta que esté: el pedido del estudiante que el cajero tiene
+    delante llega al identificarlo — es `HU-25`. Lo que se busca por el nombre
+    se entrega desde la vista del cajero de esta pantalla (`DT-58`).
     ─────────────────────────────────────────────────────────────────────────
+
+    **El cajero ve otra pantalla en la misma ruta** (`DT-58`): «Entregas», con
+    un buscador, la cola y un panel desde el que entrega o cancela. La ruta es
+    la misma porque el dato es el mismo (`DT-34`); lo que cambia es para qué lo
+    mira cada rol.
     """
+    if request.user.rol == Rol.CAJERO:
+        return render(request, "ventas/entregas.html", _contexto_de_la_cola(request))
     return render(request, "ventas/reservas-pendientes.html", _contexto_del_tablero(request))
 
 
@@ -848,18 +855,201 @@ def tablero_de_reservas_fragmento(request):
     )
 
 
+# ── Entregas: la vista del cajero de `/reservas/` (`DT-58`) ───────────────────
+#
+# Una cola con buscador, un panel con el pedido elegido y dos modales: la
+# confirmación de la entrega y el motivo de la cancelación. **Las dos escrituras
+# responden con el panel**, en cualquiera de sus estados, y la modal se cierra
+# al recibirlo (`interfaz.js`). Todo es del cajero: la administración no entrega
+# (`[S11]`) y cancela desde su propia modal (`DT-49`).
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _contexto_de_la_cola(request):
+    """La cola del cajero, filtrada por lo que haya en el buscador (`DT-58`).
+
+    Lo que está por recoger, y debajo, plegado, lo que falta por entregar
+    sumado, que es para lo que existe `HU-24`. **La suma no se filtra**: dice
+    qué hay que tener preparado para todo el descanso, no para quien se busca.
+
+    **`?ver=` se sigue respetando**, aunque la pantalla no tenga pestañas: un
+    filtro que no existe es un `404`, y uno que no es suyo, el `403` del
+    selector. Ignorarlo enseñaría la cola a quien escribió `?ver=entregados`
+    como si se lo hubieran concedido.
+    """
+    _solo_el_cajero(request.user)
+    filtro = request.GET.get("ver") or "por-recoger"
+    if filtro not in FILTROS_DE_PEDIDOS:
+        raise Http404("Ese filtro de pedidos no existe.")
+    busqueda = request.GET.get("q", "").strip()
+    pedidos = pedidos_de_la_cafeteria(actor=request.user, filtro=filtro, busqueda=busqueda)
+    return {
+        "pedidos": pedidos,
+        "busqueda": busqueda,
+        "tablero": tablero_de_reservas(actor=request.user),
+        "hay_sin_salida": any(not p.venta.estudiante.puede_operar for p in pedidos),
+    }
+
+
+@login_required
+@require_http_methods(["GET"])
+def cola_de_entregas(request):
+    """La cola del cajero sin la página (`DT-58`, `DT-16`).
+
+    La pide el buscador a cada tecla y la propia pantalla cuando se entrega o se
+    cancela un pedido (`HX-Trigger: pedidos-cambiado`), con lo que haya escrito.
+    """
+    return render(request, "ventas/partials/cola-de-entregas.html", _contexto_de_la_cola(request))
+
+
+def _pedido_por_entregar(request, pedido_id):
+    """El pedido elegido en la cola, o `None` si ya no está por recoger.
+
+    **El rol primero, después el `404`**: que un pedido existe no se le cuenta a
+    otro rol. Y **uno cerrado no es un error**: otra caja lo entregó o alguien lo
+    canceló desde que la cola se pintó. Se responde que ya no está —sin enseñar
+    cómo se cerró, que es el historial que el cajero no ve (`HU-68`)— y la cola
+    se repinta.
+    """
+    _solo_el_cajero(request.user)
+    estado = (
+        PedidoAnticipado.objects.filter(pk=pedido_id).values_list("estado", flat=True).first()
+    )
+    if estado is None:
+        raise Http404("Ese pedido no existe.")
+    if estado != EstadoDelPedido.PENDIENTE:
+        return None
+    return pedido_de_la_cafeteria(actor=request.user, pedido_id=pedido_id)
+
+
+def _panel(request, pedido, **extra):
+    """El panel del pedido elegido, en cualquiera de sus estados (`DT-58`).
+
+    **Un rechazo puede venir de que otra caja se adelantó**: entre leer el
+    pedido y bloquearlo, alguien lo entregó o lo canceló. Entonces el pedido ya
+    no se pinta —el panel volvería a ofrecer entregarlo— y queda el motivo.
+    Siempre que el pedido sale de la cola, la cola se repinta.
+    """
+    if pedido is not None and extra.get("rechazo"):
+        pedido.refresh_from_db(fields=["estado"])
+        if not pedido.esta_pendiente:
+            pedido = None
+    contexto = {
+        "pedido": pedido,
+        "estudiante": pedido.venta.estudiante if pedido else None,
+        "ya_no_esta": pedido is None,
+    }
+    contexto.update(extra)
+    respuesta = render(request, "ventas/partials/panel-de-la-entrega.html", contexto)
+    if pedido is None or extra.get("entregado") or extra.get("cancelado"):
+        respuesta["HX-Trigger"] = "pedidos-cambiado"
+    return respuesta
+
+
+def _modal(request, plantilla, pedido):
+    """Una de las dos modales de «Entregas»; si el pedido ya no está, lo dice."""
+    respuesta = render(
+        request,
+        plantilla,
+        {"pedido": pedido, "estudiante": pedido.venta.estudiante if pedido else None},
+    )
+    if pedido is None:
+        respuesta["HX-Trigger"] = "pedidos-cambiado"
+    return respuesta
+
+
+@login_required
+@require_http_methods(["GET"])
+def resumen_del_pedido(request, pedido_id):
+    """El panel con el pedido que se pulsó en la cola (`DT-58`)."""
+    return _panel(request, _pedido_por_entregar(request, pedido_id))
+
+
+@login_required
+@require_http_methods(["GET"])
+def confirmacion_de_la_entrega(request, pedido_id):
+    """La modal que confirma a quién se entrega y qué (`DT-58`).
+
+    **No escribe nada.** Lleva la fotografía porque aquí no hay tarjeta: el
+    pedido se eligió de una lista, y la cara es lo único que dice que se entrega
+    a quien lo reservó (`DEC-8`, `HU-58`).
+    """
+    return _modal(
+        request,
+        "ventas/partials/confirmacion-de-la-entrega.html",
+        _pedido_por_entregar(request, pedido_id),
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def entrega_en_el_panel(request, pedido_id):
+    """Entrega el pedido confirmado en la modal y responde con el panel (`DT-58`).
+
+    El mismo servicio que el punto de venta (`HU-25`): bloquea, comprueba el
+    estado y que el estudiante pueda retirar (`INVD-2`), asienta las salidas y
+    **no toca la billetera**. Un rechazo vuelve al panel en `200`, con el
+    motivo: htmx no intercambia un `4xx`.
+    """
+    pedido = _pedido_por_entregar(request, pedido_id)
+    if pedido is None:
+        return _panel(request, None)
+    try:
+        entregar(actor=request.user, pedido=pedido)
+    except (VentaRechazada, EstudianteNoOperativo) as rechazo:
+        return _panel(request, pedido, rechazo=_motivo_del_rechazo(rechazo))
+    return _panel(request, pedido, entregado=True)
+
+
+@login_required
+@require_http_methods(["GET"])
+def confirmacion_de_la_cancelacion(request, pedido_id):
+    """La modal que pide el motivo de la cancelación (`DT-58`, `HU-67`)."""
+    return _modal(
+        request,
+        "ventas/partials/confirmacion-de-la-cancelacion.html",
+        _pedido_por_entregar(request, pedido_id),
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def cancelacion_en_el_panel(request, pedido_id):
+    """Cancela con su motivo y devuelve el importe; responde con el panel.
+
+    `cancelar_pedido` es el mismo servicio que el de la modal de la
+    administración y el del acudiente (`HU-67`, `DEC-24`): el motivo es
+    obligatorio allí, no aquí. La modal ya apaga el botón sin él; si llega
+    vacío igualmente, el rechazo vuelve al panel como cualquier otro.
+    """
+    pedido = _pedido_por_entregar(request, pedido_id)
+    if pedido is None:
+        return _panel(request, None)
+    try:
+        cancelar_pedido(actor=request.user, pedido=pedido, motivo=request.POST.get("motivo", ""))
+    except ValidationError as rechazo:
+        return _panel(request, pedido, rechazo=_motivo_del_rechazo(rechazo))
+    return _panel(request, pedido, cancelado=True)
+
+
+def _motivo_del_rechazo(rechazo):
+    """El texto de un rechazo del servicio, sea `ValidationError` o no."""
+    return " ".join(rechazo.messages) if hasattr(rechazo, "messages") else str(rechazo)
+
+
 @login_required
 @require_http_methods(["POST"])
 def entrega(request):
     """Registra la entrega de un pedido anticipado (`TT-150`, `HU-25`).
 
-    Primer criterio de la historia: **se registra en el punto de venta**. Por eso
-    esta vista vive aquí y no en la cola de `HU-24`, que es donde se consulta lo
-    que hay que preparar: entregar es otro momento y otro rol.
+    Primer criterio de la historia: **se registra en el punto de venta**. Es el
+    camino rápido de los dos: la tarjeta escaneada ya dijo quién es. El otro es
+    el panel de «Entregas» (`DT-58`), para el pedido que se busca por el nombre.
 
     **Sin diálogo de confirmación** (`INT-2`): un modal roba el foco y el foco es
     del lector. El cobro sí lleva dos (`DT-57`), por la devuelta; la entrega no
-    cobra nada y no tiene qué calcular.
+    cobra nada y no tiene qué calcular. La de «Entregas» sí confirma, porque allí
+    no hay tarjeta y la fotografía es el único control.
 
     Devuelve el panel del estudiante en sus dos estados —entregado o rechazado—,
     que es la misma zona de la pantalla y por tanto el mismo fragmento. Arrastra

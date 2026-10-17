@@ -1,0 +1,85 @@
+{% load dinero %}
+{% comment %} DT-58. La confirmación de una entrega desde «Entregas».
+
+   Fragmento con la forma de la modal de ficha (`[S2.10]`). **No escribe nada**: el
+   formulario manda el `POST`, que responde con el panel; `interfaz.js` cierra la modal
+   al recibirlo (`data-cierra-la-ficha`).
+
+   **La fotografía va primero y grande**, porque es lo que se compara: aquí el pedido se
+   eligió de una lista por el nombre y no hay tarjeta que diga quién es (`DEC-8`,
+   `HU-58`). Cuadrada, como en la caja: un recorte redondo se come las sienes y las
+   orejas. Sin fotografía se dice en su sitio, no se disimula.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-confirmacion-de-la-entrega>
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Confirmar la entrega</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  {% if pedido is None %}
+    <p class="px-6 py-6 text-base text-texto-suave">
+      Ese pedido ya no está por recoger: otra caja lo entregó o alguien lo canceló.
+    </p>
+    <div class="flex justify-end border-t border-borde px-6 py-4">
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">Cerrar</button>
+    </div>
+  {% else %}
+    <div class="flex flex-col gap-4 overflow-y-auto px-6 py-4">
+      <div class="flex items-center gap-4">
+        {% if estudiante.tiene_foto %}
+          <img src="{{ estudiante.url_de_la_foto }}" alt="Fotografía de {{ estudiante.nombre }}"
+               data-foto-del-estudiante
+               class="h-24 w-24 shrink-0 rounded-md border border-borde object-cover">
+        {% else %}
+          <span data-sin-foto
+                class="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1
+                       rounded-md border border-dashed border-borde text-texto-suave">
+            <svg class="h-6 w-6" aria-hidden="true"><use href="#i-personas"></use></svg>
+            <span class="text-xs font-medium">Sin foto</span>
+          </span>
+        {% endif %}
+        <div class="flex min-w-0 flex-col">
+          <span class="text-sm text-texto-suave">Se lo entregas a</span>
+          <span class="font-display text-xl text-texto">{{ estudiante.nombre }}</span>
+          <span class="text-sm text-texto-suave">
+            Pedido #{{ pedido.numero }} · documento <span class="font-mono tabular-nums">{{ estudiante.documento }}</span>
+          </span>
+        </div>
+      </div>
+
+      <ul class="flex flex-col gap-1 rounded-md border border-borde p-3" aria-label="Lo que lleva">
+        {% for linea in pedido.venta.lineas.all %}
+          <li class="truncate text-base text-texto">
+            <span class="font-semibold tabular-nums">{{ linea.cantidad }}</span> × {{ linea.producto.nombre }}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <p class="text-sm text-texto-suave">
+        Está pagado: {{ pedido.total|dinero:"COP" }}. Entregarlo no cobra nada y no se puede deshacer.
+      </p>
+    </div>
+
+    <form hx-post="{% url 'entrega-en-el-panel' pedido.id %}"
+          hx-target="#panel-de-la-entrega" hx-swap="innerHTML"
+          data-cierra-la-ficha
+          class="flex flex-col-reverse gap-2 border-t border-borde px-6 py-4 tablet:flex-row tablet:justify-end">
+      {% csrf_token %}
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center justify-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">Volver</button>
+      <button type="submit" data-confirmar-entrega autofocus
+              class="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primario px-5
+                     text-base font-semibold text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-visto"></use></svg>
+        Confirmar la entrega
+      </button>
+    </form>
+  {% endif %}
+</div>

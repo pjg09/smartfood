@@ -8,7 +8,7 @@
 | titulo | Qué pantallas existen, quién alcanza cada una y con qué cuenta se entra |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `config/urls.py`; `./smartfood.md` (`S11`, `S5`); `./decisiones-tecnicas.md` (`DT-2`, `DT-16`, `DT-23`, `DT-25`); `./desarrollo.md` |
-| actualizado | 2026-10-17; el reporte de cierres de caja sale del admin a `/cierres/` (`DT-55`), y la auditoría, a `/auditoria/` (`DT-56`); 93 rutas propias. Después, el cobro del punto de venta en dos modales (`DT-57`); recontada por script: 95 rutas propias y 1 del admin, y el admin, con cinco modelos registrados. Antes, el 2026-10-15, el panel de la cafetería sale del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a `/ventas/` (`DT-54`); 89 rutas propias. Antes, el 2026-10-14, el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`). Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
+| actualizado | 2026-10-17; «Entregas», la vista del cajero de `/reservas/`, con su cola, su panel y dos modales (`DT-58`); 101 rutas propias. Antes, el reporte de cierres de caja sale del admin a `/cierres/` (`DT-55`), y la auditoría, a `/auditoria/` (`DT-56`); 93 rutas propias. Después, el cobro del punto de venta en dos modales (`DT-57`); recontada por script: 95 rutas propias y 1 del admin, y el admin, con cinco modelos registrados. Antes, el 2026-10-15, el panel de la cafetería sale del admin a `/cafeteria/` (`DT-53`), y el reporte de ventas, a `/ventas/` (`DT-54`); 89 rutas propias. Antes, el 2026-10-14, el inventario en `/inventario/` (`DEC-25`, `DT-50`), que sustituye a tres pantallas del admin, las categorías en `/categorias/` (`DT-51`) y los alérgenos en `/alergenos/` (`DEC-26`, `DT-52`), y los pedidos de la cafetería con su modal (`HU-68`, `DT-49`). Antes, el 2026-10-12, el alta de un solo acudiente (`HU-64`, `DEC-23`); 63 rutas. Antes, `/usuarios/` sustituye al listado de usuarios del admin para la institución (`DT-45`), con la edición de nombre y correo (`DT-46`), y la institución deja de editar sus datos en el admin (`DEC-22`); 62 rutas. Antes, la institución deja de tener la pantalla de restricciones (`DEC-21`), y antes las fichas en solo lectura al pulsar la fila del padrón (`DT-43`) y de los acudientes (`DT-44`), con **Ver retirados** en estos, y la tabla de `[S2]` recontada por script: 55 rutas. Antes, el 2026-10-03, se recontó —53 rutas, y su título decía sesenta y cuatro—. Antes, el 2026-10-02, el alta de un solo estudiante desde el padrón. Antes, la ficha del estudiante en la modal del padrón (`DT-40`) y el acceso del acudiente (`HU-63`, `DEC-20`), que sustituyen al admin de estudiantes. Antes, la recuperación de contraseña (`HU-62`, `DEC-19`). La tabla de `[S2]` se recontó por script: tenía 60 rutas y su título decía cuarenta y cinco |
 | idioma | es-CO |
 | version | 1.11 |
 
@@ -43,10 +43,10 @@ acudiente ficticio.
 
 ---
 
-## [S2] Las noventa y seis rutas
+## [S2] Las ciento dos rutas
 
 Pantallas propias, con Tailwind y HTMX. Todo lo demás vive en el admin (`[S3]`), que habla
-los mismos colores desde `DT-23`. Son las **95 rutas propias** que resuelve Django fuera del
+los mismos colores desde `DT-23`. Son las **101 rutas propias** que resuelve Django fuera del
 admin, todas, y **1 del admin** que se cita porque las pide alguna historia: se recontaron
 por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna.
 
@@ -111,10 +111,16 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/mis-estudiantes/<id>/pedidos/` | Fragmento HTMX: la lista de pedidos de la pantalla de reserva, que se repinta al cancelar | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/` | Fragmento HTMX: el detalle de un pedido en la modal, con su cancelación si está pendiente | **Solo su acudiente** | `HU-65` |
 | `/mis-estudiantes/<id>/pedidos/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Solo su acudiente** | `HU-66` |
-| `/reservas/` | Pedidos anticipados: cifras, lo que falta por entregar y la lista. **La administración** filtra por estado con `?ver=` —todos, por recoger, entregados, cancelados—; **el cajero** ve lo que está por recoger | **Cajero y administración** | `TT-148`, `HU-68` |
+| `/reservas/` | Pedidos anticipados. **La administración**: cifras, lo que falta por entregar y la lista, filtrada por estado con `?ver=` —todos, por recoger, entregados, cancelados—. **El cajero**: «Entregas», un buscador, la cola de lo que está por recoger y un panel desde el que entrega o cancela, con lo que falta por entregar plegado (`DT-58`) | **Cajero y administración** | `TT-148`, `HU-68`, `DT-58` |
 | `/reservas/tablero/` | El tablero de esa pantalla, como fragmento: se repinta al cancelar | **Cajero y administración** | `HU-68` |
 | `/reservas/<pedido>/` | El detalle de un pedido en la modal; uno entregado o cancelado, solo la administración | **Cajero y administración** | `HU-68`, `DT-49` |
 | `/reservas/<pedido>/cancelar/` | `POST`. Cancela con motivo, devuelve el importe y responde con la misma modal | **Cajero y administración** | `HU-67`, `DT-49` |
+| `/reservas/cola/` | La cola de «Entregas» sin la página, filtrada con `?q=`: la tarjeta y el documento, exactos; el nombre, por una parte. Fragmento | **Solo cajero** | `DT-58` |
+| `/reservas/<pedido>/resumen/` | El panel con el pedido elegido. Uno que ya no está por recoger dice que ya no está y repinta la cola. Fragmento | **Solo cajero** | `DT-58` |
+| `/reservas/<pedido>/confirmar-entrega/` | La modal que confirma a quién se entrega, con su fotografía, y qué. No escribe nada | **Solo cajero** | `DT-58`, `HU-25` |
+| `/reservas/<pedido>/entregar/` | `POST`. Entrega sin volver a cobrar y responde con el panel | **Solo cajero** | `DT-58`, `HU-25` |
+| `/reservas/<pedido>/confirmar-cancelacion/` | La modal que pide el motivo. No escribe nada | **Solo cajero** | `DT-58`, `HU-67` |
+| `/reservas/<pedido>/cancelar-en-el-panel/` | `POST`. Cancela con motivo, devuelve el importe y responde con el panel | **Solo cajero** | `DT-58`, `HU-67` |
 | `/inventario/` | El inventario: cifras, filtros y una fila por producto con *Ajustar*, *Historial*, editar y retirar. Sustituye a *Productos*, *Inventario* y *Mermas* del admin | **Solo administración** | `DEC-25`, `DT-50` |
 | `/inventario/cifras/` | Las cuatro cifras de esa pantalla, como fragmento: se repintan tras cada escritura | **Solo administración** | `DT-50` |
 | `/inventario/lista/` | La lista filtrada, como fragmento: la piden los filtros a cada cambio y las escrituras al terminar | **Solo administración** | `DT-50` |
@@ -178,6 +184,12 @@ por script contra `get_resolver()` el 2026-10-14, sin que sobre ni falte ninguna
 | `/reservas/<pedido entregado>/` | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/reservas/<pedido>/cancelar/` (`GET`) | 405 | 405 | 405 | 405 | 302 → acceso |
 | `/reservas/<pedido>/cancelar/` (`POST` sin motivo: vuelve con el error) | 403 | **200** | **200** | 403 | 302 → acceso |
+| `/reservas/cola/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/resumen/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/confirmar-entrega/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/entregar/` (`POST`) | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/confirmar-cancelacion/` | 403 | 403 | **200** | 403 | 302 → acceso |
+| `/reservas/<pedido>/cancelar-en-el-panel/` (`POST`) | 403 | 403 | **200** | 403 | 302 → acceso |
 | `/inventario/`, sus fragmentos y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/categorias/`, su fragmento y sus modales | 403 | **200** | 403 | 403 | 302 → acceso |
 | `/alergenos/`, su fragmento y su modal | 403 | **200** | 403 | 403 | 302 → acceso |
@@ -261,11 +273,12 @@ así que el foco vuelve solo al campo del modo activo, y el único diálogo es e
 al cerrarse lo devuelve al lector (`DT-57`). Su columna
 lateral es de iconos y **no se despliega**: no hay botón que lo intente, porque los 280 px
 de las etiquetas saldrían de la zona donde el cajero pulsa. Tiene tres entradas —la caja,
-la cola de reservas y el cierre de la jornada—, que son los tres sitios donde trabaja el
+las entregas y el cierre de la jornada—, que son los tres sitios donde trabaja el
 cajero y ninguno más.
 
-**Dos de esas tres no viven dentro de este armazón**, y es deliberado: la cola de reservas
-la comparte con la administración (`DT-34`) y el cierre se hace una vez, al final, con
+**Dos de esas tres no viven dentro de este armazón**, y es deliberado: las entregas son
+la vista del cajero de la pantalla de pedidos que comparte con la administración (`DT-34`,
+`DT-58`) y el cierre se hace una vez, al final, con
 billetes en la mano. La rejilla de tres zonas sin scroll está hecha para cobrar con una
 fila delante; añadirle una cuarta zona sería romperla para dos pantallas que no la
 necesitan.
@@ -608,8 +621,8 @@ lateral no se colapsa ahí, se abre como un cajón sobre el contenido.
 
 ### Cajero (`USR-3`)
 
-`/punto-de-venta/`, más la cola de reservas (`HU-24`) y el cierre de caja de la jornada
-(`HU-55`). Cualquier otro rol recibe `403` en el punto de venta aunque escriba la URL
+`/punto-de-venta/`, más «Entregas» —la cola de pedidos anticipados, desde la que también
+entrega (`HU-24`, `DT-58`)— y el cierre de caja de la jornada (`HU-55`). Cualquier otro rol recibe `403` en el punto de venta aunque escriba la URL
 (`DT-11`), y él no entra al admin — `[S11]` le concede registrar ventas, y registrar ventas
 ocurre entero aquí. La pantalla
 coloca las tres zonas —quién compra, qué compra y cuánto es— y el campo donde escribe el

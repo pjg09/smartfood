@@ -513,7 +513,34 @@ def _con_su_numero(consulta):
     return consulta.annotate(numero_del_estudiante=Subquery(anteriores))
 
 
-def pedidos_de_la_cafeteria(*, actor, filtro):
+def _del_estudiante_buscado(consulta, busqueda):
+    """Estrecha los pedidos a los del estudiante buscado (`DT-58`).
+
+    Lo que llega es lo que el cajero escribió **o lo que el lector tecleó**, y
+    se prueba en ese orden: el código de una tarjeta, el documento y, si no es
+    ninguno, una parte del nombre.
+
+    **La tarjeta y el documento, exactos**: son los mismos selectores de la caja
+    (`HU-15`, `HU-16`), con su normalización. Un documento parcial sería el
+    listado de menores que `identificar_por_documento` se niega a dar. El nombre
+    sí va por una parte —«Julián» encuentra a Julián Amariles—, y no descubre
+    nada: los nombres ya están en la lista que se está filtrando.
+    """
+    from personas.models import Estudiante
+    from personas.selectors import identificar_por_codigo_de_tarjeta, identificar_por_documento
+
+    busqueda = (busqueda or "").strip()
+    if not busqueda:
+        return consulta
+    for identificar in (identificar_por_codigo_de_tarjeta, identificar_por_documento):
+        try:
+            return consulta.filter(venta__estudiante=identificar(busqueda))
+        except Estudiante.DoesNotExist:
+            pass
+    return consulta.filter(venta__estudiante__nombre__icontains=busqueda)
+
+
+def pedidos_de_la_cafeteria(*, actor, filtro, busqueda=""):
     """Los pedidos de todo el colegio, filtrados por estado (`HU-68`, `HU-24`).
 
     `filtro` es una clave de `FILTROS_DE_PEDIDOS`. **El cajero solo pide
@@ -548,6 +575,9 @@ def pedidos_de_la_cafeteria(*, actor, filtro):
     la pantalla lo marque; su salida es cancelarlo, porque una devolución no es
     una recarga (`DEC-24`, `HU-67`).
 
+    `busqueda` es el buscador de la vista del cajero (`DT-58`), y **solo
+    estrecha la lista**: ver `_del_estudiante_buscado`.
+
     Cada pedido llega con `numero`, `total` y `kcal` (`_completar_el_pedido`),
     con las líneas, el estudiante y quién canceló ya traídos: la lista no hace
     una consulta por fila.
@@ -566,6 +596,7 @@ def pedidos_de_la_cafeteria(*, actor, filtro):
     )
     if FILTROS_DE_PEDIDOS[filtro] is not None:
         consulta = consulta.filter(estado=FILTROS_DE_PEDIDOS[filtro])
+    consulta = _del_estudiante_buscado(consulta, busqueda)
     consulta = consulta.order_by("creado_en" if filtro == "por-recoger" else "-creado_en")
 
     return [_completar_el_pedido(pedido, pedido.numero_del_estudiante) for pedido in consulta]

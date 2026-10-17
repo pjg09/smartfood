@@ -1,0 +1,67 @@
+{% load dinero %}
+{% comment %} DT-58, HU-67. El motivo de una cancelación desde «Entregas», y nada más.
+
+   Fragmento con la forma de la modal de ficha (`[S2.10]`). El motivo es obligatorio y
+   lo verá el acudiente (`DEC-24`): «Cancelar y devolver» está apagado hasta que haya
+   algo escrito (`[S2.11]`), y el servicio lo exige igual. El `POST` responde con el
+   panel y `interfaz.js` cierra la modal al recibirlo (`data-cierra-la-ficha`).
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-confirmacion-de-la-cancelacion>
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">
+      {% if pedido %}Cancelar el pedido #{{ pedido.numero }}{% else %}Cancelar el pedido{% endif %}
+    </h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  {% if pedido is None %}
+    <p class="px-6 py-6 text-base text-texto-suave">
+      Ese pedido ya no está por recoger: otra caja lo entregó o alguien lo canceló.
+    </p>
+    <div class="flex justify-end border-t border-borde px-6 py-4">
+      <button type="button" data-cerrar-ficha
+              class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                     text-base font-medium text-texto transition-colors hover:bg-superficie-hover">Cerrar</button>
+    </div>
+  {% else %}
+    <form hx-post="{% url 'cancelacion-en-el-panel' pedido.id %}"
+          hx-target="#panel-de-la-entrega" hx-swap="innerHTML"
+          data-cierra-la-ficha data-formulario-validado data-formulario-de-cancelacion
+          class="flex flex-col">
+      {% csrf_token %}
+      <div class="flex flex-col gap-3 px-6 py-4">
+        <p class="text-base text-texto">
+          {{ pedido.total|dinero:"COP" }} vuelven a la billetera de {{ estudiante.nombre }} en el
+          acto. No se puede deshacer.
+        </p>
+        <div data-campo class="flex flex-col gap-1">
+          <label for="motivo-de-la-cancelacion" class="text-sm font-medium text-texto">
+            Motivo <span class="font-normal text-texto-suave">· obligatorio, lo verá el acudiente</span>
+          </label>
+          <textarea id="motivo-de-la-cancelacion" name="motivo" required maxlength="200" rows="3" autofocus
+                    data-validar data-aviso-vacio="Escribe el motivo de la cancelación."
+                    data-maximo="200" data-aviso-largo="El motivo no puede pasar de 200 caracteres."
+                    placeholder="Se acabaron las empanadas…"
+                    class="rounded-md border border-borde bg-superficie p-3 text-base text-texto
+                           transition-colors hover:border-acento focus:border-acento focus:outline-none"></textarea>
+          <p data-aviso hidden class="text-sm text-error-fuerte"></p>
+        </div>
+      </div>
+      <div class="flex flex-col-reverse gap-2 border-t border-borde px-6 py-4 tablet:flex-row tablet:justify-end">
+        <button type="button" data-cerrar-ficha
+                class="inline-flex h-11 items-center justify-center rounded-md border border-borde bg-superficie px-4
+                       text-base font-medium text-texto transition-colors hover:bg-superficie-hover">Volver</button>
+        <button type="submit" data-guardar-ficha data-confirmar-cancelacion disabled
+                class="inline-flex h-11 items-center justify-center rounded-md bg-primario px-5
+                       text-base font-semibold text-sobre-primario transition-colors hover:bg-primario-fuerte
+                       disabled:cursor-not-allowed disabled:bg-borde disabled:text-texto-suave">
+          Cancelar y devolver {{ pedido.total|dinero:"COP" }}
+        </button>
+      </div>
+    </form>
+  {% endif %}
+</div>

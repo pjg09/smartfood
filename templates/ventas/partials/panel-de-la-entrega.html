@@ -1,0 +1,110 @@
+{% load dinero %}
+{% comment %} DT-58. El panel del pedido elegido en «Entregas», en todos sus estados.
+
+   Fragmento (`DT-16`). **Las dos escrituras responden con él**, así que es el mismo
+   sitio y la misma plantilla para: nada elegido, el pedido por recoger, el pedido recién
+   entregado, el recién cancelado, un rechazo y uno que ya no está porque otra caja lo
+   entregó o alguien lo canceló mientras tanto.
+
+   **Precio por unidad de entonces** (`DT-8`): sale de la línea, no del producto de hoy.
+{% endcomment %}
+{% if entregado %}
+  <div role="status" data-pedido-recien-entregado
+       class="flex flex-col gap-2 rounded-xl border border-exito bg-exito-suave p-5">
+    <p class="flex items-center gap-2 text-base font-semibold text-exito-fuerte">
+      <svg class="h-5 w-5 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      Pedido #{{ pedido.numero }} entregado
+    </p>
+    <p class="text-sm text-exito-fuerte">
+      A {{ estudiante.nombre }}. No se cobró nada: estaba pagado.
+    </p>
+  </div>
+{% elif cancelado %}
+  <div role="status" data-pedido-recien-cancelado
+       class="flex flex-col gap-2 rounded-xl border border-exito bg-exito-suave p-5">
+    <p class="flex items-center gap-2 text-base font-semibold text-exito-fuerte">
+      <svg class="h-5 w-5 shrink-0" aria-hidden="true"><use href="#i-correcto"></use></svg>
+      Pedido #{{ pedido.numero }} cancelado
+    </p>
+    <p class="text-sm text-exito-fuerte">
+      {{ pedido.total|dinero:"COP" }} volvieron a la billetera de {{ estudiante.nombre }}.
+    </p>
+  </div>
+{% elif pedido is None %}
+  {% if rechazo %}
+    <p role="alert" data-entrega-rechazada
+       class="mb-3 rounded-md border border-error bg-error-suave p-3 text-sm text-error-fuerte">{{ rechazo }}</p>
+  {% endif %}
+  {% comment %} Bloque punteado (`[S2.4]`): aquí no falta una función, falta elegir. {% endcomment %}
+  <p data-panel-vacio
+     class="rounded-xl border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+    {% if ya_no_esta %}
+      Ese pedido ya no está por recoger. Elige otro de la lista.
+    {% else %}
+      Elige un pedido de la lista para ver qué hay que entregar.
+    {% endif %}
+  </p>
+{% else %}
+  <div data-panel-del-pedido="{{ pedido.id }}"
+       class="flex flex-col gap-4 rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+    <div class="flex flex-col">
+      <h2 class="font-display text-lg text-texto">Pedido #{{ pedido.numero }}</h2>
+      <p class="text-sm text-texto-suave">
+        {{ estudiante.nombre }} · reservado el {{ pedido.creado_en|date:"j" }} de
+        {{ pedido.creado_en|date:"M"|lower }}, {{ pedido.creado_en|date:"H:i" }}
+      </p>
+    </div>
+
+    {% if rechazo %}
+      <p role="alert" data-entrega-rechazada
+         class="rounded-md border border-error bg-error-suave p-3 text-sm text-error-fuerte">{{ rechazo }}</p>
+    {% endif %}
+
+    <ul class="flex flex-col gap-2">
+      {% for linea in pedido.venta.lineas.all %}
+        <li class="flex items-center gap-3 rounded-md border border-borde p-3">
+          <span class="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-md bg-superficie-hover
+                       px-2 text-base font-semibold tabular-nums text-texto">{{ linea.cantidad }}</span>
+          <span class="flex min-w-0 grow flex-col">
+            <span class="truncate text-base text-texto">{{ linea.producto.nombre }}</span>
+            <span class="text-sm text-texto-suave">{{ linea.precio_unitario|dinero }} c/u</span>
+          </span>
+          <span class="shrink-0 text-base font-semibold tabular-nums text-acento-fuerte">{{ linea.importe|dinero }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <div class="flex items-baseline justify-between gap-3 border-t border-borde pt-4">
+      <span class="text-base text-texto-suave">Ya pagado</span>
+      <span class="font-display text-2xl tabular-nums text-texto" data-total-del-pedido>{{ pedido.total|dinero:"COP" }}</span>
+    </div>
+
+    {% comment %} `INVD-2`. **No hay botón de entregar, y no es un botón deshabilitado**
+       (`[S2.4]`): se dice por qué y queda la única salida que tiene, cancelar. {% endcomment %}
+    {% if estudiante.puede_operar %}
+      <button type="button" data-entregar
+              hx-get="{% url 'confirmacion-de-la-entrega' pedido.id %}"
+              hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+              class="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primario px-5
+                     text-base font-semibold text-sobre-primario transition-colors hover:bg-primario-fuerte">
+        <svg class="h-5 w-5" aria-hidden="true"><use href="#i-visto"></use></svg>
+        Marcar como entregado
+      </button>
+    {% else %}
+      <p data-no-puede-retirar class="rounded-md bg-aviso-suave p-3 text-sm text-aviso-fuerte">
+        <strong class="font-semibold">No puede retirarlo:</strong>
+        {% if estudiante.esta_de_baja %}se dio de baja del colegio{% else %}su tarjeta está desactivada{% endif %}.
+        Cancélalo y el importe vuelve a su billetera.
+      </p>
+    {% endif %}
+
+    <button type="button" data-cancelar
+            hx-get="{% url 'confirmacion-de-la-cancelacion' pedido.id %}"
+            hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+            class="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-borde
+                   bg-superficie px-4 text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      <svg class="h-5 w-5" aria-hidden="true"><use href="#i-retirar"></use></svg>
+      No se entrega: cancelar
+    </button>
+  </div>
+{% endif %}

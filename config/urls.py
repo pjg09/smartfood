@@ -88,15 +88,20 @@ from restricciones.views import (
     retiro_del_limite_diario,
 )
 from ventas.views import (
+    cancelacion_en_el_panel,
     cancelacion_por_el_acudiente,
     cancelacion_por_la_cafeteria,
     carrito,
     cierre_de_caja,
     cliente_generico,
     cobrar,
+    cola_de_entregas,
+    confirmacion_de_la_cancelacion,
+    confirmacion_de_la_entrega,
     confirmacion_del_cobro,
     devuelta_del_cobro,
     entrega,
+    entrega_en_el_panel,
     identificacion,
     detalle_del_pedido,
     detalle_del_pedido_en_la_cafeteria,
@@ -105,6 +110,7 @@ from ventas.views import (
     punto_de_venta,
     reserva,
     reservas,
+    resumen_del_pedido,
     tablero_de_reservas_fragmento,
     ticket_de_la_reserva,
 )
@@ -218,6 +224,29 @@ urlpatterns = [
         "reservas/<uuid:pedido_id>/cancelar/",
         cancelacion_por_la_cafeteria,
         name="cancelacion-por-la-cafeteria",
+    ),
+    # `DT-58`. La vista del cajero de `/reservas/`, «Entregas»: la cola con su
+    # buscador, el panel del pedido elegido y las dos modales —confirmar la
+    # entrega y el motivo de la cancelación—, cada una con su ruta de lectura y
+    # su `POST`, como el cobro (`DT-57`). Las dos escrituras responden con el
+    # panel. Todas son del cajero.
+    path("reservas/cola/", cola_de_entregas, name="cola-de-entregas"),
+    path("reservas/<uuid:pedido_id>/resumen/", resumen_del_pedido, name="resumen-del-pedido"),
+    path(
+        "reservas/<uuid:pedido_id>/confirmar-entrega/",
+        confirmacion_de_la_entrega,
+        name="confirmacion-de-la-entrega",
+    ),
+    path("reservas/<uuid:pedido_id>/entregar/", entrega_en_el_panel, name="entrega-en-el-panel"),
+    path(
+        "reservas/<uuid:pedido_id>/confirmar-cancelacion/",
+        confirmacion_de_la_cancelacion,
+        name="confirmacion-de-la-cancelacion",
+    ),
+    path(
+        "reservas/<uuid:pedido_id>/cancelar-en-el-panel/",
+        cancelacion_en_el_panel,
+        name="cancelacion-en-el-panel",
     ),
     # Acceso al sistema (`TT-56`, `DEC-12`). **No es un camino de alta**: aquí
     # solo entra quien ya tiene cuenta y ya definió su contraseña con la

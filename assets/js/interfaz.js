@@ -1195,6 +1195,54 @@
     });
   }
 
+  // ── Entregas: la vista del cajero de `/reservas/` (`DT-58`) ────────────────
+  //
+  // **Aquí tampoco se pide nada al servidor**: lo hace htmx. Esto marca la fila
+  // cuyo pedido está en el panel, cierra la modal cuando su formulario recibe el
+  // panel y devuelve el foco al buscador, con lo escrito seleccionado: la
+  // siguiente tarjeta que pase el lector lo sustituye en vez de sumarse.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  function montarEntregas() {
+    var pantalla = document.querySelector("[data-entregas]");
+    if (!pantalla) return;
+    var buscador = pantalla.querySelector("[data-buscador-de-entregas]");
+    var modal = document.querySelector("[data-modal-ficha]");
+
+    // La fila se marca por lo que enseña el panel, no por el clic: así vuelve a
+    // marcarse cuando la cola se repinta al buscar.
+    function marcarLaFila() {
+      var enElPanel = pantalla.querySelector("[data-panel-del-pedido]");
+      var id = enElPanel && enElPanel.getAttribute("data-panel-del-pedido");
+      pantalla.querySelectorAll("[data-fila-de-entrega]").forEach(function (fila) {
+        if (id && fila.getAttribute("data-fila-de-entrega") === id) {
+          fila.setAttribute("aria-current", "true");
+        } else {
+          fila.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    document.body.addEventListener("htmx:afterSettle", function (evento) {
+      marcarLaFila();
+      // Por debajo de `escritorio` el panel cae bajo la lista: sin esto, pulsar
+      // una fila no cambia nada que se vea.
+      var panel = evento.detail.target;
+      if (panel && panel.id === "panel-de-la-entrega" &&
+          panel.getBoundingClientRect().top > window.innerHeight) {
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    document.body.addEventListener("htmx:afterRequest", function (evento) {
+      var formulario = evento.detail.elt.closest && evento.detail.elt.closest("[data-cierra-la-ficha]");
+      if (!formulario || !evento.detail.successful) return;
+      if (modal && modal.open) modal.close();
+      buscador.focus();
+      buscador.select();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     montarSelectorDeTema();
     montarRevelarContrasena();
@@ -1211,5 +1259,6 @@
     montarFichaDelEstudiante();
     montarImagenAmpliable();
     montarReserva();
+    montarEntregas();
   });
 })();

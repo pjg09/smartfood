@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-57` el 2026-10-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-58` el 2026-10-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 57 (`DT-1` … `DT-57`) |
+| decisiones | 58 (`DT-1` … `DT-58`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-57`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-58`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1182,3 +1182,24 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **El cliente se olvida al cobrar**, como hasta ahora: «Venta nueva» es la única salida de la segunda modal. Dejarlo puesto invitaría a cobrarle la siguiente venta a quien ya se fue.
 - **Lo que la referencia traía y no entra**: el número de compra —las ventas no tienen número correlativo—, el filtro del catálogo por nombre y categoría, la lista de últimas ventas del turno y el nombre «Prepago», que aquí es la billetera.
 
+#### `[DT-58]` El cajero entrega también desde `/reservas/`, con un panel y dos modales
+
+**Obliga:** `HU-24` y `HU-25`, sin ampliarlas. **Amplía** `DT-34` —para el cajero, la pantalla compartida deja de ser solo de consulta— y **corrige** a `DT-49` en dos puntos: el cajero ya no abre el detalle en la modal de ficha, y lo que falta por entregar se le enseña plegado. **Es una decisión del dueño del producto**, como `DT-57`.
+
+**El hecho que lo obliga.** Durante el descanso el cajero no lee cifras: busca un pedido y lo entrega. La pantalla le enseñaba una tarjeta de «Por recoger», la suma por producto y una lista cuyo detalle se abría en una modal **sin forma de entregar**: para eso había que volver al punto de venta y escanear la tarjeta. Un pedido que se busca por el nombre no tenía salida en la pantalla donde se busca.
+
+**Decidido:**
+
+- **La vista del cajero de `/reservas/` se llama «Entregas»**, en su menú y en la barra del punto de venta: un buscador, la lista de lo que está por recoger y, al lado, un panel con el pedido elegido —quién, qué lleva y lo pagado— y dos acciones, «Marcar como entregado» y «No se puede entregar: cancelar y devolver».
+- **Entregar pide confirmación**, en una modal con la fotografía del estudiante, su nombre y lo que lleva. En el punto de venta no la pide (`TT-150`) y no es una contradicción: allí la tarjeta escaneada ya dijo quién es; aquí el pedido se elige de una lista, y la fotografía es el único control de que se entrega a quien lo reservó (`DEC-8`, `HU-58`).
+- **Cancelar pide el motivo en una modal**, obligatorio, y nada más. El servicio es el mismo que en la modal de la administración (`cancelar_pedido`, `HU-67`).
+- **El buscador filtra la lista**, y solo la lista: el código de una tarjeta escaneada y el documento se comparan **exactos**, como en la caja (`HU-16`) —una coincidencia parcial de documento sería un listado de menores—, y el nombre, por una parte.
+- **Las dos escrituras responden con el panel** —entregado, cancelado o con el rechazo— y `HX-Trigger: pedidos-cambiado`; la modal se cierra al recibir la respuesta y la lista se repinta. Un rechazo —otra caja ya lo entregó, el estudiante no puede retirar (`INVD-2`)— vuelve al panel en `200`, como en el punto de venta: htmx no intercambia un `4xx`.
+- **Un estudiante que no puede retirar no ofrece «Marcar como entregado»**: el panel dice por qué y deja solo cancelar. No es un botón deshabilitado (`[S2.4]` de `./sistema-visual.md`).
+- **Lo que falta por entregar se queda, plegado** debajo de la lista. Es lo que `HU-24` existe para responder, y se mira antes del descanso, no durante.
+- **La entrega del punto de venta se queda** tal cual y sin diálogo: escanear y entregar sigue siendo el camino rápido.
+- **La administración no cambia**: cifras, pestañas y la modal de ficha. No entrega (`[S11]`).
+
+**Lo que cuesta, dicho antes de construirlo.** Dos interfaces para cancelar el mismo pedido según quién lo haga, que es lo que `DT-49` evitaba; el servicio y el motivo son uno solo. Y dos caminos de entrega con distinta fricción: aquí hay un gesto más que en la caja, aceptado porque aquí no hay tarjeta.
+
+**Lo que la referencia traía y no entra**: el cargo por servicio sobre el pedido, que aquí no existe, y la pantalla de cocina.

@@ -1,0 +1,95 @@
+{% load dinero %}
+{% comment %} DT-58. La cola del cajero: lo que está por recoger, del más antiguo al más
+   reciente, y debajo, plegado, lo que falta por entregar.
+
+   Fragmento (`DT-16`): lo incluye `ventas/entregas.html` y lo vuelve a pedir el buscador.
+   **Cada fila pide su pedido al panel de al lado**, no a una modal: la fila entera lo
+   hace pulsando el botón del nombre (`DT-43`), que es quien tiene la petición y por
+   donde llega el teclado.
+{% endcomment %}
+<div class="flex flex-col gap-4" data-cola-de-entregas>
+
+  {% comment %} `INVD-2`, como en la pantalla de la administración: el pedido está pagado y
+     se marca en vez de esconderlo. **Su salida es cancelarlo** (`DEC-24`). {% endcomment %}
+  {% if hay_sin_salida %}
+    <div role="note" data-avisos-sin-salida
+         class="flex items-start gap-3 rounded-md border border-aviso bg-aviso-suave p-4">
+      <svg class="mt-0.5 h-5 w-5 shrink-0 text-aviso-fuerte" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <p class="text-sm text-aviso-fuerte">
+        <strong class="font-semibold">Hay pedidos marcados «No puede retirar».</strong>
+        La caja no los entrega: ábrelos y cancélalos con su motivo, y el importe vuelve a
+        su billetera.
+      </p>
+    </div>
+  {% endif %}
+
+  {% if pedidos %}
+    <ul class="flex flex-col gap-2" aria-label="Pedidos por recoger">
+      {% for pedido in pedidos %}
+        <li data-reserva data-fila-consultable data-fila-de-entrega="{{ pedido.id }}"
+            class="flex cursor-pointer items-center gap-3 rounded-md border border-borde bg-superficie
+                   p-3 shadow-sm transition-colors hover:border-acento
+                   aria-[current=true]:border-primario aria-[current=true]:bg-superficie-hover">
+          {% comment %} Decorativo: cede su sitio al nombre entre `escritorio` y `amplio`,
+             donde el panel deja la lista en unos 330 px. {% endcomment %}
+          <span aria-hidden="true"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-serie-4/12 text-serie-4
+                       escritorio:hidden amplio:flex">
+            <svg class="h-5 w-5"><use href="#i-inventario"></use></svg>
+          </span>
+          <button type="button" data-consultar
+                  hx-get="{% url 'resumen-del-pedido' pedido.id %}"
+                  hx-target="#panel-de-la-entrega" hx-swap="innerHTML"
+                  class="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left">
+            <span class="flex flex-wrap items-center gap-2 text-base font-semibold text-texto">
+              {{ pedido.venta.estudiante.nombre }}
+              {% if not pedido.venta.estudiante.puede_operar %}
+                <span data-no-puede-retirar
+                      class="rounded bg-aviso-suave px-2 py-0.5 text-sm font-medium text-aviso-fuerte">No puede retirar</span>
+              {% endif %}
+            </span>
+            <span class="text-sm text-texto-suave">
+              Pedido #{{ pedido.numero }} · {{ pedido.creado_en|date:"j" }} de
+              {{ pedido.creado_en|date:"M"|lower }}, {{ pedido.creado_en|date:"H:i" }}
+            </span>
+          </button>
+          <span class="shrink-0 font-display text-lg tabular-nums whitespace-nowrap text-acento-fuerte">{{ pedido.total|dinero }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p data-cola-vacia class="rounded-md border border-dashed border-borde p-8 text-center text-base text-texto-suave">
+      {% if busqueda %}
+        Nadie con «{{ busqueda }}» tiene pedidos por recoger.
+      {% else %}
+        No hay ningún pedido por recoger. Los que paguen los acudientes aparecerán aquí.
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% comment %} Lo que `HU-24` existe para responder, **plegado**: se mira antes del
+     descanso, no durante (`DT-58`). Suma toda la cola, no lo que el buscador deja ver.
+     Sin nada por recoger no se dibuja. {% endcomment %}
+  {% if tablero.falta_por_entregar %}
+    <details data-falta-por-entregar class="group rounded-md border border-borde bg-superficie shadow-sm">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+        <span class="flex flex-col">
+          <span class="text-base font-semibold text-texto">Qué hay que tener preparado</span>
+          <span class="text-sm text-texto-suave">
+            {{ tablero.por_recoger }} pedido{{ tablero.por_recoger|pluralize }} por recoger, sumados por producto
+          </span>
+        </span>
+        <svg class="h-4 w-4 shrink-0 rotate-90 text-texto-suave transition-transform group-open:-rotate-90"
+             aria-hidden="true"><use href="#i-flecha"></use></svg>
+      </summary>
+      <ul class="flex flex-col gap-2 border-t border-borde p-4">
+        {% for fila in tablero.falta_por_entregar %}
+          <li class="flex items-baseline justify-between gap-3">
+            <span class="truncate text-base text-texto">{{ fila.nombre }}</span>
+            <span class="shrink-0 text-base font-semibold tabular-nums text-texto">{{ fila.unidades }} unid.</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+</div>

@@ -233,11 +233,11 @@ class LaPantallaTest(BaseDeLaCafeteria):
         )
 
     def test_el_cajero_abre_lo_por_recoger_sin_pestanas_ni_historial(self):
+        """Su vista es «Entregas» (`DT-58`), y lo que no ve sigue sin verlo."""
         self.client.force_login(self.cajero)
 
         respuesta = self.client.get(self.url)
 
-        self.assertEqual(respuesta.context["filtro"], "por-recoger")
         self.assertEqual(len(respuesta.context["pedidos"]), 2)
         self.assertNotContains(respuesta, "data-filtro-de-pedidos")
         self.assertNotContains(respuesta, "data-total-reservado")

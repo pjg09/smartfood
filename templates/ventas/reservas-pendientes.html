@@ -1,16 +1,16 @@
 {% extends "base-aplicacion.html" %}
 
-{% comment %} TT-148, HU-68. Los pedidos anticipados, desde la cafetería (`HU-24`, `FUN-5`).
+{% comment %} TT-148, HU-68. Los pedidos anticipados, desde la administración (`HU-24`, `FUN-5`).
 
-   **La comparten el cajero y la administración** (`USR-3` y `USR-4`), que no
-   comparten interfaz: por eso vive en el armazón de la aplicación y no dentro de
+   **La ruta la comparten el cajero y la administración** (`USR-3` y `USR-4`), que
+   no comparten interfaz: por eso vive en el armazón de la aplicación y no dentro de
    `INT-2`, y por eso no está en el admin. Está razonado en `DT-34`.
 
-   **Y cada rol ve una parte** (`HU-68`, `[S11]`). El cajero, lo que está por
-   recoger y lo que falta por preparar, que es para lo que existe `HU-24`. La
-   administración, además, los entregados y los cancelados con un filtro por
-   estado, y cuánto se ha reservado: eso es un reporte de ventas, y `[S11]` se lo
-   da a ella sola.
+   **Esta es la vista de la administración** (`HU-68`, `[S11]`): lo que está por
+   recoger, lo que falta por preparar, los entregados y los cancelados con un filtro
+   por estado, y cuánto se ha reservado, que es un reporte de ventas y `[S11]` se lo
+   da a ella sola. El cajero ve «Entregas» en la misma ruta (`ventas/entregas.html`,
+   `DT-58`).
 
    Cada fila abre el detalle del pedido en una modal, y desde ahí se cancela uno
    por recoger, con su motivo (`HU-67`, `DT-49`). Al cancelar, la respuesta lleva
@@ -36,18 +36,18 @@
     </div>
 
     {% comment %} **No es un hueco: es una indicación de dónde se hace lo otro.**
-       Registrar la entrega vive en el punto de venta, que es donde el primer
-       criterio de `HU-25` la sitúa. Hace falta decirlo porque la administración
-       **no entra ahí** —`[S11]` no le concede la caja—, y sin esta línea se queda
+       Registrar la entrega es del cajero, en el punto de venta o en su vista de esta
+       misma ruta (`HU-25`, `DT-58`). Hace falta decirlo porque la administración
+       **no entrega** —`[S11]` no le concede la caja—, y sin esta línea se queda
        buscando aquí un botón de entregar que no le corresponde. Borde continuo y
        no punteado: aquí no falta nada (`[S2.4]`). {% endcomment %}
     <div role="note"
          class="flex items-start gap-3 rounded-md border border-borde bg-superficie p-4">
       <svg class="mt-0.5 h-5 w-5 shrink-0 text-texto-suave" aria-hidden="true"><use href="#i-informacion"></use></svg>
       <p class="text-sm text-texto-suave">
-        <strong class="font-semibold text-texto">La entrega se registra en el punto de venta.</strong>
-        Marcar un pedido como entregado lo hace el cajero al escanear la tarjeta del
-        estudiante que viene a recogerlo, y el pedido ya pagado no vuelve a descontar saldo.
+        <strong class="font-semibold text-texto">La entrega la registra el cajero.</strong>
+        Lo hace al escanear la tarjeta del estudiante en el punto de venta, o desde su
+        pantalla de entregas, y el pedido ya pagado no vuelve a descontar saldo.
       </p>
     </div>
   </div>

@@ -232,13 +232,16 @@ las existencias.
 
 ## [S9] Ver qué hay que preparar para el descanso
 
-Como cajero o como administración: entrada **Reservas** del menú. También está en la columna
-de iconos del punto de venta, que es lo que el cajero tiene delante mientras cobra.
+La administración entra por **Reservas** en su menú; el cajero, por **Entregas**, que es la
+misma ruta con su propia vista (`DT-58`) y también está en la columna de iconos del punto de
+venta.
 
 **Como cajero** enseña lo pagado y no recogido, **de lo más antiguo a lo más reciente** — es
 una cola de trabajo, no un historial, y lo que importa es qué lleva más tiempo esperando. Un
-pedido entregado sale de la lista. Encima, **qué falta por entregar**: la suma de todos los
-pedidos por recoger, producto por producto.
+pedido entregado sale de la lista. Arriba, un buscador: **pasa la tarjeta** o escribe el
+documento entero, y quedan solo los pedidos de ese estudiante; una parte del nombre también
+filtra, una parte del documento no. Debajo, plegado, **qué hay que tener preparado**: la suma
+de todos los pedidos por recoger, producto por producto. Entregar desde aquí está en `[S10]`.
 
 **Como administración** (`HU-68`) se ve además cuántos pedidos hay y cuánto se ha reservado
 —sin lo devuelto—, y la lista se filtra con **Todos**, **Por recoger**, **Entregados** y
@@ -250,8 +253,8 @@ entrega no tienen por qué ser la misma persona. La institución y el acudiente 
 aunque escriban la URL.
 
 Para verla con datos, reserva desde un acudiente (`[S8]`) y entra con
-`cajero@example.com`. **Pulsar la fila abre el detalle** en una modal, y desde ahí se cancela
-(`[S20]`).
+`cajero@example.com`. **Como cajero, pulsar la fila llena el panel de la derecha**; como
+administración, **abre el detalle** en una modal. Desde los dos se cancela (`[S20]`).
 
 ## [S10] Entregar un pedido en la caja
 
@@ -260,7 +263,15 @@ Como cajero, en el punto de venta: al identificar al estudiante, si tiene algo r
 que saber de alguien con un pedido es que viene a recogerlo. Si se monta una venta sin verlo,
 se le cobra otra vez lo que su acudiente ya pagó.
 
-**Entregar no descuenta saldo** (`HU-25`): el pedido se pagó al reservarse. Lo que mueve es
+**O desde Entregas** (`DT-58`), para quien se busca por el nombre: pulsa el pedido y, en el
+panel, **Marcar como entregado**. Sale una confirmación con la fotografía del estudiante, su
+nombre y lo que lleva —aquí no hay tarjeta que diga quién es, y la cara es lo que se
+compara—; **Confirmar la entrega** cierra la modal, el panel dice que se entregó y la cola lo
+quita. Si el estudiante está desactivado o de baja, el panel no ofrece entregar: dice por qué
+y deja **No se entrega: cancelar**. Si otra caja lo entregó mientras tanto, el panel dice que
+ya no está y la cola se repinta.
+
+**Entregar no descuenta saldo** (`HU-25`), por ninguno de los dos caminos: el pedido se pagó al reservarse. Lo que mueve es
 el inventario. Para comprobarlo a mano, mira el saldo antes y después — tiene que ser el
 mismo— y las existencias del producto, que bajan.
 
@@ -478,10 +489,13 @@ dice cuándo, por qué y si lo canceló el acudiente o la cafetería.
 Con el estudiante desactivado o dado de baja, la pantalla no ofrece el catálogo, pero **los
 pedidos siguen**: el pendiente es justo el que hay que cancelar (`DEC-24`).
 
-**Como cajero o administración** (`HU-67`, `DT-49`): en **Reservas** (`[S9]`), pulsar un pedido
+**Como administración** (`HU-67`, `DT-49`): en **Reservas** (`[S9]`), pulsar un pedido
 por recoger abre su detalle en una modal con **Cancelar**: dice cuánto vuelve y pide el motivo.
 Al cancelar, la modal lo confirma y las cifras, lo que falta por entregar y la lista se
-actualizan solos. De un cancelado, la administración ve en la modal quién lo canceló —la
+actualizan solos. **Como cajero** (`DT-58`): en **Entregas**, el pedido en el panel y
+**No se entrega: cancelar**, que abre una modal con el motivo y nada más —«Cancelar y
+devolver» está apagado hasta que hay algo escrito—; al confirmar se cierra, el panel dice
+cuánto volvió y la cola lo quita. De un cancelado, la administración ve en la modal quién lo canceló —la
 persona y su rol, o «el acudiente»—, cuándo y por qué.
 
 Al cancelar, por cualquiera de los dos caminos:

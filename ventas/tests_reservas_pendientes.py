@@ -227,7 +227,8 @@ class LaPantallaDeLaColaTest(BaseCola):
         respuesta = self.client.get(self.url)
 
         self.assertEqual(respuesta.status_code, 200)
-        self.assertTemplateUsed(respuesta, "ventas/reservas-pendientes.html")
+        # Su vista de la pantalla es «Entregas» (`DT-58`).
+        self.assertTemplateUsed(respuesta, "ventas/entregas.html")
 
     def test_la_administracion_tambien(self):
         """Y por eso la pantalla no vive dentro de `INT-2`: ahí recibe `403`."""
@@ -244,16 +245,17 @@ class LaPantallaDeLaColaTest(BaseCola):
 
         respuesta = self.client.get(self.url)
 
-        self.assertEqual(respuesta.context["cuantas"], 2)
-        self.assertContains(respuesta, "data-cuantas-reservas")
+        self.assertEqual(len(respuesta.context["pedidos"]), 2)
+        self.assertEqual(respuesta.content.decode().count("data-fila-de-entrega="), 2)
 
     def test_sin_reservas_la_pantalla_lo_dice(self):
         self._entra(Rol.CAJERO, "cajero4@example.com")
 
         respuesta = self.client.get(self.url)
 
-        self.assertEqual(respuesta.context["cuantas"], 0)
+        self.assertEqual(respuesta.context["pedidos"], [])
         self.assertNotContains(respuesta, "data-reserva")
+        self.assertContains(respuesta, "data-cola-vacia")
 
     def test_la_institucion_no_alcanza_la_pantalla(self):
         self._entra(Rol.INSTITUCION, "institucion2@example.com", staff=True)
@@ -286,26 +288,23 @@ class LosDosMenusLlevanALaCola(BaseCola):
     """
 
     def test_el_menu_del_cajero_y_el_de_la_administracion_la_llevan(self):
-        from cuentas.templatetags.interfaz import MENU_POR_ROL, RESERVAS
+        """Con el nombre de lo que cada uno hace allí (`DT-58`)."""
+        from cuentas.templatetags.interfaz import ENTREGAS, MENU_POR_ROL, RESERVAS
 
-        for rol in [Rol.CAJERO, Rol.ADMINISTRADOR]:
-            with self.subTest(rol=rol):
-                self.assertIn(RESERVAS, MENU_POR_ROL[rol])
+        self.assertIn(ENTREGAS, MENU_POR_ROL[Rol.CAJERO])
+        self.assertIn(RESERVAS, MENU_POR_ROL[Rol.ADMINISTRADOR])
 
     def test_ningun_otro_rol_la_tiene_en_su_menu(self):
-        from cuentas.templatetags.interfaz import MENU_POR_ROL, RESERVAS
+        from cuentas.templatetags.interfaz import MENU_POR_ROL
 
         for rol in [Rol.ACUDIENTE, Rol.INSTITUCION]:
             with self.subTest(rol=rol):
-                self.assertNotIn(RESERVAS, MENU_POR_ROL[rol])
+                self.assertNotIn("reservas", [entrada.ruta for entrada in MENU_POR_ROL[rol]])
 
     def test_la_barra_del_punto_de_venta_la_lleva(self):
-        from cuentas.templatetags.interfaz import (
-            MENU_DEL_PUNTO_DE_VENTA,
-            RESERVAS,
-        )
+        from cuentas.templatetags.interfaz import ENTREGAS, MENU_DEL_PUNTO_DE_VENTA
 
-        self.assertIn(RESERVAS, MENU_DEL_PUNTO_DE_VENTA)
+        self.assertIn(ENTREGAS, MENU_DEL_PUNTO_DE_VENTA)
 
 
 class LaColaMarcaLoQueNoTieneSalidaTest(BaseCola):
