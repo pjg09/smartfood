@@ -1429,7 +1429,8 @@ class PanelDeLaCafeteria:
     recargado_hoy: object
     ticket_medio: object
     de_treinta_dias: object
-    existencias_bajas: tuple
+    agotados: tuple
+    quedan_pocas: tuple
     mas_vendidos: tuple
     ultimas_ventas: tuple
 
@@ -1473,13 +1474,16 @@ def panel_de_la_cafeteria(*, actor, hoy=None):
         ),
     ).aggregate(total=Sum("monto"))["total"]
 
+    agotados, quedan_pocas = _existencias_bajas()
+
     return PanelDeLaCafeteria(
         hoy=hoy,
         de_hoy=de_hoy,
         recargado_hoy=recargado_hoy,
         ticket_medio=ticket_medio,
         de_treinta_dias=de_treinta_dias,
-        existencias_bajas=_existencias_bajas(),
+        agotados=agotados,
+        quedan_pocas=quedan_pocas,
         mas_vendidos=_mas_vendidos(treinta_dias, hoy),
         # `Venta` **no tiene columna `total`**: el importe es la suma de sus
         # líneas congeladas (`DT-8`, `DT-19`), así que se anota.
@@ -1503,7 +1507,14 @@ def panel_de_la_cafeteria(*, actor, hoy=None):
 
 
 def _existencias_bajas():
-    """Los productos activos que bajan del umbral, de menos a más.
+    """`(agotados, quedan_pocas)`: los productos activos sin existencias y los
+    que bajan del umbral, cada lista de menos a más.
+
+    **Con las palabras y los cortes del inventario** (`DEC-25`): agotado es
+    cero o menos —una entrega puede dejar el libro en negativo (`DT-35`)— y
+    «quedan pocas», de una unidad al umbral. El panel llamaba «quedan pocas» a
+    los dos grupos, y con quince agotados la pantalla de inventario y la del
+    panel decían cosas distintas de los mismos productos.
 
     Las existencias **no son una columna** (`INV-3`, `DT-5`): se suman desde el
     historial, y por eso se piden en una sola consulta con
@@ -1515,13 +1526,12 @@ def _existencias_bajas():
     productos = list(Producto.objects.filter(activo=True))
     existencias = existencias_por_producto(productos)
 
-    bajos = [
-        (p, existencias.get(p.id, 0))
-        for p in productos
-        if existencias.get(p.id, 0) <= UMBRAL_DE_EXISTENCIAS_BAJAS
-    ]
-    bajos.sort(key=lambda par: par[1])
-    return tuple(bajos[:CUANTOS_EN_EL_PANEL])
+    con_su_cifra = sorted(
+        ((p, existencias.get(p.id, 0)) for p in productos), key=lambda par: (par[1], par[0].nombre)
+    )
+    agotados = tuple(par for par in con_su_cifra if par[1] <= 0)
+    quedan_pocas = tuple(par for par in con_su_cifra if 0 < par[1] <= UMBRAL_DE_EXISTENCIAS_BAJAS)
+    return agotados, quedan_pocas
 
 
 def _mas_vendidos(desde, hasta, cuantos=CUANTOS_EN_EL_PANEL):

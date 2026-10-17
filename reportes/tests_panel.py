@@ -24,6 +24,7 @@ from catalogo.models import Categoria, Producto
 from cuentas.models import Rol, Usuario
 from cuentas.services import crear_cuenta, sincronizar_grupos_y_permisos
 from inventario.models import MovimientoInventario, TipoDeMovimientoDeInventario
+from inventario.selectors import tablero_del_inventario
 from reportes.selectors import (
     CUANTOS_EN_EL_PANEL,
     UMBRAL_DE_EXISTENCIAS_BAJAS,
@@ -188,15 +189,44 @@ class ElAvisoDeExistenciasTest(TestCase):
         escaso = producto(nombre="Crispeta", existencias=UMBRAL_DE_EXISTENCIAS_BAJAS - 6)
         producto(nombre="Agua", existencias=UMBRAL_DE_EXISTENCIAS_BAJAS + 50)
 
-        avisados = [p.nombre for p, _ in panel_de_la_cafeteria(actor=self.actor).existencias_bajas]
+        panel = panel_de_la_cafeteria(actor=self.actor)
 
-        self.assertEqual(avisados, [escaso.nombre])
+        self.assertEqual([p.nombre for p, _ in panel.quedan_pocas], [escaso.nombre])
+        self.assertEqual(panel.agotados, ())
+
+    def test_agotado_y_quedan_pocas_son_los_cortes_del_inventario(self):
+        """`DEC-25`: agotado es cero o menos, y «quedan pocas», de uno al umbral.
+        El panel llamaba «quedan pocas» a los dos, y el inventario contaba los
+        mismos productos como agotados."""
+        producto(nombre="Banano", existencias=0)
+        producto(nombre="Pan", existencias=1)
+        producto(nombre="Jugo", existencias=UMBRAL_DE_EXISTENCIAS_BAJAS)
+
+        panel = panel_de_la_cafeteria(actor=self.actor)
+        tablero = tablero_del_inventario(actor=self.actor)
+
+        self.assertEqual([p.nombre for p, _ in panel.agotados], ["Banano"])
+        self.assertEqual([p.nombre for p, _ in panel.quedan_pocas], ["Pan", "Jugo"])
+        self.assertEqual(len(panel.agotados), tablero.agotados)
+        self.assertEqual(len(panel.quedan_pocas), tablero.quedan_pocas)
+
+    def test_la_pantalla_dice_cada_grupo_por_su_nombre(self):
+        producto(nombre="Banano", existencias=0)
+        producto(nombre="Pan", existencias=1)
+        self.client.force_login(self.actor)
+
+        respuesta = self.client.get("/cafeteria/")
+
+        self.assertContains(respuesta, 'data-grupo-de-existencias="agotados"')
+        self.assertContains(respuesta, 'data-grupo-de-existencias="quedan-pocas"')
 
     def test_con_todo_surtido_no_hay_aviso(self):
         """Un hueco no es un aviso vacío: el bloque no se dibuja."""
         producto(nombre="Agua", existencias=200)
 
-        self.assertEqual(panel_de_la_cafeteria(actor=self.actor).existencias_bajas, ())
+        panel = panel_de_la_cafeteria(actor=self.actor)
+
+        self.assertEqual((panel.agotados, panel.quedan_pocas), ((), ()))
 
     def test_lo_mas_vendido_se_mide_contra_el_mas_vendido(self):
         uno = producto(nombre="Mandarina", precio="1200")

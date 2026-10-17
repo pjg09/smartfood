@@ -208,6 +208,11 @@ def panel_de_la_cafeteria(request):
         {
             "panel": panel,
             "umbral": UMBRAL_DE_EXISTENCIAS_BAJAS,
+            # Presentación: el rótulo y la marca de cada grupo del aviso (`DEC-25`).
+            "grupos_de_existencias": (
+                ("Agotados", panel.agotados, "agotados"),
+                ("Quedan pocas", panel.quedan_pocas, "quedan-pocas"),
+            ),
             "tarjetas": _tarjetas_de_la_jornada(panel),
             "mas_vendidos": panel.mas_vendidos,
         },

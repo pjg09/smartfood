@@ -130,7 +130,7 @@ hace lo mismo y cuenta cuántos quedan sin quién.
 |---|---|---|
 | **Productos** | Los que están en el catálogo | Lo retirado no se vende |
 | **Agotados** | Existencias **cero o menos** | Menos de cero pasa (`[S4]`), y es lo que más urge reponer |
-| **Quedan pocas** | De 1 a `UMBRAL_DE_EXISTENCIAS_BAJAS` (10) | Un agotado no cuenta dos veces. **El umbral es una ayuda de pantalla**, no una regla: nada se bloquea al cruzarlo y nadie lo configura. Vive en `inventario/selectors.py` y lo usa también el panel |
+| **Quedan pocas** | De 1 a `UMBRAL_DE_EXISTENCIAS_BAJAS` (10) | Un agotado no cuenta dos veces. **El umbral es una ayuda de pantalla**, no una regla: nada se bloquea al cruzarlo y nadie lo configura. Vive en `inventario/selectors.py` y lo usa también el panel, **con los mismos dos cortes**: su aviso separa agotados y «quedan pocas» con estas palabras, y una prueba compara sus cifras con las de esta pantalla |
 | **Valor del inventario** | Existencias por precio de venta, **sin restar los negativos** | Un descuadre no es mercancía que valga menos que nada |
 
 **El historial de un producto suma por un camino distinto que el total.** El total es un `SUM`
