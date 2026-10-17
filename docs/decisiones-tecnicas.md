@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` y `DT-56` el 2026-10-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-57` el 2026-10-17 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 56 (`DT-1` … `DT-56`) |
+| decisiones | 57 (`DT-1` … `DT-57`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-56`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-57`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1165,4 +1165,20 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Lo que ya decía, lo sigue diciendo**: el hueco de quién en los movimientos anteriores a `HU-69`, y que el tope recortó.
 - **La ruta cambia y su nombre no**: `auditoria`. Los enlaces de los reportes y la barra no se tocan; `/admin/auditoria/` deja de existir y el admin responde su `404`. Sobra la comprobación de `is_staff`: el rol lo exige el selector.
 - **No entran ni las recargas ni las restricciones**, como hasta ahora: `[S11]` no le da a la cafetería el saldo de las familias ni la escritura de las restricciones (`INV-4`), y la auditoría no es una puerta lateral a ninguno de los dos.
+
+#### `[DT-57]` El cobro del punto de venta se confirma en dos modales, y el catálogo lleva foto
+
+**Obliga:** `HU-21` e `INT-2`, sin ampliarlas. **Corrige** la tercera decisión del armazón del punto de venta (`TT-57`, `base-punto-de-venta.html`): «sin diálogos, ninguna acción del punto de venta se confirma con un modal». **Es una decisión del dueño del producto, tomada sabiendo lo que cuesta**, no una conclusión técnica.
+
+**Lo que cuesta, dicho antes de construirlo:** dos gestos más por venta, también en la billetera —la venta más frecuente—, donde la primera modal no calcula nada. Con `INT-2` —toda la demanda del descanso en veinte a treinta minutos, con dos a cinco cajeros— ese es el presupuesto que se gasta.
+
+**Decidido:**
+
+- **El catálogo es de tarjetas con la foto del producto** (`HU-59`), su precio, sus calorías si las declara y sus existencias, que siguen sin autorizar (`DT-6`). Sin producto en la venta, la tarjeta ofrece «Añadir»; con él, «− n +». El ticket mantiene su «− +», y los dos se repintan juntos: cada gesto devuelve el ticket y, fuera de banda, la tarjeta de ese producto.
+- **«Cobrar» abre la confirmación**: cliente, renglones, total y medio de pago, en los tres medios. **En efectivo lleva «Dinero recibido»**, una calculadora: la devuelta —o lo que falta— la calcula el servidor a cada tecla con el formateador del dinero, que es uno solo. **No se guarda**: la venta no tiene esa columna, y lo que el cliente entregó no es un hecho del sistema.
+- **Al cobrar, la modal pasa a «Venta registrada»** con lo que se cobró de verdad —el total lo calcula el servidor con los precios del momento— y, en efectivo, la devuelta. El ticket, el cliente y el catálogo se repintan detrás, fuera de banda, como antes.
+- **El foco sigue siendo del lector**, con las dos excepciones que la modal obliga a hacer: **Enter en «Dinero recibido» no cobra**, solo lleva el foco a «Cobrar» —un código leído por error dentro del campo no confirma la venta—, y al cerrar cualquier modal el foco vuelve al campo de la tarjeta. Escape cancela.
+- **Riesgo que queda**: en billetera y transferencia el foco nace en «Cobrar», así que pasar una tarjeta con la modal abierta confirma la venta con su Enter. Se acepta: el cajero no escanea con la confirmación delante, y la venta queda en el ticket y en la auditoría.
+- **El cliente se olvida al cobrar**, como hasta ahora: «Venta nueva» es la única salida de la segunda modal. Dejarlo puesto invitaría a cobrarle la siguiente venta a quien ya se fue.
+- **Lo que la referencia traía y no entra**: el número de compra —las ventas no tienen número correlativo—, el filtro del catálogo por nombre y categoría, la lista de últimas ventas del turno y el nombre «Prepago», que aquí es la billetera.
 

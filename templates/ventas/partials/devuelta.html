@@ -1,0 +1,15 @@
+{% load dinero %}
+{% comment %} DT-57. Lo que hay que devolver, o lo que falta, mientras se escribe el dinero
+   recibido. Verde si sobra: el estado existe. Rojo si falta: tampoco es decoración. Nada
+   si el campo está vacío. {% endcomment %}
+{% if devuelta is not None %}
+  <p data-devuelta class="flex h-12 items-center justify-between gap-2 rounded-md bg-exito-suave px-3 text-exito-fuerte">
+    <span class="text-base font-medium">Devuelta</span>
+    <span class="font-display text-xl font-semibold tabular-nums">{{ devuelta|dinero }}</span>
+  </p>
+{% elif faltan is not None %}
+  <p data-faltan class="flex h-12 items-center justify-between gap-2 rounded-md bg-error-suave px-3 text-error-fuerte">
+    <span class="text-base font-medium">Faltan</span>
+    <span class="font-display text-xl font-semibold tabular-nums">{{ faltan|dinero }}</span>
+  </p>
+{% endif %}

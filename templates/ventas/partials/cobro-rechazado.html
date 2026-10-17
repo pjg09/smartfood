@@ -1,0 +1,34 @@
+{% comment %} DT-57. La modal del cobro cuando la venta se rechaza.
+
+   Con el motivo exacto (`INV-1` y las demás condiciones de `reglas-de-la-venta.md`): en
+   una caja con cola, «no se pudo cobrar» obliga a adivinar. **No se escribió nada**, y el
+   carrito sigue como estaba. El ticket de detrás viaja fuera de banda con el mismo
+   rechazo, para que siga a la vista al cerrar.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-cobro-rechazado data-motivo="{{ motivo|default:'rechazo' }}">
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">La venta no se realizó</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+  <div class="flex flex-col gap-4 px-6 py-5">
+    <div role="alert" class="flex items-start gap-3 rounded-md border border-error bg-error-suave p-4 text-error-fuerte">
+      <svg class="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true"><use href="#i-alerta"></use></svg>
+      <div class="flex flex-col gap-1 text-sm">
+        <p>{{ rechazo }}</p>
+        <p>No se descontó nada: ni saldo ni existencias.</p>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha autofocus
+            class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                   text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+      Volver al ticket
+    </button>
+  </div>
+</div>
+{% include "ventas/partials/ticket.html" %}

@@ -164,10 +164,13 @@ class ElCatalogoNoCuelgaDeUnFormularioTest(TestCase):
     `{% csrf_token %}` no tiene dónde ir.
     """
 
+    # `DT-57`: los botones viven en la tarjeta de cada producto, que el catálogo
+    # incluye. Se vigilan las dos: ninguna puede convertirse en formulario.
     CATALOGO = Path(settings.BASE_DIR) / "templates/ventas/partials/catalogo.html"
+    TARJETA = Path(settings.BASE_DIR) / "templates/ventas/partials/tarjeta-del-catalogo.html"
 
     def test_publica_hx_post_y_no_tiene_formulario(self):
-        plantilla = self.CATALOGO.read_text()
+        plantilla = self.CATALOGO.read_text() + self.TARJETA.read_text()
 
         self.assertIn("hx-post", plantilla)
         self.assertNotIn(

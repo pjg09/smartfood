@@ -458,10 +458,10 @@ Todos cuelgan de `templates/base.html`, que solo pone `<head>`, tema e iconos.
 
 - **Un botón deshabilitado en lugar de un hueco.** Ver `[S2.4]`. No confundir con el guardar
   de una ficha incompleta, que sí va deshabilitado (`[S2.11]`).
-- **Un diálogo de confirmación en el punto de venta.** `INT-2` los descarta: cada uno cuesta
-  un clic y un segundo por venta, y roba el foco —que es del lector—. El botón de cobrar
-  cobra (`TT-81`). Lo que protege de un cobro accidental no es un modal: es que el ticket
-  diga después exactamente qué se cobró.
+- **Un diálogo de confirmación en el punto de venta, salvo el del cobro.** `INT-2` los
+  descarta: cada uno cuesta un clic y un segundo por venta, y roba el foco —que es del
+  lector—. El cobro es la excepción declarada (`DT-57`), con dos modales por decisión del
+  dueño del producto; añadir, quitar y entregar no preguntan.
 - **Una opción que la base va a rechazar**, ni siquiera apagada. Si no aplica, no se dibuja:
   ver `[S2.3]`. La diferencia con un hueco es que un hueco declara algo que llegará, y esto
   no va a llegar nunca — el efectivo no es un medio de pago pendiente para un estudiante.

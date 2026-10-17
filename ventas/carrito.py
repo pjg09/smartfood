@@ -19,6 +19,7 @@ Un renglón por producto, que es lo que `LineaVenta` admite (`TT-78`): añadir d
 veces el mismo producto **suma cantidades**, no apila líneas.
 """
 
+from decimal import Decimal
 from uuid import UUID
 
 CLAVE_CARRITO = "carrito"
@@ -128,3 +129,35 @@ def fijar_estudiante(sesion, estudiante):
 
 def estudiante_id(sesion):
     return sesion.get(CLAVE_ESTUDIANTE)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LA CALCULADORA DE LA DEVUELTA (`DT-57`)
+#
+# **No es dominio**: lo que el cliente entrega en efectivo no es un hecho del
+# sistema y no se guarda en ninguna parte. Es una ayuda para el cajero, que se
+# calcula en el servidor para que la cifra pase por el único formateador del
+# dinero.
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def leer_dinero(texto):
+    """`"20.000"` → `Decimal("20000")`. Se queda con los dígitos: el cajero
+    escribe con o sin puntos de miles, y el peso no tiene centavos en caja.
+    Vacío, o sin ningún dígito, es `None`: no se escribió nada."""
+    digitos = "".join(c for c in (texto or "") if c.isdigit())
+    return Decimal(digitos) if digitos else None
+
+
+def devuelta(total, recibido):
+    """`(devuelta, faltan)` para un total y lo que entregó el cliente.
+
+    Las dos son `None` si no se escribió nada. Una de las dos es cero o `None`:
+    o sobra, o falta, o es justo.
+    """
+    if recibido is None:
+        return None, None
+    diferencia = recibido - total
+    if diferencia >= 0:
+        return diferencia, None
+    return None, -diferencia

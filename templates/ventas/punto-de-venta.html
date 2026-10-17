@@ -200,4 +200,13 @@
 
     {% include "ventas/partials/ticket.html" %}
   </section>
+
+  {% comment %} `DT-57`. Las dos modales del cobro: la confirmación y la venta registrada.
+     Fuera del ticket, que se repinta tras cobrar: dentro, se cerraría sola. Al cerrarla,
+     el foco vuelve al lector (`interfaz.js`). {% endcomment %}
+  <dialog id="modal-de-la-ficha" data-modal-ficha aria-label="Cobro"
+          class="m-auto w-[min(32rem,94vw)] rounded-2xl border border-borde bg-superficie p-0
+                 text-texto backdrop:bg-velo">
+    <div id="cuerpo-de-la-ficha"></div>
+  </dialog>
 {% endblock %}

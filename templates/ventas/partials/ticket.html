@@ -9,11 +9,12 @@
    antemano cuál va a ser —una venta puede rechazarse—, y partirlo obligaría al
    botón a decidir a dónde pedir antes de saber qué pasa.
 
-   **Sin diálogo de confirmación** (`INT-2`): el botón cobra. Un modal roba el
-   foco, y el foco es del lector.
+   **«Cobrar» no cobra: abre la confirmación** (`DT-57`). Lo que se decide en ella
+   vuelve aquí fuera de banda —`oob_ticket`—, porque la respuesta del cobro es la
+   segunda modal.
 {% endcomment %}
 
-<div id="ticket-de-venta" class="flex grow flex-col gap-3">
+<div id="ticket-de-venta" class="flex grow flex-col gap-3"{% if oob_ticket %} hx-swap-oob="true"{% endif %}>
 
   {% if cobrada %}
     {% comment %} `exito` significa algo y aquí significa exactamente esto: el dinero y las
@@ -126,17 +127,16 @@
         </span>
       </div>
 
-      {% comment %} **El botón cobra, y no pregunta.** `INT-2` descarta los diálogos: cada
-         uno cuesta un clic y un segundo por venta. Lo que protege de un cobro
-         accidental no es un modal, es que la venta se pueda deshacer con una
-         devolución — y que el ticket diga después exactamente qué se cobró.
+      {% comment %} **El botón abre la confirmación** (`DT-57`): cliente, renglones, total y
+         medio, y en efectivo la calculadora de la devuelta. Es una decisión del dueño
+         del producto que cuesta dos gestos por venta, y está registrada con ese coste.
 
          El medio de pago viaja incluido: `hx-include` recoge el campo oculto del
-         bloque de la otra columna, que es quien sabe cuál aplica (`HU-54`). {% endcomment %}
+         bloque de arriba, que es quien sabe cuál aplica (`HU-54`). {% endcomment %}
       <button type="button"
-              hx-post="{% url 'cobrar' %}"
+              hx-get="{% url 'confirmacion-del-cobro' %}"
               hx-include="[name='medio_pago']"
-              hx-target="#ticket-de-venta"
+              hx-target="#cuerpo-de-la-ficha"
               hx-swap="innerHTML"
               data-cobrar
               class="flex h-12 w-full items-center justify-center gap-2 rounded-md
@@ -188,3 +188,6 @@
   {% include "ventas/partials/medio-de-pago.html" with oob=True %}
 {% endif %}
 {% if oob_catalogo %}{% include "ventas/partials/catalogo.html" %}{% endif %}
+{% comment %} `DT-57`. La tarjeta del producto que se acaba de tocar: «Añadir» o «− n +»
+   cambian con el ticket. Retirado entre medias, no vuelve: no hay tarjeta que pintar. {% endcomment %}
+{% if oob_tarjeta %}{% include "ventas/partials/tarjeta-del-catalogo.html" with producto=oob_tarjeta oob=True %}{% endif %}

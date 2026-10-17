@@ -29,6 +29,8 @@ from personas.selectors import (
 )
 from personas.services import EstudianteNoOperativo
 from ventas import carrito as carrito_de_la_venta
+from ventas.carrito import devuelta as devuelta_de_la_venta
+from ventas.carrito import leer_dinero
 from ventas.selectors import (
     catalogo_de_venta,
     catalogo_para_reservar,
@@ -44,7 +46,7 @@ from ventas.selectors import (
     resumen_de_la_reserva,
     tablero_de_reservas,
 )
-from ventas.models import PedidoAnticipado
+from ventas.models import MedioDePago, PedidoAnticipado
 from ventas.services import (
     CierreRechazado,
     VentaRechazada,
@@ -95,8 +97,25 @@ Esta vista **no cierra ninguna historia**: es el sitio donde ocurren las
     return render(
         request,
         "ventas/punto-de-venta.html",
-        {"productos": catalogo_de_venta(), **_contexto_del_ticket(request)},
+        {"productos": _catalogo_con_la_venta(request), **_contexto_del_ticket(request)},
     )
+
+
+def _catalogo_con_la_venta(request, solo=None):
+    """El catálogo con `en_la_venta` en cada producto: cuántas unidades lleva la
+    venta en curso (`DT-57`). Es lo que decide si la tarjeta ofrece «Añadir» o
+    «− n +».
+
+    Con `solo`, el producto de ese identificador y nada más, o `None`: es la
+    tarjeta que se repinta fuera de banda tras tocar el carrito.
+    """
+    carrito = carrito_de_la_venta.leer(request.session)
+    productos = catalogo_de_venta()
+    for producto in productos:
+        producto.en_la_venta = carrito.get(str(producto.id), 0)
+    if solo is not None:
+        return next((p for p in productos if str(p.id) == str(solo)), None)
+    return productos
 
 
 @login_required
@@ -221,10 +240,10 @@ def carrito(request):
     **`POST` y no `GET`**: cambia el estado de la sesión, y un `GET` que cambia
     algo es un enlace que el navegador puede reproducir solo.
 
-    Devuelve el **fragmento del ticket** y nada más: lo que cambia al tocar el
-    carrito es la columna del ticket (`DT-16`). El catálogo no se repinta —sus
-    existencias no cambian hasta que se cobre—, y repintarlo costaría el doble de
-    bytes en cada toque.
+    Devuelve el **fragmento del ticket** y, fuera de banda, **la tarjeta del
+    producto tocado** (`DT-57`): su «Añadir» o «− n +» cambia con el ticket. El
+    catálogo entero no se repinta —sus existencias no cambian hasta que se
+    cobre—, salvo al vaciar, que cambia todas las tarjetas a la vez.
 
     No comprueba existencias: montar el carrito no es cobrar. La cifra que decide
     se lee dentro del bloqueo, al confirmar (`DT-6`); avisar antes sería una
@@ -244,9 +263,62 @@ def carrito(request):
     else:
         carrito_de_la_venta.anadir(request.session, producto_id, 1)
 
+    # `DT-57`. La tarjeta del producto tocado cambia con el ticket —«Añadir» o
+    # «− n +»—, así que viaja fuera de banda. Solo esa: el catálogo entero
+    # costaría el doble de bytes en cada toque. Al vaciar, todas.
+    if accion == "vaciar":
+        fuera_de_banda = {"oob_catalogo": True, "productos": _catalogo_con_la_venta(request)}
+    else:
+        fuera_de_banda = {"oob_tarjeta": _catalogo_con_la_venta(request, solo=producto_id)}
+
     return render(
-        request, "ventas/partials/ticket.html", _contexto_del_ticket(request)
+        request, "ventas/partials/ticket.html",
+        _contexto_del_ticket(request, **fuera_de_banda),
     )
+
+
+def _medio_de_la_confirmacion(estudiante, pedido):
+    """El medio que se va a cobrar: con estudiante, siempre la billetera
+    (`HU-54`); sin él, el elegido, o efectivo. La regla la impone la base
+    (`venta_medio_de_pago_segun_el_cliente`); esto solo dice lo que va a pasar."""
+    if estudiante is not None:
+        return MedioDePago.BILLETERA
+    if pedido in (MedioDePago.EFECTIVO, MedioDePago.TRANSFERENCIA):
+        return pedido
+    return MedioDePago.EFECTIVO
+
+
+@login_required
+@require_http_methods(["GET"])
+def confirmacion_del_cobro(request):
+    """La primera modal del cobro: qué se va a cobrar, a quién y cómo (`DT-57`).
+
+    **No escribe nada.** Cerrarla es no cobrar. En efectivo lleva «Dinero
+    recibido», que solo sirve para calcular la devuelta y no se guarda.
+    """
+    _solo_el_cajero(request.user)
+    contexto = _contexto_del_ticket(request)
+    medio = _medio_de_la_confirmacion(contexto["estudiante"], request.GET.get("medio_pago"))
+    return render(request, "ventas/partials/confirmacion-del-cobro.html", {
+        **contexto,
+        "medio": medio,
+        "etiqueta_del_medio": MedioDePago(medio).label,
+        "en_efectivo": medio == MedioDePago.EFECTIVO,
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def devuelta_del_cobro(request):
+    """La devuelta mientras se escribe el dinero recibido (`DT-57`).
+
+    La calcula el servidor, a cada tecla, contra el total de la venta en curso:
+    el dinero se formatea en un solo sitio, y en JavaScript sería el segundo.
+    """
+    _solo_el_cajero(request.user)
+    _, total = lineas_del_carrito(carrito_de_la_venta.leer(request.session))
+    sobra, falta = devuelta_de_la_venta(total, leer_dinero(request.GET.get("recibido")))
+    return render(request, "ventas/partials/devuelta.html", {"devuelta": sobra, "faltan": falta})
 
 
 @login_required
@@ -254,8 +326,10 @@ def carrito(request):
 def cobrar(request):
     """Confirma la venta (`TT-80`, `TT-81`, `HU-21`).
 
-    **Sin diálogo de confirmación** (`INT-2`, `DT-16`): un modal roba el foco, y
-    el foco es del lector. El botón cobra.
+    **Se llama desde la primera modal** (`DT-57`): el botón del ticket ya no
+    cobra, abre la confirmación. Responde la segunda modal —«Venta registrada»—
+    o, si se rechaza, la modal con el motivo; y en los dos casos arrastra el
+    ticket fuera de banda.
 
     La vista no decide nada: junta lo que hay en la sesión y llama al servicio,
     que es quien bloquea, valida y escribe dentro de una sola transacción
@@ -300,28 +374,44 @@ def cobrar(request):
         # camino de venta: se sigue capturando como red, porque un camino nuevo
         # que olvide traducirla enseñaría un `500` en la caja en vez de un
         # rechazo con su motivo.
+        # `DT-57`. La modal dice por qué no se cobró, y el ticket de detrás
+        # también, para que siga a la vista al cerrarla. El carrito no se toca.
         return render(
             request,
-            "ventas/partials/ticket.html",
+            "ventas/partials/cobro-rechazado.html",
             _contexto_del_ticket(
                 request,
                 rechazo=" ".join(rechazo.messages)
                 if hasattr(rechazo, "messages")
                 else str(rechazo),
                 motivo=getattr(rechazo, "motivo", "rechazo"),
+                oob_ticket=True,
             ),
         )
 
     carrito_de_la_venta.vaciar(request.session)
+    total_cobrado = total_de(venta)
+    # La devuelta, contra **lo que se cobró de verdad** y no contra el total
+    # estimado de la primera modal: el precio puede haber cambiado entre las dos.
+    # El dinero recibido no se guarda (`DT-57`).
+    sobra, falta = (
+        devuelta_de_la_venta(total_cobrado, leer_dinero(request.POST.get("recibido")))
+        if venta.medio_pago == MedioDePago.EFECTIVO
+        else (None, None)
+    )
 
     return render(
         request,
-        "ventas/partials/ticket.html",
+        "ventas/partials/venta-registrada.html",
         {
             **_contexto_del_ticket(request),
             "cobrada": venta,
-            "total_cobrado": total_de(venta),
-            "productos": catalogo_de_venta(),
+            "renglones": list(venta.lineas.select_related("producto")),
+            "total_cobrado": total_cobrado,
+            "devuelta": sobra,
+            "faltan": falta,
+            "productos": _catalogo_con_la_venta(request),
+            "oob_ticket": True,
             "oob_estudiante": True,
             "oob_catalogo": True,
         },
@@ -767,8 +857,9 @@ def entrega(request):
     esta vista vive aquí y no en la cola de `HU-24`, que es donde se consulta lo
     que hay que preparar: entregar es otro momento y otro rol.
 
-    **Sin diálogo de confirmación** (`INT-2`), como el cobro: un modal roba el
-    foco y el foco es del lector.
+    **Sin diálogo de confirmación** (`INT-2`): un modal roba el foco y el foco es
+    del lector. El cobro sí lleva dos (`DT-57`), por la devuelta; la entrega no
+    cobra nada y no tiene qué calcular.
 
     Devuelve el panel del estudiante en sus dos estados —entregado o rechazado—,
     que es la misma zona de la pantalla y por tanto el mismo fragmento. Arrastra

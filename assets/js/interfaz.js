@@ -278,6 +278,29 @@
       if (evento.key === "Escape") devolverElFoco();
     });
 
+    // `DT-57`. **Enter en «Dinero recibido» no cobra**: lleva el foco a «Cobrar».
+    // La pistola termina cada lectura con Enter, así que una tarjeta pasada con
+    // la confirmación abierta escribiría su código en el campo y, sin esto,
+    // enviaría el formulario: cobraría sola. Con esto hacen falta dos Enter.
+    document.addEventListener("keydown", function (evento) {
+      if (evento.key !== "Enter") return;
+      var campo = evento.target.closest && evento.target.closest("[data-dinero-recibido]");
+      if (!campo) return;
+      evento.preventDefault();
+      var formulario = campo.closest("form");
+      var cobrar = formulario && formulario.querySelector("[data-confirmar-cobro]");
+      if (cobrar) cobrar.focus();
+    });
+
+    // Al cerrar una modal del cobro, el foco vuelve al lector. El `<dialog>` lo
+    // devuelve al botón que lo abrió, y ese botón ya no existe: el ticket se
+    // repintó por debajo. Sin esto, el foco se queda en el `body` y la siguiente
+    // tarjeta no se lee.
+    var modal = document.querySelector("[data-modal-ficha]");
+    if (modal) {
+      modal.addEventListener("close", function () { setTimeout(devolverElFoco, 0); });
+    }
+
     /* Tras cada búsqueda, el campo se vacía y recupera el foco (`TT-71`).
      *
      * **Sin esto, la segunda tarjeta se concatena con la primera**: el lector

@@ -1,0 +1,104 @@
+{% load dinero %}
+{% comment %} DT-57. La primera modal del cobro: qué se va a cobrar, a quién y cómo.
+
+   **No escribe nada**: cerrarla es no cobrar. El total es **estimado** —el que cobra lo
+   calcula el servidor con los precios del momento, dentro del bloqueo (`DT-6`)—, y la
+   segunda modal dice el de verdad.
+
+   **En efectivo lleva «Dinero recibido»**, una calculadora: la devuelta la calcula el
+   servidor a cada tecla, con el formateador del dinero, y **no se guarda**. Enter dentro
+   del campo **no cobra**: lleva el foco a «Cobrar» (`interfaz.js`). Un código leído por
+   error con la modal abierta acaba en el campo y no confirma la venta.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-confirmacion-del-cobro data-medio="{{ medio }}">
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Confirmar venta</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  {% if lineas %}
+    <form hx-post="{% url 'cobrar' %}" hx-target="#cuerpo-de-la-ficha" hx-swap="innerHTML"
+          hx-disabled-elt="[data-confirmar-cobro]" class="flex min-h-0 flex-col">
+      <input type="hidden" name="medio_pago" value="{{ medio }}">
+
+      <div class="flex min-h-0 flex-col gap-3 overflow-y-auto px-6 py-4">
+        <div class="flex items-baseline justify-between gap-3">
+          <span class="text-base text-texto-suave">Cliente</span>
+          <span class="text-base font-semibold text-texto" data-cliente-del-cobro>{% if estudiante %}{{ estudiante.nombre }}{% else %}Cliente genérico{% endif %}</span>
+        </div>
+
+        <ul class="flex flex-col gap-2 rounded-xl bg-superficie-hover px-4 py-3">
+          {% for linea in lineas %}
+            <li class="flex items-baseline justify-between gap-3">
+              <span class="flex min-w-0 flex-col">
+                <span class="truncate text-base text-texto">{{ linea.producto.nombre }}</span>
+                <span class="text-sm text-texto-suave tabular-nums">{{ linea.cantidad }} × {{ linea.producto.precio|dinero }}</span>
+              </span>
+              <span class="shrink-0 font-semibold text-texto tabular-nums">{{ linea.importe|dinero }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <dl class="flex flex-col gap-2">
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base text-texto-suave">Total estimado</dt>
+            <dd class="font-display text-lg font-semibold text-texto tabular-nums" data-total-estimado>{{ total|dinero:"COP" }}</dd>
+          </div>
+          <div class="flex items-baseline justify-between gap-3">
+            <dt class="text-base text-texto-suave">Medio de pago</dt>
+            <dd class="text-base font-semibold text-texto">{{ etiqueta_del_medio }}{% if en_efectivo %} (caja){% endif %}</dd>
+          </div>
+        </dl>
+
+        {% if en_efectivo %}
+          {% comment %} El campo y la devuelta **lado a lado**: a 1024 × 600, la pantalla que
+             declara `INT-2`, la devuelta debajo del campo quedaba por debajo del pliegue de
+             la modal, y es la cifra que el cajero tiene que leer. Se vio en la captura. {% endcomment %}
+          <div class="flex flex-col gap-1 border-t border-borde pt-3">
+            <label for="dinero-recibido" class="text-base font-medium text-texto">
+              Dinero recibido <span class="font-normal text-texto-suave">(opcional)</span>
+            </label>
+            <div class="grid grid-cols-2 items-center gap-3">
+              <input type="text" id="dinero-recibido" name="recibido" inputmode="numeric" autocomplete="off"
+                     autofocus data-dinero-recibido
+                     hx-get="{% url 'devuelta-del-cobro' %}" hx-trigger="input changed delay:150ms"
+                     hx-target="#devuelta-del-cobro" hx-swap="innerHTML"
+                     class="h-12 w-full rounded-md border border-borde bg-superficie px-3 font-display text-lg
+                            tabular-nums text-texto transition-colors hover:border-acento focus:border-acento
+                            focus:outline-none">
+              <div id="devuelta-del-cobro" aria-live="polite"></div>
+            </div>
+            <p class="text-sm text-texto-suave">Solo para calcular la devuelta. No se guarda en la venta.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+        <button type="button" data-cerrar-ficha
+                class="inline-flex h-11 items-center rounded-md border border-borde bg-superficie px-4
+                       text-base font-medium text-texto transition-colors hover:bg-superficie-hover">
+          Cancelar
+        </button>
+        <button type="submit" data-confirmar-cobro {% if not en_efectivo %}autofocus{% endif %}
+                class="inline-flex h-11 items-center gap-2 rounded-md bg-primario px-5 text-base font-semibold
+                       text-sobre-primario transition-colors hover:bg-primario-fuerte
+                       disabled:cursor-wait disabled:opacity-70">
+          <svg class="h-4 w-4" aria-hidden="true"><use href="#i-correcto"></use></svg>
+          Cobrar
+        </button>
+      </div>
+    </form>
+  {% else %}
+    <div class="flex flex-col gap-4 px-6 py-5">
+      <p class="text-base text-texto-suave" data-nada-que-cobrar>No hay nada en la venta todavía.</p>
+      <button type="button" data-cerrar-ficha autofocus
+              class="inline-flex h-11 items-center self-end rounded-md border border-borde px-4 text-base font-medium text-texto">
+        Cerrar
+      </button>
+    </div>
+  {% endif %}
+</div>

@@ -8,8 +8,9 @@ Tres propiedades, y las tres se rompen solas con el tiempo:
 1. **Un renglón por producto.** Pulsar dos veces la empanada suma cantidades, no
    apila líneas — que es lo que `LineaVenta` admite (`TT-78`) y lo que el cajero
    espera ver.
-2. **Sin diálogo de confirmación.** `INT-2` los descarta: un modal roba el foco,
-   y el foco es del lector.
+2. **El botón del ticket no cobra: abre la confirmación** (`DT-57`). Las dos
+   modales y la calculadora de la devuelta tienen su propio fichero,
+   `ventas/tests_cobro_en_dos_modales.py`.
 3. **Al cobrar, la caja queda lista para el siguiente cliente.** El carrito se
    vacía y el estudiante se olvida. Dejarlo puesto invitaría a cobrarle la
    siguiente venta a quien ya se fue.
@@ -240,15 +241,17 @@ class LaConfirmacionCobraSinPreguntarTest(TestCase):
                 self.carrito, {"producto": str(self.empanada.id), "accion": "anadir"}
             )
 
-    def test_el_ticket_no_pide_confirmar_nada(self):
-        """Ni `confirm`, ni `<dialog>`, ni un botón deshabilitado esperando."""
+    def test_el_boton_del_ticket_abre_la_confirmacion_y_no_cobra(self):
+        """`DT-57`: «Cobrar» pide la primera modal; cobrar lo hace ella. Ni un
+        `hx-confirm` del navegador ni un botón deshabilitado esperando."""
         self._montar_venta_de_estudiante()
         cuerpo = self.client.post(
             self.carrito, {"producto": str(self.empanada.id), "accion": "descontar"}
         ).content.decode()
 
+        self.assertIn(f'hx-get="{reverse("confirmacion-del-cobro")}"', cuerpo)
+        self.assertNotIn(f'hx-post="{self.cobrar}"', cuerpo)
         self.assertNotIn("hx-confirm", cuerpo)
-        self.assertNotIn("<dialog", cuerpo)
         self.assertNotIn("disabled", cuerpo)
 
     def test_cobrar_descuenta_saldo_y_existencias(self):

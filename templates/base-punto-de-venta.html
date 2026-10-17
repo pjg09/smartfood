@@ -18,9 +18,12 @@
       280 px de las etiquetas se los quitaría a la zona donde el cajero pulsa,
       y quien cobra no navega —entra, cobra y sale—. Hoy tiene una sola entrada,
       que es lo que el Sprint 2 construyó; no se dibujan huecos por adelantado.
-   3. **Sin diálogos.** Ninguna acción del punto de venta se confirma con un
-      modal (`PR-12` lo repite para el carrito): un diálogo roba el foco, y el
-      foco es del lector.
+   3. **Una sola acción con diálogo: cobrar** (`DT-57`). Lo demás —añadir,
+      quitar, entregar un pedido— no pregunta: un diálogo roba el foco, y el
+      foco es del lector. El cobro sí pasa por dos modales, por decisión del
+      dueño del producto y con su coste registrado: dos gestos por venta.
+      Dentro de ellas, Enter en «Dinero recibido» no cobra, y al cerrarlas el
+      foco vuelve al lector.
    4. **Foco permanente.** La pistola lectora escribe **donde esté el foco**, así
       que el foco vuelve solo al campo del modo activo en cuanto se pierde. Sin
       esto, el cajero tiene que soltar el lector y tocar la pantalla entre venta

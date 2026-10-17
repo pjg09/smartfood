@@ -8,7 +8,7 @@
 | titulo | Cómo poner a prueba cada funcionalidad del prototipo en el entorno local |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./desarrollo.md` (de donde sale); `./mapa-de-la-aplicacion.md`; `./decisiones-de-alcance.md` |
-| actualizado | 2026-10-13 |
+| actualizado | 2026-10-17 |
 | idioma | es-CO |
 | version | 1.3 |
 
@@ -499,3 +499,22 @@ un pedido ya entregado o ya cancelado, y entregar en la caja uno cancelado.
 **Cancelar no tiene vuelta.** Para probarlo sin dejar rastro en la base de trabajo, con
 `django.test.Client` dentro de una transacción que se deshace (`[S4]` de
 `./escribir-pruebas.md`).
+
+## [S21] Cobrar en la caja
+
+Como cajero, en el punto de venta (`DT-57`): cada producto es una tarjeta con su foto, su
+precio, sus calorías y lo que queda. **Añadir** pasa a «− n +» en la tarjeta, y el ticket
+enseña cada línea con su «− +»; tocar cualquiera de los dos cambia los dos.
+
+**Cobrar** abre la confirmación: cliente, renglones, total estimado y medio de pago. En
+efectivo lleva **Dinero recibido**, una calculadora: a la derecha sale la devuelta, o lo que
+falta, mientras se escribe. **No se guarda.** Enter en el campo no cobra, lleva el foco a
+«Cobrar»; Escape cancela sin cobrar. Al confirmar, **Venta registrada** dice lo que se cobró
+de verdad —con los precios del momento— y la devuelta; **Venta nueva** la cierra, olvida al
+cliente y devuelve el foco al lector.
+
+Para ver la tarjeta con foto hace falta cargarle una imagen al producto (`[S7]`), y para
+cobrar, existencias y saldo, que el seed no crea (`[S1]` de `./desarrollo.md`). Cobrar deja
+la venta en la base de trabajo: para mirar las modales sin escribir, la receta de `[S4.1]`
+de `./escribir-pruebas.md`.
+

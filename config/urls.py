@@ -94,6 +94,8 @@ from ventas.views import (
     cierre_de_caja,
     cliente_generico,
     cobrar,
+    confirmacion_del_cobro,
+    devuelta_del_cobro,
     entrega,
     identificacion,
     detalle_del_pedido,
@@ -586,6 +588,12 @@ urlpatterns = [
     ),
     path("punto-de-venta/carrito/", carrito, name="carrito-del-punto-de-venta"),
     path("punto-de-venta/cobrar/", cobrar, name="cobrar"),
+    # `DT-57`. La primera modal del cobro y la calculadora de la devuelta, que
+    # no escriben nada: el dinero recibido no se guarda.
+    path(
+        "punto-de-venta/confirmacion/", confirmacion_del_cobro, name="confirmacion-del-cobro"
+    ),
+    path("punto-de-venta/devuelta/", devuelta_del_cobro, name="devuelta-del-cobro"),
     # `TT-150`, `HU-25`. La entrega de un pedido anticipado. **Cuelga del punto
     # de venta**, que es donde el primer criterio de la historia la sitúa, y no
     # de la cola de `HU-24`: consultar lo que hay que preparar y entregárselo al

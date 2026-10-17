@@ -566,6 +566,7 @@ no venga de una historia.
 | — | `main` | El reporte de ventas sale del admin a `/ventas/`: periodo en la URL, cuatro cifras, ingresos por categoría, cómo se paga, los más vendidos e ingresos por día con una modal por día. El cierre de caja y la auditoría enlazan a sus modales | `DT-54` |
 | — | `main` | El reporte de cierres de caja sale del admin a `/cierres/`: periodo sobre la jornada, cuatro cifras con el descuadre total primero, filtros por resultado, cajero y motivo, orden por mayor descuadre y una modal por cierre con el enlace a sus ventas en efectivo | `DT-55` |
 | — | `main` | La auditoría sale del admin a `/auditoria/`: el mismo periodo, una cifra por clase de operación que filtra la línea de tiempo, la línea agrupada por día y las ventas y los cierres abiertos en su modal sin salir de ella | `DT-56` |
+| — | `main` | El punto de venta con tarjetas de producto con foto y «Añadir» que pasa a «− n +», sincronizadas con el ticket, y el cobro en dos modales: la confirmación —en efectivo con la calculadora de la devuelta, que no se guarda— y «Venta registrada» | `DT-57` |
 
 **Seis traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
 institución con `HU-64`, la reserva como encargo con `HU-65` … `HU-67`, los pedidos de la

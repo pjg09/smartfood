@@ -1,0 +1,85 @@
+{% load dinero %}
+{% comment %} DT-57. La segunda modal del cobro: lo que se cobró de verdad.
+
+   **El total es el que calculó el servidor** con los precios del momento, y los renglones
+   son los congelados de la venta (`DT-8`): si un precio cambió entre las dos modales, aquí
+   se ve el de verdad. La devuelta se calcula contra este total; el dinero recibido no se
+   guarda.
+
+   «Venta nueva» es la única salida: el cliente ya se olvidó detrás (`oob_estudiante`), y
+   al cerrar el foco vuelve al lector.
+
+   Debajo de la modal viajan, fuera de banda, el ticket, el cliente y el catálogo.
+{% endcomment %}
+<div class="flex max-h-[90vh] flex-col" data-venta-registrada="{{ cobrada.pk }}">
+  <div class="flex items-center justify-between gap-4 border-b border-borde px-6 py-4">
+    <h2 class="font-display text-lg text-texto">Venta registrada</h2>
+    <button type="button" data-cerrar-ficha aria-label="Cerrar"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-borde
+                   text-texto-suave transition-colors hover:bg-superficie-hover">
+      <svg class="h-4 w-4" aria-hidden="true"><use href="#i-cerrar"></use></svg>
+    </button>
+  </div>
+
+  <div class="flex min-h-0 flex-col gap-4 overflow-y-auto px-6 py-5">
+    <p role="status" class="flex items-start gap-2 rounded-md bg-exito-suave px-3 py-2 text-base text-exito-fuerte">
+      <svg class="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true"><use href="#i-recibo"></use></svg>
+      <span>{% if cobrada.estudiante %}Descontado del saldo de {{ cobrada.estudiante.nombre }}.{% else %}Cobrada en {{ cobrada.get_medio_pago_display|lower }}.{% endif %} Ya está en el historial.</span>
+    </p>
+
+    <div class="flex items-baseline justify-between gap-3">
+      <span class="text-base text-texto-suave">Cliente</span>
+      <span class="text-base font-semibold text-texto">{% if cobrada.estudiante %}{{ cobrada.estudiante.nombre }}{% else %}Cliente genérico{% endif %}</span>
+    </div>
+
+    <ul class="flex flex-col gap-2 rounded-xl bg-superficie-hover p-4">
+      {% for renglon in renglones %}
+        <li class="flex items-baseline justify-between gap-3">
+          <span class="flex min-w-0 flex-col">
+            <span class="truncate text-base text-texto">{{ renglon.producto.nombre }}</span>
+            <span class="text-sm text-texto-suave tabular-nums">{{ renglon.cantidad }} × {{ renglon.precio_unitario|dinero }}</span>
+          </span>
+          <span class="shrink-0 font-semibold text-texto tabular-nums">{{ renglon.importe|dinero }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <dl class="flex flex-col gap-2">
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-base text-texto-suave">Total cobrado</dt>
+        <dd class="font-display text-lg font-semibold text-texto tabular-nums" data-total-cobrado>{{ total_cobrado|dinero:"COP" }}</dd>
+      </div>
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-base text-texto-suave">Medio de pago</dt>
+        <dd class="text-base text-texto">{{ cobrada.get_medio_pago_display }}{% if cobrada.medio_pago == "efectivo" %} (caja){% endif %}</dd>
+      </div>
+      {% if devuelta is not None %}
+        <div class="flex items-baseline justify-between gap-3" data-devuelta>
+          <dt class="text-base text-texto-suave">Devuelta</dt>
+          <dd class="font-display text-xl font-semibold text-exito-fuerte tabular-nums">{{ devuelta|dinero }}</dd>
+        </div>
+      {% elif faltan is not None %}
+        {% comment %} El dinero recibido era una calculadora: si el cajero escribió menos de lo
+           cobrado, la venta se registró igual —el sistema no sabe qué hay en el cajón—, y
+           aquí se dice cuánto faltaba para que lo resuelva en el mostrador. {% endcomment %}
+        <div class="flex items-baseline justify-between gap-3" data-faltan>
+          <dt class="text-base text-texto-suave">Faltaban</dt>
+          <dd class="font-display text-xl font-semibold text-error-fuerte tabular-nums">{{ faltan|dinero }}</dd>
+        </div>
+      {% endif %}
+      <div class="flex items-baseline justify-between gap-3">
+        <dt class="text-base text-texto-suave">Fecha</dt>
+        <dd class="text-base text-texto">{{ cobrada.creado_en|date:"j \d\e M \d\e Y, H:i"|lower }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="flex items-center justify-end gap-3 border-t border-borde px-6 py-4">
+    <button type="button" data-cerrar-ficha data-venta-nueva autofocus
+            class="inline-flex h-11 items-center gap-2 rounded-md bg-primario px-5 text-base font-semibold
+                   text-sobre-primario transition-colors hover:bg-primario-fuerte">
+      Venta nueva
+    </button>
+  </div>
+</div>
+{% include "ventas/partials/ticket.html" %}

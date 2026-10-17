@@ -1,0 +1,74 @@
+{% load dinero %}
+{% comment %} DT-57. Un producto del catálogo del punto de venta, en su tarjeta.
+
+   **La foto primero** (`HU-59`): el cajero reconoce la empanada antes de leer «Empanada».
+   Sin foto, un hueco con el icono, no una imagen rota.
+
+   **Dos estados del mismo hueco**: sin el producto en la venta, «Añadir»; con él,
+   «− n +». Los dos piden al carrito, y la respuesta trae el ticket y, fuera de banda,
+   esta misma tarjeta: el `id` es lo que la encuentra.
+
+   Las existencias se enseñan porque el cajero necesita saber si le queda antes de
+   prometerlo, **y no son autorizantes**: la cifra que decide se lee dentro del bloqueo,
+   al cobrar (`DT-6`). El agotado se ofrece igual y se marca en ámbar —falta mercancía,
+   no una historia—, y lo que pase al cobrarlo lo dice la modal.
+{% endcomment %}
+<article id="tarjeta-del-producto-{{ producto.id }}" data-tarjeta-del-punto-de-venta="{{ producto.id }}"
+         {% if oob %}hx-swap-oob="true"{% endif %}
+         class="flex min-w-0 gap-3 rounded-md border bg-superficie p-3 transition-colors
+                {% if producto.en_la_venta %}border-acento{% else %}border-borde{% endif %}">
+  {% if producto.tiene_imagen %}
+    <img src="{{ producto.url_de_la_imagen }}" alt="" width="64" height="64" data-imagen-del-producto
+         class="h-16 w-16 shrink-0 rounded-md object-cover">
+  {% else %}
+    <span aria-hidden="true" data-sin-imagen-del-producto
+          class="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-dashed
+                 border-borde text-texto-suave">
+      <svg class="h-6 w-6"><use href="#i-cafeteria"></use></svg>
+    </span>
+  {% endif %}
+
+  <div class="flex min-w-0 flex-1 flex-col gap-1">
+    <span class="truncate text-base font-medium text-texto">{{ producto.nombre }}</span>
+    <p class="flex flex-wrap items-baseline gap-x-2">
+      <span class="font-display text-base font-semibold tabular-nums text-acento-fuerte">{{ producto.precio|dinero }}</span>
+      {% if producto.energia_kcal is not None %}
+        <span class="text-sm text-texto-suave">{{ producto.energia_kcal }} kcal</span>
+      {% endif %}
+    </p>
+
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      {% if producto.en_la_venta %}
+        <div class="flex items-center gap-1" data-contador-del-punto-de-venta>
+          <button type="button" aria-label="Una unidad menos de {{ producto.nombre }}"
+                  hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                  hx-vals='{"producto": "{{ producto.id }}", "accion": "descontar"}'
+                  hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                  class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                         text-texto transition-colors hover:bg-superficie-hover">−</button>
+          <span class="w-7 text-center font-display text-base tabular-nums text-texto" data-en-la-venta>{{ producto.en_la_venta }}</span>
+          <button type="button" aria-label="Una unidad más de {{ producto.nombre }}"
+                  hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                  hx-vals='{"producto": "{{ producto.id }}", "accion": "anadir"}'
+                  hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                  class="flex h-8 w-8 items-center justify-center rounded-md border border-borde
+                         text-texto transition-colors hover:bg-superficie-hover">+</button>
+        </div>
+      {% else %}
+        <button type="button" data-producto-del-catalogo
+                hx-post="{% url 'carrito-del-punto-de-venta' %}"
+                hx-vals='{"producto": "{{ producto.id }}", "accion": "anadir"}'
+                hx-target="#ticket-de-venta" hx-swap="innerHTML"
+                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-borde px-3 text-sm
+                       font-medium text-texto transition-colors hover:border-primario hover:bg-superficie-hover">
+          <span aria-hidden="true">+</span> Añadir
+        </button>
+      {% endif %}
+      {% comment %} Ámbar cuando no queda nada: en este sistema el ámbar significa «un límite
+         a punto de agotarse», y esto es exactamente eso. {% endcomment %}
+      <span class="text-sm whitespace-nowrap {% if producto.existencias > 0 %}text-texto-suave{% else %}text-aviso-fuerte{% endif %}">
+        {% if producto.existencias > 0 %}Quedan <span class="tabular-nums">{{ producto.existencias }}</span>{% else %}Sin existencias{% endif %}
+      </span>
+    </div>
+  </div>
+</article>
