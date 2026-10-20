@@ -8,7 +8,7 @@
 | titulo | Reconstrucción del entorno local, credenciales, comandos del día a día y la comprobación desde cero |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`); `./decisiones-tecnicas.md` (`DT-37`, `DT-38`) |
-| actualizado | 2026-10-02 |
+| actualizado | 2026-10-20; `[S2.1.1]`, un rol por pestaña con los subdominios de `localhost`. Antes, 2026-10-02 |
 | idioma | es-CO |
 | version | 1.5 |
 
@@ -207,6 +207,38 @@ comando. No abre nada de nadie.
 
 El dominio `example.com` está reservado por la **RFC 2606**: nadie puede registrarlo, así
 que ningún correo dirigido ahí llega a una persona real.
+
+### [S2.1.1] Un rol en cada pestaña
+
+**La sesión de Django es una cookie, y el navegador la comparte entre todas las pestañas
+del mismo host**: entrar como cajero en una pestaña cierra la administración en la otra. El
+puerto no cuenta —`localhost:8000` y `localhost:8025` comparten cookies—; el **nombre** sí.
+Y la aplicación no fija `SESSION_COOKIE_DOMAIN`, así que cada nombre guarda la suya.
+
+Por eso cada rol tiene su subdominio de `localhost`, que el navegador resuelve a la propia
+máquina sin tocar `/etc/hosts`:
+
+| Pestaña | Entra como |
+|---|---|
+| <http://institucion.localhost:8000/login/> | `institucion@example.com` |
+| <http://administracion.localhost:8000/login/> | `administracion@example.com` |
+| <http://cajero.localhost:8000/login/> | `cajero@example.com` |
+| <http://acudiente.localhost:8000/login/> | un acudiente del seed |
+
+**El subdominio no elige el rol**: lo elige la cuenta con la que se entra. El nombre es una
+etiqueta para no confundir las pestañas, y dos acudientes a la vez son
+`acudiente1.localhost` y `acudiente2.localhost`. Lo que lo hace posible es el punto de
+`.localhost` en `DJANGO_ALLOWED_HOSTS` —`compose.yaml` y `.env`—, que admite el dominio y
+todos sus subdominios; sin él, Django responde `400`. `http://localhost:8000` sigue
+funcionando igual, como una sesión más.
+
+**Los enlaces de los correos no cambian**: salen de `DJANGO_URL_BASE`, no del host de la
+pestaña, y llevan a `http://localhost:8000`. Abrir una invitación desde Mailpit entra en
+esa sesión, no en la de la pestaña desde la que se mandó.
+
+**Para empezar de cero en una pestaña** basta con cerrar la sesión en ella: las demás no se
+enteran. Una ventana de incógnito o un perfil del navegador también separan sesiones, pero
+en otra ventana.
 
 ### [S2.2] No hay entorno desplegado
 

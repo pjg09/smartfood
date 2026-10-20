@@ -36,7 +36,11 @@ x-aplicacion: &aplicacion
     # Credenciales ficticias que solo valen contra estos contenedores.
     DJANGO_SECRET_KEY: clave-solo-para-desarrollo-local-no-usar-fuera-de-aqui
     DJANGO_DEBUG: "True"
-    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    # `.localhost` admite también sus subdominios —`cajero.localhost`,
+    # `administracion.localhost`…—: cada uno es otro sitio para el navegador y
+    # guarda su propia cookie de sesión, así que se entra con un rol distinto en
+    # cada pestaña de la misma ventana (`[S2.1.1]` de `docs/desarrollo.md`).
+    DJANGO_ALLOWED_HOSTS: .localhost,127.0.0.1
     # Por la red de compose: `postgres` y `seaweedfs` son nombres de servicio, no
     # `localhost`, que dentro del contenedor es el propio contenedor.
     DATABASE_URL: postgres://${POSTGRES_USER:-smartfood}:${POSTGRES_PASSWORD:-smartfood-local}@postgres:5432/${POSTGRES_DB:-smartfood}
