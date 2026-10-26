@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17; `DT-60` el 2026-10-26 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 59 (`DT-1` … `DT-59`) |
+| decisiones | 60 (`DT-1` … `DT-60`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-59`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-60`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -712,7 +712,7 @@ El campo `sobre` del asiento llegó con eso: producto y alérgeno traen su clave
 | `INVD-4` Reasignar invalida el anterior | `DT-9` | El código vigente es un único valor por estudiante |
 | `INVD-5` Efectivo explicable | `DT-5` | Cierre calculado desde ventas registradas |
 | `INVD-6` Ninguna foto real | `DT-14`, `DT-18` | Avatares generados por el seed |
-| — (`DEC-8`, `ALC-OUT-08`) | `DT-20` | Re-codificación que retira el EXIF y neutraliza formatos políglotos |
+| — (`DEC-8`, `ALC-OUT-08`) | `DT-20`, `DT-60` | Re-codificación que retira el EXIF y neutraliza formatos políglotos; la lista de formatos limita los decodificadores que leen el fichero |
 
 ---
 
@@ -1217,3 +1217,18 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Sin cerrar**, el efectivo esperado es una **tarjeta de resumen** en la variante del panel de la cafetería —franja e icono de la misma serie, sin enlace— con la frase que dice de cuántas ventas sale (`INVD-5`); el formulario, una tarjeta con su cabecera, los dos importes lado a lado desde `tablet` y sin las flechas del campo numérico.
 - **Ya cerrada**, cuatro tarjetas de resumen —esperado, base, contado y diferencia— y debajo el resultado, el motivo si lo hubo y quién lo cuadró. La franja de la diferencia es una serie, **no `aviso`**: el estado lo dice la pastilla, como en `/cierres/` (`[S2.1]`).
 - **Lo que no cambia**: el formulario, el servicio, la redirección tras cuadrar y que el esperado no se pueda escribir (`INVD-5`).
+
+#### `[DT-60]` Las imágenes entran en cinco formatos, salen en WEBP, y la lista limita los decodificadores
+
+**Obliga:** `DEC-8` y `ALC-OUT-08`, como `DT-20`. **Corrige** a `DT-20` en dos frases: la lista de formatos de entrada y el formato de salida. Las dos razones de `DT-20` —la superficie de ataque y el EXIF— siguen intactas.
+
+**El hecho que lo obliga.** `DT-20` admite solo `image/jpeg`, `image/png` e `image/webp`, y re-codifica «a JPEG o WebP». La canalización (`config/imagenes.py`, `TT-55`) acepta además **GIF y BMP** desde su primer commit, y re-codifica **siempre a WEBP**; las dos fichas que suben imágenes —la del estudiante (`HU-57`) y la del producto (`HU-59`)— los anuncian en su texto de ayuda. Nadie registró esa diferencia. Y al revisarla salió una segunda: la lista se comprobaba **después** de que Pillow abriera el fichero, así que un TIFF, un PSD o un ICO pasaban por su decodificador antes de rechazarse.
+
+**Decidido:**
+
+- **Se aceptan JPEG, PNG, WEBP, GIF y BMP.** Lo que `DT-20` protege es lo que se guarda y se sirve —un SVG con `<script>`, un políglota, el EXIF con el GPS—, y la re-codificación lo neutraliza igual en los cinco: la imagen se reconstruye desde sus píxeles. Quitar GIF y BMP le daría un error a quien suba uno sin ganar nada; la prueba de los políglotas, de hecho, usa un GIF.
+- **La salida es siempre WEBP**, con transparencia cuando la hay. «JPEG o WebP» dejaba abierta una elección que el código ya hizo.
+- **La lista se le pasa a `Image.open(…, formats=…)`**, en las dos aperturas. Así es la lista la que decide qué decodificadores leen un fichero de quien sea, que es donde está el riesgo de aceptar imágenes. Un formato fuera de ella llega como «no identificado», y el mensaje dice cuáles se aceptan.
+- **SVG sigue fuera**, y no por la lista: Pillow no lo decodifica. Es la primera razón de `DT-20`.
+
+**Lo que cuesta.** El mensaje ya no distingue «esto no es una imagen» de «es una imagen en un formato que no aceptamos»: Pillow no puede saberlo sin abrirla, y abrirla es justo lo que se evita. Y un GIF animado se queda en su primer fotograma.

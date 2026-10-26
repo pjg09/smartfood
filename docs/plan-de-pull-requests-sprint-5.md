@@ -569,6 +569,7 @@ no venga de una historia.
 | — | `main` | El punto de venta con tarjetas de producto con foto y «Añadir» que pasa a «− n +», sincronizadas con el ticket, y el cobro en dos modales: la confirmación —en efectivo con la calculadora de la devuelta, que no se guarda— y «Venta registrada» | `DT-57` |
 | — | `main` | «Entregas», la vista del cajero de `/reservas/`: buscador por tarjeta, documento o nombre, la cola por recoger y un panel con el pedido elegido, desde el que se entrega —con una confirmación que enseña la fotografía— o se cancela con su motivo. Lo que falta por entregar queda plegado; la entrega del punto de venta no cambia | `DT-58` |
 | — | `main` | El cierre de caja sale de `/punto-de-venta/` a `/cierre-de-caja/` y adopta el sistema visual: tarjetas de resumen para el esperado y, ya cerrada, para las cuatro cifras del cuadre; el formulario en una tarjeta, sin las flechas del campo numérico. El rechazo deja de enseñarse como una lista de Python | `DT-59` |
+| — | `main` | La subida de imágenes registra lo que ya hacía —acepta GIF y BMP además de JPEG, PNG y WEBP, y guarda siempre WEBP— y le pasa la lista de formatos a Pillow, que deja de abrir con cualquier decodificador lo que después rechazaba | `DT-60` |
 
 **Seis traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
 institución con `HU-64`, la reserva como encargo con `HU-65` … `HU-67`, los pedidos de la

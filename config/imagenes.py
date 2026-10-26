@@ -25,8 +25,12 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-# Formatos que aceptamos a la ENTRADA. La salida es siempre WEBP.
-FORMATOS_ACEPTADOS = {"JPEG", "PNG", "WEBP", "GIF", "BMP"}
+# Formatos que aceptamos a la ENTRADA (`DT-60`). La salida es siempre WEBP.
+#
+# **La lista se le pasa a `Image.open`, no se comprueba después.** Sin `formats=`,
+# Pillow prueba todos sus decodificadores —TIFF, PSD, ICO…— sobre el fichero de
+# quien sea, y la lista solo decidía si se rechazaba lo que ya se había leído.
+FORMATOS_ACEPTADOS = ("JPEG", "PNG", "WEBP", "GIF", "BMP")
 
 FORMATO_SALIDA = "WEBP"
 EXTENSION_SALIDA = "webp"
@@ -63,21 +67,19 @@ def procesar_imagen(archivo, *, lado_maximo=None, calidad=None):
 
     # Primera pasada: comprobar que la estructura del fichero es coherente.
     # `verify()` deja la imagen inutilizable, así que después hay que reabrirla.
+    # Un formato fuera de la lista llega aquí como «no identificado»: Pillow no
+    # lo distingue de un fichero que no es una imagen, y el mensaje tampoco.
     try:
-        with Image.open(BytesIO(datos)) as sonda:
-            formato = sonda.format
+        with Image.open(BytesIO(datos), formats=FORMATOS_ACEPTADOS) as sonda:
             sonda.verify()
     except (UnidentifiedImageError, OSError, ValueError) as error:
-        raise ImagenInvalida("El archivo no es una imagen válida.") from error
-
-    if formato not in FORMATOS_ACEPTADOS:
         aceptados = ", ".join(sorted(FORMATOS_ACEPTADOS))
         raise ImagenInvalida(
-            f"Formato «{formato}» no aceptado. Se admiten: {aceptados}."
-        )
+            f"El archivo no es una imagen en un formato aceptado: {aceptados}."
+        ) from error
 
     try:
-        with Image.open(BytesIO(datos)) as imagen:
+        with Image.open(BytesIO(datos), formats=FORMATOS_ACEPTADOS) as imagen:
             # Aplicar la orientación del EXIF ANTES de retirarlo. Las fotos
             # tomadas con un teléfono suelen venir «de pie» solo gracias a esa
             # etiqueta: si se borra sin aplicarla, salen giradas.

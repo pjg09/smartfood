@@ -6,9 +6,10 @@ comentarios en un fichero, no propiedades del sistema.
 """
 
 from io import BytesIO
+from unittest import mock
 
 from django.test import SimpleTestCase
-from PIL import Image
+from PIL import Image, TiffImagePlugin
 
 from config.imagenes import ImagenInvalida, procesar_imagen, tiene_exif
 
@@ -75,6 +76,27 @@ class ProcesarImagenTest(SimpleTestCase):
 
         with self.assertRaises(ImagenInvalida):
             procesar_imagen(archivo)
+
+    def test_acepta_los_cinco_formatos_de_entrada(self):
+        """`DT-60`. GIF y BMP entran como los otros tres, y salen en WEBP."""
+        for formato in ("JPEG", "PNG", "WEBP", "GIF", "BMP"):
+            with self.subTest(formato=formato):
+                contenido, _ = procesar_imagen(BytesIO(_imagen(formato=formato)))
+                with Image.open(BytesIO(contenido.read())) as salida:
+                    self.assertEqual(salida.format, "WEBP")
+
+    def test_un_formato_fuera_de_la_lista_no_llega_a_decodificarse(self):
+        """`DT-60`. La lista limita los decodificadores que leen el fichero, no
+        solo lo que se guarda: un TIFF se rechaza sin que Pillow lo abra."""
+        abrir_tiff = mock.patch.object(
+            TiffImagePlugin.TiffImageFile, "_open",
+            autospec=True, side_effect=TiffImagePlugin.TiffImageFile._open,
+        )
+        with abrir_tiff as abierto, self.assertRaises(ImagenInvalida) as rechazo:
+            procesar_imagen(BytesIO(_imagen(formato="TIFF")))
+
+        abierto.assert_not_called()
+        self.assertIn("formato aceptado", str(rechazo.exception))
 
     def test_rechaza_el_archivo_vacio(self):
         with self.assertRaises(ImagenInvalida):
