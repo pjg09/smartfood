@@ -2,8 +2,9 @@
 #
 # Imagen de la aplicación Django para `compose.yaml` (DT-37).
 #
-# Es una imagen de DESARROLLO, no de producción: no hay entorno desplegado
-# (DEC-15, DT-31). En `compose.yaml` el repositorio se monta encima de /app, así
+# Es una imagen sin código, y la usan los dos compose: `compose.yaml` en local y
+# `compose.produccion.yaml` en el entorno de las exposiciones (DEC-27, DT-61).
+# En los dos el repositorio se monta encima de /app, así
 # que lo que la imagen aporta de verdad son dos cosas que NO están en el
 # repositorio: el entorno de Python con las dependencias exactas de `uv.lock` y
 # el binario de Tailwind. El código que corre es siempre el de tu disco.

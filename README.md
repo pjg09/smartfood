@@ -56,16 +56,12 @@ cinco sprints de dos semanas.
 > [`docs/plan-de-pull-requests-sprint-4.md`](./docs/plan-de-pull-requests-sprint-4.md), que
 > además trae el guion del Avance 2 en `[S8]`.
 
-> **El prototipo no se despliega, por decisión tomada el 2026-09-17.** El entorno de
-> pruebas estuvo congelado desde el 2026-08-30 —el plan gratuito del proveedor no lo
-> sostiene: la base de datos se duerme, al despertar rechaza conexiones y desactivarlo no
-> está permitido en ese plan—, y la única salida era pagar. La consulta con la docente
-> confirmó que **la asignatura no lo exige**, así que se retira en vez de restaurarse.
->
-> `DEC-15` recorta `ENT-01` para quitarle la condición de estar desplegado; el resto del
-> entregable no cambia y se demuestra **en local**, que es donde el proyecto lleva
-> funcionando todo el semestre. `DoD-4` vuelve a estar vigente pidiendo la salida real del
-> comando. El motivo completo está en [`docs/despliegue.md`](./docs/despliegue.md).
+> **Para las exposiciones, el prototipo está desplegado** en una EC2 del AWS Academy
+> Learner Lab, con HTTPS, en <https://34-198-167-139.sslip.io>. **Solo responde mientras
+> el laboratorio tiene una sesión abierta**: se enciende para exponer (`DEC-27`, `DT-61`).
+> El trabajo diario sigue en local, con `docker compose up`. Qué hay montado, cómo se
+> enciende y cómo se actualiza, y por qué se retiró el entorno que hubo antes en Railway,
+> está en [`docs/despliegue.md`](./docs/despliegue.md).
 
 ---
 
@@ -117,7 +113,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | Documento | Para qué |
 |---|---|
 | [`smartfood.md`](./docs/smartfood.md) | El anteproyecto: problema, objetivos, alcance, invariantes, matriz de permisos |
-| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto. **Nueve amplían el anteproyecto y dos lo recortan**; su `[S3]` dice cuál hace qué |
+| [`decisiones-de-alcance.md`](./docs/decisiones-de-alcance.md) | Lo acordado **después** del anteproyecto. **Trece amplían el anteproyecto y una lo recorta**; su `[S3]` dice cuál hace qué |
 | [`decisiones-tecnicas.md`](./docs/decisiones-tecnicas.md) | Arquitectura, stack y modelo de datos. Una decisión posterior **no reescribe** a la anterior: se añade con su propio identificador y dice a cuál corrige |
 | [`backlog-historias-de-usuario.md`](./docs/backlog-historias-de-usuario.md) | Las 62 historias con sus criterios de aceptación |
 
@@ -151,7 +147,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 | [`escribir-pruebas.md`](./docs/escribir-pruebas.md) | Dónde va una prueba, cómo se ejecuta y los ocho patrones que ya costaron una ronda |
 | [`mapa-de-la-aplicacion.md`](./docs/mapa-de-la-aplicacion.md) | Todas las rutas, quién alcanza cada una y el recorrido de demostración |
 | [`convenciones-de-git.md`](./docs/convenciones-de-git.md) | Cómo se integra en `main`, commits y publicación de versiones |
-| [`despliegue.md`](./docs/despliegue.md) | Por qué no hay entorno desplegado, y qué costó el que hubo |
+| [`despliegue.md`](./docs/despliegue.md) | El entorno de las exposiciones en AWS: cómo se enciende y cómo se actualiza. Y por qué se retiró el que hubo en Railway |
 | [`recorrido-de-administracion-de-estudiantes.md`](./docs/recorrido-de-administracion-de-estudiantes.md) | Recorrido de experiencia de usuario de la vista de estudiantes (`TT-35`) |
 | [`campos-nutricionales.md`](./docs/campos-nutricionales.md) | Qué declara cada producto y por qué esos campos (`TT-44`) |
 | [`sistema-visual.md`](./docs/sistema-visual.md) | Qué composición copiar al construir una pantalla, y de dónde |
@@ -171,7 +167,7 @@ afirmación se inventa — cada una cita el identificador del que sale.
 
 **Datos ficticios, siempre.** Ningún dato real de ningún estudiante entra en este
 repositorio ni en ningún entorno. No es una preferencia: es la Ley 1581 de 2012 sobre
-tratamiento de datos de menores, y es la razón por la que el prototipo no se despliega en
+tratamiento de datos de menores, y es la razón por la que el prototipo no se usa en
 un colegio real. Las fotografías son avatares generados.
 
 **Nadie se registra.** No hay ninguna ruta de registro y no la habrá. Toda cuenta nace de

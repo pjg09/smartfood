@@ -8,9 +8,9 @@
 | titulo | Reconstrucción del entorno local, credenciales, comandos del día a día y la comprobación desde cero |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable |
 | documentos_fuente | `./despliegue.md`; `./convenciones-de-git.md`; `./decisiones-de-alcance.md` (`DEC-9` … `DEC-12`, `DEC-15`); `./decisiones-tecnicas.md` (`DT-37`, `DT-38`) |
-| actualizado | 2026-10-20; `[S2.1.1]`, un rol por pestaña con los subdominios de `localhost`. Antes, 2026-10-02 |
+| actualizado | 2026-10-26; `[S2.2]`, el entorno de las exposiciones (`DEC-27`). Antes, 2026-10-20, `[S2.1.1]`, un rol por pestaña con los subdominios de `localhost` |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 Es la libreta del desarrollo: **cómo levantar el entorno desde cero, con qué se entra y
 qué comandos hacen falta a diario.** Es el único entorno que hay: `DEC-15` retiró el
@@ -240,14 +240,17 @@ esa sesión, no en la de la pestaña desde la que se mandó.
 enteran. Una ventana de incógnito o un perfil del navegador también separan sesiones, pero
 en otra ventana.
 
-### [S2.2] No hay entorno desplegado
+### [S2.2] El entorno de las exposiciones
 
-**El de `[S2.1]` es el único que existe.** `DEC-15` retiró el despliegue el 2026-09-17 y
-`DT-31` recoge la consecuencia técnica: no hay URL pública, ni credenciales de producción,
-ni variables que consultar en ningún proveedor. El porqué está en `./despliegue.md`.
+**El de `[S2.1]` es el de trabajo.** Para las exposiciones hay otro, en una EC2 del Learner
+Lab de AWS (`DEC-27`, `DT-61`): <https://34-198-167-139.sslip.io>, **solo mientras el
+laboratorio tiene una sesión abierta**. Se entra con las mismas cuentas y la misma
+contraseña de `[S2.1]`, y los subdominios por rol funcionan igual que los de `[S2.1.1]`:
+`cajero.34-198-167-139.sslip.io` y los demás. Cómo se enciende y cómo se le sube código
+nuevo: `[S7]` y `[S8]` de `./despliegue.md`.
 
-Lo que eso cambia para el día a día: **nada**. El equipo lleva todo el semestre
-desarrollando y demostrando contra `localhost`, y el Avance 2 se enseña desde un portátil.
+Lo que eso cambia para el día a día: **nada**. Se desarrolla y se prueba contra
+`localhost`; el entorno de las exposiciones recibe código cuando hay que exponer.
 
 La cuenta institucional local, la de `[S2.1]`, **no es superusuario de Django**: tiene
 exactamente los permisos que declara `cuentas/permisos.py` y no puede editar los grupos

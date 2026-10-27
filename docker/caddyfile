@@ -1,0 +1,32 @@
+# Caddy del servidor de las exposiciones (DEC-27, DT-61). Lo monta
+# `compose.produccion.yaml` en /etc/caddy/Caddyfile.
+#
+# Cada nombre lleva su certificado de Let's Encrypt, pedido solo al arrancar.
+# `{$DOMINIO}` es un nombre de sslip.io que resuelve a la IP elástica de la
+# instancia (`34-198-167-139.sslip.io` resuelve a 34.198.167.139): no hay que
+# registrar ni configurar ningún DNS.
+
+# La aplicación, y un subdominio por rol: cada uno guarda su propia cookie de
+# sesión, así que se entra con un rol distinto en cada pestaña de la misma
+# ventana (`[S2.1.1]` de `docs/desarrollo.md`). El subdominio no elige el rol:
+# lo elige la cuenta con la que se entra.
+{$DOMINIO}, institucion.{$DOMINIO}, administracion.{$DOMINIO}, cajero.{$DOMINIO}, acudiente.{$DOMINIO} {
+	encode zstd gzip
+	reverse_proxy app:8000
+}
+
+# El API S3 de SeaweedFS, para las URL firmadas de las fotografías (DT-21). La
+# firma cubre el nombre del host: Caddy lo reenvía tal cual, y por eso la URL
+# pública es un subdominio y no una ruta, que habría que reescribir.
+s3.{$DOMINIO} {
+	reverse_proxy seaweedfs:8333
+}
+
+# La interfaz de Mailpit (DEC-18), con contraseña: lista los enlaces de
+# invitación y de recuperación, que son credenciales (DEC-3).
+correo.{$DOMINIO} {
+	basic_auth {
+		{$CORREO_USUARIO} {$CORREO_CLAVE_HASH}
+	}
+	reverse_proxy mailpit:8025
+}

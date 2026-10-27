@@ -1,0 +1,182 @@
+# El stack de las exposiciones, en la EC2 del Learner Lab (DEC-27, DT-61).
+#
+# NO es el de desarrollo, y no lo sustituye: `compose.yaml` sigue siendo el que
+# levanta cualquier máquina del equipo. Este corre en el servidor, sobre una
+# copia del repositorio, y se diferencia en lo que exige estar en internet:
+#
+#   - Caddy delante, con el certificado de Let's Encrypt, en 80 y 443. Es el
+#     ÚNICO servicio con puertos publicados: PostgreSQL, SeaweedFS y Mailpit
+#     solo se alcanzan por la red de compose o a través de Caddy.
+#   - `gunicorn` con DEBUG=False, en vez de `runserver`. Los ajustes de
+#     seguridad de `config/settings.py` para DEBUG=False se activan solos.
+#   - Las hojas se compilan una vez al arrancar: no hay servicio `estilos`.
+#   - Las credenciales salen del `.env` del servidor, que no se versiona.
+#     Las obligatorias fallan al arrancar si faltan (`:?`), en vez de caer en
+#     las de desarrollo, que están publicadas en este repositorio.
+#
+# En el servidor, desde la copia del repositorio:
+#
+#   docker compose -f compose.produccion.yaml up -d --build
+#
+# Cómo se monta desde cero y qué variables lleva el `.env`: `docs/despliegue.md`.
+
+name: smartfood-produccion
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smartfood
+      POSTGRES_USER: smartfood
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en el .env del servidor}
+      POSTGRES_INITDB_ARGS: "--locale=es_CO.UTF-8 --encoding=UTF8"
+      LANG: es_CO.utf8
+    volumes:
+      - postgres-datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartfood -d smartfood"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # El almacenamiento de objetos, como en local (DT-38), y no un bucket de S3:
+  # lo decide DEC-27. Las fotografías se sirven con URL firmada (DT-21), y el
+  # navegador las pide a `s3.<dominio>`, que Caddy reenvía aquí.
+  #
+  # Las claves NO son las de `compose.yaml`: este API S3 es alcanzable desde
+  # internet a través de Caddy, y aquellas están publicadas en el repositorio.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    environment:
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?falta S3_ACCESS_KEY_ID en el .env del servidor}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?falta S3_SECRET_ACCESS_KEY en el .env del servidor}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        printf '{"identities":[{"name":"smartfood","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Admin","Read","List","Write","Tagging"]}]}' \
+          "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        exec weed server -dir=/data -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+    volumes:
+      - seaweedfs-datos:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  almacenamiento-inicializar:
+    image: chrislusf/seaweedfs:4.48
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        listar() { echo "s3.bucket.list" | weed shell -master=seaweedfs:9333 2>/dev/null | awk '{print $$1}'; }
+        if listar | grep -qx smartfood; then
+          echo "Bucket smartfood ya existía."
+        else
+          echo "s3.bucket.create -name smartfood" | weed shell -master=seaweedfs:9333
+          listar | grep -qx smartfood
+          echo "Bucket smartfood creado, privado."
+        fi
+    restart: "no"
+
+  # El correo sigue sin salir de la máquina (DEC-18): las direcciones son
+  # ficticias. La interfaz se ve en `correo.<dominio>`, detrás de la contraseña
+  # de Caddy, porque lista enlaces de invitación, que son credenciales (DEC-3).
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # La imagen es la de desarrollo (`Dockerfile`): el entorno de Python y el
+  # binario de Tailwind, sin el código. El código es la copia del repositorio
+  # que hay en el servidor, montada, igual que en local. Para actualizarlo se
+  # sustituye esa copia y se reinicia `app`.
+  app:
+    image: smartfood-aplicacion
+    build: .
+    pull_policy: build
+    # El usuario `ubuntu` de la instancia, dueño de la copia del repositorio:
+    # las hojas compiladas y los estáticos se escriben dentro de ella.
+    user: "${UID:-1000}:${GID:-1000}"
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    command: ["bash", "docker/arrancar-produccion.sh"]
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?falta DJANGO_SECRET_KEY en el .env del servidor}
+      DJANGO_DEBUG: "False"
+      # El dominio y todos sus subdominios —un rol en cada pestaña, como
+      # `[S2.1.1]` de `docs/desarrollo.md`—, y `localhost` para el healthcheck,
+      # que llega por dentro del contenedor.
+      DJANGO_ALLOWED_HOSTS: .${DOMINIO:?falta DOMINIO en el .env del servidor},localhost
+      DJANGO_URL_BASE: https://${DOMINIO}
+      DATABASE_URL: postgres://smartfood:${POSTGRES_PASSWORD}@postgres:5432/smartfood
+      # `gunicorn` reutiliza sus hilos: aquí las conexiones persistentes no se
+      # acumulan como bajo `runserver` (`compose.yaml`).
+      DJANGO_CONN_MAX_AGE: "60"
+      EMAIL_URL: smtp://mailpit:1025
+      DJANGO_DEFAULT_FROM_EMAIL: SmartFood <no-responder@${DOMINIO}>
+      S3_ENDPOINT_URL: http://seaweedfs:8333
+      S3_ENDPOINT_URL_PUBLICO: https://s3.${DOMINIO}
+      S3_BUCKET: smartfood
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_REGION: auto
+      S3_ADDRESSING_STYLE: path
+      # Vacía, no siembra. DEC-27 deja la de desarrollo: es un entorno
+      # controlado que solo vive durante las exposiciones.
+      SEMBRAR_CONTRASENA: ${SEMBRAR_CONTRASENA-}
+      SEMBRAR_ESTUDIANTES: ${SEMBRAR_ESTUDIANTES:-12}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      almacenamiento-inicializar:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/salud/', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 300s
+
+  # Termina el TLS y reparte por nombre: la aplicación, el API S3 de las URL
+  # firmadas y la interfaz de Mailpit. Los certificados se guardan en su
+  # volumen: sin él, cada reinicio pediría otros y Let's Encrypt limita cuántos.
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+      CORREO_USUARIO: ${CORREO_USUARIO:-smartfood}
+      CORREO_CLAVE_HASH: ${CORREO_CLAVE_HASH:?falta CORREO_CLAVE_HASH en el .env del servidor}
+    volumes:
+      - ./docker/caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-configuracion:/config
+    depends_on:
+      - app
+
+volumes:
+  postgres-datos:
+  seaweedfs-datos:
+  caddy-datos:
+  caddy-configuracion:

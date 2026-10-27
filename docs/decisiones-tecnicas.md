@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17; `DT-60` el 2026-10-26 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17; `DT-60` y `DT-61` el 2026-10-26 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 60 (`DT-1` … `DT-60`) |
+| decisiones | 61 (`DT-1` … `DT-61`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-60`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-61`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1232,3 +1232,28 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **SVG sigue fuera**, y no por la lista: Pillow no lo decodifica. Es la primera razón de `DT-20`.
 
 **Lo que cuesta.** El mensaje ya no distingue «esto no es una imagen» de «es una imagen en un formato que no aceptamos»: Pillow no puede saberlo sin abrirla, y abrirla es justo lo que se evita. Y un GIF animado se queda en su primer fotograma.
+
+#### `[DT-61]` El entorno de las exposiciones: una EC2 con el mismo `docker compose`, y Caddy delante
+
+**Obliga:** `DEC-27`. **Corrige** a `DT-31`, que retiraba todo entorno desplegado; lo que `DT-31` conservaba —los ajustes de seguridad de `DEBUG = False` y la sonda `/salud/`— es justo lo que este entorno usa.
+
+**El hecho que lo obliga.** `DEC-27` pide una URL con HTTPS durante las exposiciones, dentro de lo que permite un AWS Academy Learner Lab. Al revisar la cuenta, el laboratorio **deniega SES y CloudFront**, no tiene zonas de Route 53 ni certificados de ACM —que sin un dominio propio no sirven—, y sus credenciales **caducan en cada sesión**, así que no pueden ir en ningún fichero.
+
+**Decidido:**
+
+- **Una instancia EC2 `t3.medium`** (2 vCPU, 4 GB) con Ubuntu 24.04 en `us-east-1`, 30 GB de disco y una **IP elástica**, para que la dirección —y con ella el nombre— sobreviva a cada parada del laboratorio. La `t3.small` alcanzaba, pero justa al construir la imagen con PostgreSQL al lado; el coste por hora de la diferencia no pesa con sesiones de cuatro horas.
+- **`compose.produccion.yaml`, al lado de `compose.yaml` y sin sustituirlo**: los mismos PostgreSQL, SeaweedFS y Mailpit, la misma imagen de la aplicación con el código montado, y **Caddy** delante. Las diferencias son las de estar en internet: `gunicorn` con `DEBUG = False` en vez de `runserver`, las hojas compiladas una vez al arrancar (`docker/arrancar-produccion.sh`) en vez del servicio `estilos`, y las credenciales desde el `.env` del servidor, **sin valor por defecto**: si falta una, el stack no arranca en vez de caer en las de desarrollo, que están publicadas.
+- **Solo Caddy publica puertos**, el 80 y el 443; el 22 se abre únicamente a la IP de quien despliega, en el grupo de seguridad. PostgreSQL, SeaweedFS y Mailpit se alcanzan por la red de compose o a través de Caddy.
+- **El nombre es de sslip.io**: `34-198-167-139.sslip.io` resuelve a `34.198.167.139` sin registrar nada, y lo mismo cualquier subdominio. Caddy pide un certificado de Let's Encrypt **por nombre**:
+  - el dominio y un subdominio por rol —`institucion.`, `administracion.`, `cajero.`, `acudiente.`—, que llevan a la misma aplicación y guardan cookies distintas: un rol en cada pestaña, como `[S2.1.1]` de `./desarrollo.md`;
+  - `s3.`, que lleva al API S3 de SeaweedFS. **Es un subdominio y no una ruta** porque la firma de las URL de las fotografías (`DT-21`) cubre el nombre del host: Caddy lo reenvía tal cual, y una ruta habría que reescribirla, rompiendo la firma;
+  - `correo.`, que lleva a Mailpit **detrás de una contraseña** (`DEC-3`).
+- **El código se copia, no se clona**: el contenido versionado del repositorio viaja por SSH a `~/smartfood`, y `app` se reinicia. En el servidor no hay credenciales de GitHub que gestionar.
+
+**Descartado:**
+
+- **RDS para la base.** Copias automáticas y «servicio gestionado», a cambio de crédito extra, otro recurso que el laboratorio para y arranca, y una red que configurar. Con datos ficticios que se vuelven a sembrar no aporta nada.
+- **Un bucket de S3.** Funcionaría con el rol de la instancia, sin credenciales en ficheros, pero sería la única pieza que no es la de local (`DT-18` defiende esa paridad) y `DEC-27` eligió el contenedor.
+- **Un balanceador con ACM, o CloudFront.** El primero necesita un dominio propio que validar; el segundo, el laboratorio lo deniega.
+
+**Lo que cuesta.** Una sola máquina: si se borra la instancia, se pierden la base y las fotografías, que se recrean sembrando. Y el límite de Let's Encrypt de 50 certificados por semana se aplica a todo `sslip.io`, que **no está en la Public Suffix List**: lo comparten todos sus usuarios. Al montarlo los siete certificados salieron sin problema; si un día no salen, la salida es un nombre de DuckDNS, que sí está en la lista.

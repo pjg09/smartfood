@@ -1,36 +1,34 @@
-# SmartFood — Por qué no hay entorno desplegado
+# SmartFood — El entorno de las exposiciones, y el que hubo antes
 
 ## [S0] Bloque de control del documento
 
 | Campo | Valor |
 |---|---|
 | doc_id | SMARTFOOD-TIC1-DESPLIEGUE |
-| titulo | Por qué el prototipo no se despliega, y qué quedaría por hacer si algún día se retoma |
+| titulo | El entorno de las exposiciones en el Learner Lab de AWS, y por qué se retiró el que hubo en Railway |
 | tipo_documento | **Documento operativo.** No es un artefacto de Scrum ni un entregable de la asignatura |
-| documentos_fuente | `./decisiones-de-alcance.md` (`DEC-15`); `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-21`, `DT-31`); `./definicion-de-terminado.md` (`DoD-4`) |
-| actualizado | 2026-09-17 · **sin entorno desplegado, por decisión** |
+| documentos_fuente | `./decisiones-de-alcance.md` (`DEC-15`, `DEC-27`); `./decisiones-tecnicas.md` (`DT-13`, `DT-18`, `DT-21`, `DT-31`, `DT-61`); `./definicion-de-terminado.md` (`DoD-4`) |
+| actualizado | 2026-10-26 · **desplegado en el Learner Lab, encendido solo para las exposiciones** (`DEC-27`). Antes, 2026-09-17, sin entorno (`DEC-15`) |
 | idioma | es-CO |
-| version | 2.0 |
+| version | 3.0 |
 
 ### [S0.1] El estado, en una línea
 
-**El prototipo se ejecuta en local y no hay nada desplegado en internet.** Lo decidió
-`DEC-15` el 2026-09-17, después de que la consulta con la docente confirmara que la
-asignatura no exige entorno desplegado. `DT-31` retira el PaaS que `DT-13` había
-decidido.
-
-Lo que eso implica, en concreto:
+**El prototipo está desplegado en una EC2 del AWS Academy Learner Lab de la Scrum Master, y
+responde en <https://34-198-167-139.sslip.io> mientras el laboratorio tenga una sesión
+abierta.** Lo decidió `DEC-27` el 2026-10-26, que corrige a `DEC-15`; la arquitectura es
+`DT-61`. Fuera de las sesiones la instancia está parada y la URL no contesta: **basta con
+que esté encendido durante las exposiciones**.
 
 | | |
 |---|---|
-| `ENT-01` | Se entrega **sin** la condición «desplegado en un entorno de pruebas». Todo lo demás del entregable sigue igual |
-| `DoD-4` | **Vigente, no suspendido.** Pide demostrar ejecutándolo, con la salida real del comando |
-| `TT-04` | Sin efecto. Se hizo y se cerró en el Sprint 1; lo que se retira es su resultado |
-| `TT-137` | Cerrada por la decisión contraria a la que preveía: se retira en vez de restaurarse |
-| El Avance 2 | Se demuestra desde un portátil del equipo, con el recorrido de `./mapa-de-la-aplicacion.md` |
+| `ENT-01` | Vuelve a estar desplegado en un entorno de pruebas (`DEC-27`) |
+| `DoD-4` | **Vigente, sin cambios.** Se demuestra ejecutándolo, con la salida real del comando |
+| El trabajo diario | **Sigue en local**, con `./desarrollo.md`. Este entorno no sustituye a ese |
+| Antes de exponer | `[S7]`: abrir el laboratorio y esperar a que la URL conteste |
 
-> **Queda una acción fuera del repositorio:** eliminar el proyecto en la consola del
-> proveedor. Hasta que se haga, ahí sigue habiendo un proyecto congelado con su base y su
+> **Queda una acción fuera del repositorio:** eliminar el proyecto de Railway, el entorno
+> anterior. Hasta que se haga, ahí sigue habiendo un proyecto congelado con su base y su
 > bucket. **No se despliega nada en él**, y la rama `main` ya no está conectada como
 > origen de código desde el 2026-08-30.
 
@@ -38,20 +36,20 @@ Lo que eso implica, en concreto:
 
 ### [S0.2] Qué es este documento
 
-**La libreta de un entorno que existió y ya no.** Registra por qué se montó, por qué se
-retiró y qué haría falta para rehacerlo, de modo que la decisión no haya que reconstruirla
-de memoria si el proyecto se alarga o alguien pregunta en la sustentación.
+**La libreta de los dos entornos**: el de las exposiciones, que existe (`[S6]` … `[S10]`),
+y el de Railway, que existió y se retiró (`[S1]` … `[S5]`). Del primero registra qué hay
+montado, cómo se enciende, cómo se actualiza y cómo se monta desde cero; del segundo, por
+qué se retiró, para que la decisión no haya que reconstruirla de memoria.
 
 **No decide nada.** Las decisiones están en `./decisiones-de-alcance.md` y
 `./decisiones-tecnicas.md` con su identificador. Aquí solo se registra el estado y se cita
 de dónde sale.
 
-Para levantar el entorno **local**, que es el único que hay, el documento es
-`./desarrollo.md`.
+Para levantar el entorno **local**, el de trabajo, el documento es `./desarrollo.md`.
 
 ---
 
-## [S1] Por qué se retiró
+## [S1] Railway: por qué se retiró
 
 Tres hechos, en el orden en que ocurrieron.
 
@@ -86,7 +84,7 @@ decisión.
 
 ---
 
-## [S2] Las tres restricciones que tuvo el plan gratuito
+## [S2] Railway: las tres restricciones que tuvo el plan gratuito
 
 Se conservan porque explican decisiones que siguen vigentes, `DT-21` entre ellas.
 
@@ -124,7 +122,7 @@ web.
 
 ---
 
-## [S3] Qué había montado, si algo hiciera falta recuperarlo
+## [S3] Railway: qué había montado, si algo hiciera falta recuperarlo
 
 | Recurso | Valor |
 |---|---|
@@ -150,7 +148,7 @@ repositorio— eran `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`, `EMAIL_
 
 ---
 
-## [S4] Trampas que ya costaron un rato
+## [S4] Railway: trampas que ya costaron un rato
 
 Se conservan porque **cuatro de las siete no son del proveedor**: son de Django, y siguen
 siendo ciertas en cualquier ejecución con `DEBUG = False`.
@@ -167,10 +165,11 @@ siendo ciertas en cualquier ejecución con `DEBUG = False`.
 
 ---
 
-## [S5] Cómo se montaría de nuevo
+## [S5] Railway: cómo se montaría de nuevo
 
-`DEC-15` **no prohíbe desplegar más adelante**: retira la obligación. Si el proyecto se
-alarga o alguien decide retomarlo, esto es lo que costó descubrir la primera vez.
+**No es el camino que se tomó**: `DEC-27` volvió a desplegar en AWS, con `[S6]` … `[S10]`.
+Se conserva por si el proyecto volviera a un PaaS, porque es lo que costó descubrir la
+primera vez.
 
 1. Crear el proyecto y el PostgreSQL gestionado. **En un plan de pago**, o se repiten los
    dos fallos de `[S1]`.
@@ -201,3 +200,137 @@ alarga o alguien decide retomarlo, esto es lo que costó descubrir la primera ve
 > del 2026-11-01 y `.railway/railway.ts` exige Node y el paquete npm `railway`, que es
 > justo lo que este repositorio evita. Si alguien retoma el despliegue después de esa
 > fecha, el fichero que había ya no sirve.
+
+---
+
+## [S6] El entorno de las exposiciones: qué hay montado
+
+`DEC-27` y `DT-61`. Todo en la cuenta del AWS Academy Learner Lab de la Scrum Master,
+región `us-east-1`, con la etiqueta `Proyecto=smartfood` en cada recurso.
+
+| Recurso | Valor |
+|---|---|
+| Instancia EC2 | `smartfood` · `i-015dae457f6772299` · `t3.medium`, Ubuntu 24.04, 30 GB `gp3` |
+| Rol de la instancia | `LabInstanceProfile`, el que el laboratorio permite. La aplicación no lo usa |
+| IP elástica | `34.198.167.139` · `eipalloc-0250f56e82140dace` |
+| Grupo de seguridad | `smartfood-demo` · `sg-0d5b1ce10adf2b1b0` · 80 y 443 abiertos; 22 solo desde la IP de quien desplegó |
+| Llave SSH | `vockey`, la del laboratorio: el `labsuser.pem` que se descarga desde él |
+| Código | `~/smartfood` en la instancia, con su `.env` (permisos `600`) |
+| Stack | `compose.produccion.yaml`, proyecto `smartfood-produccion` |
+
+**Las direcciones**, todas con su certificado de Let's Encrypt:
+
+| Dirección | Lleva a |
+|---|---|
+| <https://34-198-167-139.sslip.io> | La aplicación |
+| `https://institucion.`, `administracion.`, `cajero.` y `acudiente.34-198-167-139.sslip.io` | La misma aplicación, con su propia cookie: un rol en cada pestaña (`[S2.1.1]` de `./desarrollo.md`) |
+| `https://s3.34-198-167-139.sslip.io` | El API S3 de SeaweedFS, para las URL firmadas de las fotografías. Sin firma contesta `403` |
+| `https://correo.34-198-167-139.sslip.io` | Mailpit, detrás de una contraseña: usuario `smartfood` y la contraseña de las cuentas sembradas |
+
+**Las cuentas** son las sembradas, con la contraseña de `[S2.1]` de `./desarrollo.md`
+(`DEC-27`): `institucion@`, `administracion@` y `cajero@example.com`, y los acudientes
+sembrados, como `andres.uribe7@example.com`. **Tienen existencias y saldo**: se cargaron
+40 unidades de cada producto y $50.000 a cada estudiante con el atajo de `[S1.2]` de
+`./desarrollo.md`, el mismo que se usa en local.
+
+---
+
+## [S7] Antes de una exposición
+
+1. **Abrir el Learner Lab** y pulsar *Start Lab*. La sesión dura unas cuatro horas y se
+   puede alargar desde el propio laboratorio.
+2. **Esperar a que la URL conteste.** El laboratorio arranca la instancia, Docker levanta
+   el stack solo (`restart: unless-stopped`) y el arranque migra, siembra —sin cambiar
+   nada: el seed es idempotente (`DEC-10`)— y recopila los estáticos. Medido el
+   2026-10-26: **la instancia estuvo en marcha a los 20 s y la aplicación respondió 36 s
+   después**, con la misma IP.
+
+   ```bash
+   curl https://34-198-167-139.sslip.io/salud/
+   # {"estado": "ok", "base_de_datos": "conectada"}
+   ```
+
+3. **Si la instancia no arrancó con el laboratorio**, se arranca a mano desde la consola
+   de EC2 o con `aws ec2 start-instances --instance-ids i-015dae457f6772299`, con las
+   credenciales de la sesión en `~/.aws/credentials`.
+
+**Al terminar no hay que hacer nada**: el laboratorio para la instancia al cerrar la
+sesión. Los datos se quedan en su disco; lo que se haya hecho durante la exposición
+sigue ahí en la siguiente.
+
+---
+
+## [S8] Cómo se actualiza el código
+
+La instancia no clona el repositorio: recibe una copia de lo versionado y reinicia
+`app`, que al arrancar compila las hojas, migra y recopila los estáticos (`DT-61`).
+Desde la raíz del repositorio, en `main` y con los cambios ya integrados:
+
+```bash
+git archive HEAD | ssh -i ~/.ssh/labsuser.pem ubuntu@34.198.167.139 'tar -xf - -C ~/smartfood'
+ssh -i ~/.ssh/labsuser.pem ubuntu@34.198.167.139 \
+  'cd ~/smartfood && docker compose -f compose.produccion.yaml up -d --build'
+```
+
+`git archive` lleva lo commiteado, no lo que haya sin commitear en el disco. **Un fichero
+que se borró del repositorio no se borra en la instancia**: la copia se superpone. Si eso
+importa, se vacía `~/smartfood` antes —conservando el `.env`—.
+
+**Si cambió `uv.lock`**, el `--build` lo reconstruye. Si no cambió nada de la imagen,
+basta `docker compose -f compose.produccion.yaml restart app`. El registro:
+`docker compose -f compose.produccion.yaml logs app`.
+
+**El SSH solo se abre a una IP.** Si quien despliega cambia de red, hay que añadir la
+nueva al grupo de seguridad `smartfood-demo`, o el `ssh` se queda esperando sin error.
+
+---
+
+## [S9] Cómo se monta desde cero
+
+Lo que se hizo el 2026-10-26, por si hubiera que repetirlo en otra cuenta.
+
+1. **El grupo de seguridad**: 80 y 443 desde cualquier sitio, 22 solo desde la IP propia.
+2. **La instancia**: Ubuntu 24.04, `t3.medium`, 30 GB `gp3`, la llave `vockey`, el perfil
+   `LabInstanceProfile` e IMDSv2 obligatorio. Un *user data* que instale `docker.io` y
+   `docker-compose-v2` y añada `ubuntu` al grupo `docker`.
+3. **La IP elástica**, asociada a la instancia. Sin ella, la IP cambia en cada arranque y
+   con ella el nombre y los certificados.
+4. **El código**, con `git archive` como en `[S8]`.
+5. **El `.env` del servidor**, en `~/smartfood`, con permisos `600`. Los secretos se
+   generan **en la instancia** y no salen de ella:
+
+   | Variable | Qué es |
+   |---|---|
+   | `DOMINIO` | `<ip-con-guiones>.sslip.io` |
+   | `DJANGO_SECRET_KEY` | Nueva: `openssl rand -base64 48` |
+   | `POSTGRES_PASSWORD` | Nueva: `openssl rand -hex 24` |
+   | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Nuevas. **Nunca las de `compose.yaml`**: este API S3 es alcanzable desde internet |
+   | `SEMBRAR_CONTRASENA` | La de las cuentas sembradas (`DEC-27`). Vacía, no siembra |
+   | `CORREO_USUARIO`, `CORREO_CLAVE_HASH` | La contraseña de Mailpit, como hash de `caddy hash-password`, **entre comillas simples**: lleva `$` y sin ellas `compose` la interpolaría |
+
+   `compose.produccion.yaml` se niega a arrancar si falta una de las obligatorias, y
+   `config/tests_contenedor.py` vigila que siga siendo así.
+6. **Levantar**: `docker compose -f compose.produccion.yaml up -d --build`. El primer
+   arranque construye la imagen, pide los siete certificados y siembra: unos cinco
+   minutos.
+7. **Cargar existencias y saldo** con el atajo de `[S1.2]` de `./desarrollo.md`, dentro
+   de `app`: `docker compose -f compose.produccion.yaml exec -T app python manage.py shell`.
+
+**Cómo se comprobó**: las cinco direcciones de la aplicación con `200` y certificado
+válido; HTTP redirige a HTTPS con `308`; `/salud/` conectada; `/.env` da `404`; Mailpit
+`401` sin contraseña y `200` con ella; el API S3 `403` sin firma; desde fuera solo
+responden el 80, el 443 y el 22. Y en Chrome, una sola ventana con cuatro pestañas —una
+por subdominio y rol—: cuatro cookies de sesión `Secure`, cada rol en su panel tras
+recargar, y la fotografía del estudiante cargada desde `s3.` con su URL firmada.
+
+---
+
+## [S10] Trampas del entorno de las exposiciones
+
+| Trampa | Qué pasa | Cómo se resuelve |
+|---|---|---|
+| **Un nombre que no es suyo recibe `200` de Caddy** | Caddy contesta `200` vacío a un `Host` que no sirve, en vez de `400`. Parece que la aplicación acepta cualquier nombre | No llega a Django, que con ese `Host` daría `400`. Se comprueba desde dentro: `docker compose … exec caddy wget --header "Host: x" http://app:8000/` |
+| **Los escáneres llegan antes que nadie** | En cuanto se emite un certificado, el nombre aparece en los registros públicos de certificados, y en minutos hay peticiones a `/graphql`, `/.env` o `/actuator/env` | Contestan `404`. Es ruido en `logs app`, no un ataque dirigido |
+| **sslip.io no está en la Public Suffix List** | El límite de Let's Encrypt —50 certificados por semana— se cuenta para todo `sslip.io`, compartido con todos sus usuarios | Los certificados se guardan en el volumen `caddy-datos` y no se piden en cada arranque. Si un día no salen, un nombre de DuckDNS, que sí está en la lista |
+| **El hash de la contraseña lleva `$`** | Sin comillas simples en el `.env`, `compose` lo interpreta como variables y Caddy recibe un hash roto | `CORREO_CLAVE_HASH='$2a$14$…'` |
+| **Las credenciales del laboratorio caducan** | Las de `~/.aws/credentials` valen una sesión | No van en ningún fichero del servidor: la aplicación no usa AWS, y la instancia, si lo necesitara, tiene su rol |

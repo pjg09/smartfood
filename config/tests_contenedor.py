@@ -112,6 +112,52 @@ class ComposeAlDiaTest(SimpleTestCase):
         self.assertEqual(_entorno_de_la_aplicacion().get("DJANGO_CONN_MAX_AGE"), '"0"')
 
 
+def _servicios_de_produccion():
+    """`{servicio: bloque}` de `compose.produccion.yaml`, por la sangría."""
+    servicios = re.search(r"^services:\n(.*?)(?=^\S)", _texto("compose.produccion.yaml"), re.S | re.M)
+    assert servicios, "compose.produccion.yaml ya no tiene services"
+    return dict(re.findall(r"^  ([a-z-]+):\n(.*?)(?=^  \S|\Z)", servicios.group(1), re.S | re.M))
+
+
+def _entorno_de_produccion():
+    entorno = re.search(
+        r"^    environment:\n(.*?)(?=^    \S|\Z)", _servicios_de_produccion()["app"], re.S | re.M
+    )
+    assert entorno, "el servicio app de producción ya no tiene environment"
+    return dict(re.findall(r"^      ([A-Z0-9_]+): *(.*)$", entorno.group(1), re.M))
+
+
+class ComposeDeProduccionAlDiaTest(SimpleTestCase):
+    """`DEC-27`, `DT-61`. El stack de las exposiciones está en internet: lo que
+    en local es una comodidad, allí es una puerta abierta."""
+
+    def test_toda_variable_obligatoria_esta_en_el_compose(self):
+        faltan = _variables_obligatorias_de_los_ajustes() - set(_entorno_de_produccion())
+        self.assertFalse(faltan, f"compose.produccion.yaml no da {sorted(faltan)} a app")
+
+    def test_sin_debug(self):
+        self.assertEqual(_entorno_de_produccion()["DJANGO_DEBUG"], '"False"')
+        self.assertIn("gunicorn", _texto("docker/arrancar-produccion.sh"))
+
+    def test_solo_caddy_publica_puertos(self):
+        """PostgreSQL, SeaweedFS y Mailpit se alcanzan por la red de compose o
+        a través de Caddy, que pone el TLS y, delante de Mailpit, la contraseña."""
+        servicios = _servicios_de_produccion()
+        self.assertLessEqual({"app", "caddy", "mailpit", "postgres", "seaweedfs"}, set(servicios))
+        con_puertos = {nombre for nombre, bloque in servicios.items() if re.search(r"^    ports:", bloque, re.M)}
+        self.assertEqual(con_puertos, {"caddy"})
+
+    def test_ninguna_credencial_cae_en_la_de_desarrollo(self):
+        """Las de `compose.yaml` están publicadas en el repositorio: si faltara
+        una variable, el servidor arrancaría con ellas sin decir nada."""
+        produccion = _texto("compose.produccion.yaml")
+        self.assertNotIn("smartfood-local", produccion)
+        self.assertNotIn("clave-solo-para-desarrollo", produccion)
+        for variable in ("DJANGO_SECRET_KEY", "POSTGRES_PASSWORD", "S3_SECRET_ACCESS_KEY"):
+            with self.subTest(variable=variable):
+                self.assertIn(f"${{{variable}:?", produccion)
+
+
 class DockerfileAlDiaTest(SimpleTestCase):
     def test_python_de_la_imagen_es_el_de_python_version(self):
         version = _texto(".python-version").strip()
@@ -130,10 +176,15 @@ class ScriptsDeArranqueAlDiaTest(SimpleTestCase):
     """Un comando renombrado rompe el arranque del contenedor, y en el host
     nadie lo corre a mano ya: nada más lo notaría."""
 
-    SCRIPTS = ("docker/arrancar-aplicacion.sh", "docker/vigilar-estilos.sh")
+    SCRIPTS = (
+        "docker/arrancar-aplicacion.sh",
+        "docker/vigilar-estilos.sh",
+        "docker/arrancar-produccion.sh",
+    )
 
     def test_los_scripts_que_se_citan_existen(self):
-        citados = set(re.findall(r"docker/[a-z-]+\.sh", _texto("compose.yaml") + _texto("Dockerfile")))
+        compose = _texto("compose.yaml") + _texto("compose.produccion.yaml")
+        citados = set(re.findall(r"docker/[a-z-]+\.sh", compose + _texto("Dockerfile")))
 
         self.assertEqual(citados, set(self.SCRIPTS))
         for script in citados:

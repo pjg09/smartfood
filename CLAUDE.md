@@ -39,7 +39,7 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/plan-de-pull-requests-sprint-5.md` | Esas 33 tareas en 13 PR y el estado de cada una —**el estado manda aquí** |
 | `docs/sprint-4-backlog.md` y los anteriores, con sus planes de PR | Los sprints cerrados. Archivo, consulta histórica |
 | `docs/definicion-de-terminado.md` | Los seis criterios de cierre (`DoD-1` … `DoD-6`) |
-| `docs/despliegue.md` | **Por qué no hay entorno desplegado** (`DEC-15`), y qué costó el que hubo |
+| `docs/despliegue.md` | **El entorno de las exposiciones** en el Learner Lab de AWS (`DEC-27`): cómo se enciende, cómo se actualiza. Y por qué se retiró el de Railway |
 | `docs/desarrollo.md` | Reconstrucción local, credenciales y comandos del día a día |
 | `docs/probar-cada-funcionalidad.md` | **Cómo ver funcionando cada cosa en local**: entrar como acudiente, recuperar contraseña, reservas, mermas, alertas… Es lo que se repasa antes de una demostración |
 | `docs/escribir-pruebas.md` | **Dónde va una prueba, cómo se ejecuta y ocho patrones** que ya costaron una ronda. Léelo antes de escribir una |
@@ -59,8 +59,8 @@ Es el primer sprint cuyo backlog incluye tareas que no salen de ninguna historia
 | `docs/convenciones-de-git.md` | Cómo se integra en `main` —push directo, `DT-41`—, convención de commits y publicación de versiones (`TT-01`) |
 
 **El alcance vigente es `[S9.1]` de `smartfood.md` MÁS `[S1]` de `decisiones-de-alcance.md`.**
-**Trece** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20`, `DEC-23` y `DEC-24`) y **dos lo
-recortan** (`DEC-14`, `DEC-15`); `DEC-18` devuelve lo que `DEC-9` recortó. Ninguna está
+**Trece** decisiones amplían el anteproyecto (`DEC-1` … `DEC-8`, `DEC-13`, `DEC-19`, `DEC-20`, `DEC-23` y `DEC-24`) y **una lo
+recorta** (`DEC-14`); `DEC-18` devuelve lo que `DEC-9` recortó, y `DEC-27` lo que `DEC-15`. Ninguna está
 incorporada a él. Para responder qué hace o no hace el sistema
 hay que mirar los dos, y `[S3]` de `decisiones-de-alcance.md` dice cuál hace qué.
 
@@ -91,8 +91,10 @@ está mal entendida o de que falta una decisión.
 
 ## Stack y arquitectura
 
-**Django + PostgreSQL + HTMX + Tailwind.** Monolito, un repositorio y **sin despliegue**: se
-ejecuta en local, con un solo `docker compose up` (`DEC-15`, `DT-31`, `DT-37`). UUIDv7 como clave primaria en todas las tablas (generado en
+**Django + PostgreSQL + HTMX + Tailwind.** Monolito y un repositorio: se trabaja en
+local, con un solo `docker compose up` (`DT-37`), y **para las exposiciones** el mismo stack
+corre en una EC2 del Learner Lab de AWS, con `compose.produccion.yaml` y Caddy delante
+(`DEC-27`, `DT-61`). UUIDv7 como clave primaria en todas las tablas (generado en
 la aplicación), **excepto el código de tarjeta**.
 
 Una app por dominio, **y cada una se creó en el sprint que la necesitó**. Con `reportes`
@@ -282,7 +284,8 @@ condición de que el prototipo se pueda demostrar (`DEC-15`), y se rompe sin toc
 infraestructura actualiza en el mismo commit** `compose.yaml`, el `Dockerfile` o los scripts
 de `docker/` —una variable sin `default=`, una librería del sistema, una versión, un paso o
 un comando del arranque, un servicio, una hoja de estilos—, y **se comprueba con
-`docker/comprobar-desde-cero.sh`** antes de subir. «Me levanta a mí» no vale, y la CI ya no
+`docker/comprobar-desde-cero.sh`** antes de subir. **`compose.produccion.yaml` también**:
+una variable obligatoria nueva va en los dos, y `config/tests_contenedor.py` lo vigila. «Me levanta a mí» no vale, y la CI ya no
 lo hace (`DT-39`). Qué cuenta como infraestructura, qué vigila cada cosa y cómo se corre:
 `[S5.3]` de `docs/desarrollo.md`.
 
@@ -312,10 +315,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.983 pruebas** y **tarda unos siete minutos, y más de diez con la máquina cargada**: por encima del tiempo
+La suite completa son **1.987 pruebas** y **tarda unos siete minutos, y más de diez con la máquina cargada**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.983, no corrió entera.
+menos de esas 1.987, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
@@ -403,8 +406,13 @@ del comando**. No basta «funciona en mi máquina»: hay que pegar el comando y 
 suspendido entre el 2026-08-30 y el 2026-09-17; el rastro está en `[S5]` de
 `docs/definicion-de-terminado.md`.
 
-**No hay entorno desplegado y no se va a desplegar** (`DEC-15`, `DT-31`): la asignatura no lo
-exige, el prototipo se demuestra en local y `ENT-01` se recorta para quitarle esa condición.
+**El entorno de las exposiciones vive en el Learner Lab de AWS de la Scrum Master**
+(`DEC-27`, `DT-61`), en <https://34-198-167-139.sslip.io>, y **solo responde mientras el
+laboratorio tiene una sesión abierta**. No es un entorno de pruebas para el día a día:
+`DoD-4` se sigue demostrando en local. Cómo se enciende, cómo se actualiza el código y cómo se
+monta desde cero: `[S7]` … `[S9]` de `docs/despliegue.md`. **El crédito es de otra persona**:
+no lances recursos en esa cuenta que no pida una tarea, y etiqueta los que sí con
+`Proyecto=smartfood`.
 **No ejecutes ninguna acción sobre Railway.** Queda un proyecto suyo pendiente de borrar a mano,
 sin código conectado; el porqué está en `docs/despliegue.md`.
 

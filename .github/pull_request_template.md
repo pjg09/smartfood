@@ -38,8 +38,8 @@ Detalle en docs/definicion-de-terminado.md
 - [ ] **`DoD-3`** Migraciones escritas, aplicadas, y `makemigrations --check` sin pendientes.
       <!-- No aplica si el PR no toca modelos. Dilo. -->
 - [ ] **`DoD-4`** Se demuestra **ejecutándolo**: pega el comando y su salida real.
-      No basta «funciona en mi máquina». No hay entorno desplegado y no lo habrá
-      (`DEC-15`); se demuestra en local. *(Siempre aplica.)*
+      No basta «funciona en mi máquina». Se demuestra en local: el entorno de las
+      exposiciones solo vive mientras el laboratorio está abierto (`DEC-27`). *(Siempre aplica.)*
 - [ ] **`DoD-5`** Cada invariante que sostiene tiene un caso de prueba que **falla si se rompe**.
       <!-- No aplica si no sostiene ninguna. Compruébalo antes de decirlo. -->
 - [ ] **`DoD-6`** Todos los datos son ficticios. *(Siempre aplica — `ALC-OUT-07`, Ley 1581 de 2012.)*

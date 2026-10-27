@@ -12,12 +12,12 @@
 | documentos_fuente | `./smartfood.md`; `./backlog-historias-de-usuario.md` (`ANEXO B`, vacíos `VAC-1` … `VAC-6`) |
 | tipo_documento | Registro de decisiones del equipo |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
-| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`); 2026-10-14 (`DEC-25`, `DEC-26`) |
+| fecha_decisiones | 2026-08-28 (`DEC-1` … `DEC-7`); 2026-08-29 (`DEC-8`); 2026-08-31 (`DEC-12`); 2026-09-16 (`DEC-13`); 2026-09-17 (`DEC-14`, `DEC-15`); 2026-09-22 (`DEC-16`, `DEC-17`); 2026-10-01 (`DEC-18`, `DEC-19`, `DEC-20`); 2026-10-12 (`DEC-21`, `DEC-22`, `DEC-23`); 2026-10-13 (`DEC-24`); 2026-10-14 (`DEC-25`, `DEC-26`); 2026-10-26 (`DEC-27`) |
 | decidido_por | Equipo SmartFood |
-| decisiones | 26 (`DEC-1` … `DEC-26`) |
+| decisiones | 27 (`DEC-1` … `DEC-27`) |
 | invariantes_nuevas | 7 (`INVD-1` … `INVD-7`) |
 | idioma | es-CO |
-| version | 1.12 |
+| version | 1.13 |
 
 ### [S0.2] Instrucciones de lectura para el agente
 
@@ -32,7 +32,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones | `DEC-1` … `DEC-26` |
+| S1 | Decisiones | `DEC-1` … `DEC-27` |
 | S2 | Invariantes derivadas | `INVD-1` … `INVD-7` |
 | S3 | Efecto sobre el alcance | Qué cambia respecto de `[S9]` del anteproyecto |
 | ANEXO A | Trazabilidad decisión → vacío → historias | Cierre de `VAC-1` … `VAC-6` |
@@ -536,6 +536,26 @@ Y quitar esa comprobación deja a la vista el hueco que ya estaba: **una reserva
 
 **Consecuencia asumida.** Una pantalla más que mantener y probar para una lista de ocho filas. Se acepta a cambio de que la administración no salga del sistema visual para nada de lo que escribe.
 
+### `[DEC-27]` El prototipo se despliega para las exposiciones, en el Learner Lab de AWS
+
+*No cierra ningún `VAC`. Decisión posterior, tomada el 2026-10-26. **Corrige a `DEC-15`**: devuelve a `ENT-01` la condición de estar desplegado en un entorno de pruebas, con una disponibilidad acotada a las sesiones del laboratorio. **Es una decisión del equipo**, tomada sabiendo que reabre una que estaba cerrada.*
+
+**El hecho que lo obliga.** `DEC-15` retiró el despliegue por dos razones: el plan gratuito del proveedor no lo sostenía —la base se dormía y al despertar rechazaba conexiones— y la única salida era pagar, para algo que la asignatura no exige. Las dos han cambiado. El equipo quiere que las exposiciones se hagan sobre una URL y no sobre un portátil, y la Scrum Master tiene un **AWS Academy Learner Lab** con crédito para sus asignaturas de la universidad, que cede a este proyecto con permiso explícito para que el desarrollador lo use y gaste ese crédito. No hay plan que pagar, y en una máquina propia la base no se duerme.
+
+**Decidido:**
+
+- **El prototipo se despliega en una instancia EC2 de ese Learner Lab**, con el stack de `docker compose` que ya levanta en local. La arquitectura y lo que se descartó están en `DT-61`.
+- **Solo está disponible mientras haya una sesión del laboratorio abierta**, unas cuatro horas: al terminar, el laboratorio para la instancia. **Basta con que esté encendido durante las exposiciones**; no hay URL permanente ni se promete.
+- **Todo en la misma instancia**: la base, el almacenamiento de objetos, el correo y la aplicación. Ni base de datos gestionada ni bucket del proveedor.
+- **HTTPS con un nombre gratuito que resuelve a la IP elástica de la instancia**, con certificado de Let's Encrypt. No se registra ningún dominio.
+- **El correo sigue sin salir** (`DEC-18`): lo atrapa Mailpit, y su interfaz se protege con contraseña porque lista enlaces de invitación, que son credenciales (`DEC-3`).
+- **Las cuentas sembradas conservan la contraseña de desarrollo**, la de `[S2.1]` de `./desarrollo.md`, aunque esté publicada en este repositorio, que es público. Se acepta porque es un entorno controlado, con datos ficticios (`ALC-OUT-07`), que solo vive durante las exposiciones. **Las demás credenciales** —la clave de Django, la de la base y las del almacenamiento— se generan nuevas y viven solo en el servidor.
+- **`DoD-4` no cambia**: se sigue demostrando ejecutándolo, con la salida real del comando, y el entorno local sigue siendo el de trabajo.
+
+**Lo que NO se decide aquí.** No se contrata nada ni se usa otra cuenta. No cambia ninguna historia ni `[S11]`. La acción pendiente de `DEC-15` —borrar el proyecto del proveedor anterior— sigue pendiente, y en él sigue sin desplegarse nada.
+
+**Consecuencia asumida.** Durante una sesión, quien tenga la URL puede entrar con cualquier cuenta sembrada, porque la contraseña está en el repositorio, y ver o cambiar datos ficticios. Una URL pública recibe escáneres automáticos a los pocos minutos de emitirse su certificado: se vio al montarlo. Y el crédito es de otra persona: el entorno se apaga cuando no se expone.
+
 ---
 
 ## [S2] Invariantes derivadas
@@ -586,6 +606,7 @@ Lo que estas decisiones **añaden** respecto de `[S9.1]` del anteproyecto:
 | `DEC-24` | Consulta y cancelación de pedidos anticipados con devolución a la billetera, por el acudiente, el cajero y la administración. Amplía `[S11]` con una fila nueva. La reserva deja de apartar existencias |
 | `DEC-25` | **No añade alcance ni recorta `[S11]`.** Sustituye las tres pantallas del inventario en el admin por `/inventario/`, y la de categorías por `/categorias/`, y el libro de inventario guarda quién registra cada movimiento (`HU-69`) |
 | `DEC-26` | **No añade alcance ni recorta `[S11]`.** Sustituye la pantalla de alérgenos del admin por `/alergenos/`; un alérgeno sigue sin poder eliminarse |
+| `DEC-27` | **No añade alcance: devuelve el que `DEC-15` recortó.** `ENT-01` vuelve a estar desplegado en un entorno de pruebas, disponible durante las sesiones del Learner Lab de AWS |
 
 Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen excluidos. En particular, `DEC-1` **no** introduce manejo de dinero real: el efectivo y la transferencia se registran como dato de la venta, y la transferencia ocurre íntegramente fuera del sistema (`ALC-OUT-01`, `ALC-OUT-02`).
 
@@ -616,6 +637,7 @@ Lo que **no cambia**: los 20 elementos de `[S9.2]` (`ALC-OUT-01..20`) siguen exc
 | — (`ANEXO B`) Matricular a una familia nueva de una en una | **Decidido** | `DEC-23` | `HU-64` |
 | — (`ANEXO B`) Pedidos anticipados de un estudiante desactivado | **Decidido** | `DEC-24` | `HU-65`, `HU-66`, `HU-67` |
 | — (`ANEXO B`) El libro de inventario no registra quién | **Decidido** | `DEC-25` | `HU-69` |
+| — (decisión posterior) Desplegar para las exposiciones, reabierto | **Decidido** | `DEC-27` | ninguna — devuelve a `ENT-01` su condición |
 
 ---
 
