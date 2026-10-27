@@ -29,8 +29,8 @@ class AltaDePersonalForm(forms.ModelForm):
         choices=[(r.value, r.label) for r in Rol if r in ROLES_DE_PERSONAL],
         label="rol",
         help_text=(
-            "Solo cajero o administrador. Las cuentas de acudiente nacen de la "
-            "carga institucional (HU-01) más su invitación (HU-03)."
+            "Solo cajero o administrador. Las cuentas de acudiente se crean con "
+            "la carga de estudiantes, que les envía su invitación."
         ),
     )
 

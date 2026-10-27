@@ -29,11 +29,12 @@ def _comprobar_que_gestiona_el_inventario(actor, accion):
         raise PermissionDenied(f"{accion} exige una cuenta identificada.")
     if actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            f"{accion} es función exclusiva de la administración de la "
-            "cafetería (HU-27, [S11])."
+            f"{accion} solo lo puede hacer la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 @transaction.atomic
@@ -107,8 +108,8 @@ def asentar(*, producto, tipo, cantidad, registrado_por, motivo="", venta=None):
     # motivo es la venta misma.
     if tipo == TipoDeMovimientoDeInventario.MERMA and not motivo.strip():
         raise ValidationError(
-            "Una merma exige motivo: es la única forma de que desaparezcan "
-            "existencias sin una venta que lo explique (INV-8)."
+            "Una merma necesita un motivo: es lo único que explica por qué faltan "
+            "existencias sin una venta."
         )
 
     return MovimientoInventario.objects.create(
@@ -219,8 +220,8 @@ def registrar_merma(*, actor, producto, cantidad, motivo):
     # (`DT-5`), y `TT-140` lo comprueba saltándose este camino entero.
     if not (motivo or "").strip():
         raise ValidationError(
-            "Una merma exige motivo: es la única forma de que desaparezcan "
-            "existencias sin una venta que lo explique (INV-8)."
+            "Una merma necesita un motivo: es lo único que explica por qué faltan "
+            "existencias sin una venta."
         )
 
     # ── BLOQUEAR, Y SOLO DESPUÉS LEER ───────────────────────────────────────
@@ -234,8 +235,8 @@ def registrar_merma(*, actor, producto, cantidad, motivo):
     if cantidad > disponibles:
         raise ValidationError(
             f"De «{bloqueado.nombre}» quedan {disponibles} y se dan de baja "
-            f"{cantidad}. Si de verdad había más, regístralo primero como "
-            "ingreso: ese ingreso también tiene una explicación (INV-3)."
+            f"{cantidad}. Si de verdad había más, regístralo primero como un "
+            "ingreso."
         )
 
     return asentar(

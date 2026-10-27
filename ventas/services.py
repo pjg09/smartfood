@@ -137,7 +137,7 @@ class ExistenciasInsuficientes(VentaRechazada):
     motivo = "existencias-insuficientes"
 
 
-def _solo_el_cajero(actor, *, accion="Registrar una venta", regla="[S11], INV-4"):
+def _solo_el_cajero(actor, *, accion="Registrar una venta"):
     """`[S11]`: «registrar ventas en el punto de venta» es de `USR-3`.
 
     Vive en el servicio y no en la vista porque `DT-15` lo exige: el control de
@@ -146,10 +146,10 @@ def _solo_el_cajero(actor, *, accion="Registrar una venta", regla="[S11], INV-4"
     hay un comando, una tarea programada o una segunda pantalla, la regla sigue
     aquí.
 
-    ── `accion` Y `regla` EXISTEN PORQUE EL MENSAJE SE LEE ──────────────────
+    ── `accion` EXISTE PORQUE EL MENSAJE SE LEE ──────────────────────────────
     El rol exigido es el mismo para todo lo que hace el cajero, pero **decirle
     «registrar ventas es del rol cajero» a quien intentó cerrar la caja es un
-    mensaje equivocado**: nombra otra función y otra regla. Se vio ejecutando
+    mensaje equivocado**: nombra otra función. Se vio ejecutando
     `cerrar_caja` con los otros tres roles (`TT-172`).
 
     La alternativa —una función de comprobación por servicio— repetiría las tres
@@ -160,10 +160,12 @@ def _solo_el_cajero(actor, *, accion="Registrar una venta", regla="[S11], INV-4"
         raise PermissionDenied(f"{accion} exige identificarse.")
     if actor.rol != Rol.CAJERO:
         raise PermissionDenied(
-            f"{accion} es del rol cajero, y de ningún otro ({regla})."
+            f"{accion} solo lo puede hacer el cajero."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 def _medio_de_pago_de(estudiante, medio_pago):
@@ -176,14 +178,14 @@ def _medio_de_pago_de(estudiante, medio_pago):
     if estudiante is not None:
         if medio_pago not in (None, MedioDePago.BILLETERA):
             raise VentaRechazada(
-                "La compra de un estudiante sale siempre de su billetera (HU-54)."
+                "La compra de un estudiante siempre se paga con su billetera."
             )
         return MedioDePago.BILLETERA
 
     if medio_pago not in (MedioDePago.EFECTIVO, MedioDePago.TRANSFERENCIA):
         raise VentaRechazada(
-            "Una venta sin estudiante se paga en efectivo o por transferencia "
-            "(DEC-1): no hay billetera contra la que cobrar."
+            "Una venta sin estudiante se paga en efectivo o por transferencia: "
+            "no hay billetera de la que cobrar."
         )
     return medio_pago
 
@@ -696,11 +698,12 @@ def _solo_su_acudiente(actor, estudiante):
         raise PermissionDenied("Reservar exige identificarse.")
     if actor.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            "Reservar el consumo por adelantado es del acudiente, y de ningún "
-            "otro rol ([S11], HU-23)."
+            "Solo el acudiente puede reservar por adelantado."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
     if estudiante is None or estudiante.acudiente.usuario_id != actor.id:
         raise PermissionDenied(
             "Solo se reserva para los estudiantes a cargo de quien reserva."
@@ -948,7 +951,9 @@ def _puede_cancelar(actor, pedido):
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied("Cancelar un pedido exige identificarse.")
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
     if actor.rol in (Rol.CAJERO, Rol.ADMINISTRADOR):
         return
     if actor.rol == Rol.ACUDIENTE:
@@ -958,8 +963,8 @@ def _puede_cancelar(actor, pedido):
             )
         return
     raise PermissionDenied(
-        "Cancelar un pedido anticipado es del acudiente del estudiante y del "
-        "personal de la cafetería, y de ningún otro rol ([S11], DEC-24)."
+        "Un pedido anticipado solo lo pueden cancelar el acudiente del "
+        "estudiante y el personal de la cafetería."
     )
 
 
@@ -1104,14 +1109,14 @@ def cerrar_caja(*, actor, base, efectivo_contado, fecha=None, motivo=""):
     en el cajón para dar cambio y no salió de ninguna venta; sin restarla, todo
     cierre daría un sobrante igual a la base.
     """
-    _solo_el_cajero(actor, accion="Cuadrar la caja", regla="HU-55, DEC-6")
+    _solo_el_cajero(actor, accion="Cuadrar la caja")  # HU-55, DEC-6
 
     if fecha is None:
         fecha = timezone.localdate()
 
     if CierreDeCaja.objects.filter(fecha=fecha).exists():
         raise JornadaYaCerrada(
-            "Esa jornada ya tiene su cierre de caja: el cuadre es diario (DEC-6)."
+            "Esta jornada ya tiene su cierre de caja: la caja se cuadra una vez al día."
         )
 
     base = Decimal(base)
@@ -1126,8 +1131,8 @@ def cerrar_caja(*, actor, base, efectivo_contado, fecha=None, motivo=""):
     motivo = (motivo or "").strip()
     if diferencia != 0 and not motivo:
         raise CierreSinMotivo(
-            f"La caja no cuadra por {dinero(abs(diferencia))}: hay que decir por "
-            f"qué (HU-55, mismo criterio que ALC-IN-18 en el inventario)."
+            f"La caja no cuadra por {dinero(abs(diferencia))}. Es obligatorio "
+            "registrar un motivo."
         )
 
     # `strip()` antes de crear, como en el asiento de inventario: la restricción

@@ -67,8 +67,7 @@ def _solo_el_cajero(usuario):
     """
     if usuario.rol != Rol.CAJERO:
         raise PermissionDenied(
-            "El punto de venta es exclusivo del rol cajero: [S11] no concede "
-            "registrar ventas a ningún otro rol."
+            "El punto de venta es solo para el cajero."
         )
 
 

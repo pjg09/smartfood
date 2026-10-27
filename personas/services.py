@@ -111,11 +111,12 @@ def _comprobar_que_administra_estudiantes(actor, accion):
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            f"{accion} es función exclusiva de la institución educativa "
-            "(HU-44, [S11])."
+            f"{accion} solo lo puede hacer la institución educativa."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 @transaction.atomic
@@ -322,14 +323,14 @@ def comprobar_que_puede_operar(estudiante):
     if estudiante.estado == EstadoDelEstudiante.BAJA:
         raise EstudianteNoOperativo(
             f"{estudiante.nombre} está de baja: se retiró del colegio. Su saldo "
-            "queda congelado y consultable, pero no se compra ni se recarga "
-            "sobre él (HU-51, HU-52, INVD-2)."
+            "queda congelado y se puede consultar, pero ya no puede comprar ni "
+            "recibir recargas."
         )
 
     raise EstudianteNoOperativo(
-        f"{estudiante.nombre} está desactivado: su tarjeta no compra ni recibe "
-        "recargas hasta que la institución educativa la reactive (INVD-2, "
-        "INVD-7, HU-49). El saldo que ya tenía sigue siendo suyo."
+        f"{estudiante.nombre} está desactivado: su tarjeta no puede comprar ni "
+        "recibir recargas hasta que la institución educativa la reactive. El "
+        "saldo que ya tenía sigue siendo suyo."
     )
 
 
@@ -379,11 +380,12 @@ def _comprobar_que_puede_desactivar(actor, estudiante):
     if actor.rol == Rol.ACUDIENTE:
         if estudiante.acudiente.usuario_id != actor.pk:
             raise PermissionDenied(
-                "Un acudiente solo desactiva a los estudiantes a su cargo "
-                "(HU-48, [S11])."
+                "Solo puedes desactivar a los estudiantes a tu cargo."
             )
         if not actor.is_active:
-            raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+            raise PermissionDenied(
+                "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+            )
         return
 
     _comprobar_que_administra_estudiantes(actor, "Desactivar a un estudiante")
@@ -442,8 +444,8 @@ def desactivar(*, actor, estudiante):
     if estudiante.estado == EstadoDelEstudiante.BAJA:
         raise ValidationError(
             f"{estudiante.nombre} está de baja: se retiró del colegio y ya no "
-            "puede comprar (INVD-2). Desactivar es para una tarjeta perdida, y "
-            "de la baja no se vuelve (HU-51, DEC-7)."
+            "puede comprar. Desactivar es para una tarjeta perdida, y una baja "
+            "no se deshace."
         )
 
     if estudiante.estado == EstadoDelEstudiante.DESACTIVADO:
@@ -489,9 +491,8 @@ def reactivar(*, actor, estudiante):
 
     if estudiante.estado == EstadoDelEstudiante.BAJA:
         raise ValidationError(
-            f"{estudiante.nombre} está de baja: se retiró del colegio, y de la "
-            "baja no se vuelve (HU-51, DEC-7). Reactivar revierte una "
-            "desactivación, no una baja."
+            f"{estudiante.nombre} está de baja: se retiró del colegio, y una "
+            "baja no se deshace. Reactivar solo deshace una desactivación."
         )
 
     if estudiante.estado == EstadoDelEstudiante.ACTIVO:
@@ -534,7 +535,7 @@ def editar_estudiante(*, actor, estudiante, **campos):
         raise ValueError(
             f"No se pueden editar estos campos de un estudiante: "
             f"{', '.join(desconocidos)}. Editables: {', '.join(CAMPOS_EDITABLES)}. "
-            "El código de tarjeta se reasigna, no se edita (HU-46, INVD-4)."
+            "El código de tarjeta no se edita: se reasigna."
         )
 
     cambiados = []
@@ -737,11 +738,12 @@ def cargar_estudiantes_y_acudientes(*, actor, archivo, contrasena_de_desarrollo=
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "Cargar estudiantes es función exclusiva de la institución educativa "
-            "(HU-01, [S11])."
+            "Solo la institución educativa puede cargar estudiantes."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     filas = leer(archivo)
 

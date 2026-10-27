@@ -374,12 +374,14 @@ def estudiantes_con_sus_restricciones(*, actor):
         raise PermissionDenied("Consultar restricciones exige identificarse.")
     if actor.rol not in CONSULTAN_EN_LA_ADMINISTRACION:
         raise PermissionDenied(
-            "La lista de restricciones de todos es de la cafetería. La "
-            "institución las ve en la ficha de cada estudiante, el acudiente en "
-            "su panel y el cajero al identificar al estudiante (HU-38, DEC-21)."
+            "La lista de restricciones de todos los estudiantes es de la "
+            "cafetería. La institución las ve en la ficha de cada estudiante, el "
+            "acudiente en su panel y el cajero al identificar al estudiante."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return (
         RestriccionesDelEstudiante.objects.select_related("limite_diario")

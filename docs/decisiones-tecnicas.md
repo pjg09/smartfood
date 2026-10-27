@@ -13,9 +13,9 @@
 | tipo_documento | Registro de decisiones de arquitectura |
 | procedencia | Copia de trabajo. El maestro estaba en el corpus documental de la asignatura (repositorio `tic1`, local). **A partir del traslado, este fichero es el vigente**: no editar la copia del corpus. |
 | corresponde_a | `ENT-03` de `./smartfood.md` — «modelo de datos, diagrama de arquitectura, matriz de roles y permisos, y las decisiones de diseño con su justificación» |
-| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17; `DT-60` y `DT-61` el 2026-10-26 |
+| fecha_decisiones | 2026-08-29; `DT-22` el 2026-08-31; `DT-23` y `DT-24` el 2026-09-01; `DT-25` el 2026-09-08; `DT-26` el 2026-09-12; `DT-27` el 2026-09-15; `DT-28` el 2026-09-15; `DT-29` el 2026-09-16; `DT-30` y `DT-31` el 2026-09-17; `DT-32` y `DT-33` el 2026-09-18; `DT-34` el 2026-09-18; `DT-35` el 2026-09-19; `DT-37` el 2026-09-30; `DT-38` el 2026-10-01; `DT-39` el 2026-10-02; `DT-40` el 2026-10-01, ampliada el 2026-10-02 con el alta; `DT-41` y `DT-42` el 2026-10-03; `DT-43` … `DT-46` el 2026-10-12; `DT-47` y `DT-48` el 2026-10-13; `DT-49` … `DT-52` el 2026-10-14; `DT-53` y `DT-54` el 2026-10-15; `DT-55` … `DT-59` el 2026-10-17; `DT-60` y `DT-61` el 2026-10-26; `DT-62` el 2026-10-27 |
 | decidido_por | Equipo SmartFood |
-| decisiones | 61 (`DT-1` … `DT-61`) |
+| decisiones | 62 (`DT-1` … `DT-62`) |
 | entidades_modelo | 18 |
 | clave_primaria | UUIDv7 en todas las tablas, con una excepción declarada (`DT-17`) |
 | idioma | es-CO |
@@ -33,7 +33,7 @@
 
 | ID | Sección | Contenido |
 |---|---|---|
-| S1 | Decisiones técnicas | `DT-1` … `DT-61`, separadas en forzadas y de conveniencia |
+| S1 | Decisiones técnicas | `DT-1` … `DT-62`, separadas en forzadas y de conveniencia |
 | S2 | Modelo de datos núcleo | 17 entidades y su forma |
 | S3 | Cómo se sostiene cada invariante | Trazabilidad invariante → decisión |
 | S4 | Lo que no se construye | Descartes explícitos |
@@ -1257,3 +1257,17 @@ El documento separa deliberadamente las decisiones **forzadas** de las **de conv
 - **Un balanceador con ACM, o CloudFront.** El primero necesita un dominio propio que validar; el segundo, el laboratorio lo deniega.
 
 **Lo que cuesta.** Una sola máquina: si se borra la instancia, se pierden la base y las fotografías, que se recrean sembrando. Y el límite de Let's Encrypt de 50 certificados por semana se aplica a todo `sslip.io`, que **no está en la Public Suffix List**: lo comparten todos sus usuarios. Al montarlo los siete certificados salieron sin problema; si un día no salen, la salida es un nombre de DuckDNS, que sí está en la lista.
+
+#### `[DT-62]` Lo que lee quien usa la aplicación no cita identificadores
+
+**Obliga:** nada nuevo del alcance; es una decisión del dueño del producto, como `DT-57`. **Corrige** a `DT-25` en una columna: el bloque punteado decía «qué falta y qué historia lo trae», y deja de decir la historia.
+
+**El hecho que lo obliga.** Los mensajes de rechazo se escribieron para el equipo y se le enseñaban al usuario tal cual. El cajero que cuadraba con diferencia leía «La caja no cuadra por $40.000: hay que decir por qué (HU-55, mismo criterio que ALC-IN-18 en el inventario)»; un acudiente con la tarjeta de su hijo desactivada, «(INVD-2, INVD-7, HU-49)»; y tres estados vacíos le decían que el catálogo lo trae «HU-26». Para quien usa la aplicación eso es ruido, y en una exposición, una pantalla que parece a medio hacer.
+
+**Decidido:**
+
+- **Ningún mensaje que pueda leer un usuario cita un identificador** del proyecto —`HU-`, `DEC-`, `DT-`, `INV-`, `INVD-`, `ALC-`, `[S11]`…—: ni los rechazos de los servicios, ni los textos de las plantillas, ni las ayudas del admin. Dicen lo que pasa y, si hay algo que hacer, qué: «La caja no cuadra por $40.000. Es obligatorio registrar un motivo».
+- **La trazabilidad se queda en el código**: el identificador va en el comentario o en el docstring de al lado, donde lo lee quien mantiene la regla. Los parámetros que solo existían para meterlo en el mensaje —`regla` e `historia`— desaparecen.
+- **Un estado vacío dice qué falta y quién lo trae**, no qué historia: «Lo gestiona la administración de la cafetería».
+- **Los guardas de programador no cambian**: los que solo saltan con un fallo en el código —un movimiento sin su venta, el generador de códigos agotado— se dirigen a quien lo depura, y citar la invariante es justo lo que necesita.
+- **`config/tests_plantillas.py` vigila las plantillas**: el texto que se sirve, sin sus comentarios, no lleva identificadores.

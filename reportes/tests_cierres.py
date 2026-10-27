@@ -103,14 +103,16 @@ class SoloLaAdministracionConsultaLosCierresTest(BaseDeCierres):
         otros reportes y otra historia. Se vio ejecutándolo, no en las pruebas —
         el mismo defecto que `TT-172` encontró en el servicio de cierre.
 
-        Se afirma sobre la historia citada y no sobre la redacción entera, que
-        cualquiera puede mejorar en un PR que no tenga que ver.
+        Se afirma sobre lo que nombra y no sobre la redacción entera, que
+        cualquiera puede mejorar en un PR que no tenga que ver. Sin citar la
+        historia (`DT-62`).
         """
         with self.assertRaises(PermissionDenied) as capturado:
             cierres_registrados(actor=self.cajero)
 
         mensaje = str(capturado.exception)
-        self.assertIn("HU-56", mensaje)
+        self.assertIn("los cierres de caja", mensaje)
+        self.assertNotIn("HU-56", mensaje)
         self.assertNotIn("inventario", mensaje.lower())
 
     def test_una_cuenta_desactivada_no_opera(self):

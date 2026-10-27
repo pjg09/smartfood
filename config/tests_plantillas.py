@@ -64,6 +64,37 @@ class NingunComentarioSeSirveAlNavegadorTest(TestCase):
         self.assertNotIn("DT-16", cuerpo)
 
 
+# Un identificador del proyecto: `HU-26`, `INV-8`, `DEC-6`, `ALC-IN-18`, `[S11]`…
+IDENTIFICADOR = re.compile(r"\b(HU|ALC-IN|ALC-OUT|DEC|DT|INVD|INV|TT|USR|INT|ENT|DoD)-\d+|\[S\d+(\.\d+)*\]")
+
+
+def _texto_servido(texto):
+    """La plantilla sin sus comentarios: lo que puede llegar al navegador."""
+    for patron in (r"{% comment %}.*?{% endcomment %}", r"{#.*?#}", r"<!--.*?-->"):
+        texto = re.sub(patron, lambda m: "\n" * m.group(0).count("\n"), texto, flags=re.S)
+    return texto
+
+
+class NingunaPlantillaEnsenaIdentificadoresTest(TestCase):
+    """`DT-62`. Los identificadores son del equipo, no de quien usa la
+    aplicación: «(HU-26)» en un estado vacío no le dice nada a un acudiente.
+    Viven en los comentarios, que no se sirven."""
+
+    def test_el_texto_servido_no_cita_identificadores(self):
+        encontrados = []
+        for plantilla in sorted(RAIZ.rglob("*.html")):
+            servido = _texto_servido(plantilla.read_text(encoding="utf-8"))
+            for numero, linea in enumerate(servido.splitlines(), 1):
+                if IDENTIFICADOR.search(linea):
+                    encontrados.append(f"{plantilla.relative_to(RAIZ)}:{numero}: {linea.strip()}")
+        self.assertEqual(encontrados, [], "\n".join(encontrados))
+
+    def test_la_deteccion_ve_un_identificador_fuera_de_un_comentario(self):
+        """Contraprueba: el mismo texto, dentro y fuera de un comentario."""
+        self.assertTrue(IDENTIFICADOR.search(_texto_servido("Lo trae (<strong>HU-26</strong>).")))
+        self.assertFalse(IDENTIFICADOR.search(_texto_servido("{% comment %} HU-26 {% endcomment %}")))
+
+
 class NingunaPlantillaEscribeUnColorSueltoTest(TestCase):
     """El sistema de diseño se sostiene solo si nada lo esquiva (`DT-23`).
 

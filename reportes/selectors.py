@@ -96,11 +96,12 @@ def _solo_su_acudiente(actor, estudiante):
         raise PermissionDenied("Consultar el consumo exige identificarse.")
     if actor.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            "El historial de consumo de un estudiante es de su acudiente, y de "
-            "ningún otro rol (HU-30, [S11])."
+            "El historial de consumo de un estudiante solo lo consulta su acudiente."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
     if estudiante is None or estudiante.acudiente.usuario_id != actor.id:
         raise PermissionDenied(
             "Solo se consulta el consumo de los estudiantes a cargo de quien "
@@ -501,9 +502,7 @@ def resumen_de_gasto(*, actor, estudiante, hoy=None):
 CONSULTAN_LOS_REPORTES_DE_LA_CAFETERIA = (Rol.ADMINISTRADOR,)
 
 
-def _solo_la_administracion(
-    actor, *, que="los reportes de ventas e inventario", regla="[S11], HU-35"
-):
+def _solo_la_administracion(actor, *, que="los reportes de ventas e inventario"):
     """`[S11]`: los reportes de la operación son de `USR-4` y de nadie más.
 
     **El cajero no entra, y no es un olvido.** Registra las ventas y ve las
@@ -517,11 +516,11 @@ def _solo_la_administracion(
     (Ley 1581), no del negocio de la cafetería, que puede estar en manos de un
     operador externo (`[S11]`, preámbulo).
 
-    ── `que` Y `regla` EXISTEN PORQUE EL MENSAJE SE LEE ────────────────────
+    ── `que` EXISTE PORQUE EL MENSAJE SE LEE ────────────────────────────────
     El rol exigido es el mismo para los tres reportes, pero **decirle «los
     reportes de ventas e inventario son de la administración» a quien intentó
     consultar los cierres de caja es un mensaje equivocado**: nombra otros
-    reportes y otra historia. Se vio ejecutando `cierres_registrados` con los
+    reportes. Se vio ejecutando `cierres_registrados` con los
     otros tres roles (`TT-175`), y es el mismo arreglo que `TT-172` hizo con
     `ventas.services._solo_el_cajero`.
 
@@ -537,11 +536,12 @@ def _solo_la_administracion(
         # ejecutándolo. Con el infinitivo delante, la frase vale para los cuatro
         # reportes sin que nadie tenga que acordarse del número.
         raise PermissionDenied(
-            f"Consultar {que} es de la administración de la cafetería y de "
-            f"ningún otro rol ({regla})."
+            f"Consultar {que} solo lo puede hacer la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 @dataclass(frozen=True)
@@ -894,9 +894,7 @@ def cierres_registrados(*, actor, desde=None, hasta=None):
     escrito a las 23:58 de un día que cuadra el anterior pertenece al anterior,
     que es lo que dice su `fecha`.
     """
-    _solo_la_administracion(
-        actor, que="los cierres de caja registrados", regla="HU-56, DEC-6"
-    )
+    _solo_la_administracion(actor, que="los cierres de caja registrados")  # HU-56, DEC-6
 
     cierres = CierreDeCaja.objects.select_related("cajero")
 
@@ -1112,9 +1110,7 @@ def auditoria(*, actor, desde=None, hasta=None, limite=OPERACIONES_MAXIMAS, clas
     periodo acotado y el tope de `OPERACIONES_MAXIMAS`, ordenar cuatro listas
     cortas en memoria cuesta menos que mantener esa consulta.
     """
-    _solo_la_administracion(
-        actor, que="el reporte de auditoría", regla="HU-37, ALC-IN-22"
-    )
+    _solo_la_administracion(actor, que="el reporte de auditoría")  # HU-37, ALC-IN-22
 
     inicio = (
         timezone.make_aware(datetime.combine(desde, time.min))
@@ -1447,7 +1443,7 @@ def panel_de_la_cafeteria(*, actor, hoy=None):
     agotarse—, y al final el mes. Cada bloque enlaza a su reporte, que es donde
     están los filtros.
     """
-    _solo_la_administracion(actor, que="el panel de la cafetería", regla="[S11], DEC-16")
+    _solo_la_administracion(actor, que="el panel de la cafetería")  # [S11], DEC-16
 
     hoy = hoy or timezone.localdate()
     ventas_de_hoy = ventas_registradas(actor=actor, desde=hoy, hasta=hoy)

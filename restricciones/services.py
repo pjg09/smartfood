@@ -51,7 +51,7 @@ from restricciones.models import (
 MONTO_MAXIMO = Decimal("1000000.00")
 
 
-def _comprobar_que_es_su_acudiente(actor, estudiante, accion, historia):
+def _comprobar_que_es_su_acudiente(actor, estudiante, accion):
     """**La única puerta de escritura del control parental.** Es `INV-4`.
 
     Segundo criterio de `HU-09` y regla de `HU-10` y `HU-11`: quien escribe una
@@ -80,16 +80,18 @@ def _comprobar_que_es_su_acudiente(actor, estudiante, accion, historia):
         raise PermissionDenied(f"{accion} exige una cuenta identificada.")
     if actor.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            f"{accion} es función exclusiva del acudiente ({historia}, INV-4, [S11])."
+            f"{accion} solo lo puede hacer el acudiente."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     # El vínculo se comprueba contra la base, no contra lo que traiga la
     # petición: es la misma regla que sostiene `estudiantes_a_cargo` (`DT-11`).
     if not hasattr(actor, "acudiente") or estudiante.acudiente_id != actor.acudiente.id:
         raise PermissionDenied(
-            f"{accion} solo vale sobre un estudiante a cargo ({historia}, [S11])."
+            f"{accion} solo se puede hacer con un estudiante a tu cargo."
         )
 
 
@@ -156,9 +158,7 @@ def fijar_limite_diario(*, actor, estudiante, monto):
     pantallas lo dicen: prometerle al acudiente una protección que aún no existe
     sería peor que no ofrecerle el campo.
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Fijar el límite diario de gasto", "HU-09"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Fijar el límite diario de gasto")  # HU-09
 
     monto = _monto_valido(monto)
 
@@ -244,9 +244,7 @@ def bloquear_producto(*, actor, estudiante, producto):
     familia declaró sobre él no debería evaporarse entre tanto. La pantalla no
     los ofrece; el servicio no los prohíbe.
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Bloquear un producto", "HU-10"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Bloquear un producto")  # HU-10
 
     restriccion, creada = RestriccionProducto.objects.get_or_create(
         estudiante=estudiante, producto=producto
@@ -284,9 +282,7 @@ def desbloquear_producto(*, actor, estudiante, producto):
     bloqueado no es un hecho, es el estado que ya se tenía.
     ─────────────────────────────────────────────────────────────────────────
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Retirar el bloqueo de un producto", "HU-10"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Retirar el bloqueo de un producto")  # HU-10
 
     borradas, _ = RestriccionProducto.objects.filter(
         estudiante=estudiante, producto=producto
@@ -331,9 +327,7 @@ def bloquear_alergeno(*, actor, estudiante, alergeno):
     cafetería. El día que entre un producto con esa condición, ya está cubierto
     — que es exactamente lo que la historia pide.
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Bloquear un alérgeno", "HU-11"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Bloquear un alérgeno")  # HU-11
 
     restriccion, creada = RestriccionAlergeno.objects.get_or_create(
         estudiante=estudiante, alergeno=alergeno
@@ -362,9 +356,7 @@ def desbloquear_alergeno(*, actor, estudiante, alergeno):
     **El retiro deja asiento** (`TT-104`, `HU-12`), dentro de la misma
     transacción que el borrado, y solo si había algo que retirar.
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Retirar el bloqueo de un alérgeno", "HU-11"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Retirar el bloqueo de un alérgeno")  # HU-11
 
     borradas, _ = RestriccionAlergeno.objects.filter(
         estudiante=estudiante, alergeno=alergeno
@@ -410,9 +402,7 @@ def retirar_limite_diario(*, actor, estudiante):
     El asiento guarda la cifra que tenía al retirarse, formateada (`DT-8`): «se
     retiró el límite» sin decir de cuánto no explica lo que el acudiente hizo.
     """
-    _comprobar_que_es_su_acudiente(
-        actor, estudiante, "Retirar el límite diario", "HU-61"
-    )
+    _comprobar_que_es_su_acudiente(actor, estudiante, "Retirar el límite diario")  # HU-61
 
     anterior = LimiteDiario.objects.filter(estudiante=estudiante).first()
     if anterior is None:

@@ -27,11 +27,12 @@ def _comprobar_que_gestiona_el_catalogo(actor, accion):
     """
     if actor is None or actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            f"{accion} es función exclusiva de la administración de la cafetería "
-            "(HU-26, [S11])."
+            f"{accion} solo lo puede hacer la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 @transaction.atomic

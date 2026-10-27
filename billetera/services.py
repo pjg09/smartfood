@@ -43,16 +43,18 @@ def _comprobar_que_es_su_acudiente(actor, estudiante):
         raise PermissionDenied("Recargar exige una cuenta identificada.")
     if actor.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            "Recargar la billetera es función exclusiva del acudiente (HU-06, [S11])."
+            "Solo el acudiente puede recargar la billetera."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     # El vínculo se comprueba contra la base, no contra lo que traiga la
     # petición: es la misma regla que sostiene `estudiantes_a_cargo` (`DT-11`).
     if not hasattr(actor, "acudiente") or estudiante.acudiente_id != actor.acudiente.id:
         raise PermissionDenied(
-            "Solo se recarga la billetera de un estudiante a cargo (HU-06, [S11])."
+            "Solo puedes recargar la billetera de los estudiantes a tu cargo."
         )
 
 

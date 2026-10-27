@@ -33,11 +33,12 @@ def personal_de_la_cafeteria(*, actor, busqueda=""):
         raise PermissionDenied("Consultar el personal exige identificarse.")
     if actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "El personal de la cafetería lo administra la institución educativa "
-            "y nadie más (HU-40, HU-42, [S11])."
+            "El personal de la cafetería solo lo gestiona la institución educativa."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     personal = Usuario.objects.filter(rol__in=ROLES_DE_PERSONAL)
 

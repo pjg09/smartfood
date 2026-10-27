@@ -122,11 +122,12 @@ def informacion_de_cobro(*, actor, estudiante):
         raise PermissionDenied("Consultar el saldo para cobrar exige identificarse.")
     if actor.rol != Rol.CAJERO:
         raise PermissionDenied(
-            "El saldo de un estudiante se le muestra al cajero solo al cobrar, "
-            "y cobrar es del rol cajero (HU-17, [S11])."
+            "El saldo de un estudiante solo se le muestra al cajero, al cobrar."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return InformacionDeCobro(
         saldo=saldo_de(estudiante),
@@ -451,11 +452,13 @@ def _personal_de_la_cafeteria(actor):
         raise PermissionDenied("Consultar las reservas exige identificarse.")
     if actor.rol not in (Rol.CAJERO, Rol.ADMINISTRADOR):
         raise PermissionDenied(
-            "Consultar las reservas pendientes es del personal de la cafetería "
-            "—cajero y administración— y de ningún otro rol ([S11], HU-24)."
+            "Las reservas pendientes solo las consulta el personal de la "
+            "cafetería: el cajero y la administración."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 def _solo_la_administracion_ve_lo_cerrado(actor):
@@ -467,9 +470,8 @@ def _solo_la_administracion_ve_lo_cerrado(actor):
     """
     if actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            "Los pedidos entregados y cancelados los consulta la administración "
-            "de la cafetería ([S11], HU-68); el cajero ve lo que está por recoger "
-            "(HU-24)."
+            "Los pedidos entregados y cancelados solo los consulta la "
+            "administración de la cafetería; el cajero ve lo que está por recoger."
         )
 
 
@@ -782,10 +784,12 @@ def informacion_del_cierre(*, actor, fecha=None):
         raise PermissionDenied("Cerrar la caja exige identificarse.")
     if actor.rol != Rol.CAJERO:
         raise PermissionDenied(
-            "Cuadrar la caja es del rol cajero, y de ningún otro (HU-55, DEC-6)."
+            "Solo el cajero puede cuadrar la caja."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     if fecha is None:
         fecha = timezone.localdate()

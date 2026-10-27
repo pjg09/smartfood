@@ -88,10 +88,12 @@ def _gestiona_el_inventario(actor):
         raise PermissionDenied("Consultar el inventario exige identificarse.")
     if actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            "El inventario es de la administración de la cafetería ([S11], HU-26, HU-27)."
+            "El inventario solo lo gestiona la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 @dataclass(frozen=True)

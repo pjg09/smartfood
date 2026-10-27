@@ -361,11 +361,11 @@ class SoloLaAdministracionAuditaTest(BaseDeLaAuditoria):
             auditoria(actor=self.cajero)
 
         mensaje = str(capturado.exception)
-        self.assertIn("HU-37", mensaje)
         self.assertNotIn("inventario", mensaje.lower())
+        self.assertNotIn("HU-37", mensaje)  # `DT-62`: sin identificadores
         # Y concuerda: el sujeto es singular. «El reporte de auditoría **son**
         # de la administración» es lo que salía antes, y se vio ejecutándolo.
-        self.assertIn("Consultar el reporte de auditoría es", mensaje)
+        self.assertIn("Consultar el reporte de auditoría solo lo puede hacer", mensaje)
 
 
 class LaPantallaDeAuditoriaTest(BaseDeLaAuditoria):

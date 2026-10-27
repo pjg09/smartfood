@@ -571,6 +571,7 @@ no venga de una historia.
 | — | `main` | El cierre de caja sale de `/punto-de-venta/` a `/cierre-de-caja/` y adopta el sistema visual: tarjetas de resumen para el esperado y, ya cerrada, para las cuatro cifras del cuadre; el formulario en una tarjeta, sin las flechas del campo numérico. El rechazo deja de enseñarse como una lista de Python | `DT-59` |
 | — | `main` | La subida de imágenes registra lo que ya hacía —acepta GIF y BMP además de JPEG, PNG y WEBP, y guarda siempre WEBP— y le pasa la lista de formatos a Pillow, que deja de abrir con cualquier decodificador lo que después rechazaba | `DT-60` |
 | — | `main` | El entorno de las exposiciones: el stack de `docker compose` en una EC2 del Learner Lab de AWS, con `compose.produccion.yaml`, `gunicorn` y Caddy con certificados de Let's Encrypt sobre un nombre de sslip.io. Un subdominio por rol, Mailpit con contraseña y el API S3 de las fotografías tras su propio subdominio. Corrige a `DEC-15` | `DEC-27`, `DT-61` |
+| — | `main` | Los mensajes que lee el usuario dejan de citar identificadores: los rechazos de los servicios —cierre de caja, estudiante desactivado o de baja, permisos—, tres estados vacíos y dos ayudas del admin. «La caja no cuadra por $40.000. Es obligatorio registrar un motivo». Una prueba vigila las plantillas | `DT-62` |
 
 **Seis traen historia: `#365` con `HU-62`, `#369` con `HU-63`, las pantallas de la
 institución con `HU-64`, la reserva como encargo con `HU-65` … `HU-67`, los pedidos de la

@@ -222,12 +222,18 @@ class LaDiferenciaExigeMotivoTest(TestCase):
         self.assertEqual(cierre.motivo, "")
 
     def test_con_diferencia_y_sin_motivo_el_servicio_rechaza(self):
-        with self.assertRaises(CierreSinMotivo):
+        with self.assertRaises(CierreSinMotivo) as rechazo:
             cerrar_caja(
                 actor=self.cajero,
                 base=Decimal("20000"),
                 efectivo_contado=Decimal("28000"),
             )
+
+        # `DT-62`: el cajero lee una frase, no la historia que la exige.
+        self.assertEqual(
+            " ".join(rechazo.exception.messages),
+            "La caja no cuadra por $2.000. Es obligatorio registrar un motivo.",
+        )
 
         # **No se escribió nada**: el rechazo no deja un cierre a medias.
         self.assertFalse(CierreDeCaja.objects.exists())
@@ -352,8 +358,9 @@ class SoloElCajeroCuadraLaCajaTest(TestCase):
         cajero» a quien intentó cuadrar la caja: nombra otra función y otra
         regla. Se vio ejecutándolo, no en las pruebas.
 
-        Se afirma sobre la regla citada —`HU-55`— y no sobre la redacción
-        entera, que cualquiera puede mejorar en un PR que no tenga que ver.
+        Se afirma sobre la función que nombra —cuadrar la caja— y no sobre la
+        redacción entera, que cualquiera puede mejorar en un PR que no tenga que
+        ver. Sin citar la historia (`DT-62`).
         """
         administrador = Usuario.objects.crear_usuario(
             email="admin-mensaje@example.com", rol=Rol.ADMINISTRADOR, nombre="Admin"
@@ -363,7 +370,8 @@ class SoloElCajeroCuadraLaCajaTest(TestCase):
             cerrar_caja(actor=administrador, base=0, efectivo_contado=0)
 
         mensaje = str(capturado.exception)
-        self.assertIn("HU-55", mensaje)
+        self.assertIn("Cuadrar la caja", mensaje)
+        self.assertNotIn("HU-55", mensaje)
         self.assertNotIn("venta", mensaje.lower())
 
     def test_un_cajero_desactivado_no_opera(self):

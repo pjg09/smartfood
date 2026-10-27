@@ -29,10 +29,12 @@ def estudiantes_a_cargo(*, usuario):
         raise PermissionDenied("Los estudiantes a cargo son de un acudiente identificado.")
     if usuario.rol != Rol.ACUDIENTE:
         raise PermissionDenied(
-            "Solo el acudiente consulta sus estudiantes a cargo (HU-04, [S11])."
+            "Solo el acudiente puede consultar a sus estudiantes."
         )
     if not usuario.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return Estudiante.objects.filter(acudiente__usuario=usuario).order_by("nombre")
 
@@ -62,11 +64,12 @@ def estudiante_para_la_institucion(*, actor, estudiante_id):
         raise PermissionDenied("Consultar la ficha de un estudiante exige identificarse.")
     if actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "Consultar el código de tarjeta es función de la institución educativa "
-            "(HU-45, [S11])."
+            "Solo la institución educativa puede consultar el código de tarjeta."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return Estudiante.objects.select_related("acudiente").get(pk=estudiante_id)
 
@@ -198,11 +201,12 @@ def padron(*, actor, busqueda="", incluir_retirados=False):
         raise PermissionDenied("Consultar el padrón exige identificarse.")
     if actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "El padrón es de la institución educativa y de nadie más "
-            "(HU-44, [S11])."
+            "El padrón solo lo consulta la institución educativa."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     estudiantes = Estudiante.objects.select_related("acudiente", "acudiente__usuario")
 
@@ -272,11 +276,12 @@ def acudientes_de_la_institucion(*, actor, busqueda="", incluir_retirados=False)
         raise PermissionDenied("Consultar los acudientes exige identificarse.")
     if actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "La lista de acudientes es de la institución educativa y de nadie "
-            "más (HU-44, [S11])."
+            "La lista de acudientes solo la consulta la institución educativa."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     acudientes = Acudiente.objects.select_related("usuario").annotate(
         cuantos=Count("estudiantes", distinct=True),
@@ -312,11 +317,12 @@ def acudiente_para_la_institucion(*, actor, acudiente_id):
         raise PermissionDenied("Consultar un acudiente exige identificarse.")
     if actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "Los acudientes son de la institución educativa y de nadie más "
-            "(HU-44, [S11])."
+            "Los acudientes solo los consulta la institución educativa."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return Acudiente.objects.select_related("usuario").get(pk=acudiente_id)
 

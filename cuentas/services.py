@@ -240,16 +240,18 @@ def crear_cuenta_de_personal(*, actor, email, rol, nombre="", contrasena_de_desa
     """
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            "Solo la institución educativa da de alta cuentas del personal (HU-40)."
+            "Solo la institución educativa puede dar de alta cuentas del personal."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     if rol not in ROLES_DE_PERSONAL:
         permitidos = ", ".join(sorted(ROLES_DE_PERSONAL))
         raise ValueError(
-            f"«{rol}» no es un rol de personal de la cafetería. Se admiten: {permitidos}. "
-            "Las cuentas de acudiente nacen de la carga institucional (HU-01, HU-03)."
+            f"«{rol}» no es un rol del personal de la cafetería. Se admiten: {permitidos}. "
+            "Las cuentas de acudiente se crean con la carga de estudiantes."
         )
 
     return crear_cuenta(
@@ -278,17 +280,19 @@ def _comprobar_actor_institucional(actor, verbo):
     """La institución educativa, y activa. `[S11]`, `DEC-2`, `HU-42`."""
     if actor is None or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            f"Solo la institución educativa puede {verbo} cuentas del personal (HU-42)."
+            f"Solo la institución educativa puede {verbo} cuentas del personal."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
 
 def _comprobar_es_personal(usuario):
     if usuario.rol not in ROLES_DE_PERSONAL:
         raise ValueError(
-            f"«{usuario.rol}» no es personal de la cafetería. `HU-42` cubre a cajeros y "
-            "administradores; la baja del estudiante es HU-51 y tiene sus propias reglas."
+            f"«{usuario.rol}» no es personal de la cafetería: aquí solo se gestionan "
+            "las cuentas de cajeros y administradores."
         )
 
 
@@ -347,15 +351,16 @@ def _comprobar_acceso_del_acudiente(actor, usuario, verbo):
     """
     if actor is None or not actor.is_authenticated or actor.rol != Rol.INSTITUCION:
         raise PermissionDenied(
-            f"Solo la institución educativa puede {verbo} la cuenta de un acudiente "
-            "(HU-63, DEC-20)."
+            f"Solo la institución educativa puede {verbo} la cuenta de un acudiente."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
     if usuario.rol != Rol.ACUDIENTE:
         raise ValueError(
-            f"«{usuario.rol}» no es un acudiente. El personal se desactiva por "
-            "HU-42 (desactivar_cuenta)."
+            f"«{usuario.rol}» no es un acudiente. Las cuentas del personal se "
+            "desactivan desde la pantalla de usuarios."
         )
 
 

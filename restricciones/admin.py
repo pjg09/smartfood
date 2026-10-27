@@ -54,10 +54,9 @@ class RestriccionesDelEstudianteAdmin(admin.ModelAdmin):
                 "fields": CAMPOS,
                 "description": (
                     "Solo consulta. Las restricciones las configura y las retira "
-                    "el acudiente desde su panel; nadie más puede cambiarlas "
-                    "(HU-13, INV-4). El alérgeno bloqueado cubre cualquier "
-                    "producto que lo declare, también los que se añadan al "
-                    "catálogo después (INV-5)."
+                    "el acudiente desde su panel; nadie más puede cambiarlas. "
+                    "El alérgeno bloqueado cubre cualquier producto que lo "
+                    "declare, también los que se añadan al catálogo después."
                 ),
             },
         )

@@ -53,10 +53,12 @@ def categorias_del_catalogo(*, actor):
         raise PermissionDenied("Consultar las categorías exige identificarse.")
     if actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            "Las categorías son de la administración de la cafetería ([S11], HU-26)."
+            "Las categorías solo las gestiona la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return list(
         Categoria.objects.annotate(cuantos=Count("productos")).order_by("nombre")
@@ -79,10 +81,12 @@ def alergenos_del_catalogo(*, actor):
         raise PermissionDenied("Consultar los alérgenos exige identificarse.")
     if actor.rol != Rol.ADMINISTRADOR:
         raise PermissionDenied(
-            "Los alérgenos son de la administración de la cafetería ([S11], HU-26)."
+            "Los alérgenos solo los gestiona la administración de la cafetería."
         )
     if not actor.is_active:
-        raise PermissionDenied("Una cuenta desactivada no opera (HU-42).")
+        raise PermissionDenied(
+            "Tu cuenta está desactivada. Pide a la institución educativa que la reactive."
+        )
 
     return list(
         Alergeno.objects.annotate(

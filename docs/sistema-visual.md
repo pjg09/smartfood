@@ -8,11 +8,11 @@
 | titulo | Las composiciones de la interfaz: qué existe, de dónde se copia y qué no inventar |
 | tipo_documento | Documento operativo. **No es un artefacto de Scrum ni un entregable** |
 | documentos_fuente | `./decisiones-tecnicas.md` (`DT-16`, `DT-23`, `DT-25`); `./mapa-de-la-aplicacion.md`; `estilos/fuente.css` |
-| actualizado | 2026-10-17; el reporte con periodo y la tarjeta de producto en caja, en la tabla (`DT-54`, `DT-57`). Antes, el 2026-10-13, `[S2.13]`, la imagen ampliable, que estrenan la foto del panel del acudiente y las imágenes de productos bloqueados. Antes, la ficha del padrón trajo `[S2.10]` a `[S2.12]` y el Sprint 5, `[S2.8]` y `[S2.9]` |
+| actualizado | 2026-10-27; `[S2.4]`, el bloque punteado dice quién trae lo que falta, sin citar la historia (`DT-62`). Antes, 2026-10-17; el reporte con periodo y la tarjeta de producto en caja, en la tabla (`DT-54`, `DT-57`). Antes, el 2026-10-13, `[S2.13]`, la imagen ampliable, que estrenan la foto del panel del acudiente y las imágenes de productos bloqueados. Antes, la ficha del padrón trajo `[S2.10]` a `[S2.12]` y el Sprint 5, `[S2.8]` y `[S2.9]` |
 | cubre | `TT-05` — armazones y hoja de estilos, más lo que `DT-25` fijó encima y lo que el control parental y los reportes añadieron |
 | responsable | Carlos (plantillas y estilos) |
 | idioma | es-CO |
-| version | 1.5 |
+| version | 1.6 |
 
 ### [S0.1] Qué responde este documento
 
@@ -82,7 +82,7 @@ no, y eso hay que saberlo **antes** de dibujar el segundo.
 | Encabezado de sección | `templates/inicio.html` | Antetítulo en versalitas y acento, título en `font-display`, entradilla; centrado |
 | Encabezado de pantalla | `templates/billetera/recarga.html` | `h1` y frase de apoyo, alineados a la izquierda, dentro del lienzo |
 | Grupo de modos | `templates/partials/grupo-de-tema.html` | Botones con `aria-pressed`; icono **sobre** la etiqueta cuando la columna es estrecha |
-| Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **qué historia lo trae** |
+| Bloque punteado | `templates/ventas/punto-de-venta.html` | Borde discontinuo, icono en pastilla, qué falta y **quién lo trae** |
 | Barra de filtros | `templates/personas/padron.html` | Buscador con icono dentro, interruptor y acción **en una fila** desde `tablet`; apilados por debajo |
 | Lista con interruptor | `templates/restricciones/partials/lista-de-productos.html` | Una fila por elemento, el estado pintado en el borde y el fondo, y un botón que dice **la acción**, no el estado |
 | Catálogo con ticket | `templates/ventas/reserva.html` | Filtros arriba, tarjetas con «Agregar» que pasa a «− n +», y el ticket al lado; **las cantidades en el formulario, el dinero en el servidor** |
@@ -184,8 +184,9 @@ Es el hueco y el estado vacío. **Un hueco nunca es un botón deshabilitado**: u
 apagada promete que un día hará algo y no dice cuándo ni de qué depende. (El guardar de una
 ficha incompleta sí va deshabilitado: no es una función que falte, y cada campo dice qué le
 falta —`[S2.11]`—.) El bloque dice qué
-falta y qué historia lo trae —`HU-17`, `HU-21`—, que son las dos cosas.
-`ventas/tests_acceso.py` lo vigila.
+falta y quién lo trae —«Lo gestiona la administración de la cafetería»—, que son las dos
+cosas, **sin citar la historia**: el identificador es del equipo y va en el comentario de la
+plantilla (`DT-62`). `config/tests_plantillas.py` vigila que no se sirva ninguno.
 
 **También sirve para un dato que falta, no solo para una función que falta.** El estudiante
 sin fotografía en el punto de venta (`TT-77`) lleva el mismo borde discontinuo en el sitio

@@ -102,7 +102,8 @@ class EdicionTest(BaseDeAdministracion):
         self.assertEqual(estudiante.codigo_tarjeta, codigo)
 
     def test_el_codigo_de_tarjeta_no_es_un_campo_editable(self):
-        """Cambiarlo es reasignar la tarjeta, y eso es `HU-46` con `INVD-4`."""
+        """Cambiarlo es reasignar la tarjeta, y eso es `HU-46` con `INVD-4`. El
+        mensaje lo dice con palabras, sin citar la historia (`DT-62`)."""
         estudiante = self.matricular()
 
         with self.assertRaises(ValueError) as ctx:
@@ -112,7 +113,8 @@ class EdicionTest(BaseDeAdministracion):
                 codigo_tarjeta="ZZZZZZZZZZZZZZ",
             )
 
-        self.assertIn("HU-46", str(ctx.exception))
+        self.assertIn("se reasigna", str(ctx.exception))
+        self.assertNotIn("HU-46", str(ctx.exception))
         self.assertNotIn("codigo_tarjeta", CAMPOS_EDITABLES)
 
     def test_un_campo_que_no_existe_es_un_error_explicito(self):

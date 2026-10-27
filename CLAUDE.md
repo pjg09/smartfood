@@ -177,10 +177,15 @@ que es Tailwind sin `preflight`, y toma los tokens como todo lo demás. En las p
 `partials/tema-inicial.html`, y lo incluyen `base.html` **y** `admin/base_site.html`:
 el admin no cuelga de `base.html`, y lo que solo esté allí no le llega.
 
+**Lo que lee quien usa la aplicación no cita identificadores** (`DT-62`): ni un rechazo de un
+servicio, ni una plantilla, ni una ayuda del admin. «(HU-55, mismo criterio que ALC-IN-18)» en
+un error es ruido para el cajero; el identificador va en el comentario de al lado. Solo los
+guardas de programador —los que saltan con un fallo del código— lo citan.
+
 **Antes de inventar una pantalla, mira `docs/sistema-visual.md`**: dice qué **dieciocho**
 composiciones existen —catorce con sección propia— y de qué plantilla se copia cada una. Tres que
 se olvidan: la acción de una tarjeta de resumen es un **enlace** de acento abajo, no un botón
-sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y qué historia lo trae—;
+sólido; **un hueco nunca es un botón deshabilitado** —dice qué falta y quién lo trae—;
 y un medidor **recorta la barra a 100, nunca el número**.
 
 **No construyas**: hexagonal, repositorios sobre el ORM, interfaces «por si cambiamos de base»,
@@ -315,10 +320,10 @@ enumera en ninguna parte —una prueba nueva entra sola—, siempre que el fiche
 `tests_<tema>.py` y su carpeta tenga `__init__.py`: si no, **no se ejecuta nunca y nada
 avisa**, salvo `config/tests_descubrimiento.py`. Tampoco hay linter ni formateador configurados.
 
-La suite completa son **1.987 pruebas** y **tarda unos siete minutos, y más de diez con la máquina cargada**: por encima del tiempo
+La suite completa son **1.989 pruebas** y **tarda unos siete minutos, y más de diez con la máquina cargada**: por encima del tiempo
 de espera por defecto de muchas herramientas. Si se corta a los 120 s no es que falle, es que no
 le dio tiempo — dale margen o corre solo la app que tocaste. Y si el resumen dice bastantes
-menos de esas 1.987, no corrió entera.
+menos de esas 1.989, no corrió entera.
 
 **Antes de afirmar `DoD-5`, introduce la violación a propósito** y comprueba que la prueba
 falla. Una prueba que exige una ausencia —«ningún rol escribe aquí», «no existe tal
